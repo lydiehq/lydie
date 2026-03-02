@@ -1,10 +1,10 @@
 import { cva } from "cva";
 
+import { Logo } from "../Logo";
+
 const SHAPE_TYPES = ["circle", "square", "half-circle"] as const;
-const CHARACTER_EMOTES = ["happy", "focused", "sleepy"] as const;
 
 type ShapeType = (typeof SHAPE_TYPES)[number];
-type CharacterEmote = (typeof CHARACTER_EMOTES)[number];
 
 type Tile =
   | {
@@ -13,8 +13,7 @@ type Tile =
       type: ShapeType;
     }
   | {
-      kind: "character";
-      emote: CharacterEmote;
+      kind: "logo";
     };
 
 type RandomFn = () => number;
@@ -68,10 +67,6 @@ function createSeededRandom(seed: number | string): RandomFn {
 
 function randomShapeType(random: RandomFn): ShapeType {
   return SHAPE_TYPES[Math.floor(random() * SHAPE_TYPES.length)] ?? "circle";
-}
-
-function randomCharacterEmote(random: RandomFn): CharacterEmote {
-  return CHARACTER_EMOTES[Math.floor(random() * CHARACTER_EMOTES.length)] ?? "happy";
 }
 
 function randomBaseTone(random: RandomFn): "blue" | "gray" {
@@ -152,43 +147,7 @@ function Shape({ tone, type }: { tone: "blue" | "gray" | "white"; type: ShapeTyp
   );
 }
 
-function Character({ emote }: { emote: CharacterEmote }) {
-  const eyeClass =
-    emote === "sleepy"
-      ? "h-[7%] w-[7%] rounded-full bg-blue-950/70"
-      : "h-[9%] w-[9%] rounded-full bg-blue-950";
-
-  return (
-    <div className="relative size-full">
-      <div className="absolute left-[12%] top-[8%] h-[36%] w-[14%] -rotate-12 rounded-full bg-blue-500" />
-      <div className="absolute right-[12%] top-[8%] h-[36%] w-[14%] rotate-12 rounded-full bg-blue-500" />
-
-      <div className="absolute inset-x-[18%] bottom-[16%] h-[56%] rounded-[40%] bg-blue-500">
-        <div className="absolute left-[26%] top-[28%] flex h-full w-[48%] justify-between">
-          <span className={eyeClass} />
-          <span className={eyeClass} />
-        </div>
-
-        {emote === "happy" ? (
-          <div className="absolute left-1/2 top-[56%] h-[16%] w-[28%] -translate-x-1/2 rounded-b-full border-b-2 border-blue-950" />
-        ) : null}
-
-        {emote === "focused" ? (
-          <div className="absolute left-1/2 top-[60%] h-[4%] w-[24%] -translate-x-1/2 rounded-full bg-blue-950" />
-        ) : null}
-
-        {emote === "sleepy" ? (
-          <div className="absolute left-1/2 top-[58%] h-[12%] w-[18%] -translate-x-1/2 rounded-full border border-blue-950/75" />
-        ) : null}
-      </div>
-
-      <div className="absolute bottom-[8%] left-[28%] h-[8%] w-[14%] rounded-full bg-blue-600" />
-      <div className="absolute bottom-[8%] right-[28%] h-[8%] w-[14%] rounded-full bg-blue-600" />
-    </div>
-  );
-}
-
-function pickCharacterIndex(columns: number, totalShapes: number, random: RandomFn): number {
+function pickLogoIndex(columns: number, totalShapes: number, random: RandomFn): number {
   const candidates = Array.from({ length: totalShapes }, (_, index) => index).filter(
     (index) => index >= columns,
   );
@@ -208,15 +167,13 @@ function createTiles(
 ): Tile[] {
   const random = seed === undefined ? Math.random : createSeededRandom(seed);
   const whiteShapeIndices = createWhiteShapeIndices(totalShapes, columns, minWhiteShapes, random);
-  const characterIndex = pickCharacterIndex(columns, totalShapes, random);
-  const supportBlockIndex = characterIndex - columns;
-  const characterEmote = randomCharacterEmote(random);
+  const logoIndex = pickLogoIndex(columns, totalShapes, random);
+  const supportBlockIndex = logoIndex - columns;
 
   return Array.from({ length: totalShapes }, (_, index) => {
-    if (index === characterIndex) {
+    if (index === logoIndex) {
       return {
-        kind: "character",
-        emote: characterEmote,
+        kind: "logo",
       };
     }
 
@@ -256,8 +213,8 @@ export function GeometricPatternIllustration({
       >
         {tiles.map((tile, index) => (
           <div key={index} className="aspect-square w-full">
-            {tile.kind === "character" ? (
-              <Character emote={tile.emote} />
+            {tile.kind === "logo" ? (
+              <Logo className="size-full text-blue-500" />
             ) : (
               <Shape tone={tile.tone} type={tile.type} />
             )}

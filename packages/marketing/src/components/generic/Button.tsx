@@ -29,12 +29,12 @@ function composeTailwindRenderProps<T>(
 
 const styles = cva({
   base: [
-    "transition-colors duration-150 relative items-center isolate select-none inline-flex shrink-0 justify-center whitespace-nowrap font-medium no-underline rounded-[var(--button-radius)] disabled:opacity-50 disabled:cursor-not-allowed group",
+    "transition-colors duration-150 relative items-center isolate select-none inline-flex shrink-0 justify-center whitespace-nowrap font-medium no-underline rounded-full disabled:opacity-50 disabled:cursor-not-allowed group",
   ].join(" "),
   variants: {
     intent: {
       primary: [
-        "border border-black shadow-[0_1px_theme(colors.white/0.25)_inset,0_1px_3px_theme(colors.black/0.2)] before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[var(--button-radius)] active:before:bg-white/0 hover:before:bg-white/6 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:rounded-[var(--button-radius)] after:bg-gradient-to-b after:from-white/14 bg-gray-800 text-white after:mix-blend-overlay",
+        "border border-black before:pointer-events-none before:absolute before:inset-0 bg-gray-800 text-white",
       ],
       secondary:
         "ring-1 ring-black/10 bg-white text-gray-700 hover:bg-black/5 border-black/20 shadow-sm disabled:bg-gray-100 disabled:text-gray-500",
@@ -44,8 +44,8 @@ const styles = cva({
     size: {
       xs: "h-5 px-2 text-[0.6875rem] [--button-radius:theme(radius.md)]",
       sm: "h-6 px-2 text-xs [--button-radius:theme(radius.md)]",
-      md: "h-7 px-2 text-[0.8125rem]/0 [--button-radius:theme(radius.md)]",
-      lg: "h-8 px-4 py-1.5 text-sm/0 [--button-radius:theme(radius.md)]",
+      md: "h-[30px] px-3 text-sm/0 [--button-radius:theme(radius.md)]",
+      lg: "h-10 px-5 text-sm/0 [--button-radius:theme(radius.md)]",
       xl: "h-11 px-8 text-sm [--button-radius:theme(radius.xl)]",
       icon: "h-10 w-10 text-sm",
     },

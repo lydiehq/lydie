@@ -8,7 +8,6 @@ import {
 import { createId } from "@lydie/core/id";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Checkbox } from "@lydie/ui/components/generic/Checkbox";
-import { ComboBox, ComboBoxItem } from "@lydie/ui/components/generic/ComboBox";
 import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { Popover } from "@lydie/ui/components/generic/Popover";
 import { Select as PropertySelect, SelectItem } from "@lydie/ui/components/generic/Select";
@@ -19,24 +18,35 @@ import { useQuery } from "@rocicorp/zero/react";
 import { DataGridNav } from "@table-nav/core";
 import { Link } from "@tanstack/react-router";
 import {
-  type CellContext,
-  type Column,
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  type RowData,
-  type RowSelectionState,
-  type SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { DialogTrigger, Input, MenuTrigger, Button as RACButton } from "react-aria-components";
 import { toast } from "sonner";
 
+import { confirmDialog } from "@/atoms/confirm-dialog";
+import { MultiSelectCellEditor } from "@/components/database-table/cells/MultiSelectCellEditor";
+import { SelectCellEditor } from "@/components/database-table/cells/SelectCellEditor";
+import { TextCellEditor } from "@/components/database-table/cells/TextCellEditor";
+import { sortNullableValues as compareSortValues } from "@/components/database-table/logic/sorting";
+import {
+  getEditableValue,
+  isFreeformField,
+  toFieldValue,
+} from "@/components/database-table/logic/value-normalization";
+import {
+  initialTableCellState,
+  tableCellStateReducer,
+  type EditingCell,
+} from "@/components/database-table/state/reducers";
 import { useGlobalBulkActions } from "@/hooks/use-global-bulk-actions";
 import { useZero } from "@/services/zero";
-import { confirmDialog } from "@/atoms/confirm-dialog";
 import { focusVisibleStyles } from "@/utils/focus-ring";
 
 type DocumentItem = {
@@ -48,34 +58,56 @@ type DocumentItem = {
   properties: Record<string, string | number | boolean | string[] | null>;
 };
 
-type EditingCell = {
-  rowId: string;
-  columnId: string;
-  seed?: string;
-} | null;
+type RowSelectionState = Record<string, boolean>;
+type SortingState = Array<{ id: string; desc: boolean }>;
+type ColumnKind = "title" | "property" | "selection" | "add-property";
 
-declare module "@tanstack/react-table" {
-  // eslint-disable-next-line no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    kind?: "title" | "property" | "selection" | "add-property";
+type TableMeta = {
+  editingCell: EditingCell;
+  startEditing: (rowId: string, columnId: string, seed?: string) => void;
+  stopEditing: () => void;
+  updateData: (
+    rowIndex: number,
+    columnId: string,
+    value: string | number | boolean | string[] | null,
+  ) => void;
+  tableNav: DataGridNav;
+  organizationSlug: string;
+  relationOptionsByField: Map<string, Array<{ id: string; title: string }>>;
+};
+
+type TableColumn = {
+  id: string;
+  size: number;
+  sortable: boolean;
+  meta?: {
+    kind?: ColumnKind;
     fieldDef?: PropertyDefinition;
-  }
+  };
+  header: () => ReactNode;
+};
 
-  // eslint-disable-next-line no-unused-vars
-  interface TableMeta<TData extends RowData> {
-    editingCell: EditingCell;
-    startEditing: (rowId: string, columnId: string, seed?: string) => void;
-    stopEditing: () => void;
-    updateData: (
-      rowIndex: number,
-      columnId: string,
-      value: string | number | boolean | string[] | null,
-    ) => void;
-    tableNav: DataGridNav;
-    organizationSlug: string;
-    relationOptionsByField: Map<string, Array<{ id: string; title: string }>>;
-  }
-}
+type TableCellContext = {
+  row: {
+    id: string;
+    index: number;
+    original: DocumentItem;
+  };
+  column: {
+    id: string;
+    columnDef: {
+      meta?: {
+        kind?: ColumnKind;
+        fieldDef?: PropertyDefinition;
+      };
+    };
+  };
+  table: {
+    options: {
+      meta: TableMeta;
+    };
+  };
+};
 
 const PROPERTY_TYPES: Array<{ label: string; value: PropertyDefinition["type"] }> = [
   { label: "Text", value: "text" },
@@ -199,28 +231,6 @@ const SYSTEM_COLUMN_IDS = {
   addProperty: "__add-property",
 } as const;
 
-function toFieldValue(
-  fieldDef: PropertyDefinition,
-  value: string,
-): string | number | boolean | string[] | null {
-  if (fieldDef.type === "boolean") {
-    return value === "true";
-  }
-  if (fieldDef.type === "number") {
-    return value === "" ? null : Number(value);
-  }
-  if (fieldDef.type === "date") {
-    return value === "" ? null : value;
-  }
-  if (fieldDef.type === "multi-select") {
-    return value
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-  }
-  return value === "" ? null : value;
-}
-
 function createDefaultEnumOptions(type: PropertyDefinition["type"]): EnumOptionDraft[] {
   if (type === "status") {
     return DEFAULT_STATUS_OPTION_DRAFTS.map((option) => ({
@@ -286,7 +296,8 @@ export function CollectionTableView({
     { id: SYSTEM_COLUMN_IDS.title, desc: false },
   ]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [editingCell, setEditingCell] = useState<EditingCell>(null);
+  const [cellState, dispatchCellState] = useReducer(tableCellStateReducer, initialTableCellState);
+  const editingCell = cellState.editingCell;
   const cellRefs = useRef(new Map<string, HTMLTableCellElement>());
   const tableNav = useMemo(() => new DataGridNav(), []);
   const listeners = useMemo(
@@ -626,73 +637,162 @@ export function CollectionTableView({
     [collectionId, organizationId, schema, z],
   );
 
-  const columns = useMemo<ColumnDef<DocumentItem>[]>(
+  const sortState = sorting[0];
+  const sortedDocuments = useMemo(() => {
+    if (!sortState?.id) {
+      return documents;
+    }
+
+    const next = [...documents];
+    next.sort((first, second) => {
+      const firstValue =
+        sortState.id === SYSTEM_COLUMN_IDS.title ? first.title : first.properties[sortState.id];
+      const secondValue =
+        sortState.id === SYSTEM_COLUMN_IDS.title ? second.title : second.properties[sortState.id];
+      const result = compareSortValues(firstValue, secondValue);
+      return sortState.desc ? -result : result;
+    });
+    return next;
+  }, [documents, sortState]);
+
+  const startEditing = useCallback(
+    (rowId: string, columnId: string, seed?: string) => {
+      tableNav.disable();
+      dispatchCellState({ type: "startEdit", rowId, columnId, seed });
+    },
+    [tableNav],
+  );
+
+  const stopEditing = useCallback(() => {
+    const lastEditedCell = editingCell;
+    dispatchCellState({ type: "stopEdit" });
+    tableNav.enable();
+    if (lastEditedCell) {
+      requestAnimationFrame(() => {
+        focusCell(lastEditedCell.rowId, lastEditedCell.columnId);
+      });
+    }
+  }, [editingCell, focusCell, tableNav]);
+
+  const updateData = useCallback(
+    (rowIndex: number, columnId: string, value: string | number | boolean | string[] | null) => {
+      const document = sortedDocuments[rowIndex];
+      if (!document) {
+        return;
+      }
+
+      if (columnId === SYSTEM_COLUMN_IDS.title) {
+        void handleRenameDocument(document.id, String(value ?? ""));
+        return;
+      }
+
+      if (!document.collectionId) {
+        return;
+      }
+
+      void handleFieldUpdate(document.id, document.collectionId, columnId, value);
+    },
+    [handleFieldUpdate, handleRenameDocument, sortedDocuments],
+  );
+
+  const tableMeta = useMemo<TableMeta>(
+    () => ({
+      editingCell,
+      startEditing,
+      stopEditing,
+      updateData,
+      tableNav,
+      organizationSlug,
+      relationOptionsByField,
+    }),
+    [
+      editingCell,
+      organizationSlug,
+      relationOptionsByField,
+      startEditing,
+      stopEditing,
+      tableNav,
+      updateData,
+    ],
+  );
+
+  const allRowsSelected =
+    sortedDocuments.length > 0 &&
+    sortedDocuments.every((document) => Boolean(rowSelection[document.id]));
+  const someRowsSelected =
+    sortedDocuments.some((document) => Boolean(rowSelection[document.id])) && !allRowsSelected;
+
+  const toggleSorting = useCallback((columnId: string) => {
+    setSorting((previous) => {
+      const current = previous[0];
+      if (!current || current.id !== columnId) {
+        return [{ id: columnId, desc: false }];
+      }
+      return [{ id: columnId, desc: !current.desc }];
+    });
+  }, []);
+
+  const columns = useMemo<TableColumn[]>(
     () => [
       {
         id: SYSTEM_COLUMN_IDS.selection,
-        enableSorting: false,
-        enableResizing: false,
         size: 32,
-        minSize: 32,
-        maxSize: 32,
-        meta: { kind: "selection" as const },
-        header: ({ table }) => (
+        sortable: false,
+        meta: { kind: "selection" },
+        header: () => (
           <Checkbox
             aria-label="Select all rows"
-            isSelected={table.getIsAllRowsSelected()}
-            isIndeterminate={table.getIsSomeRowsSelected() && !table.getIsAllRowsSelected()}
-            onChange={(isSelected) => table.toggleAllRowsSelected(Boolean(isSelected))}
-            className="justify-center"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            aria-label="Select row"
-            isSelected={row.getIsSelected()}
-            onChange={(isSelected) => row.toggleSelected(Boolean(isSelected))}
+            isSelected={allRowsSelected}
+            isIndeterminate={someRowsSelected}
+            onChange={(isSelected) => {
+              const next = Boolean(isSelected);
+              setRowSelection(
+                Object.fromEntries(sortedDocuments.map((document) => [document.id, next])),
+              );
+            }}
             className="justify-center"
           />
         ),
       },
       {
         id: SYSTEM_COLUMN_IDS.title,
-        accessorKey: "title",
-        enableSorting: true,
         size: 300,
-        sortingFn: sortNullableValues,
-        meta: { kind: "title" as const },
-        header: ({ column }) => <SortableHeader column={column} label="Title" />,
-        cell: (context) => <EditableGridCell context={context} />,
+        sortable: true,
+        meta: { kind: "title" },
+        header: () => (
+          <SortableHeader
+            label="Title"
+            sortable
+            sortDirection={
+              sortState?.id === SYSTEM_COLUMN_IDS.title ? (sortState.desc ? "desc" : "asc") : false
+            }
+            onToggle={() => toggleSorting(SYSTEM_COLUMN_IDS.title)}
+          />
+        ),
       },
-      ...schema.map(
-        (property): ColumnDef<DocumentItem> => ({
-          id: property.name,
-          accessorFn: (document: DocumentItem) => document.properties[property.name],
-          enableSorting: true,
-          enableResizing: true,
-          size: 240,
-          sortingFn: sortNullableValues,
-          meta: { kind: "property" as const, fieldDef: property },
-          header: ({ column }) => (
-            <PropertyHeader
-              column={column}
-              fieldDef={property}
-              label={property.name}
-              onDeleteProperty={handleDeleteProperty}
-              onUpdateEnumPropertyOptions={handleUpdateEnumPropertyOptions}
-            />
-          ),
-          cell: (context: CellContext<DocumentItem, unknown>) => (
-            <EditableGridCell context={context} />
-          ),
-        }),
-      ),
+      ...schema.map((property) => ({
+        id: property.name,
+        size: 240,
+        sortable: true,
+        meta: { kind: "property" as const, fieldDef: property },
+        header: () => (
+          <PropertyHeader
+            fieldDef={property}
+            label={property.name}
+            sortDirection={
+              sortState?.id === property.name ? (sortState.desc ? "desc" : "asc") : false
+            }
+            onToggleSort={() => toggleSorting(property.name)}
+            onDeleteProperty={handleDeleteProperty}
+            onUpdateEnumPropertyOptions={handleUpdateEnumPropertyOptions}
+          />
+        ),
+      })),
       {
         id: SYSTEM_COLUMN_IDS.addProperty,
-        enableSorting: false,
-        enableResizing: false,
         size: 140,
-        meta: { kind: "add-property" as const },
+        sortable: false,
+        meta: { kind: "add-property" },
         header: () => (
           <AddPropertyHeader
             collectionId={collectionId}
@@ -701,77 +801,22 @@ export function CollectionTableView({
             onAddProperty={handleAddProperty}
           />
         ),
-        cell: () => <span className="block h-6 w-[120px]" aria-hidden="true" />,
       },
     ],
     [
+      allRowsSelected,
       collectionId,
       collections,
       handleAddProperty,
       handleDeleteProperty,
       handleUpdateEnumPropertyOptions,
       schema,
+      someRowsSelected,
+      sortState,
+      sortedDocuments,
+      toggleSorting,
     ],
   );
-
-  const table = useReactTable({
-    data: documents,
-    columns,
-    state: {
-      sorting,
-      rowSelection,
-    },
-    onSortingChange: setSorting,
-    onRowSelectionChange: setRowSelection,
-    getRowId: (row) => row.id,
-    enableRowSelection: true,
-    enableColumnResizing: true,
-    columnResizeMode: "onChange",
-    defaultColumn: {
-      minSize: 140,
-      size: 240,
-      maxSize: 600,
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    meta: {
-      editingCell,
-      startEditing: (rowId, columnId, seed) => {
-        tableNav.disable();
-        setEditingCell({ rowId, columnId, seed });
-      },
-      stopEditing: () => {
-        const lastEditedCell = editingCell;
-        setEditingCell(null);
-        tableNav.enable();
-        if (lastEditedCell) {
-          requestAnimationFrame(() => {
-            focusCell(lastEditedCell.rowId, lastEditedCell.columnId);
-          });
-        }
-      },
-      updateData: (rowIndex, columnId, value) => {
-        const document = documents[rowIndex];
-        if (!document) {
-          return;
-        }
-
-        if (columnId === SYSTEM_COLUMN_IDS.title) {
-          void handleRenameDocument(document.id, String(value ?? ""));
-          return;
-        }
-
-        if (!document.collectionId) {
-          return;
-        }
-
-        void handleFieldUpdate(document.id, document.collectionId, columnId, value);
-      },
-      tableNav,
-      organizationSlug,
-      relationOptionsByField,
-    },
-  });
 
   const selectedDocumentIds = useMemo(() => {
     const existingIds = new Set(documents.map((document) => document.id));
@@ -866,49 +911,32 @@ export function CollectionTableView({
             {...listeners}
             className="max-h-none border-separate border-spacing-0"
             style={{
-              width: table.getTotalSize(),
+              width: columns.reduce((sum, column) => sum + column.size, 0),
             }}
           >
             <thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      style={{ width: header.getSize() }}
-                      className={`relative border-b border-r border-gray-200 p-0 text-left align-middle last:border-r-0 ${
-                        header.column.id === SYSTEM_COLUMN_IDS.selection ? "text-center" : ""
+              <tr>
+                {columns.map((column) => (
+                  <th
+                    key={column.id}
+                    style={{ width: column.size }}
+                    className={`relative border-b border-r border-gray-200 p-0 text-left align-middle last:border-r-0 ${
+                      column.id === SYSTEM_COLUMN_IDS.selection ? "text-center" : ""
+                    }`}
+                  >
+                    <div
+                      className={`flex min-h-9 items-center px-3 py-1 ${
+                        column.id === SYSTEM_COLUMN_IDS.selection ? "justify-center" : ""
                       }`}
                     >
-                      {header.isPlaceholder ? null : (
-                        <div
-                          className={`flex min-h-9 items-center px-3 py-1 ${
-                            header.column.id === SYSTEM_COLUMN_IDS.selection ? "justify-center" : ""
-                          }`}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </div>
-                      )}
-                      {header.column.getCanResize() ? (
-                        <div
-                          role="separator"
-                          aria-orientation="vertical"
-                          aria-label={`Resize ${String(header.column.columnDef.header ?? header.id)} column`}
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          className={`absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-transparent transition-colors hover:bg-blue-300/60 ${
-                            header.column.getIsResizing() ? "bg-blue-500/70" : ""
-                          }`}
-                        />
-                      ) : null}
-                    </th>
-                  ))}
-                </tr>
-              ))}
+                      {column.header()}
+                    </div>
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
-              {table.getRowModel().rows.length === 0 ? (
+              {sortedDocuments.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length} className="border-0">
                     <div className="flex flex-col items-center justify-center py-6 text-gray-500">
@@ -920,92 +948,125 @@ export function CollectionTableView({
                   </td>
                 </tr>
               ) : (
-                table.getRowModel().rows.map((row, rowIndex, rows) => (
-                  <tr key={row.id} className={row.getIsSelected() ? "bg-gray-50" : ""}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        ref={(node) => setCellRef(row.id, cell.column.id, node)}
-                        style={{ width: cell.column.getSize() }}
-                        tabIndex={0}
-                        onClick={(event) => {
-                          const kind = cell.column.columnDef.meta?.kind;
-                          if (kind !== "title" && kind !== "property") {
-                            return;
-                          }
+                sortedDocuments.map((document, rowIndex, rows) => (
+                  <tr key={document.id} className={rowSelection[document.id] ? "bg-gray-50" : ""}>
+                    {columns.map((column) => {
+                      const cellContext: TableCellContext = {
+                        row: { id: document.id, index: rowIndex, original: document },
+                        column: {
+                          id: column.id,
+                          columnDef: {
+                            meta: column.meta,
+                          },
+                        },
+                        table: {
+                          options: {
+                            meta: tableMeta,
+                          },
+                        },
+                      };
+                      const kind = column.meta?.kind;
+                      const fieldDef = column.meta?.fieldDef;
 
-                          if (isInteractiveTarget(event.target)) {
-                            return;
-                          }
+                      const content =
+                        kind === "selection" ? (
+                          <Checkbox
+                            aria-label="Select row"
+                            isSelected={Boolean(rowSelection[document.id])}
+                            onChange={(isSelected) =>
+                              setRowSelection((previous) => ({
+                                ...previous,
+                                [document.id]: Boolean(isSelected),
+                              }))
+                            }
+                            className="justify-center"
+                          />
+                        ) : kind === "add-property" ? (
+                          <span className="block h-6 w-[120px]" aria-hidden="true" />
+                        ) : (
+                          <EditableGridCell context={cellContext} />
+                        );
 
-                          const fieldDef = cell.column.columnDef.meta?.fieldDef;
+                      return (
+                        <td
+                          key={`${document.id}:${column.id}`}
+                          ref={(node) => setCellRef(document.id, column.id, node)}
+                          style={{ width: column.size }}
+                          tabIndex={0}
+                          onClick={(event) => {
+                            if (kind !== "title" && kind !== "property") {
+                              return;
+                            }
 
-                          const activeEdit = table.options.meta?.editingCell;
-                          if (
-                            activeEdit?.rowId === row.id &&
-                            activeEdit.columnId === cell.column.id
-                          ) {
-                            return;
-                          }
+                            if (isInteractiveTarget(event.target)) {
+                              return;
+                            }
 
-                          const shouldAutoOpenPicker =
-                            kind === "property" && fieldDef && !isFreeformField(fieldDef);
+                            const activeEdit = tableMeta.editingCell;
+                            if (
+                              activeEdit?.rowId === document.id &&
+                              activeEdit?.columnId === column.id
+                            ) {
+                              return;
+                            }
 
-                          table.options.meta?.startEditing(
-                            row.id,
-                            cell.column.id,
-                            shouldAutoOpenPicker ? "__open__" : undefined,
-                          );
-                        }}
-                        onKeyDown={(event) => {
-                          const kind = cell.column.columnDef.meta?.kind;
-                          if (kind !== "title" && kind !== "property") {
-                            return;
-                          }
+                            const shouldAutoOpenPicker =
+                              kind === "property" && fieldDef && !isFreeformField(fieldDef);
 
-                          const activeEdit = table.options.meta?.editingCell;
-                          if (
-                            activeEdit?.rowId === row.id &&
-                            activeEdit.columnId === cell.column.id
-                          ) {
-                            return;
-                          }
-
-                          const fieldDef = cell.column.columnDef.meta?.fieldDef;
-                          const canTypeEdit = kind === "title" || isFreeformField(fieldDef);
-                          if (isPrintableKey(event) && canTypeEdit) {
-                            event.preventDefault();
-                            table.options.meta?.startEditing(row.id, cell.column.id, event.key);
-                            return;
-                          }
-
-                          if (
-                            (event.key === "Backspace" || event.key === "Delete") &&
-                            canTypeEdit
-                          ) {
-                            event.preventDefault();
-                            table.options.meta?.startEditing(row.id, cell.column.id, "");
-                            return;
-                          }
-
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            table.options.meta?.startEditing(
-                              row.id,
-                              cell.column.id,
-                              kind === "property" && fieldDef && !isFreeformField(fieldDef)
-                                ? "__open__"
-                                : undefined,
+                            tableMeta.startEditing(
+                              document.id,
+                              column.id,
+                              shouldAutoOpenPicker ? "__open__" : undefined,
                             );
-                          }
-                        }}
-                        className={`overflow-hidden border-b border-r border-gray-200 p-0 align-middle last:border-r-0 transition-colors hover:bg-gray-50 ${
-                          rowIndex === rows.length - 1 ? "border-b-0" : ""
-                        } ${focusVisibleStyles}`}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
+                          }}
+                          onKeyDown={(event) => {
+                            if (kind !== "title" && kind !== "property") {
+                              return;
+                            }
+
+                            const activeEdit = tableMeta.editingCell;
+                            if (
+                              activeEdit?.rowId === document.id &&
+                              activeEdit?.columnId === column.id
+                            ) {
+                              return;
+                            }
+
+                            const canTypeEdit = kind === "title" || isFreeformField(fieldDef);
+                            if (isPrintableKey(event) && canTypeEdit) {
+                              event.preventDefault();
+                              tableMeta.startEditing(document.id, column.id, event.key);
+                              return;
+                            }
+
+                            if (
+                              (event.key === "Backspace" || event.key === "Delete") &&
+                              canTypeEdit
+                            ) {
+                              event.preventDefault();
+                              tableMeta.startEditing(document.id, column.id, "");
+                              return;
+                            }
+
+                            if (event.key === "Enter") {
+                              event.preventDefault();
+                              tableMeta.startEditing(
+                                document.id,
+                                column.id,
+                                kind === "property" && fieldDef && !isFreeformField(fieldDef)
+                                  ? "__open__"
+                                  : undefined,
+                              );
+                            }
+                          }}
+                          className={`overflow-hidden border-b border-r border-gray-200 p-0 align-middle last:border-r-0 transition-colors hover:bg-gray-50 ${
+                            rowIndex === rows.length - 1 ? "border-b-0" : ""
+                          } ${focusVisibleStyles}`}
+                        >
+                          {content}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               )}
@@ -1030,22 +1091,24 @@ export function CollectionTableView({
 }
 
 const SortableHeader = memo(function SortableHeader({
-  column,
   label,
+  sortable,
+  sortDirection,
+  onToggle,
 }: {
-  column: Column<DocumentItem, unknown>;
   label: string;
+  sortable: boolean;
+  sortDirection: "asc" | "desc" | false;
+  onToggle: () => void;
 }) {
-  const sortDirection = column.getIsSorted();
-
-  if (!column.getCanSort()) {
+  if (!sortable) {
     return <span className="block truncate text-xs font-semibold text-gray-700">{label}</span>;
   }
 
   return (
     <button
       type="button"
-      onClick={() => column.toggleSorting(sortDirection === "asc")}
+      onClick={onToggle}
       className="inline-flex max-w-full items-center gap-1 truncate text-xs font-semibold text-gray-700"
     >
       <span className="truncate">{label}</span>
@@ -1057,15 +1120,17 @@ const SortableHeader = memo(function SortableHeader({
 });
 
 const PropertyHeader = memo(function PropertyHeader({
-  column,
   fieldDef,
   label,
+  sortDirection,
+  onToggleSort,
   onDeleteProperty,
   onUpdateEnumPropertyOptions,
 }: {
-  column: Column<DocumentItem, unknown>;
   fieldDef: PropertyDefinition;
   label: string;
+  sortDirection: "asc" | "desc" | false;
+  onToggleSort: () => void;
   onDeleteProperty: (propertyName: string) => void;
   onUpdateEnumPropertyOptions: (propertyName: string, options: EnumOptionDraft[]) => Promise<void>;
 }) {
@@ -1075,7 +1140,12 @@ const PropertyHeader = memo(function PropertyHeader({
   return (
     <div className="flex items-center justify-between gap-1">
       <div className="min-w-0 flex-1">
-        <SortableHeader column={column} label={label} />
+        <SortableHeader
+          label={label}
+          sortable
+          sortDirection={sortDirection}
+          onToggle={onToggleSort}
+        />
       </div>
       <div className="flex items-center gap-1">
         {isEnumField ? (
@@ -1469,15 +1539,15 @@ const AddPropertyHeader = memo(function AddPropertyHeader({
                     </option>
                   ))}
               </select>
-              <label className="mt-2 inline-flex items-center gap-2 text-xs text-gray-600">
-                <input
-                  type="checkbox"
-                  checked={newPropertyRelationMany}
-                  onChange={(event) => setNewPropertyRelationMany(event.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Allow multiple related records
-              </label>
+              <div className="mt-2">
+                <Checkbox
+                  isSelected={newPropertyRelationMany}
+                  onChange={(isSelected) => setNewPropertyRelationMany(Boolean(isSelected))}
+                  className="text-xs text-gray-600"
+                >
+                  Allow multiple related records
+                </Checkbox>
+              </div>
             </div>
           )}
 
@@ -1542,7 +1612,7 @@ function OptionPickerLabel({ option }: { option: PropertyOption }) {
   );
 }
 
-function EditableGridCell({ context }: { context: CellContext<DocumentItem, unknown> }) {
+function EditableGridCell({ context }: { context: TableCellContext }) {
   const { row, column, table } = context;
   const meta = table.options.meta;
   const editingCell = meta?.editingCell ?? null;
@@ -1588,27 +1658,6 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
       }
     });
   }, [editingCell?.seed, fieldDef, isEditing]);
-
-  const commit = () => {
-    if (kind === "title") {
-      if (value !== row.original.title) {
-        meta?.updateData(row.index, column.id, value);
-      }
-      stopEditing();
-      return;
-    }
-
-    if (!fieldDef) {
-      stopEditing();
-      return;
-    }
-
-    const nextValue = toFieldValue(fieldDef, value);
-    if (nextValue !== currentValue) {
-      meta?.updateData(row.index, column.id, nextValue);
-    }
-    stopEditing();
-  };
 
   if (isEditing) {
     if (fieldDef?.type === "relation") {
@@ -1676,7 +1725,11 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
             meta?.updateData(row.index, column.id, valueAsString);
             stopEditing();
           }}
-          onBlur={stopEditing}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              stopEditing();
+            }
+          }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.preventDefault();
@@ -1698,41 +1751,17 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
 
     if ((fieldDef?.type === "select" || fieldDef?.type === "status") && fieldDef.options) {
       return (
-        <ComboBox
-          autoFocus
-          menuTrigger="focus"
+        <SelectCellEditor
           aria-label={`${fieldDef.name} value`}
+          options={fieldDef.options}
           selectedKey={typeof currentValue === "string" ? currentValue : null}
-          placeholder="Select an option"
-          className="w-full [&_.react-aria-Group]:h-9 [&_.react-aria-Input]:text-sm"
-          onSelectionChange={(nextValue) => {
-            const valueAsString = typeof nextValue === "string" ? nextValue : null;
-            if (valueAsString === "__empty__") {
-              meta?.updateData(row.index, column.id, null);
-              stopEditing();
-              return;
-            }
-
-            meta?.updateData(row.index, column.id, valueAsString);
+          onCommit={(value) => {
+            meta?.updateData(row.index, column.id, value);
             stopEditing();
           }}
-          onBlur={stopEditing}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.preventDefault();
-              stopEditing();
-            }
-          }}
-        >
-          <ComboBoxItem key="__empty__" id="__empty__" textValue="-">
-            -
-          </ComboBoxItem>
-          {fieldDef.options.map((option) => (
-            <ComboBoxItem key={option.id} id={option.id} textValue={option.label}>
-              <OptionPickerLabel option={option} />
-            </ComboBoxItem>
-          ))}
-        </ComboBox>
+          onCancel={stopEditing}
+          renderOption={(option) => <OptionPickerLabel option={option} />}
+        />
       );
     }
 
@@ -1744,58 +1773,22 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
           : [];
 
       return (
-        <ComboBox
-          autoFocus
-          menuTrigger="focus"
+        <MultiSelectCellEditor
           aria-label={`${fieldDef.name} values`}
-          selectedKey={null}
-          placeholder={
-            selectedValues.length > 0 ? `${selectedValues.length} selected` : "Select options"
-          }
-          className="w-full [&_.react-aria-Group]:h-9 [&_.react-aria-Input]:text-sm"
-          onSelectionChange={(nextValue) => {
-            const valueAsString = typeof nextValue === "string" ? nextValue : null;
-
-            if (valueAsString === "__clear__") {
-              meta?.updateData(row.index, column.id, null);
-              stopEditing();
-              return;
-            }
-
-            if (!valueAsString) {
-              return;
-            }
-
-            const normalized = selectedValues.includes(valueAsString)
-              ? selectedValues.filter((entry) => entry !== valueAsString)
-              : [...selectedValues, valueAsString];
-
-            meta?.updateData(row.index, column.id, normalized.length > 0 ? normalized : null);
+          options={fieldDef.options}
+          selectedValues={selectedValues}
+          onCommit={(value) => {
+            meta?.updateData(row.index, column.id, value);
             stopEditing();
           }}
-          onBlur={stopEditing}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              event.preventDefault();
-              stopEditing();
-            }
-          }}
-        >
-          <ComboBoxItem id="__clear__" textValue="Clear selections">
-            <span className="text-gray-500">Clear selections</span>
-          </ComboBoxItem>
-          {fieldDef.options.map((option) => (
-            <ComboBoxItem key={option.id} id={option.id} textValue={option.label}>
-              <OptionPickerLabel option={option} />
-            </ComboBoxItem>
-          ))}
-        </ComboBox>
+          onCancel={stopEditing}
+          renderOption={(option) => <OptionPickerLabel option={option} />}
+        />
       );
     }
 
     return (
-      <Input
-        autoFocus
+      <TextCellEditor
         type={
           fieldDef?.type === "date"
             ? "datetime-local"
@@ -1803,20 +1796,27 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
               ? "number"
               : "text"
         }
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit();
-          }
-          if (event.key === "Escape") {
-            event.preventDefault();
+        initialValue={value}
+        onCommit={(nextValue) => {
+          setValue(nextValue);
+          if (kind === "title") {
+            if (nextValue !== row.original.title) {
+              meta?.updateData(row.index, column.id, nextValue);
+            }
             stopEditing();
+            return;
           }
+          if (!fieldDef) {
+            stopEditing();
+            return;
+          }
+          const nextFieldValue = toFieldValue(fieldDef, nextValue);
+          if (nextFieldValue !== currentValue) {
+            meta?.updateData(row.index, column.id, nextFieldValue);
+          }
+          stopEditing();
         }}
-        className={`h-9 w-full rounded-none border-0 bg-transparent px-3 py-1 text-sm ${focusVisibleStyles}`}
+        onCancel={stopEditing}
       />
     );
   }
@@ -1903,32 +1903,6 @@ function EditableGridCell({ context }: { context: CellContext<DocumentItem, unkn
   );
 }
 
-function getEditableValue(
-  fieldDef: PropertyDefinition | undefined,
-  value: string | number | boolean | string[] | null | undefined,
-): string {
-  if (fieldDef?.type === "boolean") {
-    return value === true ? "true" : value === false ? "false" : "";
-  }
-  if (Array.isArray(value)) {
-    return value.join(", ");
-  }
-  return value === null || value === undefined ? "" : String(value);
-}
-
-function isFreeformField(fieldDef: PropertyDefinition | undefined): boolean {
-  if (!fieldDef) {
-    return true;
-  }
-
-  return (
-    fieldDef.type === "text" ||
-    fieldDef.type === "number" ||
-    fieldDef.type === "date" ||
-    fieldDef.type === "boolean"
-  );
-}
-
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -1939,43 +1913,4 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 
 function isPrintableKey(event: React.KeyboardEvent): boolean {
   return event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey;
-}
-
-function sortNullableValues(
-  rowA: { getValue: (columnId: string) => unknown },
-  rowB: { getValue: (columnId: string) => unknown },
-  columnId: string,
-): number {
-  const first = rowA.getValue(columnId) as string | number | boolean | string[] | null | undefined;
-  const second = rowB.getValue(columnId) as string | number | boolean | string[] | null | undefined;
-
-  if (first == null && second == null) {
-    return 0;
-  }
-  if (first == null) {
-    return 1;
-  }
-  if (second == null) {
-    return -1;
-  }
-
-  if (typeof first === "number" && typeof second === "number") {
-    return first - second;
-  }
-
-  if (typeof first === "boolean" && typeof second === "boolean") {
-    return Number(first) - Number(second);
-  }
-
-  if (Array.isArray(first) && Array.isArray(second)) {
-    return first.join(",").localeCompare(second.join(","), undefined, {
-      numeric: true,
-      sensitivity: "base",
-    });
-  }
-
-  return String(first).localeCompare(String(second), undefined, {
-    numeric: true,
-    sensitivity: "base",
-  });
 }

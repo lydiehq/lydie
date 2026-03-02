@@ -1,11 +1,7 @@
-import { motion } from "motion/react";
-
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
-import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
-
-import styles from "./Hero.module.css";
+import { ComposableDemoNew } from "./ComposableDemoNew";
 
 type Props = {
   imageSrc: string;
@@ -27,12 +23,12 @@ export function HeroNew({
   return (
     // <div className="mask-b-from-75% mask-b-to-95%">
     <div>
-      <Container className="flex relative flex-col md:flex-row md:h-[840px] py-8 md:py-0">
-        <div className="flex justify-center text-center items-center md:items-start md:text-left size-full flex-col md:max-w-[350px] gap-y-4 md:-mt-20 ">
-          <div className="relative self-start md:block hidden">
+      <Container className="flex relative flex-col">
+        <div className="flex justify-center text-center items-center md:items-start md:text-left size-full flex-col gap-y-4 py-20">
+          {/* <div className="md:block hidden absolute right-0 bottom-0">
             <GradientOutline />
             <svg
-              className="text-black/8 size-16"
+              className="text-black/8 size-32"
               viewBox="0 0 66 66"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -47,23 +43,36 @@ export function HeroNew({
                 transition={{ duration: 4, ease: "easeOut" }}
               />
             </svg>
+          </div> */}
+          <div className="flex flex-col gap-y-4 py-12">
+            {/* <div className="relative flex items-center gap-x-1.5">
+              <div className="size-8 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-linear-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-amber-300"></div>
+              <div className="size-8 rounded-full border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-linear-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-blue-300"></div>
+            </div> */}
+
+            <h1 className="text-5xl font-medium tracking-tight text-black/85">
+              <span className="inline-block">Centralize</span>{" "}
+              <span className="inline-block">your</span>{" "}
+              <span className="inline-block">writing</span>
+            </h1>
+            <p className="text-lg/relaxed text-black/70 text-balance">
+              <span className="inline-block">
+                Lydie is a cloud-based writing workspace that adapts to your needs.
+              </span>
+              <br />
+              <span className="inline-block">
+                An open-source alternative to Google Docs, Notion and others.
+              </span>
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-medium tracking-tight text-black/85">
-            <span className={styles.heroWord1}>Centralize</span>{" "}
-            <span className={styles.heroWord2}>your</span>{" "}
-            <span className={styles.heroWord3}>writing</span>
-          </h1>
-          <p className="text-base/relaxed text-black/60 max-w-md text-balance drop-shadow-text">
-            <span className={styles.heroSentence1}>
-              Lydie is a cloud-based writing workspace that adapts to your needs.
-            </span>
-            <br />
-            <span className={styles.heroSentence2}>
-              An open-source alternative to Google Docs, Notion and others.
-            </span>
-          </p>
-          <div className="flex md:justify-start justify-center items-center gap-x-1.5 mt-4 relative w-full">
-            {/* <GradientOutline /> */}
+
+          <div className="flex md:justify-start justify-center items-center gap-x-1.5 relative w-full">
+            <div className="absolute -left-6 inset-y-0">
+              <div className="rounded-full size-3 absolute -top-6 ring ring-outline-subtle"></div>
+              <div className="rounded-full size-3 absolute -bottom-6 ring ring-outline-subtle"></div>
+            </div>
+            <GradientOutline />
+
             <Button
               href="https://app.lydie.co/auth"
               size="lg"
@@ -72,6 +81,7 @@ export function HeroNew({
             >
               <span>Start writing for free</span>
             </Button>
+
             <Button
               href="https://github.com/lydiehq/lydie"
               size="lg"
@@ -85,34 +95,26 @@ export function HeroNew({
             </Button>
           </div>
         </div>
-        <div className="md:absolute top-12 left-[400px] mt-12 md:mt-0">
-          <div className="rounded-2xl top-12 ring ring-outline-subtle flex flex-col w-full p-0 left-1/2 md:p-2">
-            <GradientOutline />
-            <div className="md:flex items-center gap-x-1.5 mb-1.5 hidden">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="rounded-full size-3 ring ring-black/6 shrink-0" />
-              ))}
-            </div>
-            <div className="flex gap-x-2">
-              <CastShadow className="w-full rounded-b-xl rounded-t-lg">
-                <div className="flex flex-1 w-[160%] md:h-[720px] aspect-874/606 rounded-b-xl rounded-t-lg overflow-hidden bg-white shadow-xl ring ring-black/8 relative max-w-5xl ">
-                  <img
-                    src={imageSrc}
-                    srcSet={imageSrcSet}
-                    sizes={imageSizes}
-                    alt={imageAlt}
-                    width={imageWidth}
-                    height={imageHeight}
-                    loading="eager"
-                    decoding="async"
-                    className="w-full h-auto"
-                  />
-                </div>
-              </CastShadow>
-            </div>
-          </div>
-        </div>
       </Container>
+      <div className="relative my-20">
+        <div
+          className="rounded-2xl p-8 border border-black/8 absolute inset-x-4 -inset-y-20"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(15, 23, 42, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 23, 42, 0.02) 1px, transparent 1px), linear-gradient(to top left, #eff6ff, #faf5ff, #fff1f2)",
+            backgroundSize: "22px 22px, 22px 22px, 100% 100%",
+          }}
+        >
+          <GradientOutline />
+        </div>
+
+        <Container>
+          <ComposableDemoNew
+            activeState="collaboration"
+            states={["collaboration", "linking", "assistant"]}
+          />
+        </Container>
+      </div>
     </div>
   );
 }

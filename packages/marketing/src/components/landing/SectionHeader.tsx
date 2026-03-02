@@ -44,7 +44,7 @@ export function SectionHeader({
   return (
     <div
       className={clsx(
-        "flex flex-col gap-y-2 max-w-lg",
+        "flex flex-col gap-y-7 max-w-lg",
         centered && "items-center text-center",
         className,
       )}
