@@ -62,27 +62,6 @@ export const apiKeyAuth: MiddlewareHandler<ApiAuthEnv> = async (c, next) => {
     });
   }
 
-  const idOrSlug = c.req.param("idOrSlug");
-
-  const organization = await db.query.organizationsTable.findFirst({
-    where: {
-      OR: [{ id: idOrSlug }, { slug: idOrSlug }],
-    },
-  });
-
-  if (!organization) {
-    throw new HTTPException(404, {
-      message: "Organization not found",
-    });
-  }
-
-  // Validate that the API key belongs to the organization specified in the URL
-  if (apiKey.organizationId !== organization.id) {
-    throw new HTTPException(403, {
-      message: "API key does not have access to this organization",
-    });
-  }
-
   await db
     .update(apiKeysTable)
     .set({ lastUsedAt: new Date() })

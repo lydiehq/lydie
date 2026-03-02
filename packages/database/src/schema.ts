@@ -237,6 +237,7 @@ export const collectionsTable = pgTable(
             | "relation";
           required: boolean;
           unique: boolean;
+          indexed?: boolean;
           options?: Array<{
             id: string;
             label: string;

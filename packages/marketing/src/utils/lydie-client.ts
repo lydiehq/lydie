@@ -1,8 +1,7 @@
 import type { DocumentListItem } from "@lydie/core/content";
 
 const apiKey = process.env.LYDIE_API_KEY || import.meta.env.LYDIE_API_KEY;
-const organizationId = "lydie";
-const apiUrl = "https://api.lydie.co/v1";
+const apiUrl = "https://api.lydie.co/api/v1";
 
 export const collections = {
   blog: "blog",
@@ -25,9 +24,38 @@ export type CollectionApiDocument = Record<string, unknown> & {
   id: string;
   title: string;
   fields?: Record<string, CollectionFieldValue>;
-  related?: Array<Record<string, unknown>>;
+  related?: Array<Record<string, unknown>> | string[];
   toc?: Array<{ id: string; level: number; text: string }>;
 };
+
+function withAuth() {
+  return {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  };
+}
+
+function parseListEnvelope(payload: unknown): { documents: CollectionApiDocument[] } {
+  if (!payload || typeof payload !== "object") return { documents: [] };
+  const data = (payload as { data?: unknown }).data;
+  return {
+    documents: Array.isArray(data) ? (data as CollectionApiDocument[]) : [],
+  };
+}
+
+function parseSingleEnvelope(payload: unknown): CollectionApiDocument {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Invalid API response");
+  }
+
+  const data = (payload as { data?: unknown }).data;
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid API response");
+  }
+
+  return data as CollectionApiDocument;
+}
 
 // Build path map from documents with parent relations
 export function buildPathMap(documents: CollectionApiDocument[]): Map<string, string> {
@@ -39,9 +67,7 @@ export function buildPathMap(documents: CollectionApiDocument[]): Map<string, st
     const cached = pathMap.get(documentId);
     if (cached) return cached;
 
-    if (visiting.has(documentId)) {
-      return "/";
-    }
+    if (visiting.has(documentId)) return "/";
 
     const doc = byId.get(documentId);
     if (!doc) return "/";
@@ -51,14 +77,13 @@ export function buildPathMap(documents: CollectionApiDocument[]): Map<string, st
     const parentId = doc.fields?.parent as string | undefined;
     const rawSlug = typeof doc.fields?.slug === "string" ? doc.fields.slug.trim() : "";
     const slugSegment = rawSlug.replace(/^\/+|\/+$/g, "");
-    const segment = slugSegment;
 
     let path: string;
     if (!parentId) {
       path = slugSegment ? `/${slugSegment}` : "/";
     } else {
       const parentPath = getPath(parentId);
-      path = parentPath === "/" ? `/${segment}` : `${parentPath}/${segment}`;
+      path = parentPath === "/" ? `/${slugSegment}` : `${parentPath}/${slugSegment}`;
     }
 
     visiting.delete(documentId);
@@ -66,30 +91,20 @@ export function buildPathMap(documents: CollectionApiDocument[]): Map<string, st
     return path;
   }
 
-  for (const doc of documents) {
-    getPath(doc.id);
-  }
+  for (const doc of documents) getPath(doc.id);
 
   return pathMap;
 }
 
 export function getCollectionDocumentPath(collectionHandle: string, path: string): string {
-  if (collectionHandle === collections.blog) {
-    return path === "/" ? "/blog" : `/blog${path}`;
-  }
-
+  if (collectionHandle === collections.blog) return path === "/" ? "/blog" : `/blog${path}`;
   if (collectionHandle === collections.knowledgeBases) {
     return path === "/" ? "/knowledge-bases" : `/knowledge-bases${path}`;
   }
-
   if (collectionHandle === collections.noteTaking) {
     return path === "/" ? "/note-taking" : `/note-taking${path}`;
   }
-
-  if (collectionHandle === collections.documentation) {
-    return path === "/" ? "/docs" : `/docs${path}`;
-  }
-
+  if (collectionHandle === collections.documentation) return path === "/" ? "/docs" : `/docs${path}`;
   return path;
 }
 
@@ -104,25 +119,12 @@ export async function getCollectionDocuments(
 ): Promise<{ documents: CollectionApiDocument[] }> {
   const params = new URLSearchParams();
 
-  if (options?.includeRelated) {
-    params.set("include_related", "true");
-  }
+  const includes: string[] = [];
+  if (options?.includeRelated) includes.push("related");
+  if (includes.length > 0) params.set("include", includes.join(","));
 
-  if (options?.relatedScope) {
-    params.set("related_scope", options.relatedScope);
-  }
-
-  if (options?.relatedCollectionHandle) {
-    params.set("related_collection_handle", options.relatedCollectionHandle);
-  }
-
-  if (typeof options?.relatedLimit === "number") {
-    params.set("related_limit", String(options.relatedLimit));
-  }
-
-  if (options?.includeToc) {
-    params.set("include_toc", "true");
-  }
+  if (typeof options?.relatedLimit === "number") params.set("related_limit", String(options.relatedLimit));
+  if (options?.includeToc) params.set("include_toc", "true");
 
   if (options?.filters) {
     for (const [key, value] of Object.entries(options.filters)) {
@@ -131,31 +133,22 @@ export async function getCollectionDocuments(
   }
 
   if (options?.sortBy) {
-    params.set("sort_by", options.sortBy);
-  }
-
-  if (options?.sortOrder) {
-    params.set("sort_order", options.sortOrder);
+    const sortOrder = options.sortOrder === "asc" ? "" : "-";
+    params.set("sort", `${sortOrder}${options.sortBy}`);
   }
 
   const response = await fetch(
-    `${apiUrl}/${organizationId}/${collectionHandle}/documents${
+    `${apiUrl}/collections/${encodeURIComponent(collectionHandle)}/documents${
       params.toString() ? `?${params.toString()}` : ""
     }`,
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    },
+    withAuth(),
   );
 
   if (!response.ok) {
     return { documents: [] };
   }
 
-  return (await response.json()) as {
-    documents: CollectionApiDocument[];
-  };
+  return parseListEnvelope(await response.json());
 }
 
 export async function getCollectionDocument(
@@ -163,46 +156,31 @@ export async function getCollectionDocument(
   documentIdOrPropertyValue: string,
   options?: CollectionRelatedOptions & {
     includeToc?: boolean;
+    by?: string;
   },
 ): Promise<CollectionApiDocument> {
   const params = new URLSearchParams();
 
-  if (options?.includeRelated) {
-    params.set("include_related", "true");
-  }
+  const includes: string[] = [];
+  if (options?.includeRelated) includes.push("related");
+  if (includes.length > 0) params.set("include", includes.join(","));
 
-  if (options?.relatedScope) {
-    params.set("related_scope", options.relatedScope);
-  }
-
-  if (options?.relatedCollectionHandle) {
-    params.set("related_collection_handle", options.relatedCollectionHandle);
-  }
-
-  if (typeof options?.relatedLimit === "number") {
-    params.set("related_limit", String(options.relatedLimit));
-  }
-
-  if (options?.includeToc) {
-    params.set("include_toc", "true");
-  }
+  if (typeof options?.relatedLimit === "number") params.set("related_limit", String(options.relatedLimit));
+  if (options?.includeToc) params.set("include_toc", "true");
+  if (options?.by) params.set("by", options.by);
 
   const response = await fetch(
-    `${apiUrl}/${organizationId}/${collectionHandle}/documents/${encodeURIComponent(
+    `${apiUrl}/collections/${encodeURIComponent(collectionHandle)}/documents/${encodeURIComponent(
       documentIdOrPropertyValue,
     )}${params.toString() ? `?${params.toString()}` : ""}`,
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    },
+    withAuth(),
   );
 
   if (!response.ok) {
     throw new Error(`Failed to fetch collection document: ${response.statusText}`);
   }
 
-  return (await response.json()) as CollectionApiDocument;
+  return parseSingleEnvelope(await response.json());
 }
 
 export const getCollectionDocumentByIdentifier = getCollectionDocument;
@@ -216,16 +194,7 @@ export async function getDocumentsBySlugs(
     params.set("slugs", slugs.join(","));
   }
 
-  console.log("Using API Key:", apiKey);
-
-  const response = await fetch(
-    `${apiUrl}/${organizationId}/documents/by-slugs?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    },
-  );
+  const response = await fetch(`https://api.lydie.co/v1/documents/by-slugs?${params.toString()}`, withAuth());
 
   if (!response.ok) {
     throw new Error(`Failed to fetch documents by slugs: ${response.statusText}`);
@@ -234,11 +203,32 @@ export async function getDocumentsBySlugs(
   return (await response.json()) as { documents: DocumentListItem[] };
 }
 
+
+export async function getCollectionRelatedDocuments(
+  collectionHandle: string,
+  documentId: string,
+  limit = 5,
+): Promise<CollectionApiDocument[]> {
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+
+  const response = await fetch(
+    `${apiUrl}/collections/${encodeURIComponent(collectionHandle)}/documents/${encodeURIComponent(documentId)}/related?${params.toString()}`,
+    withAuth(),
+  );
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const payload = (await response.json()) as { data?: unknown };
+  return Array.isArray(payload.data) ? (payload.data as CollectionApiDocument[]) : [];
+}
+
 export const lydieClient = {
   getDocumentsBySlugs,
 };
 
-// Fetch a document by its path within a collection
 export async function getCollectionDocumentByPath(
   collectionHandle: string,
   targetPath: string,
@@ -246,7 +236,6 @@ export async function getCollectionDocumentByPath(
     includeToc?: boolean;
   },
 ): Promise<CollectionApiDocument | null> {
-  // Fetch all documents to build the path map
   const { documents } = await getCollectionDocuments(collectionHandle, {
     includeRelated: options?.includeRelated,
     relatedScope: options?.relatedScope,
@@ -256,8 +245,6 @@ export async function getCollectionDocumentByPath(
   });
 
   const pathMap = buildPathMap(documents);
-
-  // Find document with matching path
   const normalizedTarget = targetPath === "/" ? "/" : targetPath.replace(/\/$/, "");
 
   for (const doc of documents) {
@@ -265,7 +252,6 @@ export async function getCollectionDocumentByPath(
     const normalizedDocPath = docPath === "/" ? "/" : docPath.replace(/\/$/, "");
 
     if (normalizedDocPath === normalizedTarget) {
-      // Attach the computed path to the document
       return { ...doc, path: docPath };
     }
   }
@@ -273,7 +259,6 @@ export async function getCollectionDocumentByPath(
   return null;
 }
 
-// Get all documents with their computed paths
 export async function getCollectionDocumentsWithPaths(
   collectionHandle: string,
   options?: CollectionRelatedOptions & {
@@ -285,7 +270,6 @@ export async function getCollectionDocumentsWithPaths(
   const { documents } = await getCollectionDocuments(collectionHandle, options);
   const pathMap = buildPathMap(documents);
 
-  // Attach paths to documents
   const documentsWithPaths = documents.map((doc) => ({
     ...doc,
     path: pathMap.get(doc.id) || "/",

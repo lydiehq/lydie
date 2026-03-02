@@ -14,6 +14,7 @@ export type PropertyDefinition = {
   type: "text" | "number" | "date" | "select" | "multi-select" | "status" | "boolean" | "relation";
   required: boolean;
   unique: boolean;
+  indexed?: boolean;
   options?: PropertyOption[];
   relation?: {
     targetCollectionId: string;

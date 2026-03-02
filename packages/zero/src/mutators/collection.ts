@@ -40,6 +40,7 @@ const propertyDefinitionSchema = z.object({
   ]),
   required: z.boolean(),
   unique: z.boolean(),
+  indexed: z.boolean().optional(),
   options: z
     .array(
       z.object({

@@ -71,6 +71,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Run backend API Vitest suite
+        run: bunx vitest run packages/backend/src/api/external/collections.test.ts
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:

@@ -85,6 +85,8 @@ interface CollectionPageProps {
 function CollectionPage({ collection, organization, userIsAdmin }: CollectionPageProps) {
   const z = useZero();
   const schema = (collection.properties as PropertyDefinition[] | null) ?? [];
+  const lookupKey = schema.find((property) => property.unique)?.name ?? null;
+  const indexedFields = schema.filter((property) => property.indexed).map((property) => property.name);
   const [name, setName] = useState(collection.name);
   const [isSavingName, setIsSavingName] = useState(false);
   const [hasAttemptedInitialView, setHasAttemptedInitialView] = useState(false);
@@ -277,6 +279,9 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
           <p className="text-sm text-gray-500 mt-1">
             /{collection.handle}
             {isSavingName && <span className="ml-2 text-gray-400">Saving...</span>}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            API lookup: {lookupKey ?? "id"} · Indexed: {indexedFields.length > 0 ? indexedFields.join(", ") : "none"}
           </p>
         </div>
         {userIsAdmin && (

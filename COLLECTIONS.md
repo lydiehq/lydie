@@ -101,3 +101,13 @@ The external collections API supports explicit related-document scoping for modu
 - `related_limit=<n>` controls related result count (default is 5).
 
 Related payloads do not assume first-party slugs. Any route-specific property (for example `slug`) is consumer-defined collection data under `fields`.
+
+
+## External Collections REST API
+
+The canonical REST API for collection documents is documented in `docs/collections-rest-api.md`.
+
+- Base route: `/api/v1/collections/{collectionId}/documents`
+- Single lookup uses `?by=` with configured lookup key or `id`
+- Collection settings for lookup/indexed fields: `PATCH /api/v1/collections/{collectionId}`
+

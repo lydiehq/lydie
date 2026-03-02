@@ -79,10 +79,6 @@ try {
       sortBy: "created_at",
       sortOrder: "asc",
       includeToc: true,
-      includeRelated: true,
-      relatedScope: "collection_handle",
-      relatedCollectionHandle: lydieApi.collections.knowledgeBases,
-      relatedLimit: 2,
     } as unknown as Parameters<
       typeof lydieApi.getCollectionDocumentsWithPaths
     >[1],
@@ -126,8 +122,7 @@ try {
     documentsForToc = [resolvedDocument, ...documentsForToc];
   }
 
-  const relatedFromApi = (resolvedDocument.related ||
-    []) as RelatedCollectionDocument[];
+  const relatedFromApi = (await lydieApi.getCollectionRelatedDocuments(collectionHandle, resolvedDocument.id, 2)) as RelatedCollectionDocument[];
 
   const knowledgeBaseDocuments =
     collectionHandle === lydieApi.collections.knowledgeBases

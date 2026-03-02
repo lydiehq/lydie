@@ -8,6 +8,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Form } from "react-aria-components";
 import { toast } from "sonner";
+import type { PropertyDefinition } from "@lydie/core/collection";
 
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
@@ -69,12 +70,33 @@ interface CollectionSettingsProps {
     id: string;
     name: string;
     handle: string;
+    properties: unknown;
   };
   organization: {
     id: string;
     slug: string;
   };
   userIsAdmin: boolean;
+}
+
+function getLookupSettings(properties: unknown): { lookupKey: string; indexedFields: string[] } {
+  const schema = Array.isArray(properties) ? (properties as PropertyDefinition[]) : [];
+  const lookupKey = schema.find((property) => property.unique)?.name ?? "";
+  const indexedFields = schema.filter((property) => property.indexed).map((property) => property.name);
+  return { lookupKey, indexedFields };
+}
+
+function applyLookupSettings(
+  properties: unknown,
+  lookupKey: string,
+  indexedFields: string[],
+): PropertyDefinition[] {
+  const schema = Array.isArray(properties) ? (properties as PropertyDefinition[]) : [];
+  return schema.map((property) => ({
+    ...property,
+    unique: lookupKey.length > 0 ? property.name === lookupKey : false,
+    indexed: indexedFields.includes(property.name),
+  }));
 }
 
 function CollectionSettings({ collection, organization, userIsAdmin }: CollectionSettingsProps) {
@@ -86,6 +108,7 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
     }) as any,
   );
   const usageCount = (usages ?? []).length;
+  const lookupSettings = getLookupSettings(collection.properties);
 
   const handleForm = useAppForm({
     defaultValues: {
@@ -110,6 +133,36 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
       } catch (error) {
         console.error(error);
         toast.error("Failed to update collection handle");
+      }
+    },
+  });
+
+  const lookupForm = useAppForm({
+    defaultValues: {
+      lookupKey: lookupSettings.lookupKey,
+      indexedFields: lookupSettings.indexedFields.join(", "),
+    },
+    onSubmit: async ({ value }) => {
+      const lookupKey = value.lookupKey.trim();
+      const indexedFields = value.indexedFields
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+        .slice(0, 3);
+
+      try {
+        await z.mutate(
+          mutators.collection.update({
+            collectionId: collection.id,
+            organizationId: organization.id,
+            properties: applyLookupSettings(collection.properties, lookupKey, indexedFields),
+          }),
+        );
+        toast.success("Collection API lookup settings updated");
+        lookupForm.reset();
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to update collection API lookup settings");
       }
     },
   });
@@ -201,6 +254,44 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
                 isDisabled={!canSubmit || handleValue.trim() === collection.handle}
               >
                 {isSubmitting ? "Saving..." : "Save"}
+              </Button>
+            )}
+          />
+        </Form>
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col gap-y-4">
+        <SectionHeader
+          heading="API Lookup"
+          description="Choose one lookup property and up to 3 indexed fields for external API filters."
+        />
+        <Form
+          className="flex flex-col gap-3 max-w-2xl"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void lookupForm.handleSubmit();
+          }}
+        >
+          <lookupForm.AppField
+            name="lookupKey"
+            children={(field) => <field.TextField label="Lookup key property (optional)" />}
+          />
+          <lookupForm.AppField
+            name="indexedFields"
+            children={(field) => (
+              <field.TextField label="Indexed fields (comma-separated, max 3)" />
+            )}
+          />
+          <lookupForm.Subscribe
+            selector={(state) => ({
+              canSubmit: state.canSubmit,
+              isSubmitting: state.isSubmitting,
+            })}
+            children={({ canSubmit, isSubmitting }) => (
+              <Button size="sm" type="submit" isDisabled={!canSubmit}>
+                {isSubmitting ? "Saving..." : "Save API settings"}
               </Button>
             )}
           />

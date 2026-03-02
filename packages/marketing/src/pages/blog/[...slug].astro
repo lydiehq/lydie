@@ -24,14 +24,7 @@ const { slug } = Astro.params;
 const BLOG_COLLECTION_HANDLE = lydieApi.collections.blog;
 
 type BlogDocument = lydieApi.CollectionApiDocument;
-type RelatedDocument = {
-  id: string;
-  title: string;
-  createdAt?: string;
-  coverImage?: string | null;
-  slug?: string;
-  fields?: Record<string, unknown>;
-};
+type RelatedDocument = lydieApi.CollectionApiDocument;
 
 function getMarketingSlug(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -47,13 +40,11 @@ if (!slug) {
 }
 
 let document: BlogDocument;
+let relatedDocuments: RelatedDocument[] = [];
 try {
   const { documents } = await lydieApi.getCollectionDocuments(
     BLOG_COLLECTION_HANDLE,
     {
-      includeRelated: true,
-      relatedScope: "same_collection",
-      relatedLimit: 4,
       filters: {
         slug,
       },
@@ -61,6 +52,10 @@ try {
   );
 
   document = documents[0] as BlogDocument;
+
+  if (document?.id) {
+    relatedDocuments = await lydieApi.getCollectionRelatedDocuments(BLOG_COLLECTION_HANDLE, document.id, 4);
+  }
 } catch (error) {
   return new Response(null, {
     status: 404,
@@ -164,7 +159,7 @@ const structuredData = {
             <span class="text-gray-500 text-sm"> Related posts </span>
             <div class="grid md:grid-cols-2 grid-cols-1 gap-3">
               {
-                (document.related as RelatedDocument[] | undefined)?.map(
+                relatedDocuments.map(
                   (post) => {
                     const relatedSlug = getMarketingSlug(
                       post.fields?.slug ?? post.slug,

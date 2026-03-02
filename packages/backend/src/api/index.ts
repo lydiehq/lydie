@@ -52,7 +52,7 @@ export const app = new Hono()
     return c.text("ok");
   })
   .route("/internal", InternalApi)
-  .route("/v1/:idOrSlug", ExternalApi)
+  .route("/api/v1", ExternalApi)
   .route("/public", PublicApi);
 
 export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
