@@ -1,6 +1,3 @@
-// Node.js-specific hash utilities.
-// Uses Node.js crypto module - not compatible with browser environments.
-
 import { createHash } from "node:crypto";
 
 // Generate a hash for content to detect changes.

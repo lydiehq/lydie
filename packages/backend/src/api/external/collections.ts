@@ -3,8 +3,10 @@ import { createId } from "@lydie/core/id";
 import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { collectionFieldsTable, collectionsTable, db, documentsTable } from "@lydie/database";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { describeRoute, resolver, validator } from "hono-openapi";
 import { Hono, type MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
+import * as v from "valibot";
 
 import { extractTableOfContents } from "../../utils/toc";
 import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transformer";
@@ -42,6 +44,32 @@ type FilterOp = "$eq" | "$in" | "$gt" | "$lt" | "$like" | "$null";
 type Filter = { field: string; op: FilterOp; rawValue: string };
 
 const SAFE_FIELD_RE = /^[a-z_][a-z0-9_]*$/;
+const collectionParamsSchema = v.object({
+  collectionId: v.string(),
+});
+const documentLookupParamsSchema = v.object({
+  collectionId: v.string(),
+  value: v.string(),
+});
+const documentIdParamsSchema = v.object({
+  collectionId: v.string(),
+  docId: v.string(),
+});
+const documentBodySchema = v.object({
+  title: v.optional(v.string()),
+  parentId: v.optional(v.nullable(v.string())),
+  fields: v.optional(v.record(v.string(), v.any())),
+  published: v.optional(v.boolean()),
+});
+const collectionSettingsBodySchema = v.object({
+  lookupKey: v.optional(v.nullable(v.string())),
+  indexedFields: v.optional(v.array(v.string())),
+});
+const defaultEnvelopeSchema = v.object({
+  data: v.optional(v.any()),
+  meta: v.optional(v.any()),
+  error: v.optional(v.any()),
+});
 
 function parseLimit(value: string | undefined, defaultValue: number, maxValue: number): number {
   const parsed = value ? Number(value) : defaultValue;
@@ -423,9 +451,22 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
   return new Hono()
   .use(authMiddleware)
   .use(rateLimitMiddleware)
-  .get("/collections/:collectionId/documents", async (c) => {
+  .get(
+    "/collections/:collectionId/documents",
+    describeRoute({
+      summary: "List collection documents",
+      description: "Returns collection root documents with filtering, sorting, and cursor pagination.",
+      responses: {
+        200: {
+          description: "Documents listed",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", collectionParamsSchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
+    const { collectionId: collectionIdentifier } = c.req.valid("param");
 
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
     if (!collection) {
@@ -513,11 +554,24 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
         ],
       },
     });
-  })
-  .get("/collections/:collectionId/documents/:value", async (c) => {
+  },
+  )
+  .get(
+    "/collections/:collectionId/documents/:value",
+    describeRoute({
+      summary: "Get a single collection document",
+      description: "Finds a document by id or by configured lookup key via ?by=field.",
+      responses: {
+        200: {
+          description: "Document found",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", documentLookupParamsSchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
-    const value = c.req.param("value");
+    const { collectionId: collectionIdentifier, value } = c.req.valid("param");
     const by = c.req.query("by") ?? "id";
 
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
@@ -557,11 +611,24 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     }
 
     return c.json({ data: next });
-  })
-  .get("/collections/:collectionId/documents/:docId/children", async (c) => {
+  },
+  )
+  .get(
+    "/collections/:collectionId/documents/:docId/children",
+    describeRoute({
+      summary: "Get document children",
+      description: "Returns child documents with optional recursive depth.",
+      responses: {
+        200: {
+          description: "Children listed",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", documentIdParamsSchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
-    const docId = c.req.param("docId");
+    const { collectionId: collectionIdentifier, docId } = c.req.valid("param");
     const depth = parseDepth(c.req.query("depth"));
 
     if (depth > 5) {
@@ -581,11 +648,24 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
         nextCursor: null,
       },
     });
-  })
-  .get("/collections/:collectionId/documents/:docId/related", async (c) => {
+  },
+  )
+  .get(
+    "/collections/:collectionId/documents/:docId/related",
+    describeRoute({
+      summary: "Get related documents",
+      description: "Returns related documents for a given collection document.",
+      responses: {
+        200: {
+          description: "Related listed",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", documentIdParamsSchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
-    const docId = c.req.param("docId");
+    const { collectionId: collectionIdentifier, docId } = c.req.valid("param");
     const limit = parseLimit(c.req.query("limit"), 5, 20);
 
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
@@ -634,21 +714,31 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     );
 
     return c.json({ data: mapped });
-  })
-  .post("/collections/:collectionId/documents", async (c) => {
+  },
+  )
+  .post(
+    "/collections/:collectionId/documents",
+    describeRoute({
+      summary: "Create collection document",
+      description: "Creates a new collection document.",
+      responses: {
+        201: {
+          description: "Document created",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", collectionParamsSchema),
+    validator("json", documentBodySchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
+    const { collectionId: collectionIdentifier } = c.req.valid("param");
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
     if (!collection) {
       return c.json(documentError("COLLECTION_NOT_FOUND", "Collection does not exist or is not accessible"), 404);
     }
 
-    const body = await c.req.json<{
-      title?: string;
-      parentId?: string | null;
-      fields?: Record<string, FieldValue>;
-      published?: boolean;
-    }>();
+    const body = c.req.valid("json");
 
     const now = new Date();
     const id = createId();
@@ -684,11 +774,25 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     }
 
     return c.json({ data: await toApiDocument(created.document, created.values, false) }, 201);
-  })
-  .patch("/collections/:collectionId/documents/:docId", async (c) => {
+  },
+  )
+  .patch(
+    "/collections/:collectionId/documents/:docId",
+    describeRoute({
+      summary: "Update collection document",
+      description: "Updates an existing collection document and field values.",
+      responses: {
+        200: {
+          description: "Document updated",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", documentIdParamsSchema),
+    validator("json", documentBodySchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
-    const docId = c.req.param("docId");
+    const { collectionId: collectionIdentifier, docId } = c.req.valid("param");
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
     if (!collection) {
       return c.json(documentError("COLLECTION_NOT_FOUND", "Collection does not exist or is not accessible"), 404);
@@ -699,12 +803,7 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
       return c.json(documentError("DOCUMENT_NOT_FOUND", "No document matches the given value/field"), 404);
     }
 
-    const body = await c.req.json<{
-      title?: string;
-      parentId?: string | null;
-      fields?: Record<string, FieldValue>;
-      published?: boolean;
-    }>();
+    const body = c.req.valid("json");
 
     const now = new Date();
     await db
@@ -747,11 +846,24 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     }
 
     return c.json({ data: await toApiDocument(updated.document, updated.values, false) });
-  })
-  .delete("/collections/:collectionId/documents/:docId", async (c) => {
+  },
+  )
+  .delete(
+    "/collections/:collectionId/documents/:docId",
+    describeRoute({
+      summary: "Delete collection document",
+      description: "Soft-deletes a collection document.",
+      responses: {
+        200: {
+          description: "Document deleted",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", documentIdParamsSchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
-    const docId = c.req.param("docId");
+    const { collectionId: collectionIdentifier, docId } = c.req.valid("param");
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
     if (!collection) {
       return c.json(documentError("COLLECTION_NOT_FOUND", "Collection does not exist or is not accessible"), 404);
@@ -777,20 +889,32 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
       );
 
     return c.json({ data: { id: docId, deleted: true } });
-  })
-  .patch("/collections/:collectionId", async (c) => {
+  },
+  )
+  .patch(
+    "/collections/:collectionId",
+    describeRoute({
+      summary: "Update collection API settings",
+      description: "Updates lookup key and indexed fields for collection external API behavior.",
+      responses: {
+        200: {
+          description: "Collection settings updated",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", collectionParamsSchema),
+    validator("json", collectionSettingsBodySchema),
+    async (c) => {
     const organizationId = c.get("organizationId");
-    const collectionIdentifier = c.req.param("collectionId");
+    const { collectionId: collectionIdentifier } = c.req.valid("param");
 
     const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
     if (!collection) {
       return c.json(documentError("COLLECTION_NOT_FOUND", "Collection does not exist or is not accessible"), 404);
     }
 
-    const body = await c.req.json<{
-      lookupKey?: string | null;
-      indexedFields?: string[];
-    }>();
+    const body = c.req.valid("json");
 
     const lookupKey = body.lookupKey ?? null;
     const indexedFields = body.indexedFields ?? [];
@@ -868,7 +992,8 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
         updatedAt: new Date().toISOString(),
       },
     });
-  });
+  },
+  );
 }
 
 export const CollectionsApi = createCollectionsApi();
