@@ -291,7 +291,7 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
             })}
             children={({ canSubmit, isSubmitting }) => (
               <Button size="sm" type="submit" isDisabled={!canSubmit}>
-                {isSubmitting ? "Saving..." : "Save API settings"}
+                {isSubmitting ? "Saving..." : "Apply API settings"}
               </Button>
             )}
           />
