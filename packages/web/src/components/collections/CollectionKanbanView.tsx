@@ -1,10 +1,17 @@
+import { ReOrderRegular } from "@fluentui/react-icons";
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { isTextDropItem, ListBox, ListBoxItem, useDragAndDrop } from "react-aria-components";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Button as RACButton,
+  isTextDropItem,
+  ListBox,
+  ListBoxItem,
+  useDragAndDrop,
+} from "react-aria-components";
 import { toast } from "sonner";
 
 import { useZero } from "@/services/zero";
@@ -49,7 +56,7 @@ function extractFieldValues(
     : {};
 }
 
-export function CollectionKanban({
+export function CollectionKanbanView({
   collectionId,
   organizationId,
   organizationSlug,
@@ -91,6 +98,51 @@ export function CollectionKanban({
   }, [schema]);
 
   const options = useMemo(() => statusField?.options ?? [], [statusField]);
+
+  const handleRenameOption = useCallback(
+    async (optionId: string, nextLabel: string) => {
+      if (!statusField || !statusField.options) {
+        return;
+      }
+
+      const trimmedLabel = nextLabel.trim();
+      if (!trimmedLabel) {
+        return;
+      }
+
+      const currentOption = statusField.options.find((option) => option.id === optionId);
+      if (!currentOption || currentOption.label === trimmedLabel) {
+        return;
+      }
+
+      const nextSchema = schema.map((field) => {
+        if (field.name !== statusField.name || !field.options) {
+          return field;
+        }
+
+        return {
+          ...field,
+          options: field.options.map((option) =>
+            option.id === optionId ? { ...option, label: trimmedLabel } : option,
+          ),
+        };
+      });
+
+      try {
+        await z.mutate(
+          mutators.collection.update({
+            collectionId,
+            organizationId,
+            properties: nextSchema,
+          }),
+        );
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to rename column");
+      }
+    },
+    [collectionId, organizationId, schema, statusField, z],
+  );
 
   const cardsByOption = useMemo(() => {
     if (!statusField) {
@@ -149,6 +201,7 @@ export function CollectionKanban({
               toast.error("Failed to move card");
             }
           }}
+          onRenameOption={handleRenameOption}
         />
       ))}
     </div>
@@ -164,6 +217,7 @@ function KanbanColumn({
   documents,
   organizationSlug,
   onMove,
+  onRenameOption,
 }: {
   optionId: string;
   optionLabel: string;
@@ -173,8 +227,28 @@ function KanbanColumn({
   documents: DocumentCard[];
   organizationSlug: string;
   onMove: (documentId: string, statusId: string) => Promise<void>;
+  onRenameOption: (optionId: string, nextLabel: string) => Promise<void>;
 }) {
   const byId = useMemo(() => new Map(documents.map((doc) => [doc.id, doc])), [documents]);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(optionLabel);
+
+  useEffect(() => {
+    setDraftName(optionLabel);
+  }, [optionLabel]);
+
+  const handleSaveName = useCallback(async () => {
+    const trimmed = draftName.trim();
+    setIsEditingName(false);
+    if (!trimmed) {
+      setDraftName(optionLabel);
+      return;
+    }
+
+    if (trimmed !== optionLabel) {
+      await onRenameOption(optionId, trimmed);
+    }
+  }, [draftName, onRenameOption, optionId, optionLabel]);
 
   const parseDroppedCards = async (items: Iterable<any>): Promise<DragCard[]> => {
     const parsed = await Promise.all(
@@ -228,13 +302,43 @@ function KanbanColumn({
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-3">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          <span
-            className={`size-2 rounded-full ${getOptionDotClassName(optionColor)}`}
-            aria-hidden
-          />
-          {optionLabel}
-        </h3>
+        <div className="min-w-0 flex-1">
+          {isEditingName ? (
+            <input
+              type="text"
+              value={draftName}
+              onChange={(event) => setDraftName(event.target.value)}
+              onBlur={() => void handleSaveName()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void handleSaveName();
+                }
+
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setDraftName(optionLabel);
+                  setIsEditingName(false);
+                }
+              }}
+              className="w-full rounded border border-blue-300 bg-white px-2 py-1 text-sm font-semibold text-gray-900 outline-none ring-2 ring-blue-200"
+              aria-label="Edit column name"
+              autoFocus
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEditingName(true)}
+              className="inline-flex max-w-full items-center gap-2 rounded px-1 py-0.5 text-sm font-semibold text-gray-900 hover:bg-gray-100"
+            >
+              <span
+                className={`size-2 rounded-full ${getOptionDotClassName(optionColor)}`}
+                aria-hidden
+              />
+              <span className="truncate">{optionLabel}</span>
+            </button>
+          )}
+        </div>
         <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
           {cards.length}
         </span>
@@ -257,13 +361,22 @@ function KanbanColumn({
             textValue={card.title}
             className="rounded-md border border-gray-200 bg-white p-2 text-sm text-gray-800 shadow-sm outline-none"
           >
-            <Link
-              to="/w/$organizationSlug/$id"
-              params={{ organizationSlug, id: card.id }}
-              className="line-clamp-2 block"
-            >
-              {card.title || "Untitled"}
-            </Link>
+            <div className="flex items-start gap-1.5">
+              <RACButton
+                slot="drag"
+                aria-label={`Drag ${card.title || "Untitled"}`}
+                className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              >
+                <ReOrderRegular className="size-3.5" />
+              </RACButton>
+              <Link
+                to="/w/$organizationSlug/$id"
+                params={{ organizationSlug, id: card.id }}
+                className="line-clamp-2 block min-w-0 flex-1"
+              >
+                {card.title || "Untitled"}
+              </Link>
+            </div>
           </ListBoxItem>
         )}
       </ListBox>

@@ -16,8 +16,9 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { CollectionKanban } from "@/components/modules/CollectionKanban";
-import { CollectionTable } from "@/components/modules/CollectionTable";
+import { CollectionKanbanView } from "@/components/collections/CollectionKanbanView";
+import { CollectionTableView } from "@/components/collections/CollectionTableView";
+import { CollectionViewTabs } from "@/components/collections/CollectionViewTabs";
 import { useZero } from "@/services/zero";
 
 import { Link } from "../generic/Link";
@@ -74,7 +75,9 @@ export function CollectionViewBlockComponent(props: Props) {
   const viewName = (viewData?.name as string | undefined) || "Untitled view";
   const viewConfig = (viewData?.config as { filters?: Record<string, unknown> } | undefined) ?? {};
   const filters = viewConfig.filters ?? {};
-  const viewType = (viewData?.type as "table" | "list" | "kanban" | undefined) ?? "table";
+  const viewType =
+    ((viewData?.type === "list" ? "table" : viewData?.type) as "table" | "kanban" | undefined) ??
+    "table";
   const viewsCollectionId = collectionId ?? pickerCollectionId;
 
   const [collectionViews] = useQuery(
@@ -224,11 +227,13 @@ export function CollectionViewBlockComponent(props: Props) {
 
   const collectionViewsData = useMemo(
     () =>
-      (collectionViews ?? []) as unknown as Array<{
-        id: string;
-        name: string;
-        type: "table" | "list" | "kanban";
-      }>,
+      ((collectionViews ?? []) as unknown as Array<{ id: string; name: string; type: string }>).map(
+        (view) => ({
+          id: view.id,
+          name: view.name,
+          type: (view.type === "list" ? "table" : view.type) as "table" | "kanban",
+        }),
+      ),
     [collectionViews],
   );
 
@@ -441,22 +446,11 @@ export function CollectionViewBlockComponent(props: Props) {
         </div>
 
         {collectionViewsData.length > 1 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {collectionViewsData.map((viewOption) => (
-              <button
-                key={viewOption.id}
-                type="button"
-                onClick={() => handleUpdate({ viewId: viewOption.id })}
-                className={`rounded-md border px-2 py-1 text-xs transition-colors ${
-                  viewOption.id === viewId
-                    ? "border-blue-300 bg-blue-50 text-blue-700"
-                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                {viewOption.name}
-              </button>
-            ))}
-          </div>
+          <CollectionViewTabs
+            views={collectionViewsData}
+            selectedViewId={viewId}
+            onSelectView={(nextViewId) => handleUpdate({ viewId: nextViewId })}
+          />
         ) : null}
 
         <div
@@ -468,14 +462,14 @@ export function CollectionViewBlockComponent(props: Props) {
           }}
         >
           {viewType === "kanban" ? (
-            <CollectionKanban
+            <CollectionKanbanView
               collectionId={collectionId}
               organizationId={organizationId}
               organizationSlug={organizationSlug}
               schema={schema}
             />
           ) : (
-            <CollectionTable
+            <CollectionTableView
               collectionId={collectionId}
               organizationId={organizationId}
               organizationSlug={organizationSlug}

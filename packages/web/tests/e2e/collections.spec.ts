@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures/auth.fixture";
 import {
@@ -147,6 +147,32 @@ test.describe("collections", () => {
           "Details Test Collection",
         );
         await expect(page.getByText("/details-test")).toBeVisible();
+        await expect(page.getByText("Manage reusable views for this collection.")).toHaveCount(0);
+      } finally {
+        await deleteTestCollection(collection.id);
+      }
+    });
+
+    test("should rename a view from the view tab menu", async ({ page, organization }) => {
+      const collection = await createTestCollection(organization.id, {
+        name: "View Rename Test",
+        handle: "view-rename-test",
+        properties: [{ name: "status", type: "text", required: false, unique: false }],
+      });
+
+      try {
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
+
+        await createKanbanView(page, "Roadmap");
+
+        await page.getByRole("button", { name: "Open Roadmap view menu" }).click();
+        await page.getByRole("menuitem", { name: "Edit view settings" }).click();
+        await page.getByLabel(/^Name$/).fill("Sprint Board");
+        await page.getByLabel("Filter field").selectOption("status");
+        await page.getByLabel("Filter value").fill("active");
+        await page.getByRole("button", { name: "Save view" }).click();
+
+        await expect(page.getByRole("button", { name: /Sprint Board/i })).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -481,6 +507,129 @@ test.describe("collections", () => {
       } finally {
         await deleteTestDocument(doc1.id);
         await deleteTestDocument(doc2.id);
+        await deleteTestCollection(collection.id);
+      }
+    });
+  });
+
+  test.describe("kanban status labels", () => {
+    test("should edit status labels in collection page kanban view", async ({ page, organization }) => {
+      const initialLabel = `Queue ${Date.now()}`;
+      const nextLabel = `${initialLabel} Updated`;
+      const collection = await createTestCollection(organization.id, {
+        name: "Kanban Label Route Test",
+        handle: `kanban-label-route-${Date.now()}`,
+        properties: [
+          {
+            name: "status",
+            type: "status",
+            required: false,
+            unique: false,
+            options: [
+              {
+                id: "status_queue",
+                label: initialLabel,
+                color: "gray",
+                order: 0,
+                stage: "NOT_STARTED",
+              },
+              {
+                id: "status_done",
+                label: "Done",
+                color: "green",
+                order: 1,
+                stage: "COMPLETE",
+              },
+            ],
+          },
+        ],
+      });
+
+      const { document } = await createTestCollectionDocument(organization.id, collection.id, {
+        title: "Route Kanban Label Document",
+        fieldValues: { status: "status_queue" },
+      });
+
+      try {
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
+
+        await createKanbanView(page, "Board");
+
+        await renameKanbanColumn(page, initialLabel, nextLabel);
+        await page.reload();
+
+        await expect(page.getByRole("button", { name: nextLabel })).toBeVisible();
+      } finally {
+        await deleteTestDocument(document.id);
+        await deleteTestCollection(collection.id);
+      }
+    });
+
+    test("should edit status labels in embedded collection kanban view", async ({ page, organization }) => {
+      const initialLabel = `Backlog ${Date.now()}`;
+      const nextLabel = `${initialLabel} Updated`;
+      const collection = await createTestCollection(organization.id, {
+        name: "Kanban Label Block Test",
+        handle: `kanban-label-block-${Date.now()}`,
+        properties: [
+          {
+            name: "status",
+            type: "status",
+            required: false,
+            unique: false,
+            options: [
+              {
+                id: "status_backlog",
+                label: initialLabel,
+                color: "gray",
+                order: 0,
+                stage: "NOT_STARTED",
+              },
+              {
+                id: "status_progress",
+                label: "In progress",
+                color: "blue",
+                order: 1,
+                stage: "IN_PROGRESS",
+              },
+            ],
+          },
+        ],
+      });
+
+      const { document: collectionDocument } = await createTestCollectionDocument(
+        organization.id,
+        collection.id,
+        {
+          title: "Block Kanban Label Document",
+          fieldValues: { status: "status_backlog" },
+        },
+      );
+
+      const editorDocument = await createEditorDocument(page, organization.slug, {
+        title: "Collection Block Kanban Label Test",
+      });
+
+      try {
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
+        await createKanbanView(page, "Board");
+
+        await page.goto(`/w/${organization.slug}/${editorDocument.id}`);
+
+        await page.locator("[data-testid='editor-content']").click();
+        await page.keyboard.type("/collection");
+        await page.getByText("Collection View").click();
+        await page.getByRole("button", { name: collection.name }).click();
+        await page.getByRole("button", { name: /Board/i }).click();
+
+        const block = page.locator("[data-doc-widget]").filter({ hasText: collection.name }).first();
+        await renameKanbanColumn(block, initialLabel, nextLabel);
+
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
+        await expect(page.getByRole("button", { name: nextLabel })).toBeVisible();
+      } finally {
+        await deleteTestDocument(editorDocument.id);
+        await deleteTestDocument(collectionDocument.id);
         await deleteTestCollection(collection.id);
       }
     });
@@ -1050,6 +1199,27 @@ async function createEditorDocument(page: Page, organizationSlug: string, option
   return {
     id: match[1],
   };
+}
+
+async function createKanbanView(page: Page, viewName: string): Promise<void> {
+  await page.getByRole("button", { name: "New view" }).click();
+  await page.getByLabel(/^Name$/).fill(viewName);
+  await page.getByLabel(/^Layout$/).selectOption("kanban");
+  await page.getByRole("button", { name: "Save view" }).click();
+  await page.getByRole("button", { name: new RegExp(viewName, "i") }).click();
+  await expect(page.getByText("Drop cards here").first()).toBeVisible();
+}
+
+async function renameKanbanColumn(
+  container: Page | Locator,
+  currentLabel: string,
+  nextLabel: string,
+): Promise<void> {
+  await container.getByRole("button", { name: currentLabel }).first().click();
+  const nameInput = container.getByRole("textbox", { name: "Edit column name" }).first();
+  await nameInput.fill(nextLabel);
+  await nameInput.press("Enter");
+  await expect(container.getByRole("button", { name: nextLabel }).first()).toBeVisible();
 }
 
 function getExternalApiUrl(path: string): string {

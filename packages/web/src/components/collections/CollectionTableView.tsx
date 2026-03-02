@@ -273,7 +273,7 @@ function extractFieldValues(
   };
 }
 
-export function CollectionTable({
+export function CollectionTableView({
   collectionId,
   organizationId,
   organizationSlug,

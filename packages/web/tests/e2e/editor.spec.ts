@@ -115,6 +115,39 @@ test.describe("editor", () => {
     await expect(page.getByRole("button", { name: "Delete Table" })).toHaveCount(0);
   });
 
+  test("can toggle document width from breadcrumb menu", async ({ page, organization }) => {
+    await gotoWorkspace(page, organization.slug);
+    await createDocument(page, { title: "Document Width Test", content: "" });
+
+    const widthContainer = page.getByTestId("document-width-container");
+
+    const isInitiallyFullWidth = await widthContainer.evaluate((element) =>
+      element.className.includes("max-w-none"),
+    );
+
+    await page.getByRole("button", { name: "Document Options" }).click();
+    await page
+      .getByRole("menuitem", {
+        name: isInitiallyFullWidth ? "Disable Full Width" : "Enable Full Width",
+      })
+      .click();
+
+    await expect(widthContainer).toHaveClass(
+      isInitiallyFullWidth ? /max-w-\[680px\]/ : /max-w-none/,
+    );
+
+    await page.getByRole("button", { name: "Document Options" }).click();
+    await page
+      .getByRole("menuitem", {
+        name: isInitiallyFullWidth ? "Enable Full Width" : "Disable Full Width",
+      })
+      .click();
+
+    await expect(widthContainer).toHaveClass(
+      isInitiallyFullWidth ? /max-w-none/ : /max-w-\[680px\]/,
+    );
+  });
+
   test.skip("can insert and display images", async ({ page, organization }) => {
     await gotoWorkspace(page, organization.slug);
     await createDocument(page, { title: "Image Test", content: "" });

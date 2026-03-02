@@ -1,2 +1,5 @@
 export { ModuleViewToggle } from "./ModuleViewToggle";
-export { CollectionTable } from "./CollectionTable";
+export {
+  CollectionTableView,
+  CollectionTableView as CollectionTable,
+} from "../collections/CollectionTableView";

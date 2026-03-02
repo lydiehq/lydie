@@ -1,7 +1,12 @@
 export type CollectionViewRecord = {
   id: string;
   name: string;
-  type: "table" | "list" | "kanban";
+  type: "table" | "kanban";
+  config?: {
+    filters?: Record<string, string | number | boolean>;
+    sortField?: string | null;
+    sortDirection?: "asc" | "desc" | null;
+  };
 };
 
 export function resolveSelectedViewId(

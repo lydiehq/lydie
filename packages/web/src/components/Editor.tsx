@@ -1,5 +1,7 @@
-import { ChevronRight16Filled, ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
+import { ChevronRight16Filled, MoreVerticalRegular, ReOrderDotsVertical16Regular } from "@fluentui/react-icons";
 import type { HocuspocusProvider } from "@hocuspocus/provider";
+import { Button } from "@lydie/ui/components/generic/Button";
+import { Menu, MenuItem } from "@lydie/ui/components/generic/Menu";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
@@ -10,7 +12,16 @@ import DragHandle from "@tiptap/extension-drag-handle-react";
 import { EditorContent } from "@tiptap/react";
 import clsx from "clsx";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Fragment, type CSSProperties, type RefObject, useEffect, useMemo, useRef } from "react";
+import {
+  Fragment,
+  type CSSProperties,
+  type RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { MenuTrigger } from "react-aria-components";
 import { toast } from "sonner";
 
 import { editorSessions, pendingChangeStatusAtom, pendingEditorChangeAtom } from "@/atoms/editor";
@@ -22,10 +33,12 @@ import {
 import { BottomBar } from "@/components/editor/BottomBar";
 import { BubbleMenu } from "@/components/editor/BubbleMenu";
 import { CoverImageEditor } from "@/components/editor/CoverImageEditor";
+import { DocumentSettingsDialog } from "@/components/editor/DocumentSettingsDialog";
 import { LinkPopover } from "@/components/editor/link-popover/LinkPopover";
 import { StatusBar } from "@/components/editor/StatusBar";
 import { TableOfContentsMinimap } from "@/components/editor/TableOfContentsMinimap";
 import { useAuth } from "@/context/auth.context";
+import { useDocumentActions } from "@/hooks/use-document-actions";
 import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
 import { useZero } from "@/services/zero";
 import { applyContentChanges } from "@/utils/document-changes";
@@ -333,6 +346,10 @@ function EditorLayout({
   ancestorDocuments,
   scrollContainerRef,
 }: EditorLayoutProps) {
+  const z = useZero();
+  const { deleteDocument } = useDocumentActions();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
     <div
       className="overflow-hidden flex flex-col grow relative size-full"
@@ -340,51 +357,83 @@ function EditorLayout({
     >
       <nav
         aria-label="Document breadcrumbs"
-        className="mx-auto flex py-1 items-center gap-1 text-xs text-gray-400"
+        className="p-2 flex items-center justify-between gap-2 text-xs text-gray-400"
       >
-        <Link
-          to="/w/$organizationSlug"
-          params={{ organizationSlug }}
-          className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-        >
-          Workspace
-        </Link>
+        <div className="flex min-w-0 items-center gap-1">
+          <Link
+            to="/w/$organizationSlug"
+            params={{ organizationSlug }}
+            className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+          >
+            Workspace
+          </Link>
 
-        {collectionData ? (
-          <>
-            <ChevronRight16Filled className="size-3 shrink-0 text-gray-300" aria-hidden="true" />
-            <Link
-              to="/w/$organizationSlug/collections/$collectionId"
-              params={{
-                organizationSlug,
-                collectionId: collectionData.id,
+          {collectionData ? (
+            <>
+              <ChevronRight16Filled className="size-3 shrink-0 text-gray-300" aria-hidden="true" />
+              <Link
+                to="/w/$organizationSlug/collections/$collectionId"
+                params={{
+                  organizationSlug,
+                  collectionId: collectionData.id,
+                }}
+                className="truncate rounded px-1 py-0.5 transition-colors hover:text-gray-700"
+              >
+                {collectionData.name || "Untitled Collection"}
+              </Link>
+            </>
+          ) : null}
+
+          {ancestorDocuments.map((ancestor) => (
+            <Fragment key={ancestor.id}>
+              <ChevronRight16Filled className="size-3 shrink-0 text-gray-300" aria-hidden="true" />
+              <Link
+                to="/w/$organizationSlug/$id"
+                params={{
+                  organizationSlug,
+                  id: ancestor.id,
+                }}
+                className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
+              >
+                {ancestor.title?.trim() || "Untitled"}
+              </Link>
+            </Fragment>
+          ))}
+
+          <ChevronRight16Filled className="size-3 shrink-0 text-gray-300" aria-hidden="true" />
+          <span className="truncate px-1 py-0.5 text-gray-600">{documentTitle}</span>
+        </div>
+
+        <MenuTrigger>
+          <Button intent="ghost" size="icon-sm" aria-label="Document Options">
+            <MoreVerticalRegular className="size-3.5 text-gray-600" />
+          </Button>
+          <Menu>
+            <MenuItem
+              onAction={() => {
+                z.mutate(
+                  mutators.document.update({
+                    documentId: doc.id,
+                    fullWidth: !doc.full_width,
+                    organizationId: doc.organization_id,
+                  }),
+                );
               }}
-              className="truncate rounded px-1 py-0.5 transition-colors hover:text-gray-700"
             >
-              {collectionData.name || "Untitled Collection"}
-            </Link>
-          </>
-        ) : null}
-
-        {ancestorDocuments.map((ancestor) => (
-          <Fragment key={ancestor.id}>
-            <ChevronRight16Filled className="size-3 shrink-0 text-gray-300" aria-hidden="true" />
-            <Link
-              to="/w/$organizationSlug/$id"
-              params={{
-                organizationSlug,
-                id: ancestor.id,
-              }}
-              className="truncate rounded px-1 py-0.5 transition-colors hover:bg-gray-100 hover:text-gray-700"
-            >
-              {ancestor.title?.trim() || "Untitled"}
-            </Link>
-          </Fragment>
-        ))}
-
-        <ChevronRight16Filled className="size-3 shrink-0 text-gray-300" aria-hidden="true" />
-        <span className="truncate px-1 py-0.5 text-gray-600">{documentTitle}</span>
+              {doc.full_width ? "Disable Full Width" : "Enable Full Width"}
+            </MenuItem>
+            <MenuItem onAction={() => setIsSettingsOpen(true)}>Settings</MenuItem>
+            <MenuItem onAction={() => deleteDocument(doc.id, true)}>Delete</MenuItem>
+          </Menu>
+        </MenuTrigger>
       </nav>
+
+      <DocumentSettingsDialog
+        key={doc.id}
+        isOpen={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        doc={doc}
+      />
 
       <StatusBar provider={provider} />
       <TableOfContentsMinimap editor={contentEditor} containerRef={scrollContainerRef} />
@@ -397,6 +446,7 @@ function EditorLayout({
           <BubbleMenu editor={contentEditor} />
 
           <div
+            data-testid="document-width-container"
             className={clsx(
               "mx-auto w-full",
               doc.full_width ? "max-w-none px-20" : "max-w-[680px] px-4",

@@ -1,8 +1,10 @@
-import { SettingsRegular } from "@fluentui/react-icons";
+import { Add16Filled, SettingsRegular } from "@fluentui/react-icons";
 import type { PropertyDefinition } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
+import { Dialog } from "@lydie/ui/components/generic/Dialog";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Input } from "@lydie/ui/components/generic/Field";
+import { Modal } from "@lydie/ui/components/generic/Modal";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
@@ -12,8 +14,13 @@ import { TextField } from "react-aria-components";
 import { toast } from "sonner";
 
 import { useCollectionTabSync } from "@/components/layout/DocumentTabBar";
-import { CollectionTable } from "@/components/modules";
-import { CollectionKanban } from "@/components/modules/CollectionKanban";
+import { CollectionKanbanView } from "@/components/collections/CollectionKanbanView";
+import { CollectionTableView } from "@/components/collections/CollectionTableView";
+import {
+  CollectionViewTabMenu,
+  CollectionViewTabs,
+  type CollectionViewType,
+} from "@/components/collections/CollectionViewTabs";
 import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useZero } from "@/services/zero";
@@ -90,9 +97,23 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
   const [name, setName] = useState(collection.name);
   const [isSavingName, setIsSavingName] = useState(false);
   const [hasAttemptedInitialView, setHasAttemptedInitialView] = useState(false);
-  const [newViewName, setNewViewName] = useState("");
-  const [newViewType, setNewViewType] = useState<"table" | "list" | "kanban">("table");
   const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
+  const [viewEditorState, setViewEditorState] = useState<
+    | {
+        mode: "create";
+      }
+    | {
+        mode: "edit";
+        viewId: string;
+      }
+    | null
+  >(null);
+  const [viewEditorName, setViewEditorName] = useState("");
+  const [viewEditorType, setViewEditorType] = useState<CollectionViewType>("table");
+  const [viewEditorFilterField, setViewEditorFilterField] = useState("");
+  const [viewEditorFilterValue, setViewEditorFilterValue] = useState("");
+  const [viewEditorSortField, setViewEditorSortField] = useState("");
+  const [viewEditorSortDirection, setViewEditorSortDirection] = useState<"asc" | "desc">("asc");
 
   const [views] = useQuery(
     queries.collections.viewsByCollection({
@@ -100,9 +121,23 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
       collectionId: collection.id,
     }),
   );
-  const viewRecords = ((views ?? []) as Array<{ id: string; name: string; type: string }>).filter(
-    (view) => view.type === "table" || view.type === "list" || view.type === "kanban",
-  ) as CollectionViewRecord[];
+  const viewRecords = (
+    (views ?? []) as Array<{
+      id: string;
+      name: string;
+      type: string;
+      config?: {
+        filters?: Record<string, string | number | boolean>;
+        sortField?: string | null;
+        sortDirection?: "asc" | "desc" | null;
+      };
+    }>
+  )
+    .filter((view) => view.type === "table" || view.type === "list" || view.type === "kanban")
+    .map((view) => ({
+      ...view,
+      type: (view.type === "list" ? "table" : view.type) as CollectionViewRecord["type"],
+    }));
 
   useEffect(() => {
     const nextSelectedViewId = resolveSelectedViewId(selectedViewId, viewRecords);
@@ -147,6 +182,43 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
     [selectedViewId, viewRecords],
   );
 
+  const sortableFields = schema.map((property) => property.name);
+
+  const openCreateViewEditor = useCallback(() => {
+    setViewEditorState({ mode: "create" });
+    setViewEditorName(`View ${viewRecords.length + 1}`);
+    setViewEditorType("table");
+    setViewEditorFilterField("");
+    setViewEditorFilterValue("");
+    setViewEditorSortField("");
+    setViewEditorSortDirection("asc");
+  }, [viewRecords.length]);
+
+  const openEditViewEditor = useCallback(
+    (viewId: string) => {
+      const view = viewRecords.find((entry) => entry.id === viewId);
+      if (!view) {
+        return;
+      }
+
+      const filters = view.config?.filters ?? {};
+      const [firstFilterField, firstFilterValue] = Object.entries(filters)[0] ?? ["", ""];
+
+      setViewEditorState({ mode: "edit", viewId: view.id });
+      setViewEditorName(view.name);
+      setViewEditorType(view.type);
+      setViewEditorFilterField(firstFilterField);
+      setViewEditorFilterValue(String(firstFilterValue ?? ""));
+      setViewEditorSortField(view.config?.sortField ?? "");
+      setViewEditorSortDirection(view.config?.sortDirection === "desc" ? "desc" : "asc");
+    },
+    [viewRecords],
+  );
+
+  const closeViewEditor = useCallback(() => {
+    setViewEditorState(null);
+  }, []);
+
   const saveName = useCallback(async () => {
     const trimmed = name.trim();
     if (!trimmed || trimmed === collection.name) {
@@ -183,31 +255,72 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
     );
   }, [collection.id, organization.id, z]);
 
-  const handleCreateView = useCallback(async () => {
-    const trimmed = newViewName.trim();
+  const handleSaveView = useCallback(async () => {
+    const trimmed = viewEditorName.trim();
     if (!trimmed) {
       toast.error("View name is required");
       return;
     }
 
+    const filters =
+      viewEditorFilterField.trim() && viewEditorFilterValue.trim()
+        ? { [viewEditorFilterField.trim()]: viewEditorFilterValue.trim() }
+        : {};
+    const sortField = viewEditorSortField.trim() || null;
+    const sortDirection = sortField ? viewEditorSortDirection : null;
+
     try {
-      await z.mutate(
-        mutators.collection.createView({
-          organizationId: organization.id,
-          collectionId: collection.id,
-          name: trimmed,
-          type: newViewType,
-        }),
-      );
-      setNewViewName("");
-      setNewViewType("table");
-      setSelectedViewId(null);
-      toast.success("View created");
+      if (viewEditorState?.mode === "create") {
+        const viewId = createId();
+        await z.mutate(
+          mutators.collection.createView({
+            viewId,
+            organizationId: organization.id,
+            collectionId: collection.id,
+            name: trimmed,
+            type: viewEditorType,
+            filters,
+            sortField,
+            sortDirection,
+          }),
+        );
+        setSelectedViewId(viewId);
+        toast.success("View created");
+      }
+
+      if (viewEditorState?.mode === "edit") {
+        await z.mutate(
+          mutators.collection.updateView({
+            viewId: viewEditorState.viewId,
+            organizationId: organization.id,
+            name: trimmed,
+            type: viewEditorType,
+            filters,
+            sortField,
+            sortDirection,
+          }),
+        );
+        toast.success("View updated");
+      }
+
+      closeViewEditor();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create view");
+      toast.error("Failed to save view");
     }
-  }, [collection.id, newViewName, newViewType, organization.id, z]);
+  }, [
+    closeViewEditor,
+    collection.id,
+    organization.id,
+    viewEditorFilterField,
+    viewEditorFilterValue,
+    viewEditorName,
+    viewEditorSortDirection,
+    viewEditorSortField,
+    viewEditorState,
+    viewEditorType,
+    z,
+  ]);
 
   const handleDeleteView = useCallback(
     async (viewId: string) => {
@@ -233,7 +346,7 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
   );
 
   const handleUpdateViewType = useCallback(
-    async (viewId: string, type: "table" | "list" | "kanban") => {
+    async (viewId: string, type: CollectionViewType) => {
       try {
         await z.mutate(
           mutators.collection.updateView({
@@ -297,78 +410,31 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
       </div>
 
       <div className="px-6 py-4 space-y-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">Views</h2>
-            <p className="text-xs text-gray-500">Manage reusable views for this collection.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Input
-              value={newViewName}
-              onChange={(event) => setNewViewName(event.target.value)}
-              placeholder="View name"
-              className="min-w-48 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+        <CollectionViewTabs
+          views={viewRecords}
+          selectedViewId={selectedViewId}
+          onSelectView={setSelectedViewId}
+          renderViewActions={(view) => (
+            <CollectionViewTabMenu
+              key={view.id}
+              view={view}
+              canDelete={viewRecords.length > 1}
+              onOpenEditor={openEditViewEditor}
+              onChangeType={(viewId, type) => void handleUpdateViewType(viewId, type)}
+              onDelete={(viewId) => void handleDeleteView(viewId)}
             />
-            <select
-              value={newViewType}
-              onChange={(event) =>
-                setNewViewType(event.target.value as "table" | "list" | "kanban")
-              }
-              className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+          )}
+          endSlot={
+            <button
+              type="button"
+              onClick={openCreateViewEditor}
+              className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2.5 py-1.5 text-sm text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-900"
             >
-              <option value="table">Table</option>
-              <option value="list">List</option>
-              <option value="kanban">Kanban</option>
-            </select>
-            <Button intent="secondary" size="sm" onPress={handleCreateView}>
-              + New view
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            {viewRecords.map((view) => (
-              <div
-                key={view.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2"
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedViewId(view.id)}
-                  className={`min-w-0 text-left ${selectedViewId === view.id ? "text-blue-700" : "text-gray-900"}`}
-                >
-                  <div className="truncate text-sm font-medium">{view.name}</div>
-                  <div className="text-xs text-gray-500">{view.id}</div>
-                </button>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={view.type}
-                    onChange={(event) =>
-                      void handleUpdateViewType(
-                        view.id,
-                        event.target.value as "table" | "list" | "kanban",
-                      )
-                    }
-                    className="rounded-md border border-gray-300 bg-white px-2 py-1 text-xs"
-                  >
-                    <option value="table">Table</option>
-                    <option value="list">List</option>
-                    <option value="kanban">Kanban</option>
-                  </select>
-                  <Button
-                    intent="ghost"
-                    size="sm"
-                    onPress={() => void handleDeleteView(view.id)}
-                    isDisabled={viewRecords.length <= 1}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              <Add16Filled className="size-3.5" />
+              New view
+            </button>
+          }
+        />
 
         <Button intent="secondary" size="sm" onPress={handleCreateRow}>
           + New entry
@@ -376,14 +442,14 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
         <div className="rounded-xl border border-gray-200 bg-white">
           <div className="overflow-x-auto">
             {selectedView?.type === "kanban" ? (
-              <CollectionKanban
+              <CollectionKanbanView
                 collectionId={collection.id}
                 organizationId={organization.id}
                 organizationSlug={organization.slug}
                 schema={schema}
               />
             ) : (
-              <CollectionTable
+              <CollectionTableView
                 collectionId={collection.id}
                 organizationId={organization.id}
                 organizationSlug={organization.slug}
@@ -394,6 +460,108 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
           </div>
         </div>
       </div>
+
+      <Modal isOpen={viewEditorState !== null} onOpenChange={(isOpen) => !isOpen && closeViewEditor()} size="sm">
+        <Dialog>
+          <div className="p-4 flex flex-col gap-y-3">
+            <h2 className="text-base font-medium text-gray-900">
+              {viewEditorState?.mode === "create" ? "Create view" : "Edit view"}
+            </h2>
+            <label htmlFor="collection-view-editor-name" className="flex flex-col gap-1 text-sm text-gray-700">
+              Name
+              <Input
+                id="collection-view-editor-name"
+                value={viewEditorName}
+                onChange={(event) => setViewEditorName(event.target.value)}
+                placeholder="View name"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm text-gray-700">
+              Layout
+              <select
+                value={viewEditorType}
+                onChange={(event) => setViewEditorType(event.target.value as CollectionViewType)}
+                className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+              >
+                <option value="table">Table</option>
+                <option value="kanban">Board</option>
+              </select>
+            </label>
+
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-sm text-gray-700">
+                Filter field
+                <select
+                  value={viewEditorFilterField}
+                  onChange={(event) => setViewEditorFilterField(event.target.value)}
+                  className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                >
+                  <option value="">None</option>
+                  {sortableFields.map((fieldName) => (
+                    <option key={fieldName} value={fieldName}>
+                      {fieldName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label
+                htmlFor="collection-view-editor-filter-value"
+                className="flex flex-col gap-1 text-sm text-gray-700"
+              >
+                Filter value
+                <Input
+                  id="collection-view-editor-filter-value"
+                  value={viewEditorFilterValue}
+                  onChange={(event) => setViewEditorFilterValue(event.target.value)}
+                  placeholder="e.g. draft"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-sm text-gray-700">
+                Sort field
+                <select
+                  value={viewEditorSortField}
+                  onChange={(event) => setViewEditorSortField(event.target.value)}
+                  className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                >
+                  <option value="">None</option>
+                  {sortableFields.map((fieldName) => (
+                    <option key={fieldName} value={fieldName}>
+                      {fieldName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm text-gray-700">
+                Direction
+                <select
+                  value={viewEditorSortDirection}
+                  onChange={(event) =>
+                    setViewEditorSortDirection(event.target.value as "asc" | "desc")
+                  }
+                  className="rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-sm"
+                  disabled={!viewEditorSortField}
+                >
+                  <option value="asc">Ascending</option>
+                  <option value="desc">Descending</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button intent="ghost" size="sm" onPress={closeViewEditor}>
+                Cancel
+              </Button>
+              <Button intent="secondary" size="sm" onPress={() => void handleSaveView()}>
+                Save view
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+      </Modal>
     </div>
   );
 }
