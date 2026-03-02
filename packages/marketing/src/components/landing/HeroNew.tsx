@@ -24,7 +24,7 @@ export function HeroNew({
     // <div className="mask-b-from-75% mask-b-to-95%">
     <div>
       <Container className="flex relative flex-col">
-        <div className="flex justify-center text-center items-center md:items-start md:text-left size-full flex-col gap-y-4 py-20">
+        <div className="flex justify-center text-center items-center md:items-start md:text-left size-full flex-col gap-y-4 py-24">
           {/* <div className="md:block hidden absolute right-0 bottom-0">
             <GradientOutline />
             <svg

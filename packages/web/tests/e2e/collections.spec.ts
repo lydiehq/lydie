@@ -1203,9 +1203,10 @@ async function createEditorDocument(page: Page, organizationSlug: string, option
 
 async function createKanbanView(page: Page, viewName: string): Promise<void> {
   await page.getByRole("button", { name: "New view" }).click();
-  await page.getByLabel(/^Name$/).fill(viewName);
-  await page.getByLabel(/^Layout$/).selectOption("kanban");
-  await page.getByRole("button", { name: "Save view" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel(/^Name$/).fill(viewName);
+  await dialog.getByRole("combobox").first().selectOption("kanban");
+  await dialog.getByRole("button", { name: "Save view" }).click();
   await page.getByRole("button", { name: new RegExp(viewName, "i") }).click();
   await expect(page.getByText("Drop cards here").first()).toBeVisible();
 }

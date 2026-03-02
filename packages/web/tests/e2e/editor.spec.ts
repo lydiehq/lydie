@@ -125,7 +125,7 @@ test.describe("editor", () => {
       element.className.includes("max-w-none"),
     );
 
-    await page.getByRole("button", { name: "Document Options" }).click();
+    await page.getByTestId("editor-view").getByRole("button", { name: "Document Options" }).click();
     await page
       .getByRole("menuitem", {
         name: isInitiallyFullWidth ? "Disable Full Width" : "Enable Full Width",
@@ -136,7 +136,7 @@ test.describe("editor", () => {
       isInitiallyFullWidth ? /max-w-\[680px\]/ : /max-w-none/,
     );
 
-    await page.getByRole("button", { name: "Document Options" }).click();
+    await page.getByTestId("editor-view").getByRole("button", { name: "Document Options" }).click();
     await page
       .getByRole("menuitem", {
         name: isInitiallyFullWidth ? "Enable Full Width" : "Disable Full Width",
