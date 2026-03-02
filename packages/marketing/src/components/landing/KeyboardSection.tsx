@@ -161,7 +161,7 @@ export function KeyboardSection() {
   const isKeyPressed = (key: string) => pressedKeys.has(key);
 
   return (
-    <div className="py-48 flex flex-col items-center gap-y-6 relative z-10">
+    <div className="py-24 lg:py-48 flex flex-col items-center gap-y-6 relative z-10">
       <SectionHeader
         eyebrow="Keyboard shortcuts"
         title="Everything at your fingertips"
@@ -187,11 +187,11 @@ export function KeyboardSection() {
           </CastShadow>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-24 -top-[240px]">
+        <div className="absolute left-1/2 -top-[310px] -translate-x-24 lg:-top-[240px]">
           <Key label="⌘" width="cmd" rotate={-15} dataKey="meta" isPressed={isKeyPressed("meta")} />
         </div>
 
-        <div className="absolute left-1/2 -top-[220px]">
+        <div className="absolute left-1/2 -top-[290px] lg:-top-[220px]">
           <Key label="K" rotate={9} dataKey="k" isPressed={isKeyPressed("k")} />
         </div>
 
@@ -201,12 +201,12 @@ export function KeyboardSection() {
         </div>
 
         {/* Y - positioned top */}
-        <div className="absolute left-[320px] -top-[200px] lg:left-[180px] lg:-top-[120px]">
+        <div className="absolute left-[320px] top-[380px] lg:left-[180px] lg:-top-[120px]">
           <Key label="Y" rotate={-8} dataKey="y" isPressed={isKeyPressed("y")} />
         </div>
 
         {/* N - positioned top-right */}
-        <div className="absolute left-[1040px] -top-[100px]">
+        <div className="absolute left-[10px] -top-[200px] lg:left-[1040px] lg:-top-[100px]">
           <Key label="N" rotate={20} dataKey="n" isPressed={isKeyPressed("n")} />
         </div>
 
