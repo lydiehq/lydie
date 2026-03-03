@@ -14,7 +14,7 @@ import FormattedDate from "../../components/FormattedDate.astro";
 import ArticleHeadingEnhancements from "../../components/ArticleHeadingEnhancements.astro";
 import LydieContent from "../../components/LydieContent.astro";
 import RelatedDocumentCard from "../../components/RelatedDocumentCard.astro";
-import { GeometricPatternIllustration } from "../../components/illustrations/GeometricPatternIllustration";
+import { SparseGeometricGridIllustration } from "../../components/illustrations/SparseGeometricGridIllustration";
 import { Heading } from "../../components/generic/Heading";
 import { Container } from "../../components/Container";
 import { articleTypographyClassName } from "../../utils/article-typography";
@@ -142,7 +142,7 @@ const structuredData = {
             </span>
           </header>
           <div class="w-full aspect-[21/10]">
-            <GeometricPatternIllustration
+            <SparseGeometricGridIllustration
               seed={`blog:${illustrationSeed}`}
               radius="md"
             />
@@ -164,6 +164,14 @@ const structuredData = {
                     const relatedSlug = getMarketingSlug(
                       post.fields?.slug ?? post.slug,
                     );
+                    const relatedCreatedAt =
+                      typeof post.createdAt === "string"
+                        ? post.createdAt
+                        : undefined;
+                    const relatedCoverImage =
+                      typeof post.coverImage === "string" || post.coverImage === null
+                        ? post.coverImage
+                        : undefined;
 
                     return (
                       <RelatedDocumentCard
@@ -173,8 +181,8 @@ const structuredData = {
                             : `/blog/${post.id}`
                         }
                         title={post.title}
-                        createdAt={post.createdAt}
-                        coverImage={post.coverImage}
+                        createdAt={relatedCreatedAt as string | undefined}
+                        coverImage={relatedCoverImage as string | null | undefined}
                         seed={String(post.fields?.slug ?? post.slug ?? post.id)}
                       />
                     );

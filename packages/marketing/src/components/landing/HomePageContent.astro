@@ -20,6 +20,7 @@ import { MultiDocumentChatSection } from "./MultiDocumentChatSection";
 import { SpeedSection } from "./SpeedSection";
 import { Container } from "../Container";
 import { HeroNew } from "./HeroNew";
+import { CollectionsSection } from "./CollectionsSection";
 
 const heroWidths = [640, 768, 1024, 1280, 1536, 1920, 2260];
 const heroOptimizedImages = await Promise.all(
@@ -61,15 +62,7 @@ const faqItems = [
 ];
 ---
 
-<HeroNew
-  client:load
-  imageSrc={heroDefaultImage.src}
-  imageSrcSet={heroSrcset}
-  imageSizes="(max-width: 768px) 100vw, (max-width: 1536px) 90vw, 1536px"
-  imageAlt="Screenshot of the the Lydie platform including a sidebar with a document tree as well as the main WYSIWYG editor focusing on a document titled 'The Enduring Allure of Coffee'."
-  imageWidth={heroDefaultImage.options.width}
-  imageHeight={heroDefaultImage.options.height}
-/>
+<HeroNew client:load />
 <!-- <ProblemSolutionSection /> -->
 
 <!-- <Hero
@@ -92,7 +85,7 @@ const faqItems = [
   >
   </div>
 </div> -->
-<Container className="pb-24 pt-16 hidden flex-col md:flex">
+<!-- <Container className="pb-24 pt-16 hidden flex-col md:flex">
   <DemoWithSelector
     client:visible
     states={["collaboration", "linking", "assistant"]}
@@ -103,11 +96,12 @@ const faqItems = [
       description="At Lydie's core is an ergonomic editor that feels natural - whether you're drafting quick notes or deep documentation."
     />
   </DemoWithSelector>
-</Container>
+</Container> -->
 <Divider />
 <Container className="relative my-24 flex flex-col gap-y-48">
   <MultiDocumentChatSection />
   <SpeedSection client:visible />
+  <CollectionsSection client:visible />
 </Container>
 
 <KeyboardSection client:visible />

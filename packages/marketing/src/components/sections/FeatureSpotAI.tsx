@@ -47,14 +47,6 @@ export function FeatureSpotAI() {
       role="img"
       aria-label="AI assistant interface illustration showing chat messages and document creation"
     >
-      <div
-        className="absolute -left-38 -top-38 size-100 -z-1 mask-radial-closest-side mask-radial-from-40% mask-radial-at-[50%_50%]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(0, 0,0, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)",
-          backgroundSize: "48px 48px, 48px 48px, 100% 100%",
-        }}
-      />
       {/* <GradientOutline /> */}
       <div className="flex flex-col gap-y-4 p-1.5">
         <UserMessage content="Create a project brief from my Q4 Planning doc and Goals 2025" />
