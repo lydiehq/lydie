@@ -6,19 +6,20 @@ import * as React from "react";
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
 import { CastShadow } from "../generic/CastShadow";
-import { GradientOutline } from "../generic/GradientOutline";
+
+import styles from "./Hero.module.css";
 
 export function HeroNew() {
   return (
-    <div className="h-[calc(100vh-55px)] flex relative">
+    <div className="relative min-h-[calc(100vh-55px)]">
       <motion.div
-        className="absolute inset-px -z-1 mask-radial-closest-side mask-radial-from-40% mask-radial-at-[50%_50%]"
+        className="absolute inset-px -z-1 mask-radial-closest-side mask-radial-from-20% mask-radial-at-[58%_50%]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1.3, ease: [0.25, 0.46, 0.45, 0.94] }}
         style={{
           backgroundImage:
-            "linear-gradient(rgba(0, 0,0, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)",
+            "linear-gradient(rgba(0, 0,0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px)",
           backgroundSize: "48px 48px, 48px 48px, 100% 100%",
         }}
       />
@@ -31,12 +32,10 @@ export function HeroNew() {
       >
         <AIAssistantSidebar />
       </motion.div> */}
-      <div className="absolute left-0 md:left-auto md:right-8 top-0 p-1 z-0 pointer-events-auto mask-b-from-68% mask-b-to-95%">
-        <Application />
-      </div>
-      <Container className="flex flex-col relative mb-8 z-20 pointer-events-none">
-        <div className="flex flex-col gap-y-4 relative grow items-start justify-end w-full py-4 pointer-events-auto z-30">
-          {/* <div className="absolute top-[196px] left-[98px]">
+      <Container className="relative z-20 pointer-events-none overflow-visible">
+        <div className="flex min-h-[calc(100vh-55px)] flex-col gap-8 py-8 md:flex-row md:items-center md:gap-10 md:py-0">
+          <div className="relative z-30 flex w-full max-w-[400px] flex-col items-start justify-center gap-y-4 py-4 pointer-events-auto md:shrink-0">
+            {/* <div className="absolute top-[196px] left-[98px]">
             <div className="grid grid-cols-2 gap-1">
               {[...Array(4)].map((_, index) => (
                 <CastShadow strength={0.4}>
@@ -45,47 +44,50 @@ export function HeroNew() {
               ))}
             </div>
           </div> */}
-          <h1 className="text-5xl font-medium tracking-tight text-black/85">
-            <span className="inline-block">Centralize</span>{" "}
-            <span className="inline-block">your</span> <span className="inline-block">writing</span>
-          </h1>
-          <p className="text-lg/relaxed text-black/70 text-balance">
-            <span className="inline-block">
-              Lydie is a cloud-based writing workspace that adapts to your needs.
-            </span>
-            <br />
-            <span className="inline-block">
-              An open-source alternative to Google Docs, Notion and others.
-            </span>
-          </p>
-        </div>
-        <div className="flex md:justify-start justify-center items-center gap-x-1.5 relative w-full py-4 pointer-events-auto">
-          <div className="absolute -left-6 inset-y-0">
-            <div className="rounded-full size-3 absolute -top-6 ring ring-outline-subtle"></div>
-            <div className="rounded-full size-3 absolute -bottom-6 ring ring-outline-subtle"></div>
-          </div>
-          <GradientOutline />
+            <h1 className="text-4xl font-medium tracking-tight text-black/85">
+              <span className={styles.heroWord1}>Centralize</span>{" "}
+              <span className={styles.heroWord2}>your</span>{" "}
+              <span className={styles.heroWord3}>writing</span>
+            </h1>
+            <p className="text-base/relaxed text-black/70 text-balance">
+              <span className={styles.heroSentence1}>
+                Lydie is a cloud-based writing workspace that adapts to your needs.
+              </span>
+              <br />
+              <span className={styles.heroSentence2}>
+                An open-source alternative to Google Docs, Notion and others.
+              </span>
+            </p>
+            <div className="flex md:justify-start justify-center items-center gap-x-1.5 relative w-full py-4 pointer-events-auto">
+              <div className={styles.heroButton1}>
+                <Button
+                  href="https://app.lydie.co/auth"
+                  size="lg"
+                  intent="primary"
+                  phCapture="hero_cta_clicked"
+                >
+                  <span>Start writing for free</span>
+                </Button>
+              </div>
 
-          <Button
-            href="https://app.lydie.co/auth"
-            size="lg"
-            intent="primary"
-            phCapture="hero_cta_clicked"
-          >
-            <span>Start writing for free</span>
-          </Button>
-
-          <Button
-            href="https://github.com/lydiehq/lydie"
-            size="lg"
-            target="_blank"
-            intent="ghost"
-            phCapture="github_clicked"
-          >
-            <div className="flex items-center gap-x-1.5">
-              <span>Star on GitHub</span>
+              <div className={styles.heroButton2}>
+                <Button
+                  href="https://github.com/lydiehq/lydie"
+                  size="lg"
+                  target="_blank"
+                  intent="ghost"
+                  phCapture="github_clicked"
+                >
+                  <div className="flex items-center gap-x-1.5">
+                    <span>Star on GitHub</span>
+                  </div>
+                </Button>
+              </div>
             </div>
-          </Button>
+          </div>
+          <div className={`w-full pointer-events-auto md:min-w-0 ${styles.heroImage}`}>
+            <Application />
+          </div>
         </div>
       </Container>
     </div>
@@ -108,73 +110,76 @@ export function Application() {
   const newLocal =
     "size-5.5 rounded-md border border-black/10 before:pointer-events-none before:absolute before:inset-0 before:bg-linear-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300";
   return (
-    <section className="flex flex-col items-center w-full" aria-hidden="true">
-      <div className="relative size-full">
-        <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-[1000px] p-2 relative bg-[#f9f9f9] select-none">
+    <section className="flex w-full" aria-hidden="true">
+      <div className="relative w-full">
+        <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full md:w-[620px] lg:w-[720px] xl:w-[820px] 2xl:w-[920px] p-2 relative bg-[#f9f9f9] select-none ml-auto">
           <div className="flex items-center gap-x-1.5 mb-1.5">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="rounded-full size-3 ring ring-black/6 shrink-0" />
             ))}
           </div>
           <div className="flex gap-x-2">
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="flex-1 h-[680px] rounded-b-xl rounded-t-lg bg-[#fcfcfc] shadow-lg ring ring-black/8 relative"
-            >
-              <div className="flex h-full min-w-0">
-                <div className="relative flex h-full min-w-0 flex-1">
-                  <div className="w-52 flex flex-col p-1 relative z-10">
-                    <div className="w-full p-1 mb-2">
-                      <div className="flex items-center gap-x-2">
-                        <div className={newLocal}></div>
-                        <span className="text-xs font-medium text-gray-400">My notes</span>
+            <CastShadow>
+              <motion.div
+                initial={{ opacity: 0, scale: 1.05, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 1, delay: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="flex-1 h-[360px] sm:h-[460px] md:h-[520px] lg:h-[620px] xl:h-[680px] rounded-b-xl rounded-t-lg bg-[#fcfcfc] shadow-lg ring ring-black/8 relative overflow-hidden"
+              >
+                <div className="flex h-full min-w-0">
+                  <div className="relative flex h-full min-w-0 flex-1">
+                    <div className="w-32 sm:w-40 md:w-44 lg:w-52 flex flex-col p-1 relative z-10">
+                      <div className="w-full p-1 mb-2">
+                        <div className="flex items-center gap-x-2">
+                          <div className={newLocal}></div>
+                          <span className="text-xs font-medium text-gray-400">My notes</span>
+                        </div>
                       </div>
-                    </div>
-                    {documents.map((title, i) => {
-                      const isActive = title === "Japan Trip Planning";
-                      return (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, scale: 1.1, y: 6 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{
-                            duration: 0.7,
-                            delay: 0.55 + i * 0.08,
-                            ease: [0.25, 0.46, 0.45, 0.94],
-                          }}
-                          className={`flex items-center gap-x-1.5 py-1.5 px-1.5 hover:bg-black/4 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""}`}
-                        >
-                          <DocumentThumbnailIcon />
-                          <span
-                            className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : "text-black/60"}`}
+                      {documents.map((title, i) => {
+                        const isActive = title === "Japan Trip Planning";
+                        return (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, scale: 1.1, y: 6 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{
+                              duration: 0.7,
+                              delay: 0.55 + i * 0.08 + 1,
+                              ease: [0.25, 0.46, 0.45, 0.94],
+                            }}
+                            className={`flex items-center gap-x-1.5 py-[5px] px-1.5 hover:bg-black/2 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""}`}
                           >
-                            {title}
-                          </span>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                  <motion.div
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1.6, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="flex flex-1 overflow-hidden shadow-surface rounded-l-lg rounded-r-md m-1.5 relative bg-white"
-                  >
-                    <div className="flex-1 flex flex-col min-w-0">
-                      <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
-                        <ToolbarItems />
-                      </div>
-                      <div className="px-16 py-6 max-w-[65ch] overflow-hidden grow mask-b-to-80%">
-                        <DocumentContent />
-                      </div>
+                            <DocumentThumbnailIcon />
+                            <span
+                              className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : "text-black/60"}`}
+                            >
+                              {title}
+                            </span>
+                          </motion.div>
+                        );
+                      })}
                     </div>
-                  </motion.div>
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-linear-to-b from-transparent to-[#fcfcfc]" />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 1.05, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 1.6, delay: 1.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      className="flex flex-1 overflow-hidden shadow-surface rounded-l-lg rounded-r-md m-1.5 relative bg-white"
+                    >
+                      <div className="flex-1 flex flex-col min-w-0">
+                        <div className="flex justify-between items-center px-1 py-0.5 border-b border-gray-200">
+                          <ToolbarItems />
+                        </div>
+                        <div className="px-4 py-4 sm:px-8 sm:py-5 lg:px-16 lg:py-6 max-w-[65ch] overflow-hidden grow">
+                          <DocumentContent />
+                        </div>
+                      </div>
+
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-60 bg-linear-to-b from-transparent to-[#fcfcfc]" />
+                    </motion.div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </CastShadow>
           </div>
         </div>
       </div>
