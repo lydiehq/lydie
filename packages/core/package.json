@@ -22,7 +22,7 @@
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "nanoid": "^5.1.6",
-    "node-html-parser": "^7.0.2",
+    "node-html-parser": "^7.1.0",
     "sharp": "^0.34.5",
     "stripe": "catalog:",
     "yjs": "catalog:",
