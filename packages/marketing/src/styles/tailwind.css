@@ -15,7 +15,10 @@
 @theme {
   --font-sans: Inter Variable, sans-serif;
   --font-handwritten: "Reenie Beanie", cursive;
-  --shadow-surface: 0px 0px 8px -4px rgba(0, 0, 0, 0.2), 0 0 1.5px 0 rgba(0, 0, 0, 0.2);
+  --shadow-surface:
+    color-mix(in oklch, var(--color-gray-950) 7%, transparent) 0px 2px 4px 0px,
+    color-mix(in oklch, var(--color-gray-950) 10%, transparent) 0px 1px 1px 0px,
+    color-mix(in oklch, var(--color-gray-950) 5%, transparent) 0px 0px 0px 1px;
   --shadow-legit:
     0px 4px 20px 0px rgba(15, 12, 12, 0.08), 0px 8px 12px -4px rgba(15, 12, 12, 0.08),
     0px 0px 2px 0px rgba(15, 12, 12, 0.1), 0px 1px 2px 0px rgba(15, 12, 12, 0.1);

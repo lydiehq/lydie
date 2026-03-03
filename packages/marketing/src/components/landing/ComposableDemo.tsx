@@ -1,7 +1,7 @@
 import { BotRegular } from "@fluentui/react-icons";
 import { getColorById } from "@lydie/core/colors";
 import { CollaborationCaret } from "@lydie/ui/components/editor/CollaborationCaret";
-import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
+import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { AnimatePresence, motion } from "motion/react";
 import * as React from "react";
 
@@ -39,9 +39,8 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
   const newLocal =
     "size-5.5 rounded-md border border-black/10 shadow-[0_1px_--theme(--color-white/0.15)_inset,0_1px_3px_--theme(--color-black/0.15)] before:pointer-events-none before:absolute before:inset-0 before:bg-linear-to-t before:from-white/15 after:pointer-events-none after:absolute after:inset-0 after:-z-10 after:bg-linear-to-b after:from-white/14 relative bg-pink-300";
   return (
-    <section className="flex flex-col items-center overflow-visible w-full" aria-hidden="true">
-      <div className="relative size-full p-1.5 -m-1.5">
-        <GradientOutline />
+    <section className="flex flex-col items-center overflow-visible w-[1080px]" aria-hidden="true">
+      <div className="relative size-full">
         <div className="rounded-2xl ring ring-outline-subtle flex flex-col w-full p-2 relative bg-[#f9f9f9] select-none">
           <div className="flex items-center gap-x-1.5 mb-1.5">
             {[...Array(3)].map((_, i) => (
@@ -50,7 +49,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
           </div>
           <div className="flex gap-x-2">
             <CastShadow className="w-full rounded-b-xl rounded-t-lg">
-              <div className="flex overflow-hidden flex-1 h-[580px] rounded-b-xl rounded-t-lg bg-white shadow-xl ring ring-black/8 relative">
+              <div className="flex overflow-hidden flex-1 h-[680px] rounded-b-xl rounded-t-lg bg-[#fcfcfc] shadow-xl ring ring-black/8 relative">
                 <motion.div
                   className="flex flex-1 min-w-0"
                   animate={{
@@ -81,11 +80,9 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                         return (
                           <div
                             key={i}
-                            className={`flex items-center gap-x-1.5 py-1 px-1.5 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
+                            className={`flex items-center gap-x-1.5 py-1 px-1.5 hover:bg-black/4 rounded-md truncate min-w-0 ${isActive ? "bg-black/5" : ""} ${isLinked ? "bg-blue-50 ring-1 ring-blue-200/60" : ""}`}
                           >
-                            <DocumentIcon
-                              className={`size-4 shrink-0 ${isActive ? "text-black/60" : isLinked ? "text-blue-500" : "text-black/30"}`}
-                            />
+                            <DocumentThumbnailIcon />
                             <span
                               className={`text-[0.8125rem] select-none truncate ${isActive ? "font-medium text-black/60" : isLinked ? "font-medium text-blue-600" : "text-black/60"}`}
                             >
@@ -97,7 +94,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                     </div>
                   </motion.div>
                   <motion.div
-                    className={`flex flex-1 overflow-hidden relative bg-white ${activeState === "assistant" ? "border-r border-black/8 rounded-r-lg" : "border-l border-black/8 rounded-l-lg"}`}
+                    className={`flex flex-1 overflow-hidden mt-1.5 relative bg-white ${activeState === "assistant" ? "border border-black/8 rounded-r-lg" : "border border-black/8 rounded-l-lg"}`}
                     transition={{
                       type: "spring",
                       stiffness: 400,
@@ -132,7 +129,7 @@ export function ComposableDemo({ activeState }: ComposableDemoProps) {
                       </div>
 
                       <div
-                        className={`px-8 py-6 max-w-[65ch] mx-auto overflow-hidden grow ${activeState === "assistant" ? "mask-r-from-0% mask-r-to-100%" : ""}`}
+                        className={`px-8 py-6 max-w-[65ch] mask-b-from-20% mask-b-to-80% mx-auto overflow-hidden grow ${activeState === "assistant" ? "mask-r-from-0% mask-r-to-100%" : ""}`}
                       >
                         <DocumentContent currentState={activeState} />
                       </div>

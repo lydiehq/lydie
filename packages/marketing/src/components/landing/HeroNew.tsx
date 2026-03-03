@@ -1,7 +1,8 @@
 import { Container } from "../Container";
 import { Button } from "../generic/Button";
+import { CastShadow } from "../generic/CastShadow";
 import { GradientOutline } from "../generic/GradientOutline";
-import { ComposableDemoNew } from "./ComposableDemoNew";
+import { ComposableDemo } from "./ComposableDemo";
 
 type Props = {
   imageSrc: string;
@@ -20,6 +21,81 @@ export function HeroNew({
   imageWidth,
   imageHeight,
 }: Props) {
+  return (
+    <div className="h-[calc(100vh-55px)] flex relative">
+      <div className="absolute inset-0 mask-b-from-70% mask-b-to-95%">
+        <div className="absolute left-0 md:left-118 top-0 p-1 z-0">
+          <ComposableDemo
+            activeState="collaboration"
+            states={["collaboration", "linking", "assistant"]}
+          />
+        </div>
+      </div>
+      <Container className="flex flex-col relative mb-16">
+        <div className="flex flex-col gap-y-4 relative grow items-start justify-end w-full py-4">
+          <div
+            className="absolute inset-0 -z-1 mask-radial-closest-side mask-radial-from-40% mask-radial-at-[50%_50%]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(0, 0,0, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px)",
+              backgroundSize: "48px 48px, 48px 48px, 100% 100%",
+            }}
+          />
+          {/* <div className="absolute top-[196px] left-[98px]">
+            <div className="grid grid-cols-2 gap-1">
+              {[...Array(4)].map((_, index) => (
+                <CastShadow strength={0.4}>
+                  <div key={index} className="bg-white shadow-surface rounded-lg size-[42px]" />
+                </CastShadow>
+              ))}
+            </div>
+          </div> */}
+          <h1 className="text-5xl font-medium tracking-tight text-black/85">
+            <span className="inline-block">Centralize</span>{" "}
+            <span className="inline-block">your</span> <span className="inline-block">writing</span>
+          </h1>
+          <p className="text-lg/relaxed text-black/70 text-balance">
+            <span className="inline-block">
+              Lydie is a cloud-based writing workspace that adapts to your needs.
+            </span>
+            <br />
+            <span className="inline-block">
+              An open-source alternative to Google Docs, Notion and others.
+            </span>
+          </p>
+        </div>
+        <div className="flex md:justify-start justify-center items-center gap-x-1.5 relative w-full py-4">
+          <div className="absolute -left-6 inset-y-0">
+            <div className="rounded-full size-3 absolute -top-6 ring ring-outline-subtle"></div>
+            <div className="rounded-full size-3 absolute -bottom-6 ring ring-outline-subtle"></div>
+          </div>
+          <GradientOutline />
+
+          <Button
+            href="https://app.lydie.co/auth"
+            size="lg"
+            intent="primary"
+            phCapture="hero_cta_clicked"
+          >
+            <span>Start writing for free</span>
+          </Button>
+
+          <Button
+            href="https://github.com/lydiehq/lydie"
+            size="lg"
+            target="_blank"
+            intent="ghost"
+            phCapture="github_clicked"
+          >
+            <div className="flex items-center gap-x-1.5">
+              <span>Star on GitHub</span>
+            </div>
+          </Button>
+        </div>
+      </Container>
+    </div>
+  );
+
   return (
     // <div className="mask-b-from-75% mask-b-to-95%">
     <div>
