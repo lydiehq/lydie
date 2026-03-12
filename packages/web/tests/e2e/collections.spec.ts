@@ -1232,7 +1232,10 @@ async function createKanbanView(page: Page, viewName: string): Promise<void> {
   await dialog.getByLabel(/^Name$/).fill(viewName);
   await dialog.getByRole("combobox").first().selectOption("kanban");
   await dialog.getByRole("button", { name: "Save view" }).click();
-  await page.getByRole("button", { name: new RegExp(viewName, "i") }).click();
+  const escapedViewName = viewName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  await page
+    .getByRole("button", { name: new RegExp(`^${escapedViewName}\\s+kanban$`, "i") })
+    .click();
   await expect(page.getByText("Drop cards here").first()).toBeVisible();
 }
 
