@@ -245,7 +245,7 @@ export function CollectionViewBlockComponent(props: Props) {
   // Empty state - no collection selected
   if (!viewId || !collectionId) {
     return (
-      <NodeViewWrapper>
+      <NodeViewWrapper contentEditable={false}>
         <div
           data-doc-widget
           style={{
@@ -390,6 +390,7 @@ export function CollectionViewBlockComponent(props: Props) {
 
   return (
     <NodeViewWrapper
+      contentEditable={false}
       className=" w-full"
       data-doc-block-wide
       style={{

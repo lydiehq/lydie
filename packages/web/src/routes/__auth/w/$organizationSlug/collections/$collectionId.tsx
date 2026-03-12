@@ -91,7 +91,6 @@ function CollectionPage({ collection, organization }: CollectionPageProps) {
   const indexedFields = schema.filter((property) => property.indexed).map((property) => property.name);
   const [name, setName] = useState(collection.name);
   const [isSavingName, setIsSavingName] = useState(false);
-  const [hasAttemptedInitialView, setHasAttemptedInitialView] = useState(false);
   const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
   const [viewEditorState, setViewEditorState] = useState<
     | {
@@ -140,37 +139,6 @@ function CollectionPage({ collection, organization }: CollectionPageProps) {
       setSelectedViewId(nextSelectedViewId);
     }
   }, [selectedViewId, viewRecords]);
-
-  useEffect(() => {
-    setHasAttemptedInitialView(false);
-  }, [collection.id]);
-
-  useEffect(() => {
-    if (hasAttemptedInitialView || viewRecords.length > 0) {
-      return;
-    }
-
-    const initialViewId = createId();
-    setHasAttemptedInitialView(true);
-
-    void (async () => {
-      try {
-        z.mutate(
-          mutators.collection.createView({
-            viewId: initialViewId,
-            organizationId: organization.id,
-            collectionId: collection.id,
-            name: "Table",
-            type: "table",
-          }),
-        );
-        setSelectedViewId(initialViewId);
-      } catch (error: unknown) {
-        console.error(error);
-        toast.error("Failed to create default table view");
-      }
-    })();
-  }, [collection.id, hasAttemptedInitialView, organization.id, viewRecords.length, z]);
 
   const selectedView = useMemo(
     () => viewRecords.find((view) => view.id === selectedViewId) ?? null,
