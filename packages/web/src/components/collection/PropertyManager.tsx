@@ -22,10 +22,9 @@ type Props = {
   collectionId: string;
   organizationId: string;
   schema: PropertyDefinition[];
-  isAdmin: boolean;
 };
 
-export function PropertyManager({ collectionId, organizationId, schema, isAdmin }: Props) {
+export function PropertyManager({ collectionId, organizationId, schema }: Props) {
   const z = useZero();
   const [isAdding, setIsAdding] = useState(false);
   const [newProperty, setNewProperty] = useState<{
@@ -124,24 +123,6 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
     await saveSchema(schema.filter((field) => field.name !== fieldName));
   };
 
-  if (!isAdmin) {
-    if (schema.length === 0) return null;
-
-    return (
-      <div className="flex flex-wrap gap-2">
-        {schema.map((field) => (
-          <div
-            key={field.name}
-            className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded text-sm"
-          >
-            <span className="font-medium">{field.name}</span>
-            <span className="text-gray-400 text-xs">({field.type})</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-3">
       {schema.length > 0 && (
@@ -153,15 +134,13 @@ export function PropertyManager({ collectionId, organizationId, schema, isAdmin 
             >
               <span className="font-medium">{field.name}</span>
               <span className="text-blue-500 text-xs">({field.type})</span>
-              {isAdmin && (
-                <button
-                  onClick={() => handleRemoveProperty(field.name)}
-                  className="ml-1 text-blue-400 hover:text-blue-600"
-                  title="Remove property"
-                >
-                  ×
-                </button>
-              )}
+              <button
+                onClick={() => handleRemoveProperty(field.name)}
+                className="ml-1 text-blue-400 hover:text-blue-600"
+                title="Remove property"
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>

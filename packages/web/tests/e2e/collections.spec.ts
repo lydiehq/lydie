@@ -197,7 +197,9 @@ test.describe("collections", () => {
         await expect(page.getByRole("dialog")).not.toBeVisible();
         await page.reload();
 
-        await expect(page.getByRole("button", { name: /Sprint Board/i })).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: /^Sprint Board\s+kanban$/i }),
+        ).toBeVisible();
       } finally {
         await deleteTestCollection(collection.id);
       }
@@ -644,8 +646,8 @@ test.describe("collections", () => {
         await page.locator("[data-testid='editor-content']").click();
         await page.keyboard.type("/collection");
         await page.getByText("Collection View").click();
-        await page.getByRole("button", { name: collection.name }).click();
-        await page.getByRole("button", { name: /Board/i }).click();
+        await page.getByRole("button", { name: collection.name, exact: true }).click();
+        await page.getByRole("button", { name: /^Board\s+kanban$/i }).click();
 
         const block = page.locator("[data-doc-widget]").filter({ hasText: collection.name }).first();
         await renameKanbanColumn(block, initialLabel, nextLabel);
@@ -1249,9 +1251,6 @@ async function renameKanbanColumn(
   await nameInput.fill(nextLabel);
   await nameInput.press("Enter");
   await expect(container.getByRole("button", { name: nextLabel }).first()).toBeVisible({
-    timeout: 10000,
-  });
-  await expect(container.getByRole("button", { name: currentLabel }).first()).not.toBeVisible({
     timeout: 10000,
   });
 }

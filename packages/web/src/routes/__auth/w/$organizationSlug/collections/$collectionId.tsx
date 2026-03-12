@@ -21,10 +21,8 @@ import {
   CollectionViewTabs,
   type CollectionViewType,
 } from "@/components/collections/CollectionViewTabs";
-import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useZero } from "@/services/zero";
-import { isAdmin } from "@/utils/admin";
 
 import { resolveSelectedViewId, type CollectionViewRecord } from "./view-selection";
 
@@ -36,8 +34,6 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug/collections/$c
 function RouteComponent() {
   const { collectionId } = Route.useParams();
   const { organization } = useOrganization();
-  const { user } = useAuth();
-  const userIsAdmin = isAdmin(user);
   const matchRoute = useMatchRoute();
 
   const [collection, status] = useQuery(
@@ -71,7 +67,7 @@ function RouteComponent() {
   }
 
   return (
-    <CollectionPage collection={collection} organization={organization} userIsAdmin={userIsAdmin} />
+    <CollectionPage collection={collection} organization={organization} />
   );
 }
 
@@ -86,10 +82,9 @@ interface CollectionPageProps {
     id: string;
     slug: string;
   };
-  userIsAdmin: boolean;
 }
 
-function CollectionPage({ collection, organization, userIsAdmin }: CollectionPageProps) {
+function CollectionPage({ collection, organization }: CollectionPageProps) {
   const z = useZero();
   const schema = (collection.properties as PropertyDefinition[] | null) ?? [];
   const lookupKey = schema.find((property) => property.unique)?.name ?? null;
@@ -367,16 +362,15 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
     <div className="h-full overflow-y-auto">
       <div className="px-6 py-5 border-b border-black/6 flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          {userIsAdmin ? (
-            <TextField
-              value={name}
-              onChange={setName}
-              aria-label="Collection name"
-              className="flex items-center gap-2"
-              onBlur={() => void saveName()}
-            >
-              <Input
-                className="
+          <TextField
+            value={name}
+            onChange={setName}
+            aria-label="Collection name"
+            className="flex items-center gap-2"
+            onBlur={() => void saveName()}
+          >
+            <Input
+              className="
                   text-xl font-semibold text-gray-900 p-0 min-w-0 flex-1
                   border-0 !border-0 bg-transparent !bg-transparent
                   outline-none !outline-none ring-0 !ring-0
@@ -384,11 +378,8 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
                   focus:outline-none focus:!outline-none
                   shadow-none !shadow-none
                 "
-              />
-            </TextField>
-          ) : (
-            <h1 className="text-xl font-semibold text-gray-900">{collection.name}</h1>
-          )}
+            />
+          </TextField>
           <p className="text-sm text-gray-500 mt-1">
             /{collection.handle}
             {isSavingName && <span className="ml-2 text-gray-400">Saving...</span>}
@@ -397,16 +388,14 @@ function CollectionPage({ collection, organization, userIsAdmin }: CollectionPag
             API lookup: {lookupKey ?? "id"} · Indexed: {indexedFields.length > 0 ? indexedFields.join(", ") : "none"}
           </p>
         </div>
-        {userIsAdmin && (
-          <Button
-            intent="ghost"
-            size="sm"
-            href={`/w/${organization.slug}/collections/${collection.id}/settings`}
-          >
-            <SettingsRegular className="w-4 h-4 mr-1" />
-            Settings
-          </Button>
-        )}
+        <Button
+          intent="ghost"
+          size="sm"
+          href={`/w/${organization.slug}/collections/${collection.id}/settings`}
+        >
+          <SettingsRegular className="w-4 h-4 mr-1" />
+          Settings
+        </Button>
       </div>
 
       <div className="px-6 py-4 space-y-2">

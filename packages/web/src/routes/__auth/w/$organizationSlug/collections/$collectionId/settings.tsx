@@ -10,12 +10,10 @@ import { Form } from "react-aria-components";
 import { toast } from "sonner";
 import type { PropertyDefinition } from "@lydie/core/collection";
 
-import { useAuth } from "@/context/auth.context";
 import { useOrganization } from "@/context/organization.context";
 import { useAppForm } from "@/hooks/use-app-form";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useZero } from "@/services/zero";
-import { isAdmin } from "@/utils/admin";
 
 export const Route = createFileRoute(
   "/__auth/w/$organizationSlug/collections/$collectionId/settings",
@@ -27,8 +25,6 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { collectionId } = Route.useParams();
   const { organization } = useOrganization();
-  const { user } = useAuth();
-  const userIsAdmin = isAdmin(user);
 
   const [collection, status] = useQuery(
     queries.collections.byId({
@@ -57,11 +53,7 @@ function RouteComponent() {
   }
 
   return (
-    <CollectionSettings
-      collection={collection}
-      organization={organization}
-      userIsAdmin={userIsAdmin}
-    />
+    <CollectionSettings collection={collection} organization={organization} />
   );
 }
 
@@ -76,7 +68,6 @@ interface CollectionSettingsProps {
     id: string;
     slug: string;
   };
-  userIsAdmin: boolean;
 }
 
 function getLookupSettings(properties: unknown): { lookupKey: string; indexedFields: string[] } {
@@ -99,7 +90,7 @@ function applyLookupSettings(
   }));
 }
 
-function CollectionSettings({ collection, organization, userIsAdmin }: CollectionSettingsProps) {
+function CollectionSettings({ collection, organization }: CollectionSettingsProps) {
   const z = useZero();
   const [usages] = useQuery(
     queries.collections.viewUsagesByCollection({
@@ -191,20 +182,6 @@ function CollectionSettings({ collection, organization, userIsAdmin }: Collectio
       toast.error("This collection is still referenced by one or more views");
     }
   };
-
-  if (!userIsAdmin) {
-    return (
-      <div className="flex flex-col gap-y-6">
-        <div>
-          <Heading level={1}>Settings</Heading>
-        </div>
-        <Separator />
-        <div className="text-sm text-gray-500">
-          You don't have permission to manage this collection.
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-y-6">
