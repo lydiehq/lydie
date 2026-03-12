@@ -157,7 +157,30 @@ test.describe("collections", () => {
       const collection = await createTestCollection(organization.id, {
         name: "View Rename Test",
         handle: "view-rename-test",
-        properties: [{ name: "status", type: "text", required: false, unique: false }],
+        properties: [
+          {
+            name: "status",
+            type: "status",
+            required: false,
+            unique: false,
+            options: [
+              {
+                id: "status_backlog",
+                label: "Backlog",
+                color: "gray",
+                order: 0,
+                stage: "NOT_STARTED",
+              },
+              {
+                id: "status_done",
+                label: "Done",
+                color: "green",
+                order: 1,
+                stage: "COMPLETE",
+              },
+            ],
+          },
+        ],
       });
 
       try {
@@ -171,6 +194,8 @@ test.describe("collections", () => {
         await page.getByLabel("Filter field").selectOption("status");
         await page.getByLabel("Filter value").fill("active");
         await page.getByRole("button", { name: "Save view" }).click();
+        await expect(page.getByRole("dialog")).not.toBeVisible();
+        await page.reload();
 
         await expect(page.getByRole("button", { name: /Sprint Board/i })).toBeVisible();
       } finally {
@@ -1220,7 +1245,12 @@ async function renameKanbanColumn(
   const nameInput = container.getByRole("textbox", { name: "Edit column name" }).first();
   await nameInput.fill(nextLabel);
   await nameInput.press("Enter");
-  await expect(container.getByRole("button", { name: nextLabel }).first()).toBeVisible();
+  await expect(container.getByRole("button", { name: nextLabel }).first()).toBeVisible({
+    timeout: 10000,
+  });
+  await expect(container.getByRole("button", { name: currentLabel }).first()).not.toBeVisible({
+    timeout: 10000,
+  });
 }
 
 function getExternalApiUrl(path: string): string {

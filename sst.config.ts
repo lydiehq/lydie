@@ -2,7 +2,6 @@
 export default $config({
   app(input) {
     const useAwsProfile = !process.env.CI && !process.env.GITHUB_ACTIONS;
-
     return {
       name: "lydie",
       // protect: ["production"].includes(input?.stage),
@@ -13,6 +12,7 @@ export default $config({
           region: "us-east-1",
         },
         command: true,
+        planetscale: "0.4.1",
       },
     };
   },
