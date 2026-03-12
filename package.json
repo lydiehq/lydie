@@ -15,22 +15,22 @@
       "react-dom": "^19.2.4",
       "yjs": "^13.6.29",
       "drizzle-orm": "^1.0.0-beta.15-9485290",
-      "better-auth": "^1.5.1",
-      "@better-auth/drizzle-adapter": "^1.5.1",
-      "@ai-sdk/google": "^3.0.36",
-      "@ai-sdk/openai": "^3.0.39",
-      "ai": "^6.0.108",
-      "@tiptap/core": "^3.20.0",
-      "@tiptap/pm": "^3.20.0",
-      "@tiptap/react": "^3.20.0",
-      "@tiptap/starter-kit": "^3.20.0",
+      "better-auth": "^1.5.5",
+      "@better-auth/drizzle-adapter": "^1.5.5",
+      "@ai-sdk/google": "^3.0.43",
+      "@ai-sdk/openai": "^3.0.41",
+      "ai": "^6.0.116",
+      "@tiptap/core": "^3.20.1",
+      "@tiptap/pm": "^3.20.1",
+      "@tiptap/react": "^3.20.1",
+      "@tiptap/starter-kit": "^3.20.1",
       "@tiptap/y-tiptap": "^3.0.2",
-      "@tiptap/extension-drag-handle": "^3.20.0",
-      "@tiptap/extension-drag-handle-react": "^3.20.0",
-      "@tiptap/extension-mention": "^3.20.0",
-      "@tiptap/extension-node-range": "^3.20.0",
-      "@tiptap/extension-placeholder": "^3.20.0",
-      "stripe": "^20.4.0"
+      "@tiptap/extension-drag-handle": "^3.20.1",
+      "@tiptap/extension-drag-handle-react": "^3.20.1",
+      "@tiptap/extension-mention": "^3.20.1",
+      "@tiptap/extension-node-range": "^3.20.1",
+      "@tiptap/extension-placeholder": "^3.20.1",
+      "stripe": "^20.4.1"
     }
   },
   "scripts": {
@@ -66,13 +66,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.61",
+    "@ai-sdk/gateway": "^3.0.66",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
     "@tanstack/react-query-persist-client": "^5.90.24",
-    "@tiptap/extension-code": "^3.20.0",
-    "@tiptap/extension-table-of-contents": "^3.20.0",
-    "framer-motion": "^12.34.4"
+    "@tiptap/extension-code": "^3.20.1",
+    "@tiptap/extension-table-of-contents": "^3.20.1",
+    "framer-motion": "^12.35.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -81,9 +81,9 @@
     "@types/bun": "^1.3.10",
     "@vitest/ui": "^4.0.18",
     "jsdom": "^28.1.0",
-    "oxfmt": "^0.36.0",
-    "oxlint": "^1.51.0",
-    "oxlint-tsgolint": "^0.15.0",
+    "oxfmt": "^0.39.0",
+    "oxlint": "^1.54.0",
+    "oxlint-tsgolint": "^0.16.0",
     "sst": "v3.18.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
