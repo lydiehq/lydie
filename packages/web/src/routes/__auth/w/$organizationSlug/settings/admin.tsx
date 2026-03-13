@@ -1,6 +1,7 @@
 import { ArrowDownloadRegular } from "@fluentui/react-icons";
 import type { ContentNode } from "@lydie/core/content";
 import { serializeToMarkdown } from "@lydie/core/serialization/markdown";
+import { convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { Button } from "@lydie/ui/components/generic/Button";
 import { Heading } from "@lydie/ui/components/generic/Heading";
 import { SectionHeader } from "@lydie/ui/components/layout/SectionHeader";
@@ -66,11 +67,8 @@ function RouteComponent() {
       // Create a folder structure based on document paths
       for (const doc of documents) {
         try {
-          // Note: Zero queries don't sync yjs_state, so we use json_content here.
-          // If the document has collaborative edits in Yjs, json_content might be outdated.
-          // For the most up-to-date content, users should ensure documents are saved before exporting.
-          // Convert the JSON content to markdown
-          const markdown = serializeToMarkdown(doc.json_content as ContentNode);
+          const jsonContent = convertYjsToJson(doc.yjs_state);
+          const markdown = serializeToMarkdown(jsonContent as ContentNode);
 
           // Create a safe filename from the title
           const safeTitle =
@@ -80,13 +78,12 @@ function RouteComponent() {
               .replace(/^-|-$/g, "")
               .toLowerCase() || "untitled";
 
-          // Use the document's slug as the filename for consistency
-          const filename = `${doc.slug || safeTitle}.md`;
+          const filename = `${safeTitle || "untitled"}-${doc.id.slice(0, 6)}.md`;
 
           // Add metadata header to markdown
           const metadataHeader = `---
 title: ${doc.title}
-slug: ${doc.slug}
+id: ${doc.id}
 created: ${new Date(doc.created_at).toISOString()}
 updated: ${new Date(doc.updated_at).toISOString()}
 ---
@@ -164,7 +161,7 @@ updated: ${new Date(doc.updated_at).toISOString()}
               <strong>What's included:</strong>
               <ul className="mt-2 ml-4 list-disc space-y-1">
                 <li>All documents converted to Markdown format</li>
-                <li>Metadata header with title, slug, and timestamps</li>
+                <li>Metadata header with title, ID, and timestamps</li>
                 <li>Files organized in a ZIP archive</li>
                 <li>Compatible with most Markdown editors and note-taking apps</li>
               </ul>

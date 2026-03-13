@@ -455,7 +455,7 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     "/collections/:collectionId/documents",
     describeRoute({
       summary: "List collection documents",
-      description: "Returns collection root documents with filtering, sorting, and cursor pagination.",
+      description: "Returns collection documents with filtering, sorting, and cursor pagination.",
       responses: {
         200: {
           description: "Documents listed",
@@ -478,7 +478,7 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     const sortRaw = c.req.query("sort") ?? "-created_at";
     const descending = sortRaw.startsWith("-");
     const sortField = descending ? sortRaw.slice(1) : sortRaw;
-    const limit = parseLimit(c.req.query("limit"), 20, 100);
+    const limit = parseLimit(c.req.query("limit"), 100, 100);
     const cursor = decodeCursor(c.req.query("cursor"));
     const include = parseIncludes(c.req.query("include"));
     const sparseFields = parseFields(c.req.query("fields"));
@@ -492,7 +492,7 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
         message: `Filter on '${filter.field}' is not indexed and may be slow on large collections. Declare it as an indexed field in collection settings.`,
       }));
 
-    const rows = await getCollectionDocuments(organizationId, collection.id, null);
+    const rows = await getCollectionDocuments(organizationId, collection.id, undefined);
     let documents = await Promise.all(rows.map((row) => toApiDocument(row.document, row.values, includeToc)));
     documents = applyFilters(documents, filters);
 

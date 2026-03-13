@@ -103,7 +103,6 @@ async function pushToIntegration(documentId: string, integrationLinkId: string |
       document: {
         id: document.id,
         title: document.title,
-        slug: document.slug,
         content: jsonContent,
         published: document.published,
         updatedAt: document.updatedAt,

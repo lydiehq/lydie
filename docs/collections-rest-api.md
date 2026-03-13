@@ -7,11 +7,10 @@ Base URL: `/api/v1`
 ### List documents
 `GET /api/v1/collections/{collectionId}/documents`
 
-- Root documents only (`parent_id IS NULL`)
 - Query params:
   - `filter[{field}]`, `filter[{field}][$eq]`, `[$in]`, `[$gt]`, `[$lt]`, `[$like]`, `[$null]`
   - `sort` (example: `-created_at`, `title`)
-  - `limit` (default `20`, max `100`)
+  - `limit` (default `100`, max `100`)
   - `cursor`
   - `include` (`related`, `children`)
   - `fields` (sparse fieldsets)
@@ -23,7 +22,7 @@ Response envelope:
   "data": [{ "id": "doc_1", "fields": { "slug": "hello-world" } }],
   "meta": {
     "total": 1,
-    "limit": 20,
+    "limit": 100,
     "nextCursor": null,
     "warnings": []
   }

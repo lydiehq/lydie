@@ -164,7 +164,6 @@ export const documentMutators = {
       documentId: z.string(),
       title: z.string().optional(),
       published: z.boolean().optional(),
-      customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       coverImage: z.string().nullable().optional(),
       fullWidth: z.boolean().optional(),
       organizationId: z.string(),
@@ -177,7 +176,6 @@ export const documentMutators = {
       const updates: any = { id: args.documentId };
       if (args.title !== undefined) updates.title = args.title;
       if (args.published !== undefined) updates.published = args.published;
-      if (args.customFields !== undefined) updates.custom_fields = args.customFields;
       if (args.coverImage !== undefined) updates.cover_image = args.coverImage;
       if (args.fullWidth !== undefined) updates.full_width = args.fullWidth;
       if (args.collectionId !== undefined) updates.collection_id = args.collectionId;

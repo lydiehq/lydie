@@ -15,6 +15,8 @@ import { GeometricPatternIllustration } from "../../components/illustrations/Geo
 import * as lydieApi from "../../utils/lydie-client";
 
 const BLOG_COLLECTION_HANDLE = lydieApi.collections.blog;
+const POSTS_PER_PAGE = 12;
+const MAX_PAGE = 100;
 
 type BlogListDocument = Awaited<
   ReturnType<typeof lydieApi.getCollectionDocuments>
@@ -48,18 +50,79 @@ function getPostDate(post: BlogListDocument): Date {
   return Number.isNaN(parsedDate.getTime()) ? new Date(0) : parsedDate;
 }
 
+function parsePage(value: string | null): number {
+  if (!value) return 1;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) return 1;
+  return Math.min(MAX_PAGE, Math.trunc(parsed));
+}
+
+function getBlogPageHref(page: number): string {
+  return page <= 1 ? "/blog" : `/blog?page=${page}`;
+}
+
+function getBlogPageUrl(page: number): URL {
+  return new URL(getBlogPageHref(page), Astro.url);
+}
+
 let posts: BlogListDocument[] = [];
+let nextCursor: string | null = null;
+const currentPage = parsePage(Astro.url.searchParams.get("page"));
+let effectivePage = currentPage;
 
 try {
-  console.log("[Blog] Fetching posts from collection:", BLOG_COLLECTION_HANDLE);
-  const { documents } = await lydieApi.getCollectionDocuments(
-    BLOG_COLLECTION_HANDLE,
+  console.log(
+    `[Blog] Fetching posts from collection: ${BLOG_COLLECTION_HANDLE} (page ${currentPage})`,
   );
-  posts = documents;
-  console.log(`[Blog] Successfully fetched ${posts.length} blog posts`);
+
+  let cursor: string | undefined;
+  for (let page = 1; page <= currentPage; page++) {
+    const response = (await lydieApi.getCollectionDocuments(
+      BLOG_COLLECTION_HANDLE,
+      {
+        sortBy: "created_at",
+        sortOrder: "desc",
+        limit: POSTS_PER_PAGE,
+        ...(cursor ? { cursor } : {}),
+      } as Parameters<typeof lydieApi.getCollectionDocuments>[1],
+    )) as unknown as {
+      documents: BlogListDocument[];
+      meta?: { nextCursor?: string | null };
+    };
+
+    const documents = response.documents;
+    const responseCursor = response.meta?.nextCursor ?? null;
+
+    if (page === currentPage) {
+      posts = documents;
+      nextCursor = responseCursor;
+      break;
+    }
+
+    if (!responseCursor) {
+      posts = documents;
+      nextCursor = null;
+      effectivePage = page;
+      break;
+    }
+
+    cursor = responseCursor;
+  }
+
+  console.log(
+    `[Blog] Successfully fetched ${posts.length} blog posts for page ${effectivePage}`,
+  );
 } catch (error) {
   console.error("[Blog] Failed to fetch blog posts:", error);
   posts = [];
+  nextCursor = null;
+}
+
+if (currentPage > 1 && effectivePage !== currentPage) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Blog page not found",
+  });
 }
 
 const sortedPosts = posts.sort((a, b) => {
@@ -70,11 +133,34 @@ const sortedPosts = posts.sort((a, b) => {
 
 const featuredPost = sortedPosts[0];
 const remainingPosts = sortedPosts.slice(1);
+
+const hasPreviousPage = effectivePage > 1;
+const hasNextPage = Boolean(nextCursor);
+const previousPageHref = hasPreviousPage
+  ? getBlogPageHref(effectivePage - 1)
+  : null;
+const nextPageHref = hasNextPage ? getBlogPageHref(effectivePage + 1) : null;
+
+const canonicalURL = getBlogPageUrl(effectivePage);
+const prevURL = hasPreviousPage ? getBlogPageUrl(effectivePage - 1) : undefined;
+const nextURL = hasNextPage ? getBlogPageUrl(effectivePage + 1) : undefined;
+
+const pageTitle =
+  effectivePage === 1
+    ? "Blog - Lydie"
+    : `Blog - Page ${effectivePage} - Lydie`;
+const pageDescription =
+  effectivePage === 1
+    ? "Resources on writing, working in teams, and technical insights into Lydie."
+    : `Page ${effectivePage} of resources on writing, working in teams, and technical insights into Lydie.`;
 ---
 
 <Layout
-  title="Blog - Lydie"
-  description="Resources on writing, working in teams, and technical insights into Lydie."
+  title={pageTitle}
+  description={pageDescription}
+  canonicalURL={canonicalURL}
+  prevURL={prevURL}
+  nextURL={nextURL}
 >
   <div class="py-8">
     <Container>
@@ -167,6 +253,37 @@ const remainingPosts = sortedPosts.slice(1);
           </section>
         )
       }
+
+      {(hasPreviousPage || hasNextPage) && (
+        <nav
+          class="mt-12 flex items-center justify-between border-t border-gray-100 pt-6"
+          aria-label="Blog pagination"
+        >
+          <div>
+            {previousPageHref && (
+              <a
+                href={previousPageHref}
+                rel="prev"
+                class="text-sm text-gray-700 hover:text-gray-900"
+              >
+                ← Newer posts
+              </a>
+            )}
+          </div>
+          <span class="text-xs text-gray-500">Page {effectivePage}</span>
+          <div>
+            {nextPageHref && (
+              <a
+                href={nextPageHref}
+                rel="next"
+                class="text-sm text-gray-700 hover:text-gray-900"
+              >
+                Older posts →
+              </a>
+            )}
+          </div>
+        </nav>
+      )}
     </Container>
   </div>
 </Layout>

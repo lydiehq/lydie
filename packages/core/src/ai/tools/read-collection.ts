@@ -89,7 +89,6 @@ Use this after reading a document that contains a collection view block so you c
           .select({
             id: documentsTable.id,
             title: documentsTable.title,
-            slug: documentsTable.slug,
             createdAt: documentsTable.createdAt,
             updatedAt: documentsTable.updatedAt,
           })
@@ -130,7 +129,6 @@ Use this after reading a document that contains a collection view block so you c
         result.entries = entries.map((entry) => ({
           id: entry.id,
           title: entry.title,
-          slug: entry.slug,
           fieldValues: fieldValuesByDocumentId.get(entry.id) ?? {},
           createdAt: entry.createdAt.toISOString(),
           updatedAt: entry.updatedAt.toISOString(),

@@ -5,7 +5,6 @@ import type {
   OAuthIntegration,
 } from "@lydie/core/integrations/oauth";
 import type {
-  CustomFieldSchema,
   DeleteOptions,
   ExternalResource,
   Integration,
@@ -17,6 +16,7 @@ import type {
 import { createErrorResult } from "@lydie/core/integrations/types";
 import { deserializeFromHTML, serializeToHTML } from "@lydie/core/serialization/html";
 import { deserializeFromText } from "@lydie/core/serialization/text";
+import { slugify } from "@lydie/core/utils";
 
 export interface ShopifyConfig {
   shop: string; // myshop.myshopify.com
@@ -135,7 +135,7 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     // Convert to HTML
     const htmlContent = serializeToHTML(document.content as ContentNode);
     const title = document.title || "Untitled";
-    const slug = document.slug;
+    const slug = slugify(title) || document.id;
 
     const resourceType = config.resourceType || "pages";
     const resourceId = config.resourceId;
@@ -336,29 +336,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
     }
   },
 
-  getCustomFieldSchema(): CustomFieldSchema {
-    return {
-      fields: [
-        {
-          key: "teaser",
-          label: "Blog Post Teaser",
-          type: "string",
-          required: false,
-          description: "Short summary for blog listing pages",
-          placeholder: "Enter a brief teaser...",
-        },
-        {
-          key: "metaDescription",
-          label: "SEO Meta Description",
-          type: "string",
-          required: false,
-          description: "Meta description for search engines",
-          placeholder: "SEO description for search engines",
-        },
-      ],
-    };
-  },
-
   async pull(options: PullOptions): Promise<SyncResult[]> {
     const { connection } = options;
     const config = connection.config as ShopifyConfig;
@@ -403,7 +380,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
               message: `Pulled page: ${page.title}`,
               metadata: {
                 title: page.title,
-                slug: page.handle,
                 content: content,
                 shopifyType: "page",
               },
@@ -454,7 +430,6 @@ export const shopifyIntegration: Integration & OAuthIntegration = {
                   message: `Pulled article: ${article.title}`,
                   metadata: {
                     title: article.title,
-                    slug: article.handle,
                     content: content,
                     shopifyType: "article",
                     blogId: String(blog.id),

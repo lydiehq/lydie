@@ -69,13 +69,11 @@ const documents = table("documents")
   .columns({
     id: string(),
     title: string(),
-    slug: string().optional(),
     sort_order: number(),
     yjs_state: string().optional(),
     // Note: body field removed - using yjsState exclusively for content storage
     user_id: string(),
     parent_id: string().optional(),
-    custom_fields: json().optional(),
     collection_id: string().optional(),
     organization_id: string(),
     integration_link_id: string().optional(),

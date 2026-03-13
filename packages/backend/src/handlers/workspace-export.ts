@@ -19,7 +19,6 @@ interface ExportEvent {
 interface DocumentWithChildren {
   id: string;
   title: string;
-  slug: string;
   content: ContentNode;
   properties: Record<string, string | number | boolean | null>;
   childSchema: Array<{ field: string; type: string; required: boolean; options?: string[] }> | null;
@@ -40,7 +39,6 @@ function generateFrontmatter(
 ): string {
   const frontmatterData: Record<string, unknown> = {
     title: doc.title,
-    slug: doc.slug,
     ...metadata,
   };
 
@@ -110,6 +108,11 @@ function sanitizeFilename(title: string): string {
     .substring(0, 100); // Limit length
 }
 
+function createDocumentFilename(doc: { title: string; id: string }): string {
+  const safeTitle = sanitizeFilename(doc.title) || "untitled";
+  return `${safeTitle}-${doc.id.slice(0, 6)}.md`;
+}
+
 async function getDocumentsForExport(organizationId: string): Promise<DocumentWithChildren[]> {
   const allDocs = await db
     .select()
@@ -121,23 +124,20 @@ async function getDocumentsForExport(organizationId: string): Promise<DocumentWi
   // Build a map for quick lookup
   const docMap = new Map<string, DocumentWithChildren>();
   for (const doc of allDocs) {
+    const legacyDoc = doc as typeof doc & {
+      properties?: Record<string, string | number | boolean | null>;
+      childSchema?: Array<{ field: string; type: string; required: boolean; options?: string[] }>;
+      pageConfig?: { showChildrenInSidebar: boolean; defaultView: "documents" | "table" };
+    };
+
     const jsonContent = convertYjsToJson(doc.yjsState);
     docMap.set(doc.id, {
       id: doc.id,
       title: doc.title,
-      slug: doc.slug,
       content: jsonContent as ContentNode,
-      properties: (doc.properties as Record<string, string | number | boolean | null>) || {},
-      childSchema: doc.childSchema as Array<{
-        field: string;
-        type: string;
-        required: boolean;
-        options?: string[];
-      }> | null,
-      pageConfig: (doc.pageConfig as {
-        showChildrenInSidebar: boolean;
-        defaultView: "documents" | "table";
-      } | null) || { showChildrenInSidebar: true, defaultView: "documents" },
+      properties: legacyDoc.properties || {},
+      childSchema: legacyDoc.childSchema || null,
+      pageConfig: legacyDoc.pageConfig || { showChildrenInSidebar: true, defaultView: "documents" },
       sortOrder: doc.sortOrder,
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
@@ -196,13 +196,12 @@ async function createManifestAndUploadFiles(
     documents: documents.map(({ doc, path }) => ({
       id: doc.id,
       title: doc.title,
-      slug: doc.slug,
       path,
       sortOrder: doc.sortOrder,
       properties: doc.properties,
       childSchema: doc.childSchema,
       pageConfig: doc.pageConfig,
-      filename: `${path}/${doc.slug}.md`,
+      filename: `${path}/${createDocumentFilename(doc)}`,
     })),
   };
 
@@ -229,7 +228,7 @@ async function createManifestAndUploadFiles(
     const markdown = serializeToMarkdown(doc.content);
     const fullContent = `${frontmatter}\n\n${markdown}`;
 
-    const filename = `${docPath}/${doc.slug}.md`;
+    const filename = `${docPath}/${createDocumentFilename(doc)}`;
     const key = `exports/${organizationId}/${exportId}/${filename}`;
 
     await s3Client.send(
@@ -253,7 +252,6 @@ Total documents: ${documents.length}
 
 Each document is exported as a Markdown file with YAML frontmatter containing:
 - \`title\`: Document title
-- \`slug\`: URL-friendly slug
 - \`originalId\`: Original document ID (for re-importing)
 - \`sortOrder\`: Document sort order
 - \`path\`: Hierarchical path

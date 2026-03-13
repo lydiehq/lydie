@@ -16,6 +16,7 @@ import type {
 } from "@lydie/core/integrations/types";
 import { createErrorResult } from "@lydie/core/integrations/types";
 import { deserializeFromHTML, serializeToHTML } from "@lydie/core/serialization/html";
+import { slugify } from "@lydie/core/utils";
 
 export interface BloggerConfig {
   accessToken: string;
@@ -204,7 +205,7 @@ export const bloggerIntegration: Integration & OAuthIntegration = {
 
     const htmlContent = serializeToHTML(document.content as ContentNode);
     const title = document.title || "Untitled";
-    const slug = document.slug;
+    const slug = slugify(title) || document.id;
 
     const resourceType = config.resourceType || "posts";
 

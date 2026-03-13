@@ -2,6 +2,7 @@ import { documentLinksTable, documentsTable } from "@lydie/database";
 import { and, eq, inArray, not } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
+import { slugify } from "./utils";
 import { convertJsonToYjs, convertYjsToJson } from "./yjs-to-json";
 
 type Database = PostgresJsDatabase<any>;
@@ -70,12 +71,12 @@ export async function indexDocumentLinks(
   }
 
   const targetDocs = await db
-    .select({ id: documentsTable.id, slug: documentsTable.slug })
+    .select({ id: documentsTable.id, title: documentsTable.title })
     .from(documentsTable)
     .where(inArray(documentsTable.id, targetIds));
 
   const slugMap = new Map<string, string>(
-    targetDocs.map((d: { id: string; slug: string | null }) => [d.id, d.slug || d.id]),
+    targetDocs.map((d: { id: string; title: string }) => [d.id, slugify(d.title || "") || d.id]),
   );
 
   await db.transaction(async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
@@ -108,12 +109,11 @@ export async function getBacklinks(targetDocumentId: string, db: Database): Prom
 export async function getBacklinkDetails(
   targetDocumentId: string,
   db: Database,
-): Promise<Array<{ id: string; title: string | null; slug: string | null }>> {
+): Promise<Array<{ id: string; title: string | null }>> {
   const result = await db
     .select({
       id: documentsTable.id,
       title: documentsTable.title,
-      slug: documentsTable.slug,
     })
     .from(documentLinksTable)
     .innerJoin(documentsTable, eq(documentLinksTable.sourceDocumentId, documentsTable.id))
@@ -124,7 +124,7 @@ export async function getBacklinkDetails(
 
 export async function updateLinksForSlugChange(
   targetDocumentId: string,
-  newSlug: string,
+  targetPathSegment: string,
   yjsStateBase64: string,
 ): Promise<string | null> {
   const jsonContent = convertYjsToJson(yjsStateBase64);
@@ -150,10 +150,10 @@ export async function updateLinksForSlugChange(
           return {
             ...markObj,
             attrs: {
-              ...attrs,
-              href: `/${newSlug}`,
-            },
-          };
+                ...attrs,
+                href: `/${targetPathSegment}`,
+              },
+            };
         }
         return mark;
       });
@@ -185,7 +185,7 @@ export async function updateLinksForSlugChange(
 
 export async function propagateSlugChange(
   targetDocumentId: string,
-  newSlug: string,
+  targetPathSegment: string,
   db: Database,
 ): Promise<{ updatedCount: number; errors: string[] }> {
   const errors: string[] = [];
@@ -210,7 +210,7 @@ export async function propagateSlugChange(
 
       const updatedYjsState = await updateLinksForSlugChange(
         targetDocumentId,
-        newSlug,
+        targetPathSegment,
         doc.yjsState,
       );
 
@@ -226,7 +226,7 @@ export async function propagateSlugChange(
         await db
           .update(documentLinksTable)
           .set({
-            lastVerifiedSlug: newSlug,
+            lastVerifiedSlug: targetPathSegment,
             updatedAt: new Date(),
           })
           .where(

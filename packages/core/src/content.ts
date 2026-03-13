@@ -1,15 +1,5 @@
 import { createHeadingIdGenerator } from "./heading-ids";
-
-// Build a URL-friendly slug from a title
-function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { slugify } from "./utils";
 
 // Normalize a route path
 function normalizeRoute(value: string | null | undefined): string {
@@ -80,7 +70,6 @@ export interface CustomBlockProps {
 export interface RelatedDocument {
   id: string;
   title: string;
-  slug: string;
   similarity: number;
   createdAt: string;
   updatedAt: string;
@@ -95,7 +84,6 @@ export interface TocItem {
 export interface Document {
   id: string;
   title: string;
-  slug: string;
   fields: Record<string, string | number | boolean | null>;
   jsonContent: ContentNode;
   userId: string;
@@ -104,7 +92,6 @@ export interface Document {
   published: boolean;
   lastIndexedTitle: string | null;
   lastIndexedContentHash: string | null;
-  customFields: Record<string, string | number> | null;
   coverImage: string | null;
   createdAt: string;
   updatedAt: string;
@@ -129,12 +116,10 @@ export type LinkResolver = (ref: LinkReference) => string;
 export interface DocumentListItem {
   id: string;
   title: string;
-  slug: string;
   fields: Record<string, string | number | boolean | null>;
   path: string;
   fullPath: string;
   published: boolean;
-  customFields: Record<string, string | number> | null;
   coverImage: string | null;
   createdAt: string;
   updatedAt: string;
@@ -504,7 +489,7 @@ export class LydieClient {
       const document = (await response.json()) as Document;
 
       if (this.debug) {
-        console.log(`[Lydie] Successfully fetched document: ${document.title} (${document.slug})`);
+        console.log(`[Lydie] Successfully fetched document: ${document.title} (${document.id})`);
         if (document.related) {
           console.log(`[Lydie] Found ${document.related.length} related documents`);
         }

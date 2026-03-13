@@ -162,7 +162,7 @@ const structuredData = {
                 relatedDocuments.map(
                   (post) => {
                     const relatedSlug = getMarketingSlug(
-                      post.fields?.slug ?? post.slug,
+                      post.fields?.slug,
                     );
                     const relatedCreatedAt =
                       typeof post.createdAt === "string"
@@ -183,7 +183,7 @@ const structuredData = {
                         title={post.title}
                         createdAt={relatedCreatedAt as string | undefined}
                         coverImage={relatedCoverImage as string | null | undefined}
-                        seed={String(post.fields?.slug ?? post.slug ?? post.id)}
+                        seed={String(post.fields?.slug ?? post.id)}
                       />
                     );
                   },

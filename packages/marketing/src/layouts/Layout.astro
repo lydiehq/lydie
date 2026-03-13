@@ -11,9 +11,11 @@ export interface Props {
   title: string;
   description: string;
   canonicalURL?: URL | string;
+  prevURL?: URL | string;
+  nextURL?: URL | string;
 }
 
-const { title, description, canonicalURL } = Astro.props;
+const { title, description, canonicalURL, prevURL, nextURL } = Astro.props;
 
 const linkGroups = [
   {
@@ -107,6 +109,8 @@ const linkGroups = [
       title={title}
       description={description}
       canonicalURL={canonicalURL}
+      prevURL={prevURL}
+      nextURL={nextURL}
     />
     <PostHog />
   </head>

@@ -6,7 +6,6 @@ import { z } from "zod";
 interface DocumentNode {
   id: string;
   title: string | null;
-  slug: string;
   parentId: string | null;
   sortOrder: number | null;
   children: DocumentNode[];
@@ -129,7 +128,6 @@ Not for: semantic content search (use find_documents) or reading content (use re
           .select({
             id: documentsTable.id,
             title: documentsTable.title,
-            slug: documentsTable.slug,
             parentId: documentsTable.parentId,
             createdAt: documentsTable.createdAt,
             updatedAt: documentsTable.updatedAt,
@@ -142,7 +140,6 @@ Not for: semantic content search (use find_documents) or reading content (use re
         const results = documents.map((doc) => ({
           id: doc.id,
           title: doc.title,
-          slug: doc.slug,
           parentId: doc.parentId,
           createdAt: doc.createdAt.toISOString(),
           updatedAt: doc.updatedAt.toISOString(),
@@ -259,7 +256,6 @@ Not for: semantic content search (use find_documents) or reading content (use re
             .select({
               id: documentsTable.id,
               title: documentsTable.title,
-              slug: documentsTable.slug,
               parentId: documentsTable.parentId,
               sortOrder: documentsTable.sortOrder,
             })
@@ -273,7 +269,6 @@ Not for: semantic content search (use find_documents) or reading content (use re
             nodes.push({
               id: doc.id,
               title: doc.title,
-              slug: doc.slug,
               parentId: doc.parentId,
               sortOrder: doc.sortOrder,
               children,
@@ -294,7 +289,6 @@ Not for: semantic content search (use find_documents) or reading content (use re
             .select({
               id: documentsTable.id,
               title: documentsTable.title,
-              slug: documentsTable.slug,
               parentId: documentsTable.parentId,
               sortOrder: documentsTable.sortOrder,
             })

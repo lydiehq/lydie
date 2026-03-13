@@ -101,7 +101,6 @@ CRITICAL: Always read before editing. Use this to understand document structure,
           id: documentsTable.id,
           title: documentsTable.title,
           yjsState: documentsTable.yjsState,
-          slug: documentsTable.slug,
           createdAt: documentsTable.createdAt,
           updatedAt: documentsTable.updatedAt,
         })
@@ -230,7 +229,6 @@ CRITICAL: Always read before editing. Use this to understand document structure,
       }
 
       if (includeMetadata) {
-        result.slug = document.slug;
         result.createdAt = document.createdAt.toISOString();
         result.updatedAt = document.updatedAt.toISOString();
       }

@@ -66,7 +66,6 @@ For internal research/context gathering, use scan_documents instead.`,
         .select({
           id: documentsTable.id,
           title: documentsTable.title,
-          slug: documentsTable.slug,
           createdAt: documentsTable.createdAt,
           updatedAt: documentsTable.updatedAt,
         })
@@ -78,7 +77,6 @@ For internal research/context gathering, use scan_documents instead.`,
       const results = documents.map((doc) => ({
         id: doc.id,
         title: doc.title,
-        slug: doc.slug,
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString(),
       }));

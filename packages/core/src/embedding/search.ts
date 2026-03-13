@@ -45,7 +45,6 @@ export async function searchDocumentsByTitle(
       .select({
         id: documentsTable.id,
         title: documentsTable.title,
-        slug: documentsTable.slug,
         similarity,
         createdAt: documentsTable.createdAt,
         updatedAt: documentsTable.updatedAt,
@@ -102,7 +101,6 @@ export async function hybridSearchDocuments(
           searchType: "title_match",
           documentId: titleResult.id,
           documentTitle: titleResult.title,
-          documentSlug: titleResult.slug,
           titleSimilarity: titleResult.similarity,
           contentChunks: contentResults,
         });
@@ -326,7 +324,6 @@ export async function searchDocuments(
         similarity,
         title: documentsTable.title,
         id: documentsTable.id,
-        slug: documentsTable.slug,
         headerBreadcrumb: documentEmbeddingsTable.headerBreadcrumb,
       })
       .from(documentEmbeddingsTable)
@@ -351,7 +348,6 @@ export async function searchDocuments(
           searchType: "content_match",
           documentId: result.id,
           documentTitle: result.title,
-          documentSlug: result.slug,
           contentChunks: [],
         });
       }

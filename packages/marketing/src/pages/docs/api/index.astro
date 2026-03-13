@@ -27,7 +27,8 @@ type OpenApiSpec = {
   paths: Record<string, SpecPath>;
 };
 
-let renderedSpec: OpenApiSpec = externalApiOpenApiSpec as unknown as OpenApiSpec;
+let renderedSpec: OpenApiSpec =
+  externalApiOpenApiSpec as unknown as OpenApiSpec;
 try {
   const response = await fetch(openApiUrl);
   if (response.ok) {
@@ -57,21 +58,36 @@ const renderedEndpoints = Object.entries(renderedSpec.paths)
     <div class="space-y-10">
       <header class="space-y-4">
         <p class="text-sm font-medium text-blue-600">Developer Docs</p>
-        <h1 class="text-4xl font-semibold text-gray-900">External API Reference</h1>
-        <p class="text-lg text-gray-600 max-w-3xl">
-          This page is custom-rendered by our marketing frontend while staying aligned with our backend OpenAPI source of truth.
-        </p>
-        <div class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
-          <p><span class="font-medium">OpenAPI:</span> {renderedSpec.openapi}</p>
-          <p><span class="font-medium">Version:</span> {renderedSpec.info.version}</p>
-          <p><span class="font-medium">Schema endpoint:</span> <code>/api/v1/openapi.json</code></p>
+        <h1 class="text-4xl font-semibold text-gray-900">
+          External API Reference
+        </h1>
+        <div
+          class="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700"
+        >
+          <p>
+            <span class="font-medium">OpenAPI:</span>
+            {renderedSpec.openapi}
+          </p>
+          <p>
+            <span class="font-medium">Version:</span>
+            {renderedSpec.info.version}
+          </p>
+          <p>
+            <span class="font-medium">Schema endpoint:</span>
+            <code>/api/v1/openapi.json</code>
+          </p>
         </div>
       </header>
 
       <section class="space-y-4">
         <h2 class="text-2xl font-semibold text-gray-900">Authentication</h2>
-        <p class="text-gray-600">All endpoints require a bearer API key in the <code>Authorization</code> header.</p>
-        <pre class="overflow-x-auto rounded-xl border border-gray-200 bg-gray-900 p-4 text-sm text-gray-100"><code>{sampleCurl}</code></pre>
+        <p class="text-gray-600">
+          All endpoints require a bearer API key in the <code
+            >Authorization</code
+          > header.
+        </p>
+        <pre
+          class="overflow-x-auto rounded-xl border border-gray-200 bg-gray-900 p-4 text-sm text-gray-100"><code>{sampleCurl}</code></pre>
       </section>
 
       <section class="space-y-4">
@@ -81,12 +97,18 @@ const renderedEndpoints = Object.entries(renderedSpec.paths)
             renderedEndpoints.map((endpoint) => (
               <article class="rounded-xl border border-gray-200 bg-white p-4">
                 <div class="flex flex-wrap items-center gap-3">
-                  <span class={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold uppercase ${methodClass[endpoint.method] ?? "bg-gray-50 text-gray-700 border-gray-200"}`}>
+                  <span
+                    class={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold uppercase ${methodClass[endpoint.method] ?? "bg-gray-50 text-gray-700 border-gray-200"}`}
+                  >
                     {endpoint.method}
                   </span>
-                  <code class="text-sm text-gray-800">/api/v1{endpoint.path}</code>
+                  <code class="text-sm text-gray-800">
+                    /api/v1{endpoint.path}
+                  </code>
                 </div>
-                <h3 class="mt-2 text-lg font-semibold text-gray-900">{endpoint.summary}</h3>
+                <h3 class="mt-2 text-lg font-semibold text-gray-900">
+                  {endpoint.summary}
+                </h3>
                 <p class="mt-1 text-gray-600">{endpoint.description}</p>
               </article>
             ))

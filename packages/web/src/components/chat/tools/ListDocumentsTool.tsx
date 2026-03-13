@@ -32,7 +32,6 @@ export interface ListDocumentsToolProps {
       documents?: Array<{
         id: string;
         title: string;
-        slug: string;
         createdAt: string;
         updatedAt: string;
         contentPreview?: string;
@@ -61,6 +60,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
     tool.state === "call-streaming" || (outputState && outputState !== "success");
   const documents = tool.output?.documents || [];
   const filters = tool.output?.filters;
+  const titleFilter = filters?.titleFilter;
 
   let loadingMessage = "Loading documents...";
   if (outputState === "loading") {
@@ -173,7 +173,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
         <ChevronRightRegular className="size-3 opacity-0 group-hover:opacity-100 group-expanded:rotate-90 transition-all duration-200 absolute" />
         <span className="text-[13px]">
           Listed {documents.length} document{documents.length !== 1 ? "s" : ""}
-          {filters && filters.titleFilter ? ` matching "${filters.titleFilter}"` : ""}
+          {titleFilter ? ` matching "${titleFilter}"` : ""}
         </span>
       </Button>
       <DisclosurePanel className="overflow-hidden pl-5">
@@ -221,7 +221,7 @@ export function ListDocumentsTool({ tool, className = "" }: ListDocumentsToolPro
                           <span className="truncate">{doc.title}</span>
                           <OpenRegular className="size-3 shrink-0" />
                         </Link>
-                        <div className="text-xs text-gray-500 mt-1">/{doc.slug}</div>
+                        <div className="text-xs text-gray-500 mt-1">{doc.id}</div>
                       </div>
 
                       <div className="text-xs text-gray-400 shrink-0">

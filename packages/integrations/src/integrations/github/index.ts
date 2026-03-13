@@ -334,16 +334,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
       const accessToken = await getAccessToken(connection);
       let markdown = serializeToMarkdown(document.content);
 
-      // Add frontmatter if custom fields exist
-      if (document.customFields && Object.keys(document.customFields).length > 0) {
-        const frontmatterLines = ["---"];
-        for (const [key, value] of Object.entries(document.customFields)) {
-          frontmatterLines.push(`${key}: ${JSON.stringify(value)}`);
-        }
-        frontmatterLines.push("---", "");
-        markdown = frontmatterLines.join("\n") + markdown;
-      }
-
       // Determine file path from parent hierarchy (ensures files are pushed to correct location even if moved)
       let filePath: string;
       if (document.parentPathSegments && document.parentPathSegments.length > 0) {
@@ -574,7 +564,6 @@ export const githubIntegration: GitHubIntegrationExtended = {
           message: `Created folder page for ${folderPath}`,
           metadata: {
             title: folderName,
-            slug: folderPath.replace(/\//g, "-").toLowerCase(),
             content: { type: "doc", content: [] },
           },
         });
@@ -612,26 +601,9 @@ export const githubIntegration: GitHubIntegrationExtended = {
           const pathParts = file.path.split("/");
           const fileName = pathParts.pop() || file.name;
 
-          const slug = fileName
-            .replace(/\.(md|mdx|txt)$/i, "")
-            .replace(/\//g, "-")
-            .toLowerCase();
-
           // Title priority: frontmatter.title > filename
           // Preserve full filename so we know what extension to use when pushing
           const title = frontmatter.title || fileName;
-
-          // Convert frontmatter to customFields (only string and number values)
-          const customFields: Record<string, string | number> = {};
-          for (const [key, value] of Object.entries(frontmatter)) {
-            if (key !== "title" && key !== "slug") {
-              if (typeof value === "string" || typeof value === "number") {
-                customFields[key] = value;
-              } else if (typeof value === "boolean") {
-                customFields[key] = String(value);
-              }
-            }
-          }
 
           results.push({
             success: true,
@@ -640,9 +612,7 @@ export const githubIntegration: GitHubIntegrationExtended = {
             message: `Pulled ${file.path}`,
             metadata: {
               title,
-              slug: frontmatter.slug || slug,
               content: tipTapContent,
-              customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
             },
           });
         } catch (error) {

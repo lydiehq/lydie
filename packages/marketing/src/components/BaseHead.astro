@@ -8,6 +8,8 @@ interface Props {
   description: string;
   image?: ImageMetadata;
   canonicalURL?: URL | string;
+  prevURL?: URL | string;
+  nextURL?: URL | string;
 }
 
 const canonicalURL = Astro.props.canonicalURL
@@ -15,6 +17,18 @@ const canonicalURL = Astro.props.canonicalURL
     ? new URL(Astro.props.canonicalURL, Astro.site)
     : Astro.props.canonicalURL
   : new URL(Astro.url.pathname, Astro.site);
+
+const prevURL = Astro.props.prevURL
+  ? typeof Astro.props.prevURL === "string"
+    ? new URL(Astro.props.prevURL, Astro.site)
+    : Astro.props.prevURL
+  : null;
+
+const nextURL = Astro.props.nextURL
+  ? typeof Astro.props.nextURL === "string"
+    ? new URL(Astro.props.nextURL, Astro.site)
+    : Astro.props.nextURL
+  : null;
 
 const { title, description } = Astro.props;
 ---
@@ -40,6 +54,8 @@ const { title, description } = Astro.props;
 <meta name="generator" content={Astro.generator} />
 
 <link rel="canonical" href={canonicalURL} />
+{prevURL && <link rel="prev" href={prevURL} />}
+{nextURL && <link rel="next" href={nextURL} />}
 
 <title>{title}</title>
 <meta name="title" content={title} />

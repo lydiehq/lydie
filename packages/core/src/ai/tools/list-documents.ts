@@ -66,7 +66,6 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
         .select({
           id: documentsTable.id,
           title: documentsTable.title,
-          slug: documentsTable.slug,
           createdAt: documentsTable.createdAt,
           updatedAt: documentsTable.updatedAt,
         })
@@ -81,7 +80,6 @@ Examples: "What documents do I have?", "Show me my recent files", "List the late
         const result: any = {
           id: doc.id,
           title: doc.title,
-          slug: doc.slug,
           createdAt: doc.createdAt.toISOString(),
           updatedAt: doc.updatedAt.toISOString(),
         };

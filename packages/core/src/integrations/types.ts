@@ -1,29 +1,9 @@
 // Base types for document sync integrations
 
-// Custom field types supported for document metadata
-export type CustomFieldType = "string" | "number";
-
-// Definition of a single custom field
-export interface CustomFieldDefinition {
-  key: string;
-  label: string;
-  type: CustomFieldType;
-  required?: boolean;
-  defaultValue?: string | number;
-  description?: string;
-  placeholder?: string;
-}
-
-// Schema defining a set of custom fields for an integration
-export interface CustomFieldSchema {
-  fields: CustomFieldDefinition[];
-}
-
 // The document structure that integrations will work with
 export interface SyncDocument {
   id: string;
   title: string;
-  slug: string;
   content: any; // TipTap JSON structure
   published: boolean;
   updatedAt: Date;
@@ -39,7 +19,6 @@ export interface SyncDocument {
   // If provided, integrations should use this instead of computing from parentId
   // This ensures the path reflects the current document location even if externalId is stale
   parentPathSegments?: string[];
-  customFields?: Record<string, string | number>;
 }
 
 // Configuration for connecting to an external platform
@@ -69,9 +48,7 @@ export interface SyncResult {
   conflictDetails?: ConflictDetails;
   // Additional data for pull operations, typically includes:
   // - title: Document title
-  // - slug: URL-friendly slug
   // - content: TipTap JSON content
-  // - customFields: Integration-specific metadata
   metadata?: any;
 }
 
@@ -116,7 +93,6 @@ export interface PulledDocument {
   externalId: string; // ID/path in external system
   title: string;
   content: any; // TipTap JSON
-  slug: string;
 }
 
 // Metadata about synced documents
@@ -179,9 +155,6 @@ export interface Integration {
   // Optional - integrations can override this method
   onConnect?(): { links?: DefaultLink[] };
 
-  // Define custom fields that documents should have for this integration
-  // Optional - if not defined, no custom fields are required
-  getCustomFieldSchema?(): CustomFieldSchema;
 }
 
 // Helper function to create an error result

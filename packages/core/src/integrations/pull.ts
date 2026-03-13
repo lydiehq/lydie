@@ -132,10 +132,6 @@ export async function pullFromIntegrationLink(
     for (const result of results) {
       if (result.success && result.metadata) {
         try {
-          const customFields = result.metadata.customFields as
-            | Record<string, string | number>
-            | undefined;
-
           // Check if document already exists by externalId
           let existingDocument = null;
           if (result.externalId) {
@@ -166,9 +162,7 @@ export async function pullFromIntegrationLink(
               .update(documentsTable)
               .set({
                 title: result.metadata.title,
-                slug: result.metadata.slug,
                 yjsState: yjsState,
-                customFields: customFields || null,
                 updatedAt: new Date(),
                 deletedAt: null, // Ensure document is not marked as deleted
               })
@@ -190,13 +184,11 @@ export async function pullFromIntegrationLink(
             await db.insert(documentsTable).values({
               id: documentId,
               title: result.metadata.title,
-              slug: result.metadata.slug,
               yjsState: yjsState,
               userId: userId,
               organizationId,
               integrationLinkId: link.id,
               externalId: result.externalId ?? null,
-              customFields: customFields || null,
               published: true, // Documents from integrations are published by default
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -220,7 +212,6 @@ export async function pullFromIntegrationLink(
               {
                 documentId: insertedDocument.id,
                 yjsState: insertedDocument.yjsState,
-                title: insertedDocument.title,
               },
               db,
             ).catch((error) => {

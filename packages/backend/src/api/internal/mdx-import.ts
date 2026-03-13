@@ -6,7 +6,6 @@ import {
   extractMDXComponents,
   parseFrontmatter,
 } from "@lydie/core/serialization/mdx";
-import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { db, documentComponentsTable, documentsTable } from "@lydie/database";
 import { and, eq, inArray, isNull } from "drizzle-orm";
@@ -20,7 +19,6 @@ type Variables = {
 
 interface ParsedMDXContent {
   title: string;
-  slug?: string;
   content: any; // TipTap JSON structure
   components: MDXComponent[];
   properties?: Record<string, string | number | boolean | null>;
@@ -41,7 +39,7 @@ function parseMDXContent(
   mdxContent: string,
   filename: string | undefined,
   componentSchemas: Record<string, any> = {},
-): ParsedMDXContent & { customFields?: Record<string, string | number> } {
+): ParsedMDXContent {
   // Parse frontmatter first
   const { frontmatter, contentWithoutFrontmatter } = parseFrontmatter(mdxContent);
 
@@ -71,15 +69,6 @@ function parseMDXContent(
     }
   }
 
-  let slug = "";
-  if (frontmatter.slug) {
-    slug = frontmatter.slug;
-  } else if (filename) {
-    slug = filename.replace(/\.(mdx?|md)$/i, "");
-  } else {
-    slug = slugify(title);
-  }
-
   const contentLines = lines.slice(contentStartIndex);
   const contentString = contentLines.join("\n");
 
@@ -88,17 +77,6 @@ function parseMDXContent(
   const tipTapContent = deserializeFromMDX(contentString, {
     componentSchemas,
   });
-
-  const customFields: Record<string, string | number> = {};
-  for (const [key, value] of Object.entries(frontmatter)) {
-    if (key !== "title" && key !== "slug") {
-      if (typeof value === "string" || typeof value === "number") {
-        customFields[key] = value;
-      } else if (typeof value === "boolean") {
-        customFields[key] = String(value);
-      }
-    }
-  }
 
   // Extract database-specific fields from frontmatter
   const properties = frontmatter.properties as
@@ -113,10 +91,8 @@ function parseMDXContent(
 
   const result = {
     title,
-    slug,
     content: tipTapContent,
     components,
-    customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
     properties,
     childSchema,
     pageConfig,
@@ -173,7 +149,6 @@ async function getOrCreatePageByPath(
       await db.insert(documentsTable).values({
         id: newPageId,
         title: pageName,
-        slug: newPageId,
         yjsState: yjsState,
         userId,
         organizationId,
@@ -250,19 +225,16 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
       }
 
       const documentId = createId();
-      const finalSlug = parsed.slug || documentId;
 
       const yjsState = convertJsonToYjs(parsed.content);
 
       const insertData = {
         id: documentId,
         title: parsed.title,
-        slug: finalSlug,
         yjsState: yjsState,
         userId,
         organizationId,
         parentId: finalParentId || null,
-        customFields: parsed.customFields || null,
         properties: parsed.properties || null,
         childSchema: parsed.childSchema || null,
         pageConfig: parsed.pageConfig || null,
@@ -350,7 +322,6 @@ export const MDXImportRoute = new Hono<{ Variables: Variables }>()
         success: true,
         documentId,
         title: parsed.title,
-        slug: finalSlug,
         parentId: finalParentId,
         componentsFound: parsed.components.length,
         newComponentsCreated: createdComponents,

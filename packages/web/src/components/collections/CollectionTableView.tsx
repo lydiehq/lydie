@@ -52,7 +52,6 @@ import { focusVisibleStyles } from "@/utils/focus-ring";
 type DocumentItem = {
   id: string;
   title: string;
-  slug: string | null;
   parentId: string | null;
   collectionId: string | null;
   properties: Record<string, string | number | boolean | string[] | null>;
@@ -356,7 +355,6 @@ export function CollectionTableView({
       return {
         id: doc.id,
         title: doc.title,
-        slug: doc.slug ?? null,
         parentId: doc.parent_id ?? null,
         collectionId: extracted.collectionId,
         properties: extracted.values,

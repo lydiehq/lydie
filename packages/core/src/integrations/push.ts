@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 
 import { convertYjsToJson } from "../yjs-to-json";
 import type { Integration, SyncDocument } from "./types";
-import { validateCustomFields } from "./validation";
 
 export interface PushDocumentOptions {
   documentId: string;
@@ -78,21 +77,6 @@ export async function pushDocumentToIntegration(
 
     console.log(`[Integration Push] Pushing to ${connection.integrationType}: ${document.title}`);
 
-    const schema = integration.getCustomFieldSchema?.();
-    const validation = validateCustomFields(
-      document.customFields as Record<string, string | number> | undefined,
-      schema,
-    );
-
-    if (!validation.valid) {
-      const errorMessage = `Custom field validation failed: ${validation.errors.join(", ")}`;
-      console.error(`[Integration Push] ${errorMessage}`);
-      return {
-        success: false,
-        error: errorMessage,
-      };
-    }
-
     const mergedConfig = {
       ...(connection.config as Record<string, any>),
       ...(link.config as Record<string, any>),
@@ -107,30 +91,36 @@ export async function pushDocumentToIntegration(
 
       while (currentParentId && !visited.has(currentParentId)) {
         visited.add(currentParentId);
-        const parent = await db.query.documentsTable.findFirst({
+        const parentResult: {
+          externalId: string | null;
+          title: string;
+          parentId: string | null;
+        } | null | undefined = await db.query.documentsTable.findFirst({
           where: { id: currentParentId },
         });
 
-        if (!parent) break;
+        const parentDoc: { externalId: string | null; title: string; parentId: string | null } | null =
+          parentResult ?? null;
 
-        if (parent.externalId?.startsWith("__folder__")) {
-          const folderPath = parent.externalId.substring("__folder__".length);
+        if (!parentDoc) break;
+
+        if (parentDoc.externalId?.startsWith("__folder__")) {
+          const folderPath = parentDoc.externalId.substring("__folder__".length);
           const folderName = folderPath.split("/").pop() || folderPath;
           parentPathSegments.unshift(folderName); // Add to beginning (we're going up the tree)
         } else {
           // For regular parent documents, use title
           // This shouldn't happen in practice for synced documents, but handle it gracefully
-          parentPathSegments.unshift(parent.title);
+          parentPathSegments.unshift(parentDoc.title);
         }
 
-        currentParentId = parent.parentId;
+        currentParentId = parentDoc.parentId;
       }
     }
 
     const syncDocument: SyncDocument = {
       id: document.id,
       title: document.title,
-      slug: document.slug,
       content: jsonContent,
       published: document.published,
       updatedAt: document.updatedAt,
@@ -138,7 +128,6 @@ export async function pushDocumentToIntegration(
       externalId: document.externalId,
       parentId: document.parentId,
       parentPathSegments: parentPathSegments.length > 0 ? parentPathSegments : undefined,
-      customFields: document.customFields as Record<string, string | number> | undefined,
     };
 
     const result = await integration.push({

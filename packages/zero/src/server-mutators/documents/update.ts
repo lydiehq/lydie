@@ -11,7 +11,6 @@ export const updateDocumentMutation = ({ asyncTasks }: MutatorContext) =>
     z.object({
       documentId: z.string(),
       title: z.string().optional(),
-      customFields: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
       organizationId: z.string(),
       coverImage: z.string().nullable().optional(),
       fullWidth: z.boolean().optional(),

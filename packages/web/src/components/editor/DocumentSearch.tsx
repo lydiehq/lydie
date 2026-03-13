@@ -8,7 +8,7 @@ import { Input } from "react-aria-components";
 import { useOrganization } from "@/context/organization.context";
 
 interface DocumentSearchProps {
-  onSelectDocument: (document: { id: string; title: string; slug: string }) => void;
+  onSelectDocument: (document: { id: string; title: string }) => void;
   onBack: () => void;
   exclude?: string; // Exclude current document
 }
@@ -27,9 +27,7 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
       if (!query.trim()) return true;
 
       const searchTerm = query.toLowerCase();
-      return (
-        doc.title.toLowerCase().includes(searchTerm) || doc.slug.toLowerCase().includes(searchTerm)
-      );
+      return doc.title.toLowerCase().includes(searchTerm);
     })
     .slice(0, 8); // Limit to 8 results
 
@@ -76,7 +74,7 @@ export function DocumentSearch({ onSelectDocument, onBack, exclude }: DocumentSe
                   <div className="font-medium text-sm text-gray-900 truncate">
                     {doc.title || "Untitled"}
                   </div>
-                  <div className="text-xs text-gray-500 truncate">{doc.slug}</div>
+                  <div className="text-xs text-gray-500 truncate">{doc.id}</div>
                 </div>
               </button>
             ))}

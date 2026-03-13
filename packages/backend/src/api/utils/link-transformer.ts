@@ -112,7 +112,7 @@ export async function fetchDocumentMetadata(
       .select({
         id: documentsTable.id,
         title: documentsTable.title,
-        slug: collectionFieldsTable.values,
+        values: collectionFieldsTable.values,
         collectionHandle: collectionsTable.handle,
       })
       .from(documentsTable)
@@ -127,18 +127,18 @@ export async function fetchDocumentMetadata(
         id: doc.id,
         title: doc.title,
         slug:
-          typeof doc.slug === "object" &&
-          doc.slug !== null &&
-          "slug" in doc.slug &&
-          typeof doc.slug.slug === "string"
-            ? doc.slug.slug
+          typeof doc.values === "object" &&
+          doc.values !== null &&
+          "slug" in doc.values &&
+          typeof doc.values.slug === "string"
+            ? doc.values.slug
             : undefined,
         parentId:
-          typeof doc.slug === "object" &&
-          doc.slug !== null &&
-          "parent" in doc.slug &&
-          typeof doc.slug.parent === "string"
-            ? doc.slug.parent
+          typeof doc.values === "object" &&
+          doc.values !== null &&
+          "parent" in doc.values &&
+          typeof doc.values.parent === "string"
+            ? doc.values.parent
             : undefined,
         collectionHandle: doc.collectionHandle || undefined,
         exists: true,

@@ -36,11 +36,47 @@ function withAuth() {
   };
 }
 
-function parseListEnvelope(payload: unknown): { documents: CollectionApiDocument[] } {
-  if (!payload || typeof payload !== "object") return { documents: [] };
+type CollectionListMeta = {
+  total: number;
+  limit: number;
+  nextCursor: string | null;
+  warnings?: Array<Record<string, unknown>>;
+};
+
+function parseListEnvelope(payload: unknown): {
+  documents: CollectionApiDocument[];
+  meta: CollectionListMeta;
+} {
+  if (!payload || typeof payload !== "object") {
+    return {
+      documents: [],
+      meta: {
+        total: 0,
+        limit: 0,
+        nextCursor: null,
+      },
+    };
+  }
   const data = (payload as { data?: unknown }).data;
+  const rawMeta = (payload as { meta?: unknown }).meta;
+  const safeMeta =
+    rawMeta && typeof rawMeta === "object"
+      ? (rawMeta as Partial<CollectionListMeta>)
+      : undefined;
+
   return {
     documents: Array.isArray(data) ? (data as CollectionApiDocument[]) : [],
+    meta: {
+      total: typeof safeMeta?.total === "number" ? safeMeta.total : 0,
+      limit: typeof safeMeta?.limit === "number" ? safeMeta.limit : 0,
+      nextCursor:
+        typeof safeMeta?.nextCursor === "string" || safeMeta?.nextCursor === null
+          ? safeMeta.nextCursor
+          : null,
+      warnings: Array.isArray(safeMeta?.warnings)
+        ? (safeMeta.warnings as Array<Record<string, unknown>>)
+        : undefined,
+    },
   };
 }
 
@@ -115,8 +151,10 @@ export async function getCollectionDocuments(
     filters?: Record<string, string | number | boolean>;
     sortBy?: "created_at" | "updated_at" | "title";
     sortOrder?: "asc" | "desc";
+    limit?: number;
+    cursor?: string;
   },
-): Promise<{ documents: CollectionApiDocument[] }> {
+): Promise<{ documents: CollectionApiDocument[]; meta: CollectionListMeta }> {
   const params = new URLSearchParams();
 
   const includes: string[] = [];
@@ -137,6 +175,9 @@ export async function getCollectionDocuments(
     params.set("sort", `${sortOrder}${options.sortBy}`);
   }
 
+  if (typeof options?.limit === "number") params.set("limit", String(options.limit));
+  if (typeof options?.cursor === "string" && options.cursor.length > 0) params.set("cursor", options.cursor);
+
   const response = await fetch(
     `${apiUrl}/collections/${encodeURIComponent(collectionHandle)}/documents${
       params.toString() ? `?${params.toString()}` : ""
@@ -145,7 +186,14 @@ export async function getCollectionDocuments(
   );
 
   if (!response.ok) {
-    return { documents: [] };
+    return {
+      documents: [],
+      meta: {
+        total: 0,
+        limit: 0,
+        nextCursor: null,
+      },
+    };
   }
 
   return parseListEnvelope(await response.json());

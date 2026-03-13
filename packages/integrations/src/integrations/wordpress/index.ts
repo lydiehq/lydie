@@ -11,6 +11,7 @@ import type {
 } from "@lydie/core/integrations/types";
 import { createErrorResult } from "@lydie/core/integrations/types";
 import { deserializeFromHTML, serializeToHTML } from "@lydie/core/serialization/html";
+import { slugify } from "@lydie/core/utils";
 
 export interface WordpressConfig {
   siteUrl: string;
@@ -128,7 +129,7 @@ export const wordpressIntegration: Integration = {
 
     const htmlContent = serializeToHTML(document.content as ContentNode);
     const title = document.title || "Untitled";
-    const slug = document.slug;
+    const slug = slugify(title) || document.id;
 
     const resourceType = config.resourceType || "pages";
     const endpointType = resourceType === "posts" ? "posts" : "pages";
@@ -277,7 +278,6 @@ export const wordpressIntegration: Integration = {
           id: number;
           title: { rendered: string };
           content: { rendered: string };
-          slug: string;
         }>;
 
         for (const item of items) {
@@ -292,7 +292,6 @@ export const wordpressIntegration: Integration = {
               message: `Pulled ${type.slice(0, -1)}: ${item.title.rendered}`,
               metadata: {
                 title: item.title.rendered,
-                slug: item.slug,
                 content: content,
                 wpType: type,
               },

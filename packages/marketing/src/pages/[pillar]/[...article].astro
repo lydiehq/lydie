@@ -47,7 +47,6 @@ type RelatedCollectionDocument = {
   title: string;
   createdAt?: string;
   coverImage?: string | null;
-  slug?: string;
   fields?: Record<string, unknown>;
 };
 
@@ -255,7 +254,7 @@ const breadcrumbItems = [
                               : `/knowledge-bases${doc.path}`
                             : (() => {
                                 const relatedSlug = getMarketingSlug(
-                                  doc.fields?.slug ?? doc.slug,
+                                  doc.fields?.slug,
                                 );
                                 return relatedSlug
                                   ? `/knowledge-bases/${relatedSlug}`
@@ -265,7 +264,7 @@ const breadcrumbItems = [
                         title={doc.title}
                         createdAt={doc.createdAt}
                         coverImage={doc.coverImage}
-                        seed={String(doc.fields?.slug ?? doc.slug ?? doc.id)}
+                        seed={String(doc.fields?.slug ?? doc.id)}
                       />
                     ))}
                   </div>

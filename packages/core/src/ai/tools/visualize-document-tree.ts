@@ -6,7 +6,6 @@ import { z } from "zod";
 interface DocumentNode {
   id: string;
   title: string | null;
-  slug: string;
   parentId: string | null;
   sortOrder: number | null;
   children: DocumentNode[];
@@ -126,7 +125,6 @@ Examples: "Show me the document tree", "What documents are under the welcome pag
           .select({
             id: documentsTable.id,
             title: documentsTable.title,
-            slug: documentsTable.slug,
             parentId: documentsTable.parentId,
             sortOrder: documentsTable.sortOrder,
           })
@@ -140,7 +138,6 @@ Examples: "Show me the document tree", "What documents are under the welcome pag
           nodes.push({
             id: doc.id,
             title: doc.title,
-            slug: doc.slug,
             parentId: doc.parentId,
             sortOrder: doc.sortOrder,
             children,
@@ -161,7 +158,6 @@ Examples: "Show me the document tree", "What documents are under the welcome pag
           .select({
             id: documentsTable.id,
             title: documentsTable.title,
-            slug: documentsTable.slug,
             parentId: documentsTable.parentId,
             sortOrder: documentsTable.sortOrder,
           })

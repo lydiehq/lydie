@@ -165,7 +165,6 @@ export const documentsTable = pgTable(
       .notNull()
       .$default(() => createId()),
     title: text("title").notNull(),
-    slug: text("slug"),
     // Note: body field removed - using yjsState exclusively for content storage
     yjsState: text("yjs_state"), // Y.js binary state stored as base64 for collaborative editing
     userId: text("user_id").references(() => usersTable.id, {
@@ -175,7 +174,6 @@ export const documentsTable = pgTable(
       onDelete: "set null",
     }),
     sortOrder: integer("sort_order").notNull().default(0),
-    customFields: jsonb("custom_fields").$type<Record<string, string | number>>(),
     collectionId: text("collection_id").references(() => collectionsTable.id, {
       onDelete: "set null",
     }),

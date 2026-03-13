@@ -15,7 +15,6 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useNavigate } from "@tanstack/react-router";
 import type { Editor } from "@tiptap/core";
 import { getMarkRange } from "@tiptap/core";
 import type { ComponentType, SVGProps } from "react";
@@ -41,7 +40,6 @@ type PopoverState =
 interface SearchDocument {
   id: string;
   title: string | null;
-  slug: string | null;
 }
 
 interface LinkPopoverProps {
@@ -307,7 +305,7 @@ function EditModeContent({
       const linkAttrs = {
         kind: "internal" as const,
         refId: docId,
-        href: doc?.slug ? `/${doc.slug}` : `/${docId}`,
+        href: `/${docId}`,
       };
 
       const { $from } = editor.state.selection;
@@ -609,7 +607,6 @@ export function LinkPopover({
   organizationId: string;
   organizationSlug: string;
 }) {
-  const navigate = useNavigate({ from: "/w/$organizationSlug" });
   const linkState = useLinkState(editor);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -633,12 +630,9 @@ export function LinkPopover({
 
   const handleNavigate = useCallback(
     (docId: string) => {
-      void navigate({
-        to: "/w/$organizationSlug/$id" as ".",
-        params: { organizationSlug: organizationSlug as string, id: docId },
-      });
+      window.location.assign(`/w/${organizationSlug}/${docId}`);
     },
-    [navigate, organizationSlug],
+    [organizationSlug],
   );
 
   return (
