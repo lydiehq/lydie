@@ -24,7 +24,7 @@ import {
 import { useOrganization } from "@/context/organization.context";
 import { useZero } from "@/services/zero";
 
-import { resolveSelectedViewId, type CollectionViewRecord } from "./view-selection";
+import { resolveSelectedViewId, type CollectionViewRecord } from "./-view-selection";
 
 export const Route = createFileRoute("/__auth/w/$organizationSlug/collections/$collectionId")({
   component: RouteComponent,

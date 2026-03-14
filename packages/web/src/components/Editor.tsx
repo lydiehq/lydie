@@ -57,6 +57,7 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [pendingChange, setPendingChange] = useAtom(pendingEditorChangeAtom);
+  const pendingChangeStatus = useAtomValue(pendingChangeStatusAtom);
   const setPendingChangeStatus = useSetAtom(pendingChangeStatusAtom);
   const isDocked = useAtomValue(isDockedAtom);
   const isAssistantOpen = useAtomValue(isOpenAtom);

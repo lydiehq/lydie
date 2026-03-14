@@ -5,7 +5,34 @@ import { expect, test } from "./fixtures/auth.fixture";
 import { createTestOrganization } from "./utils/db";
 
 test.describe("workspace management", () => {
-  test("should be able to create a new workspace through organization menu", async ({
+  test("should create a workspace from create page", async ({ page }) => {
+    await page.goto("/new", { waitUntil: "networkidle" });
+    await expect(page.getByRole("heading", { name: "Create Workspace" })).toBeVisible();
+
+    const workspaceName = `Workspace ${Date.now()}`;
+    await page.getByLabel("Workspace Name").fill(workspaceName);
+    await page.getByRole("button", { name: "Create Workspace" }).click();
+
+    await page.waitForURL(/\/w\/[\w-]+(?:\/[\w-]+)?$/);
+
+    const [createdWorkspace] = await db
+      .select({ id: organizationsTable.id })
+      .from(organizationsTable)
+      .where(eq(organizationsTable.name, workspaceName))
+      .limit(1);
+
+    expect(createdWorkspace?.id).toBeTruthy();
+    expect(page.url()).toContain("/w/");
+    expect(page.url()).toContain(createdWorkspace?.id ?? "");
+
+    await page.getByRole("button", { name: workspaceName }).first().click();
+    await page.getByRole("menuitem", { name: "Switch workspace" }).click();
+    await expect(page.getByRole("dialog").getByText(workspaceName, { exact: true })).toBeVisible({
+      timeout: 15000,
+    });
+  });
+
+  test("should navigate to create workspace page through organization menu", async ({
     page,
     organization,
   }) => {
@@ -18,20 +45,9 @@ test.describe("workspace management", () => {
     await expect(page.getByRole("heading", { name: "My workspaces" })).toBeVisible();
 
     await page.getByRole("link", { name: "Create workspace" }).click();
+    await page.waitForURL("/new");
     await expect(page.getByRole("heading", { name: "Create Workspace" })).toBeVisible();
-
-    const newWorkspaceName = `New Workspace ${Date.now()}`;
-    await page.getByLabel("Workspace Name").fill(newWorkspaceName);
-
-    await page.getByRole("button", { name: "Create Workspace" }).click();
-
-    await page.waitForURL(/\/w\/[\w-]+(?:\/[\w-]+)?$/);
-
-    await page.getByRole("button", { name: newWorkspaceName }).first().click();
-    await page.getByRole("menuitem", { name: "Switch workspace" }).click();
-    await expect(page.getByRole("dialog").getByText(newWorkspaceName, { exact: true })).toBeVisible({
-      timeout: 15000,
-    });
+    await expect(page.getByRole("button", { name: "Create Workspace" })).toBeVisible();
   });
 
   test("should be able to switch between workspaces", async ({ page, organization, user }) => {

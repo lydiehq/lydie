@@ -1,6 +1,5 @@
 import { setupOrganizationBilling } from "@lydie/core/billing/billing-sync";
 import { createId } from "@lydie/core/id";
-import { slugify } from "@lydie/core/utils";
 import { convertJsonToYjs } from "@lydie/core/yjs-to-json";
 import { documentEmbeddingsTable, documentTitleEmbeddingsTable } from "@lydie/database";
 import { defineMutator, Transaction } from "@rocicorp/zero";
@@ -98,7 +97,6 @@ async function createOnboardingDocumentsWithEmbeddings(
   await tx.mutate.documents.insert(
     withTimestamps({
       id: onboardingDocId,
-      slug: `${slugify("Welcome to Your Workspace")}-${createId().slice(0, 6)}`,
       title: guideTitle,
       yjs_state: guideYjsState,
       user_id: userId,
@@ -152,7 +150,6 @@ async function createOnboardingDocumentsWithEmbeddings(
     await tx.mutate.documents.insert(
       withTimestamps({
         id: docId,
-        slug: `${slugify(doc.title)}-${createId().slice(0, 6)}`,
         title: doc.title,
         yjs_state: yjsState,
         user_id: userId,

@@ -585,7 +585,6 @@ export const templateMutators = {
 
       await tx.mutate.documents.insert({
         id: rootDocumentId,
-        slug: `${slugify(rootTemplateDoc.title)}-${createId().slice(0, 6)}`,
         title: rootTemplateDoc.title,
         yjs_state: remapTemplateDocumentState(rootTemplateDoc),
         user_id: ctx.userId,
@@ -611,7 +610,6 @@ export const templateMutators = {
 
         await tx.mutate.documents.insert({
           id: newDocId,
-          slug: `${slugify(templateDoc.title)}-${createId().slice(0, 6)}`,
           title: templateDoc.title,
           yjs_state: remapTemplateDocumentState(templateDoc),
           user_id: ctx.userId,

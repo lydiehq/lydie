@@ -29,7 +29,7 @@ import { useAuth } from "@/context/auth.context";
 import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
 import { getCachedSession, revalidateSession, type ExtendedSessionData } from "@/lib/auth/session";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
-import { resolveOrganizationRecovery } from "@/routes/__auth/w/$organizationSlug/organization-recovery";
+import { resolveOrganizationRecovery } from "@/routes/__auth/w/$organizationSlug/-organization-recovery";
 import { authClient } from "@/utils/auth";
 
 const organizationSearchSchema = z.object({
@@ -198,7 +198,12 @@ function RouteLayout() {
   const currentDocumentId = useMemo(() => {
     for (let index = routerState.matches.length - 1; index >= 0; index -= 1) {
       const params = routerState.matches[index]?.params;
-      const id = params?.id;
+
+      if (!params || typeof params !== "object" || !("id" in params)) {
+        continue;
+      }
+
+      const id = params.id;
 
       if (typeof id === "string" && id.length > 0) {
         return id;

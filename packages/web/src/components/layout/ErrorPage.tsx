@@ -13,9 +13,9 @@ interface ErrorPageProps {
 }
 
 export function ErrorPage({ error, reset }: ErrorPageProps) {
-  const isDev = import.meta.env.DEV;
+  const showDebugInfo = import.meta.env.DEV && !import.meta.env.PROD;
 
-  if (isDev) {
+  if (showDebugInfo) {
     console.error("Route Error:", error);
     console.error("Error details:", {
       name: error.name,
@@ -57,16 +57,16 @@ export function ErrorPage({ error, reset }: ErrorPageProps) {
             Something went wrong
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {isDev
+            {showDebugInfo
               ? error.message || "An unexpected error occurred"
               : "We encountered an unexpected error. Please try again."}
           </p>
         </div>
 
-        {isDev && error.stack && (
+        {showDebugInfo && error.stack && (
           <details className="w-full mt-4 text-left">
             <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-2">
-              Error details (dev only)
+              Error details (local dev only)
             </summary>
             <pre className="p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs overflow-auto max-h-64 text-gray-800 dark:text-gray-200">
               {error.stack}

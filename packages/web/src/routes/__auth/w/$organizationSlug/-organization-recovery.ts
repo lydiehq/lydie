@@ -16,7 +16,7 @@ function getFallbackOrganizationSlug(session: ExtendedSessionData["session"] | u
 
   if (
     activeOrganizationSlug &&
-    organizations.some((organization) => organization.slug === activeOrganizationSlug)
+    organizations.some((organization: { slug: string }) => organization.slug === activeOrganizationSlug)
   ) {
     return activeOrganizationSlug;
   }

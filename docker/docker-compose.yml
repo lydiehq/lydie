@@ -80,9 +80,7 @@ services:
       APP_STAGE: ${APP_STAGE:-development}
       SECURE_COOKIES: "false"
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
-      # In the e2e topology nginx proxies requests from :3000 → backend:3001,
-      # so Better Auth must see the public-facing origin (localhost:3000).
-      BETTER_AUTH_BASE_URL: http://localhost:3000/internal/public/auth
+      BETTER_AUTH_BASE_URL: ${BETTER_AUTH_BASE_URL:-http://localhost:3001/internal/public/auth}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-at-least-32-chars}
       BETTER_AUTH_ENABLE_TEST_UTILS: ${BETTER_AUTH_ENABLE_TEST_UTILS:-false}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}

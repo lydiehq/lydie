@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSelectedViewId } from "./view-selection";
+import { resolveSelectedViewId } from "./-view-selection";
 
 describe("resolveSelectedViewId", () => {
   const views = [
