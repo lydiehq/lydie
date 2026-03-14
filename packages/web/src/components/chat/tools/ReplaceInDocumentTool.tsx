@@ -4,7 +4,7 @@ import { DocumentIcon } from "@lydie/ui/components/icons/DocumentIcon";
 import { Separator } from "@lydie/ui/components/layout/Separator";
 import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { motion } from "motion/react";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -66,10 +66,10 @@ export function ReplaceInDocumentTool({
   const [applyStatus, setApplyStatus] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const applyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isApplyingRef = useRef(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
-  const navigate = useNavigate();
   const params = useParams({ strict: false });
   const z = useZero();
   const sessions = useEditorSessions();
@@ -103,6 +103,10 @@ export function ReplaceInDocumentTool({
   const replaceText = tool.input?.replace || tool.output?.replace || "";
   const selectionWithEllipsis =
     tool.input?.selectionWithEllipsis || tool.output?.selectionWithEllipsis || "";
+
+  useEffect(() => {
+    isApplyingRef.current = isApplying;
+  }, [isApplying]);
 
   // Reset state when a new tool call starts
   useEffect(() => {
@@ -268,7 +272,7 @@ export function ReplaceInDocumentTool({
 
       // Safety timeout in case navigation fails
       applyTimeoutRef.current = setTimeout(() => {
-        if (isApplying) {
+        if (isApplyingRef.current) {
           console.error("Navigation timeout - resetting state");
           setIsApplying(false);
           setApplyStatus("");
@@ -279,13 +283,7 @@ export function ReplaceInDocumentTool({
       }, 5000);
 
       setTimeout(() => {
-        void navigate({
-          to: "/w/$organizationSlug/$id",
-          params: {
-            organizationSlug: params.organizationSlug as string,
-            id: targetDocumentId,
-          },
-        });
+        window.location.assign(`/w/${params.organizationSlug as string}/${targetDocumentId}`);
       }, 100);
 
       return;
@@ -332,7 +330,7 @@ export function ReplaceInDocumentTool({
 
       // Safety timeout in case editor never initializes
       applyTimeoutRef.current = setTimeout(() => {
-        if (isApplying) {
+        if (isApplyingRef.current) {
           console.error("Editor initialization timeout - resetting state");
           setIsApplying(false);
           setApplyStatus("");
@@ -351,7 +349,7 @@ export function ReplaceInDocumentTool({
 
     // Safety timeout to prevent stuck state (30 seconds)
     applyTimeoutRef.current = setTimeout(() => {
-      if (isApplying) {
+      if (isApplyingRef.current) {
         console.error("Apply timeout - resetting state");
         setIsApplying(false);
         setIsUsingLLM(false);
