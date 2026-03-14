@@ -16,7 +16,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Button as RACButton, TooltipTrigger } from "react-aria-components";
 import { createPortal } from "react-dom";
 
@@ -276,11 +276,14 @@ const FloatingAssistantChatContent = memo(function FloatingAssistantChatContent(
   const clearPendingMessage = useSetAtom(clearPendingMessageAtom);
   const [pendingContent, setPendingContent] = useState<string | undefined>(undefined);
 
-  // Handle pending message from other components
-  if (pendingMessage && pendingContent !== pendingMessage) {
+  useEffect(() => {
+    if (!pendingMessage || pendingContent === pendingMessage) {
+      return;
+    }
+
     setPendingContent(pendingMessage);
     clearPendingMessage();
-  }
+  }, [clearPendingMessage, pendingContent, pendingMessage]);
 
   const handleSubmit = useCallback(
     (text: string, contextDocumentIds: string[]) => {
