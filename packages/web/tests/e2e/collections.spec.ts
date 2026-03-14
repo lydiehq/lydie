@@ -646,8 +646,19 @@ test.describe("collections", () => {
         await page.locator("[data-testid='editor-content']").click();
         await page.keyboard.type("/collection");
         await page.getByText("Collection View").click();
-        await page.getByRole("button", { name: collection.name, exact: true }).click();
-        await page.getByRole("button", { name: /^Board\s+kanban$/i }).click();
+
+        const collectionSearch = page.getByPlaceholder("Search collections...");
+        await expect(collectionSearch).toBeVisible();
+        await collectionSearch.fill(collection.name);
+        const escapedCollectionName = collection.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        await page
+          .getByRole("button", { name: new RegExp(`^${escapedCollectionName}(?:\\s|$)`, "i") })
+          .first()
+          .click();
+
+        const boardKanbanView = page.getByRole("button", { name: /^Board\s+kanban$/i });
+        await expect(boardKanbanView).toBeVisible();
+        await boardKanbanView.click();
 
         const block = page.locator("[data-doc-widget]").filter({ hasText: collection.name }).first();
         await renameKanbanColumn(block, initialLabel, nextLabel);

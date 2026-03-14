@@ -25,9 +25,13 @@ test.describe("workspace management", () => {
 
     await page.getByRole("button", { name: "Create Workspace" }).click();
 
-    await page.waitForURL(/\/w\/[\w-]+/);
+    await page.waitForURL(/\/w\/[\w-]+(?:\/[\w-]+)?$/);
 
-    await expect(page.getByRole("button", { name: newWorkspaceName }).first()).toBeVisible();
+    await page.getByRole("button", { name: newWorkspaceName }).first().click();
+    await page.getByRole("menuitem", { name: "Switch workspace" }).click();
+    await expect(page.getByRole("dialog").getByText(newWorkspaceName, { exact: true })).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("should be able to switch between workspaces", async ({ page, organization, user }) => {
