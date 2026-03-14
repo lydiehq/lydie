@@ -13,11 +13,12 @@ import { useDocumentActions } from "@/hooks/use-document-actions";
 import { DocumentMenu } from "../documents/DocumentMenu";
 import { TreeItemIcon } from "./TreeItemIcon";
 
-type TreeDocumentItem = {
+export type TreeDocumentItem = {
   id: string;
   name: string;
   type: "document";
   isCollection?: boolean;
+  isFavorited?: boolean;
   children?: TreeDocumentItem[];
 };
 

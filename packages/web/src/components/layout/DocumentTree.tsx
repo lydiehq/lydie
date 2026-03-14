@@ -15,14 +15,7 @@ import { useDocumentDragDrop } from "@/hooks/use-document-drag-drop";
 import { getUserStorage, setUserStorage } from "@/lib/user-storage";
 import { getAncestorIds } from "@/utils/document-tree";
 
-import { DocumentTreeItem } from "./DocumentTreeItem";
-
-type TreeItem = {
-  id: string;
-  name: string;
-  type: "document";
-  children?: TreeItem[];
-};
+import { DocumentTreeItem, type TreeDocumentItem } from "./DocumentTreeItem";
 
 const STORAGE_KEY = "lydie:document:tree:expanded:keys";
 
@@ -92,7 +85,7 @@ export function DocumentTree({ renderEmptyState }: Props) {
       byParent.set(parentId, [...siblings, document]);
     }
 
-    const build = (parentId: string | null): TreeItem[] => {
+    const build = (parentId: string | null): TreeDocumentItem[] => {
       const siblings = [...(byParent.get(parentId) ?? [])].sort(
         (first, second) => (first.sort_order ?? 0) - (second.sort_order ?? 0),
       );
@@ -115,7 +108,7 @@ export function DocumentTree({ renderEmptyState }: Props) {
   const openTabIds = useMemo(() => new Set(openTabs.map((tab) => tab.documentId)), [openTabs]);
 
   const renderItem = useCallback(
-    (item: TreeItem): ReactElement => (
+    (item: TreeDocumentItem): ReactElement => (
       <DocumentTreeItem
         item={item}
         renderItem={renderItem}

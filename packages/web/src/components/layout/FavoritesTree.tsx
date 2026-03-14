@@ -8,16 +8,7 @@ import { Tree } from "react-aria-components";
 import { documentTabsAtom } from "@/atoms/tabs";
 import { useOrganization } from "@/context/organization.context";
 
-import { DocumentTreeItem } from "./DocumentTreeItem";
-
-type TreeItem = {
-  id: string;
-  name: string;
-  type: "document";
-  children?: TreeItem[];
-  isFavorited?: boolean;
-  isCollection?: boolean;
-};
+import { DocumentTreeItem, type TreeDocumentItem } from "./DocumentTreeItem";
 
 export function FavoritesTree() {
   const { organization } = useOrganization();
@@ -51,7 +42,7 @@ export function FavoritesTree() {
   const openTabIds = useMemo(() => new Set(openTabs.map((t) => t.documentId)), [openTabs]);
 
   const renderItem = useCallback(
-    (item: TreeItem): ReactElement => (
+    (item: TreeDocumentItem): ReactElement => (
       <DocumentTreeItem
         item={item}
         renderItem={renderItem}
