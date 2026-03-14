@@ -2,6 +2,7 @@ import {
   Outlet,
   createFileRoute,
   notFound,
+  redirect,
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
@@ -25,7 +26,9 @@ import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
 import { useAuth } from "@/context/auth.context";
 import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
+import { getCachedSession, revalidateSession, type ExtendedSessionData } from "@/lib/auth/session";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
+import { resolveOrganizationRecovery } from "@/routes/__auth/w/$organizationSlug/organization-recovery";
 import { authClient } from "@/utils/auth";
 
 const organizationSearchSchema = z.object({
@@ -45,6 +48,34 @@ export const Route = createFileRoute("/__auth/w/$organizationSlug")({
       return { organization };
     } catch (error) {
       console.error(error);
+
+      const isOrganizationMissing =
+        error instanceof Error && error.message.startsWith("Organization not found:");
+
+      if (isOrganizationMissing) {
+        await revalidateSession(context.queryClient);
+
+        const refreshedSession = getCachedSession(context.queryClient)?.session;
+        const fallbackSession = (context.auth as ExtendedSessionData | undefined)?.session;
+        const recovery = resolveOrganizationRecovery(
+          params.organizationSlug,
+          refreshedSession ?? fallbackSession,
+        );
+
+        if (recovery.type === "redirect-new") {
+          throw redirect({ to: "/new" });
+        }
+
+        if (recovery.type === "redirect-workspace") {
+          throw redirect({
+            to: "/w/$organizationSlug",
+            params: {
+              organizationSlug: recovery.organizationSlug,
+            },
+          });
+        }
+      }
+
       throw notFound();
     }
   },
