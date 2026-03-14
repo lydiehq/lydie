@@ -191,6 +191,10 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
     if (pendingChange.documentId !== doc.id) return;
     if (!session) return;
 
+    if (pendingChangeStatus === "applying") {
+      return;
+    }
+
     const applyPendingChange = async () => {
       setPendingChangeStatus("applying");
       toast.info("Applying changes...");
@@ -245,7 +249,15 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [session, doc.id, pendingChange, setPendingChange, setPendingChangeStatus, z]);
+  }, [
+    session,
+    doc.id,
+    pendingChange,
+    pendingChangeStatus,
+    setPendingChange,
+    setPendingChangeStatus,
+    z,
+  ]);
 
   const [collectionData] = useQuery(
     doc.collection_id

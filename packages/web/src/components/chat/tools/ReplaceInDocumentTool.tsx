@@ -196,26 +196,16 @@ export function ReplaceInDocumentTool({
         dispatchApplyState({ type: "applying" });
         setIsUsingLLM(false); // Will be set by the apply function if needed
       } else if (pendingChangeStatus === "applied") {
+        clearApplyTimeout();
         dispatchApplyState({ type: "applied" });
         setIsUsingLLM(false);
-
-        // Clear timeout on successful apply
-        if (applyTimeoutRef.current) {
-          clearTimeout(applyTimeoutRef.current);
-          applyTimeoutRef.current = null;
-        }
       } else if (pendingChangeStatus === "failed") {
+        clearApplyTimeout();
         dispatchApplyState({
           type: "failed",
           message: "Failed to apply changes. Please try again.",
         });
         setIsUsingLLM(false);
-
-        // Clear timeout on failure
-        if (applyTimeoutRef.current) {
-          clearTimeout(applyTimeoutRef.current);
-          applyTimeoutRef.current = null;
-        }
       } else if (pendingChangeStatus === "pending") {
         dispatchApplyState({ type: "navigating" });
       }
@@ -226,14 +216,9 @@ export function ReplaceInDocumentTool({
         (applyStatus === "Navigating to document..." || applyStatus === "Applying...")
       ) {
         if (targetDocumentId === params.id || !targetDocumentId) {
+          clearApplyTimeout();
           dispatchApplyState({ type: "applied" });
           setIsUsingLLM(false);
-
-          // Clear timeout on completion
-          if (applyTimeoutRef.current) {
-            clearTimeout(applyTimeoutRef.current);
-            applyTimeoutRef.current = null;
-          }
         }
       }
     }
@@ -283,6 +268,36 @@ export function ReplaceInDocumentTool({
 
   const wordCount = countWords(replaceText);
 
+  const clearApplyTimeout = () => {
+    if (applyTimeoutRef.current) {
+      clearTimeout(applyTimeoutRef.current);
+      applyTimeoutRef.current = null;
+    }
+  };
+
+  const createPendingChange = (documentId: string) => ({
+    documentId,
+    title: newTitle,
+    selectionWithEllipsis,
+    replace: replaceText,
+    organizationId,
+  });
+
+  const startFailureTimeout = (durationMs: number, message: string) => {
+    clearApplyTimeout();
+    applyTimeoutRef.current = setTimeout(() => {
+      if (isApplyingRef.current) {
+        console.error("Apply flow timeout - resetting state", { durationMs, message });
+        dispatchApplyState({
+          type: "failed",
+          message,
+        });
+        setPendingChangeStatus(null);
+        setPendingChange(null);
+      }
+    }, durationMs);
+  };
+
   const handleApply = async () => {
     dispatchApplyState({ type: "clear-error" });
 
@@ -299,31 +314,12 @@ export function ReplaceInDocumentTool({
       dispatchApplyState({ type: "navigating" });
 
       // Store the pending change and set status
-      setPendingChange({
-        documentId: targetDocumentId,
-        title: newTitle,
-        selectionWithEllipsis,
-        replace: replaceText,
-        organizationId,
-      });
+      setPendingChange(createPendingChange(targetDocumentId));
       setPendingChangeStatus("pending");
 
-      // Safety timeout in case navigation fails
-      applyTimeoutRef.current = setTimeout(() => {
-        if (isApplyingRef.current) {
-          console.error("Navigation timeout - resetting state");
-          dispatchApplyState({
-            type: "failed",
-            message: "Navigation took too long. Please try again.",
-          });
-          setPendingChangeStatus(null);
-          setPendingChange(null);
-        }
-      }, 5000);
+      startFailureTimeout(5000, "Navigation took too long. Please try again.");
 
-      setTimeout(() => {
-        window.location.assign(`/w/${params.organizationSlug as string}/${targetDocumentId}`);
-      }, 100);
+      window.location.assign(`/w/${params.organizationSlug as string}/${targetDocumentId}`);
 
       return;
     }
@@ -356,44 +352,17 @@ export function ReplaceInDocumentTool({
       dispatchApplyState({ type: "waiting-editor" });
 
       // Store the pending change - Editor.tsx useEffect will apply it
-      setPendingChange({
-        documentId: currentDocId,
-        title: newTitle,
-        selectionWithEllipsis,
-        replace: replaceText,
-        organizationId,
-      });
+      setPendingChange(createPendingChange(currentDocId));
       setPendingChangeStatus("pending");
 
-      // Safety timeout in case editor never initializes
-      applyTimeoutRef.current = setTimeout(() => {
-        if (isApplyingRef.current) {
-          console.error("Editor initialization timeout - resetting state");
-          dispatchApplyState({
-            type: "failed",
-            message: "Editor failed to initialize. Please try reloading the document.",
-          });
-          setPendingChangeStatus(null);
-          setPendingChange(null);
-        }
-      }, 10000);
+      startFailureTimeout(10000, "Editor failed to initialize. Please try reloading the document.");
 
       return;
     }
 
     dispatchApplyState({ type: "applying" });
 
-    // Safety timeout to prevent stuck state (30 seconds)
-    applyTimeoutRef.current = setTimeout(() => {
-      if (isApplyingRef.current) {
-        console.error("Apply timeout - resetting state");
-        dispatchApplyState({
-          type: "failed",
-          message: "Operation timed out. Please try again or reload the document.",
-        });
-        setIsUsingLLM(false);
-      }
-    }, 30000);
+    startFailureTimeout(30000, "Operation timed out. Please try again or reload the document.");
 
     try {
       const result = await applyDocumentChange({
@@ -423,10 +392,7 @@ export function ReplaceInDocumentTool({
       }
 
       // Clear timeout on success/failure
-      if (applyTimeoutRef.current) {
-        clearTimeout(applyTimeoutRef.current);
-        applyTimeoutRef.current = null;
-      }
+      clearApplyTimeout();
 
       if (result.success) {
         dispatchApplyState({ type: "applied" });
@@ -442,10 +408,7 @@ export function ReplaceInDocumentTool({
       console.error("Failed to apply:", error);
 
       // Clear timeout
-      if (applyTimeoutRef.current) {
-        clearTimeout(applyTimeoutRef.current);
-        applyTimeoutRef.current = null;
-      }
+      clearApplyTimeout();
 
       const errorMsg =
         error instanceof Error
