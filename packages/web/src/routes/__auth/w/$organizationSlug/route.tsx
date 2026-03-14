@@ -14,6 +14,7 @@ import { z } from "zod";
 import {
   isFloatingAssistantDockedAtom as isDockedAtom,
   isSidebarCollapsedAtom,
+  sidebarToggleSignalAtom,
 } from "@/atoms/workspace-settings";
 import { setDocumentTabsStorageScopeAtom } from "@/atoms/tabs";
 import { FloatingAssistant } from "@/components/assistant/FloatingAssistant";
@@ -117,6 +118,7 @@ function RouteLayout() {
   const setTabStorageScope = useSetAtom(setDocumentTabsStorageScopeAtom);
   const routerState = useRouterState();
   const isDocked = useAtomValue(isDockedAtom);
+  const sidebarToggleSignal = useAtomValue(sidebarToggleSignalAtom);
   const { session } = useAuth();
 
   useEffect(() => {
@@ -133,14 +135,12 @@ function RouteLayout() {
   }, [sidebarPanelRef]);
 
   useEffect(() => {
-    const handleToggleSidebar = () => {
-      toggleSidebar();
-    };
-    window.addEventListener("toggle-sidebar", handleToggleSidebar);
-    return () => {
-      window.removeEventListener("toggle-sidebar", handleToggleSidebar);
-    };
-  }, [toggleSidebar]);
+    if (sidebarToggleSignal === 0) {
+      return;
+    }
+
+    toggleSidebar();
+  }, [sidebarToggleSignal, toggleSidebar]);
   const navigate = useNavigate();
   const search = Route.useSearch();
   const params = Route.useParams();
@@ -196,13 +196,17 @@ function RouteLayout() {
   };
 
   const currentDocumentId = useMemo(() => {
-    const params = routerState.location.pathname.split("/");
-    const orgSlugIndex = params.indexOf("w");
-    if (orgSlugIndex !== -1 && params[orgSlugIndex + 2]) {
-      return params[orgSlugIndex + 2];
+    for (let index = routerState.matches.length - 1; index >= 0; index -= 1) {
+      const params = routerState.matches[index]?.params;
+      const id = params?.id;
+
+      if (typeof id === "string" && id.length > 0) {
+        return id;
+      }
     }
+
     return null;
-  }, [routerState.location.pathname]);
+  }, [routerState.matches]);
 
   const shouldShowDockedPanel = isDocked;
 

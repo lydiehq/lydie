@@ -25,7 +25,7 @@ import {
   makeTabPersistentAtom,
   syncDocumentTabAtom,
 } from "@/atoms/tabs";
-import { isSidebarCollapsedAtom } from "@/atoms/workspace-settings";
+import { isSidebarCollapsedAtom, requestSidebarToggleAtom } from "@/atoms/workspace-settings";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { composeTailwindRenderProps, focusRing } from "@/utils/focus-ring";
 
@@ -150,6 +150,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
 
   const { createDocument } = useDocumentActions();
   const isSidebarCollapsed = useAtomValue(isSidebarCollapsedAtom);
+  const requestSidebarToggle = useSetAtom(requestSidebarToggleAtom);
 
   if (tabs.length === 0) return null;
 
@@ -164,10 +165,7 @@ export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
               focusRing,
               "p-1 rounded hover:bg-black/5 text-gray-700 group mr-1",
             )}
-            onPress={() => {
-              // Dispatch custom event to toggle sidebar
-              window.dispatchEvent(new CustomEvent("toggle-sidebar"));
-            }}
+            onPress={requestSidebarToggle}
             aria-label="Expand sidebar"
           >
             <SidebarIcon direction="left" collapsed={true} />

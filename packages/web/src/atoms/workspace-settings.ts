@@ -48,6 +48,7 @@ const DEFAULT_SETTINGS: WorkspaceSettings = {
 const STORAGE_KEY = "lydie-workspace-settings";
 
 const workspaceSettingsAtom = atomWithStorage<WorkspaceSettings>(STORAGE_KEY, DEFAULT_SETTINGS);
+const sidebarToggleRequestAtom = atom(0);
 
 // Creates a derived atom that only subscribes to a specific path in the settings.
 function createSettingAtom<Path extends keyof WorkspaceSettings>(
@@ -113,6 +114,10 @@ export const sidebarExpandedSectionsAtom = createNestedSettingAtom("sidebar", "e
 export const isFavoritesExpandedAtom = createSidebarSectionAtom("favorites");
 export const isDocumentsExpandedAtom = createSidebarSectionAtom("documents");
 export const isCollectionsExpandedAtom = createSidebarSectionAtom("collections");
+export const sidebarToggleSignalAtom = atom((get) => get(sidebarToggleRequestAtom));
+export const requestSidebarToggleAtom = atom(null, (get, set) => {
+  set(sidebarToggleRequestAtom, get(sidebarToggleRequestAtom) + 1);
+});
 
 // Assistant settings
 export const assistantSettingsAtom = createSettingAtom("assistant");
