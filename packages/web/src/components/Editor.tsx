@@ -139,7 +139,6 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
   //   };
   // }, [session, doc.id, doc.title]);
 
-  // Keep editor session subscriptions, preview-tab conversion, and title blur persistence together.
   useEffect(() => {
     if (!session) {
       return;
@@ -151,6 +150,20 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
         makeTabPersistent(doc.id);
       }
     };
+
+    session.contentEditor.on("update", onEditorUpdate);
+    session.titleEditor.on("update", onEditorUpdate);
+
+    return () => {
+      session.contentEditor.off("update", onEditorUpdate);
+      session.titleEditor.off("update", onEditorUpdate);
+    };
+  }, [session, doc.id, makeTabPersistent]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
 
     const handleBlur = () => {
       const finalTitle = session.titleEditor.getText().trim();
@@ -165,18 +178,13 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
       }
     };
 
-    session.contentEditor.on("update", onEditorUpdate);
-    session.titleEditor.on("update", onEditorUpdate);
-
     const titleDom = session.titleEditor.view.dom as HTMLElement;
     titleDom.addEventListener("blur", handleBlur, true);
 
     return () => {
-      session.contentEditor.off("update", onEditorUpdate);
-      session.titleEditor.off("update", onEditorUpdate);
       titleDom.removeEventListener("blur", handleBlur, true);
     };
-  }, [session, doc.id, doc.organization_id, makeTabPersistent]);
+  }, [session, doc.id, doc.organization_id]);
 
   // Apply pending changes
   useEffect(() => {
