@@ -2,7 +2,7 @@ import { queries } from "@lydie/zero/queries";
 import { useQuery } from "@rocicorp/zero/react";
 import { useEffect } from "react";
 
-import { mentionStore } from "@/components/editor/MentionMenu";
+import { setMentionDocuments } from "@/atoms/mention-documents";
 
 /**
  * Hook that fetches documents for the @ mention feature.
@@ -23,7 +23,7 @@ export function useMentionDocuments(organizationId: string, searchTerm: string =
         id: doc.id,
         title: doc.title,
       }));
-      mentionStore.setResults(items);
+      setMentionDocuments(items);
     }
   }, [searchResults]);
 
@@ -49,7 +49,7 @@ export function usePreloadMentionDocuments(organizationId: string) {
         id: doc.id,
         title: doc.title,
       }));
-      mentionStore.setResults(items);
+      setMentionDocuments(items);
     }
   }, [allDocuments]);
 }

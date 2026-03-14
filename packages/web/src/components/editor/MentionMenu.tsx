@@ -5,6 +5,8 @@ import type { SuggestionKeyDownProps, SuggestionProps } from "@tiptap/suggestion
 import { forwardRef, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
+import { getMentionDocuments } from "@/atoms/mention-documents";
+
 type MentionItem = {
   id: string;
   title: string | null;
@@ -14,28 +16,6 @@ type MentionMenuProps = {
   items: MentionItem[];
   command: (item: MentionItem) => void;
 };
-
-// Global store for mention search results
-class MentionStore {
-  private results: MentionItem[] = [];
-  private listeners: Set<() => void> = new Set();
-
-  setResults(results: MentionItem[]) {
-    this.results = results;
-    this.listeners.forEach((listener) => listener());
-  }
-
-  getResults(): MentionItem[] {
-    return this.results;
-  }
-
-  subscribe(listener: () => void) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-}
-
-export const mentionStore = new MentionStore();
 
 export const MentionMenuList = forwardRef<
   { onKeyDown: (props: SuggestionKeyDownProps) => boolean },
@@ -123,7 +103,7 @@ MentionMenuList.displayName = "MentionMenuList";
 export function createMentionMenuSuggestion() {
   return {
     items: ({ query }: { query: string }) => {
-      const results = mentionStore.getResults();
+      const results = getMentionDocuments();
       // Filter search results based on query
       if (!query) return results.slice(0, 10);
       return results
