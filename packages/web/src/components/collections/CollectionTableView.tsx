@@ -66,7 +66,7 @@ type TableMeta = {
   startEditing: (rowId: string, columnId: string, seed?: string) => void;
   stopEditing: () => void;
   updateData: (
-    rowIndex: number,
+    rowId: string,
     columnId: string,
     value: string | number | boolean | string[] | null,
   ) => void;
@@ -671,8 +671,8 @@ export function CollectionTableView({
   }, [editingCell, focusCell, tableNav]);
 
   const updateData = useCallback(
-    (rowIndex: number, columnId: string, value: string | number | boolean | string[] | null) => {
-      const document = sortedDocuments[rowIndex];
+    (rowId: string, columnId: string, value: string | number | boolean | string[] | null) => {
+      const document = sortedDocuments.find((item) => item.id === rowId);
       if (!document) {
         return;
       }
@@ -1695,7 +1695,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
                 const normalized = Array.from(keys)
                   .map((key) => String(key))
                   .filter(Boolean);
-                meta?.updateData(row.index, column.id, normalized);
+                meta?.updateData(row.id, column.id, normalized);
                 stopEditing();
               }}
             >
@@ -1718,7 +1718,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
           className="w-full"
           onSelectionChange={(nextValue) => {
             const valueAsString = typeof nextValue === "string" ? nextValue : null;
-            meta?.updateData(row.index, column.id, valueAsString);
+            meta?.updateData(row.id, column.id, valueAsString);
             stopEditing();
           }}
           onOpenChange={(isOpen) => {
@@ -1752,7 +1752,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
           options={fieldDef.options}
           selectedKey={typeof currentValue === "string" ? currentValue : null}
           onCommit={(value) => {
-            meta?.updateData(row.index, column.id, value);
+            meta?.updateData(row.id, column.id, value);
             stopEditing();
           }}
           onCancel={stopEditing}
@@ -1774,7 +1774,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
           options={fieldDef.options}
           selectedValues={selectedValues}
           onCommit={(value) => {
-            meta?.updateData(row.index, column.id, value);
+            meta?.updateData(row.id, column.id, value);
             stopEditing();
           }}
           onCancel={stopEditing}
@@ -1797,7 +1797,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
           setValue(nextValue);
           if (kind === "title") {
             if (nextValue !== row.original.title) {
-              meta?.updateData(row.index, column.id, nextValue);
+              meta?.updateData(row.id, column.id, nextValue);
             }
             stopEditing();
             return;
@@ -1808,7 +1808,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
           }
           const nextFieldValue = toFieldValue(fieldDef, nextValue);
           if (nextFieldValue !== currentValue) {
-            meta?.updateData(row.index, column.id, nextFieldValue);
+            meta?.updateData(row.id, column.id, nextFieldValue);
           }
           stopEditing();
         }}
