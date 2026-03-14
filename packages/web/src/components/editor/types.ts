@@ -2,27 +2,15 @@ import type { queries } from "@lydie/zero/queries";
 import type { QueryResultType } from "@rocicorp/zero";
 import type { Editor } from "@tiptap/core";
 
+import type { PendingChangeStatus, PendingEditorChange } from "@/atoms/editor";
+
 /**
  * Document type from Zero queries.
  * Use this type for editor-related components.
  */
 export type EditorDocument = NonNullable<QueryResultType<typeof queries.documents.byId>>;
 
-/**
- * Pending change from the AI assistant.
- */
-export interface PendingEditorChange {
-  documentId: string;
-  organizationId: string;
-  title?: string;
-  selectionWithEllipsis?: string;
-  replace?: string;
-}
-
-/**
- * Status of pending change application.
- */
-export type PendingChangeStatus = "applying" | "applied" | "failed" | null;
+export type { PendingChangeStatus, PendingEditorChange };
 
 /**
  * Props for the EditorView presentational component.
