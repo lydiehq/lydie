@@ -78,6 +78,13 @@ interface CollectionItem {
   action: () => void;
 }
 
+type NavigationRoute = {
+  id: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  path: string;
+};
+
 type MenuView = "root" | "switch-workspace";
 
 export function CommandMenu() {
@@ -166,8 +173,12 @@ export function CommandMenu() {
     [handleOpenChange],
   );
 
-  const getIntegrationRoute = (integrationType: string) =>
-    `/w/$organizationSlug/settings/integrations/${integrationType}`;
+  const navigateByPath = useCallback(
+    (path: string) => {
+      navigate({ href: path });
+    },
+    [navigate],
+  );
 
   const goToOrganization = useCallback(
     (targetOrg: { id: string; slug: string }) => {
@@ -179,14 +190,9 @@ export function CommandMenu() {
         organizationId: targetOrg.id,
       });
 
-      navigate({
-        to: "/w/$organizationSlug",
-        params: {
-          organizationSlug: targetOrg.slug,
-        },
-      });
+      navigateByPath(`/w/${targetOrg.slug}`);
     },
-    [navigate, organization.slug],
+    [navigateByPath, organization.slug],
   );
 
   const z = useZero();
@@ -253,6 +259,82 @@ export function CommandMenu() {
       });
     }
 
+    const workspaceBasePath = `/w/${organization.slug}`;
+
+    const baseNavigationRoutes: NavigationRoute[] = [
+      { id: "go-home", label: "Go home", icon: HomeFilled, path: "" },
+      { id: "go-assistant", label: "Go to assistant", icon: BotRegular, path: "/assistant" },
+      {
+        id: "settings-general",
+        label: "Go to organization settings",
+        icon: SettingsRegular,
+        path: "/settings",
+      },
+      {
+        id: "settings-profile",
+        label: "Go to profile settings",
+        icon: SettingsRegular,
+        path: "/settings/profile",
+      },
+      {
+        id: "settings-preferences",
+        label: "Go to preferences settings",
+        icon: SettingsRegular,
+        path: "/settings/user",
+      },
+      {
+        id: "settings-ai",
+        label: "Go to AI settings",
+        icon: SparkleRegular,
+        path: "/settings/ai",
+      },
+      {
+        id: "billing",
+        label: "Go to billing settings",
+        icon: PaymentRegular,
+        path: "/settings/billing",
+      },
+      {
+        id: "mdx-import",
+        label: "Go to import settings",
+        icon: ArrowUploadRegular,
+        path: "/settings/import",
+      },
+      {
+        id: "integrations",
+        label: "Go to integrations",
+        icon: PlugConnectedRegular,
+        path: "/settings/integrations",
+      },
+    ];
+
+    const adminNavigationRoutes: NavigationRoute[] = [
+      {
+        id: "settings-components",
+        label: "Go to components settings",
+        icon: CubeRegular,
+        path: "/settings/components",
+      },
+      {
+        id: "settings-templates",
+        label: "Go to templates settings",
+        icon: DocumentCopyRegular,
+        path: "/settings/templates",
+      },
+      {
+        id: "settings-export-import",
+        label: "Go to export & import settings",
+        icon: ArrowDownloadRegular,
+        path: "/settings/export-import",
+      },
+      {
+        id: "settings-admin",
+        label: "Go to admin settings",
+        icon: SettingsRegular,
+        path: "/settings/admin",
+      },
+    ];
+
     const navigationItems: MenuItem[] = [
       {
         id: "switch-workspace",
@@ -264,188 +346,31 @@ export function CommandMenu() {
           setSearch("");
         },
       },
-      {
-        id: "go-home",
-        label: "Go home",
-        icon: HomeFilled,
+      ...baseNavigationRoutes.map((route) => ({
+        id: route.id,
+        label: route.label,
+        icon: route.icon,
         action: () => {
-          navigate({
-            to: "/w/$organizationSlug",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
+          navigateByPath(`${workspaceBasePath}${route.path}`);
         },
-      },
-      {
-        id: "go-assistant",
-        label: "Go to assistant",
-        icon: BotRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/assistant",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "settings-general",
-        label: "Go to organization settings",
-        icon: SettingsRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "settings-profile",
-        label: "Go to profile settings",
-        icon: SettingsRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings/profile",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "settings-preferences",
-        label: "Go to preferences settings",
-        icon: SettingsRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings/user",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "settings-ai",
-        label: "Go to AI settings",
-        icon: SparkleRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings/ai",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "billing",
-        label: "Go to billing settings",
-        icon: PaymentRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings/billing",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "mdx-import",
-        label: "Go to import settings",
-        icon: ArrowUploadRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings/import",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
-      {
-        id: "integrations",
-        label: "Go to integrations",
-        icon: PlugConnectedRegular,
-        action: () => {
-          navigate({
-            to: "/w/$organizationSlug/settings/integrations",
-            params: {
-              organizationSlug: organization?.slug as string,
-            },
-          });
-        },
-      },
+      })),
       ...integrationMetadata.map((integration: IntegrationMetadata) => ({
         id: `integration-${integration.id}`,
         label: `Go to ${integration.name} integration`,
         iconUrl: getIntegrationIconUrl(integration.id) || undefined,
         action: () => {
-          navigate({
-            to: getIntegrationRoute(integration.id),
-          });
+          navigateByPath(`${workspaceBasePath}/settings/integrations/${integration.id}`);
         },
       })),
       ...(userIsAdmin
-        ? [
-            {
-              id: "settings-components",
-              label: "Go to components settings",
-              icon: CubeRegular,
-              action: () => {
-                navigate({
-                  to: "/w/$organizationSlug/settings/components",
-                  params: {
-                    organizationSlug: organization?.slug as string,
-                  },
-                });
-              },
+        ? adminNavigationRoutes.map((route) => ({
+            id: route.id,
+            label: route.label,
+            icon: route.icon,
+            action: () => {
+              navigateByPath(`${workspaceBasePath}${route.path}`);
             },
-            {
-              id: "settings-templates",
-              label: "Go to templates settings",
-              icon: DocumentCopyRegular,
-              action: () => {
-                navigate({
-                  to: "/w/$organizationSlug/settings/templates",
-                  params: {
-                    organizationSlug: organization?.slug as string,
-                  },
-                });
-              },
-            },
-            {
-              id: "settings-export-import",
-              label: "Go to export & import settings",
-              icon: ArrowDownloadRegular,
-              action: () => {
-                navigate({
-                  to: "/w/$organizationSlug/settings/export-import",
-                  params: {
-                    organizationSlug: organization?.slug as string,
-                  },
-                });
-              },
-            },
-            {
-              id: "settings-admin",
-              label: "Go to admin settings",
-              icon: SettingsRegular,
-              action: () => {
-                navigate({
-                  to: "/w/$organizationSlug/settings/admin",
-                  params: {
-                    organizationSlug: organization?.slug as string,
-                  },
-                });
-              },
-            },
-          ]
+          }))
         : []),
     ];
 
@@ -466,7 +391,7 @@ export function CommandMenu() {
     currentDocument,
     currentDocumentId,
     deleteDocument,
-    navigate,
+    navigateByPath,
     organization.slug,
     publishDocument,
     userIsAdmin,
@@ -494,20 +419,18 @@ export function CommandMenu() {
         id: "workspace-actions",
         heading: "Actions",
         items: [
-          {
-            id: "create-workspace",
-            label: "Create new workspace",
-            icon: AddRegular,
-            action: () => {
-              navigate({
-                to: "/new",
-              });
+            {
+              id: "create-workspace",
+              label: "Create new workspace",
+              icon: AddRegular,
+              action: () => {
+                navigateByPath("/new");
+              },
             },
-          },
-        ],
-      },
-    ];
-  }, [goToOrganization, navigate, organization.slug, organizations]);
+          ],
+        },
+      ];
+  }, [goToOrganization, navigateByPath, organization.slug, organizations]);
 
   const menuSections = menuView === "root" ? rootMenuSections : workspaceMenuSections;
 
@@ -558,16 +481,10 @@ export function CommandMenu() {
       label: doc.title || "Untitled Document",
       collectionName: doc.collection?.name ?? null,
       action: () => {
-        navigate({
-          to: "/w/$organizationSlug/$id",
-          params: {
-            organizationSlug: organization.slug,
-            id: doc.id,
-          },
-        });
+        navigateByPath(`/w/${organization.slug}/${doc.id}`);
       },
     }));
-  }, [searchDocuments, navigate, organization.slug, search.length]);
+  }, [navigateByPath, organization.slug, search.length, searchDocuments]);
 
   const collectionItems = useMemo<CollectionItem[]>(() => {
     if (search.length < 2) {
@@ -590,16 +507,10 @@ export function CommandMenu() {
         label: collection.name || "Untitled Collection",
         handle: collection.handle,
         action: () => {
-          navigate({
-            to: "/w/$organizationSlug/collections/$collectionId",
-            params: {
-              organizationSlug: organization.slug,
-              collectionId: collection.id,
-            },
-          });
+          navigateByPath(`/w/${organization.slug}/collections/${collection.id}`);
         },
       }));
-  }, [collectionsData, navigate, organization.slug, search]);
+  }, [collectionsData, navigateByPath, organization.slug, search]);
 
   return (
     <ModalOverlay
