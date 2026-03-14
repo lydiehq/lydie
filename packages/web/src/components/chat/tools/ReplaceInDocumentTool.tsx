@@ -7,7 +7,7 @@ import { useQuery } from "@rocicorp/zero/react";
 import { useParams } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { motion } from "motion/react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useReducer, useRef, useState } from "react";
 import { useEffect } from "react";
 import { Button as AriaButton } from "react-aria-components";
 import { StickToBottom } from "use-stick-to-bottom";
@@ -53,6 +53,48 @@ export interface ReplaceInDocumentToolProps {
   className?: string;
 }
 
+type ApplyPhase = "idle" | "navigating" | "waiting-editor" | "applying" | "applied" | "failed";
+
+type ApplyState = {
+  phase: ApplyPhase;
+  errorMessage: string;
+};
+
+type ApplyAction =
+  | { type: "reset" }
+  | { type: "navigating" }
+  | { type: "waiting-editor" }
+  | { type: "applying" }
+  | { type: "applied" }
+  | { type: "failed"; message: string }
+  | { type: "clear-error" };
+
+const INITIAL_APPLY_STATE: ApplyState = {
+  phase: "idle",
+  errorMessage: "",
+};
+
+function applyStateReducer(state: ApplyState, action: ApplyAction): ApplyState {
+  switch (action.type) {
+    case "reset":
+      return INITIAL_APPLY_STATE;
+    case "navigating":
+      return { phase: "navigating", errorMessage: "" };
+    case "waiting-editor":
+      return { phase: "waiting-editor", errorMessage: "" };
+    case "applying":
+      return { phase: "applying", errorMessage: "" };
+    case "applied":
+      return { phase: "applied", errorMessage: "" };
+    case "failed":
+      return { phase: "failed", errorMessage: action.message };
+    case "clear-error":
+      return state.phase === "failed" ? { phase: "idle", errorMessage: "" } : state;
+    default:
+      return state;
+  }
+}
+
 export function ReplaceInDocumentTool({
   tool,
   organizationId,
@@ -60,14 +102,26 @@ export function ReplaceInDocumentTool({
 }: ReplaceInDocumentToolProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
-  const [isApplied, setIsApplied] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
+  const [applyState, dispatchApplyState] = useReducer(applyStateReducer, INITIAL_APPLY_STATE);
   const [isUsingLLM, setIsUsingLLM] = useState(false);
-  const [applyStatus, setApplyStatus] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string>("");
   const applyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isApplyingRef = useRef(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const isApplied = applyState.phase === "applied";
+  const isApplying =
+    applyState.phase === "navigating" ||
+    applyState.phase === "waiting-editor" ||
+    applyState.phase === "applying";
+  const applyStatus =
+    applyState.phase === "navigating"
+      ? "Navigating to document..."
+      : applyState.phase === "waiting-editor"
+        ? "Waiting for editor to initialize..."
+        : applyState.phase === "applying"
+          ? "Applying..."
+          : "";
+  const errorMessage = applyState.errorMessage;
 
   const { user } = useAuth();
   const params = useParams({ strict: false });
@@ -110,11 +164,8 @@ export function ReplaceInDocumentTool({
 
   // Reset state when a new tool call starts
   useEffect(() => {
-    setIsApplied(false);
-    setIsApplying(false);
+    dispatchApplyState({ type: "reset" });
     setIsUsingLLM(false);
-    setApplyStatus("");
-    setErrorMessage("");
 
     // Clear any pending timeout
     if (applyTimeoutRef.current) {
@@ -141,18 +192,12 @@ export function ReplaceInDocumentTool({
       pendingChange.title === newTitle;
 
     if (isMatchingPendingChange) {
-      // Clear errors when syncing with pending change
-      setErrorMessage("");
-
       if (pendingChangeStatus === "applying") {
-        setIsApplying(true);
+        dispatchApplyState({ type: "applying" });
         setIsUsingLLM(false); // Will be set by the apply function if needed
-        setApplyStatus("Applying...");
       } else if (pendingChangeStatus === "applied") {
-        setIsApplied(true);
-        setIsApplying(false);
+        dispatchApplyState({ type: "applied" });
         setIsUsingLLM(false);
-        setApplyStatus("");
 
         // Clear timeout on successful apply
         if (applyTimeoutRef.current) {
@@ -160,11 +205,11 @@ export function ReplaceInDocumentTool({
           applyTimeoutRef.current = null;
         }
       } else if (pendingChangeStatus === "failed") {
-        setIsApplied(false);
-        setIsApplying(false);
+        dispatchApplyState({
+          type: "failed",
+          message: "Failed to apply changes. Please try again.",
+        });
         setIsUsingLLM(false);
-        setApplyStatus("");
-        setErrorMessage("Failed to apply changes. Please try again.");
 
         // Clear timeout on failure
         if (applyTimeoutRef.current) {
@@ -172,8 +217,7 @@ export function ReplaceInDocumentTool({
           applyTimeoutRef.current = null;
         }
       } else if (pendingChangeStatus === "pending") {
-        setIsApplying(true);
-        setApplyStatus("Navigating to document...");
+        dispatchApplyState({ type: "navigating" });
       }
     } else if (!pendingChange && pendingChangeStatus === null) {
       // Pending change was cleared - check if we should complete
@@ -182,11 +226,8 @@ export function ReplaceInDocumentTool({
         (applyStatus === "Navigating to document..." || applyStatus === "Applying...")
       ) {
         if (targetDocumentId === params.id || !targetDocumentId) {
-          setIsApplied(true);
-          setIsApplying(false);
+          dispatchApplyState({ type: "applied" });
           setIsUsingLLM(false);
-          setApplyStatus("");
-          setErrorMessage("");
 
           // Clear timeout on completion
           if (applyTimeoutRef.current) {
@@ -243,22 +284,19 @@ export function ReplaceInDocumentTool({
   const wordCount = countWords(replaceText);
 
   const handleApply = async () => {
-    // Clear any previous errors
-    setErrorMessage("");
+    dispatchApplyState({ type: "clear-error" });
 
     // Validate content
     if (!replaceText && !newTitle) {
       const error = "No content to apply. Please try reloading or asking the AI again.";
-      setErrorMessage(error);
+      dispatchApplyState({ type: "failed", message: error });
       console.error("Apply failed: No content", { replaceText, newTitle });
       return;
     }
 
     // Handle navigation to different document
     if (targetDocumentId && targetDocumentId !== params.id) {
-      setIsApplying(true);
-      setApplyStatus("Navigating to document...");
-      setErrorMessage("");
+      dispatchApplyState({ type: "navigating" });
 
       // Store the pending change and set status
       setPendingChange({
@@ -274,9 +312,10 @@ export function ReplaceInDocumentTool({
       applyTimeoutRef.current = setTimeout(() => {
         if (isApplyingRef.current) {
           console.error("Navigation timeout - resetting state");
-          setIsApplying(false);
-          setApplyStatus("");
-          setErrorMessage("Navigation took too long. Please try again.");
+          dispatchApplyState({
+            type: "failed",
+            message: "Navigation took too long. Please try again.",
+          });
           setPendingChangeStatus(null);
           setPendingChange(null);
         }
@@ -294,7 +333,7 @@ export function ReplaceInDocumentTool({
     // Validate preconditions with detailed feedback
     if (!currentDocId) {
       const error = "No document selected. Please open a document first.";
-      setErrorMessage(error);
+      dispatchApplyState({ type: "failed", message: error });
       console.error("Apply failed: No document ID", { targetDocumentId, paramsId: params.id });
       return;
     }
@@ -314,9 +353,7 @@ export function ReplaceInDocumentTool({
         hasTitleEditor,
       });
 
-      setIsApplying(true);
-      setApplyStatus("Waiting for editor to initialize...");
-      setErrorMessage("");
+      dispatchApplyState({ type: "waiting-editor" });
 
       // Store the pending change - Editor.tsx useEffect will apply it
       setPendingChange({
@@ -332,9 +369,10 @@ export function ReplaceInDocumentTool({
       applyTimeoutRef.current = setTimeout(() => {
         if (isApplyingRef.current) {
           console.error("Editor initialization timeout - resetting state");
-          setIsApplying(false);
-          setApplyStatus("");
-          setErrorMessage("Editor failed to initialize. Please try reloading the document.");
+          dispatchApplyState({
+            type: "failed",
+            message: "Editor failed to initialize. Please try reloading the document.",
+          });
           setPendingChangeStatus(null);
           setPendingChange(null);
         }
@@ -343,18 +381,17 @@ export function ReplaceInDocumentTool({
       return;
     }
 
-    setIsApplying(true);
-    setApplyStatus("Applying...");
-    setErrorMessage("");
+    dispatchApplyState({ type: "applying" });
 
     // Safety timeout to prevent stuck state (30 seconds)
     applyTimeoutRef.current = setTimeout(() => {
       if (isApplyingRef.current) {
         console.error("Apply timeout - resetting state");
-        setIsApplying(false);
+        dispatchApplyState({
+          type: "failed",
+          message: "Operation timed out. Please try again or reload the document.",
+        });
         setIsUsingLLM(false);
-        setApplyStatus("");
-        setErrorMessage("Operation timed out. Please try again or reload the document.");
       }
     }, 30000);
 
@@ -392,17 +429,14 @@ export function ReplaceInDocumentTool({
       }
 
       if (result.success) {
-        setIsApplied(true);
-        setApplyStatus("");
-        setErrorMessage("");
+        dispatchApplyState({ type: "applied" });
       } else {
         const errors = [result.contentError, result.titleError].filter(Boolean);
         const errorMsg =
           errors.length > 0
             ? `Failed: ${errors.join(", ")}`
             : "Failed to apply. Please try reloading the document.";
-        setApplyStatus("");
-        setErrorMessage(errorMsg);
+        dispatchApplyState({ type: "failed", message: errorMsg });
       }
     } catch (error) {
       console.error("Failed to apply:", error);
@@ -417,10 +451,8 @@ export function ReplaceInDocumentTool({
         error instanceof Error
           ? `Error: ${error.message}`
           : "Unexpected error. Please try reloading the document.";
-      setApplyStatus("");
-      setErrorMessage(errorMsg);
+      dispatchApplyState({ type: "failed", message: errorMsg });
     } finally {
-      setIsApplying(false);
       setIsUsingLLM(false);
     }
   };
@@ -512,13 +544,16 @@ export function ReplaceInDocumentTool({
 
   const handlePreview = async () => {
     if (!editor || !replaceText) {
-      setErrorMessage("Editor not available. Please wait for the document to load.");
+      dispatchApplyState({
+        type: "failed",
+        message: "Editor not available. Please wait for the document to load.",
+      });
       return;
     }
 
     const currentDocId = targetDocumentId || params.id;
     if (!currentDocId) {
-      setErrorMessage("No document selected.");
+      dispatchApplyState({ type: "failed", message: "No document selected." });
       return;
     }
 
@@ -539,7 +574,10 @@ export function ReplaceInDocumentTool({
     const rangeResult = findChangeRange(editor, selectionWithEllipsis);
 
     if (!rangeResult.success) {
-      setErrorMessage(rangeResult.error || "Could not find the text to replace in the document.");
+      dispatchApplyState({
+        type: "failed",
+        message: rangeResult.error || "Could not find the text to replace in the document.",
+      });
       return;
     }
 
@@ -574,24 +612,29 @@ export function ReplaceInDocumentTool({
         // Ignore scroll errors
       }
     } else {
-      setErrorMessage("Diff preview is not available. Please apply the change directly.");
+      dispatchApplyState({
+        type: "failed",
+        message: "Diff preview is not available. Please apply the change directly.",
+      });
     }
   };
 
-  // Listen for accept/reject from the editor extension
   useEffect(() => {
-    if (!isPreviewing) return;
-
-    // Check if the proposed change has been accepted or rejected
-    const extension = editor?.extensionManager.extensions.find(
-      (ext: any) => ext.name === "proposedChange",
-    );
-
-    if (extension && !extension.storage.isActive) {
-      // The change was either accepted or rejected
-      setIsApplied(true);
-      setProposedChange(null);
+    if (!editor || !isPreviewing) {
+      return;
     }
+
+    const handleResolved = () => {
+      dispatchApplyState({ type: "applied" });
+      setProposedChange(null);
+    };
+
+    const dom = editor.view.dom as HTMLElement;
+    dom.addEventListener("lydie:proposed-change-resolved", handleResolved);
+
+    return () => {
+      dom.removeEventListener("lydie:proposed-change-resolved", handleResolved);
+    };
   }, [editor, isPreviewing, setProposedChange]);
 
   const isError = tool.state === "output-error";
@@ -705,7 +748,7 @@ export function ReplaceInDocumentTool({
                 >
                   <span className="flex-1">{errorMessage}</span>
                   <AriaButton
-                    onPress={() => setErrorMessage("")}
+                    onPress={() => dispatchApplyState({ type: "clear-error" })}
                     className="text-red-600 hover:text-red-700 shrink-0"
                   >
                     Dismiss

@@ -59,6 +59,16 @@ export const ProposedChange = Extension.create<ProposedChangeOptions, ProposedCh
   },
 
   addCommands() {
+    const emitResolvedEvent = (accepted: boolean) => {
+      const target = this.editor.view.dom;
+      target.dispatchEvent(
+        new CustomEvent("lydie:proposed-change-resolved", {
+          detail: { accepted },
+          bubbles: true,
+        }),
+      );
+    };
+
     return {
       showProposedChange: (from: number, to: number, proposedHTML: string) => (): boolean => {
         this.storage.from = from;
@@ -97,6 +107,7 @@ export const ProposedChange = Extension.create<ProposedChangeOptions, ProposedCh
 
             // Call the callback if provided
             this.options.onAccept?.();
+            emitResolvedEvent(true);
 
             return true;
           } catch (error) {
@@ -114,6 +125,7 @@ export const ProposedChange = Extension.create<ProposedChangeOptions, ProposedCh
 
         // Call the callback if provided
         this.options.onReject?.();
+        emitResolvedEvent(false);
 
         return true;
       },
