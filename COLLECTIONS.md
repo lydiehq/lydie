@@ -47,6 +47,7 @@ Design intent:
 - Collections are managed from collection pages and sidebar collection links.
 - Collection entries are hidden from the main document sidebar tree.
 - Collection entries can still be edited from document context (field editing remains available).
+- Deleting a collection that is referenced in document collection-view blocks shows the referencing documents and, on confirmation, disconnects those blocks (`viewId: null`) before deleting.
 - External API collection access is handle-based.
 
 ## What Collections Are Not
@@ -110,4 +111,3 @@ The canonical REST API for collection documents is documented in `docs/collectio
 - Base route: `/api/v1/collections/{collectionId}/documents`
 - Single lookup uses `?by=` with configured lookup key or `id`
 - Collection settings for lookup/indexed fields: `PATCH /api/v1/collections/{collectionId}`
-

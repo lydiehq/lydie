@@ -10,10 +10,12 @@ Lydie is a high-performance writing workspace that scales from simple notes to d
 
 ```bash
 bun install
-bun run docker:db:up
 bun run db:migrate
 bun run dev
 ```
+
+`dev` auto-starts Docker Postgres and auto-stops it on exit.
+If you want to keep Postgres running after exit, use `KEEP_DB_RUNNING=1 bun run dev`.
 
 This starts the local SST multiplexer and runs local dev processes for:
 
@@ -22,7 +24,7 @@ This starts the local SST multiplexer and runs local dev processes for:
 - **Zero Sync**: http://localhost:4848
 - **Marketing**: local Astro dev server in the SST tabs
 
-`sst dev` expects a reachable Postgres instance from your local machine (default: `localhost:5432`).
+`sst dev` still expects Postgres at `localhost:5432`; `bun run dev` now handles that automatically.
 
 ### Development (Docker, optional)
 

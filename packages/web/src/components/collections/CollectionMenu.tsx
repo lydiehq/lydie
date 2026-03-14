@@ -39,11 +39,23 @@ export function CollectionMenu({
 
   const usageCount = (usages ?? []).length;
 
+  const referencingDocumentTitles = Array.from(
+    new Set(
+      (usages ?? [])
+        .map((usage: any) => usage.document?.title)
+        .filter((title: unknown): title is string => typeof title === "string" && title.length > 0),
+    ),
+  );
+
   const handleDelete = () => {
     const itemName = collectionName;
+    const referencingDocumentsMessage =
+      referencingDocumentTitles.length > 0
+        ? `\n\nReferenced in:\n${referencingDocumentTitles.map((title) => `- ${title}`).join("\n")}`
+        : "";
     const warningMessage =
       usageCount > 0
-        ? `This collection is referenced by ${usageCount} view block${usageCount === 1 ? "" : "s"}. Remove those references first.`
+        ? `This collection is referenced by ${usageCount} view block${usageCount === 1 ? "" : "s"}. If you continue, those blocks will be disconnected from this collection.${referencingDocumentsMessage}`
         : `This collection will be moved to trash. You can restore it later from the trash.`;
 
     confirmDialog({
@@ -61,11 +73,12 @@ export function CollectionMenu({
         mutators.collection.delete({
           collectionId,
           organizationId: organization.id,
+          force: usageCount > 0,
         }),
       );
     } catch (error) {
       console.error(error);
-      toast.error("This collection is still referenced by one or more views");
+      toast.error("Failed to delete collection");
       return;
     }
 

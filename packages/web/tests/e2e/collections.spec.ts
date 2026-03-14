@@ -277,6 +277,63 @@ test.describe("collections", () => {
       await expect(page.getByText("Delete Test Collection")).not.toBeVisible();
     });
 
+    test("should delete referenced collection and disconnect collection view blocks", async ({
+      page,
+      organization,
+    }) => {
+      const collection = await createTestCollection(organization.id, {
+        name: "Referenced Delete Collection",
+        handle: "referenced-delete-test",
+      });
+
+      const editorDocument = await createEditorDocument(page, organization.slug, {
+        title: "Referenced Collection Block Document",
+      });
+
+      try {
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}`);
+        await createKanbanView(page, "Board");
+
+        await page.goto(`/w/${organization.slug}/${editorDocument.id}`);
+        await page.locator("[data-testid='editor-content']").click();
+        await page.keyboard.type("/collection");
+        await page.getByText("Collection View").click();
+
+        const collectionSearch = page.getByPlaceholder("Search collections...");
+        await expect(collectionSearch).toBeVisible();
+        await collectionSearch.fill(collection.name);
+        const escapedCollectionName = collection.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        await page
+          .getByRole("button", { name: new RegExp(`^${escapedCollectionName}(?:\\s|$)`, "i") })
+          .first()
+          .click();
+
+        await page.getByRole("button", { name: /^Board\s+kanban$/i }).click();
+        await expect(page.getByText("Referenced Delete Collection").first()).toBeVisible();
+
+        await page.goto(`/w/${organization.slug}/collections/${collection.id}/settings`);
+
+        let confirmMessage = "";
+        page.once("dialog", async (dialog) => {
+          confirmMessage = dialog.message();
+          await dialog.accept();
+        });
+
+        await page.getByRole("button", { name: "Delete collection" }).click();
+        await expect(page).toHaveURL(`/w/${organization.slug}`);
+
+        expect(confirmMessage).toContain("referenced by 1 view block");
+        expect(confirmMessage).toContain("Referenced in:");
+        expect(confirmMessage).toContain("Referenced Collection Block Document");
+
+        await page.goto(`/w/${organization.slug}/${editorDocument.id}`);
+        await expect(page.getByText("Create your new collection")).toBeVisible({ timeout: 15000 });
+      } finally {
+        await deleteTestDocument(editorDocument.id);
+        await deleteTestCollection(collection.id);
+      }
+    });
+
     test("should show not found state for invalid collection", async ({ page, organization }) => {
       await page.goto(`/w/${organization.slug}/collections/non-existent-id`);
 

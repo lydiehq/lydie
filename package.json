@@ -34,7 +34,7 @@
     }
   },
   "scripts": {
-    "dev": "sst dev",
+    "dev": "sh -c 'bun run docker:db:up; if [ \"${KEEP_DB_RUNNING:-0}\" = \"1\" ]; then sst dev; else trap \"bun run docker:db:down\" EXIT INT TERM; sst dev; fi'",
     "docker:dev": "docker compose --env-file .env -f docker/docker-compose.dev.yml up --build",
     "docker:dev:down": "docker compose --env-file .env -f docker/docker-compose.dev.yml down",
     "docker:dev:logs": "docker compose --env-file .env -f docker/docker-compose.dev.yml logs -f",
@@ -44,7 +44,7 @@
     "docker:prod": "docker compose --env-file .env -f docker/docker-compose.yml up -d --build",
     "docker:prod:down": "docker compose --env-file .env -f docker/docker-compose.yml down -v",
     "docker:prod:logs": "docker compose --env-file .env -f docker/docker-compose.yml logs -f",
-    "docker:e2e": "BETTER_AUTH_ENABLE_TEST_UTILS=true docker compose --env-file .env -f docker/docker-compose.yml up -d --build && BETTER_AUTH_ENABLE_TEST_UTILS=true bun --filter=@lydie/web test:e2e; docker compose --env-file .env -f docker/docker-compose.yml down -v",
+    "docker:e2e": "BETTER_AUTH_ENABLE_TEST_UTILS=true docker compose --env-file .env -f docker/docker-compose.yml up -d --build --wait --wait-timeout 180 && BETTER_AUTH_ENABLE_TEST_UTILS=true docker compose --env-file .env -f docker/docker-compose.yml --profile test run --rm e2e; docker compose --env-file .env -f docker/docker-compose.yml down -v",
     "db:push": "bun --filter=@lydie/database db:push",
     "db:sync": "bun --filter=@lydie/database db:sync-zero-publication",
     "db:studio": "bun --filter=@lydie/database db:studio",

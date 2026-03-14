@@ -28,7 +28,7 @@ export function ConfirmDialog() {
           <Heading slot="title" className="text-lg font-medium text-gray-900">
             {state.title}
           </Heading>
-          <p className="text-sm text-slate-600">{state.message}</p>
+          <p className="text-sm text-slate-600 whitespace-pre-line">{state.message}</p>
           <div className="flex gap-x-1.5 justify-end">
             <Button intent="secondary" onPress={handleClose} size="sm">
               Cancel

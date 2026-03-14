@@ -1,6 +1,7 @@
 import { resolveRelationTargetCollectionId } from "@lydie/core/collection";
 import { createId } from "@lydie/core/id";
 import { slugify } from "@lydie/core/utils";
+import { convertJsonToYjs, convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { defineMutator } from "@rocicorp/zero";
 import type { ReadonlyJSONValue } from "@rocicorp/zero";
 import { z } from "zod";
@@ -416,6 +417,54 @@ function normalizeValueForManyRelation(value: unknown): string[] {
   }
 
   return [];
+}
+
+function clearCollectionViewReferencesInJson(
+  node: unknown,
+  blockIds: Set<string>,
+): { node: unknown; changed: boolean } {
+  if (!node || typeof node !== "object") {
+    return { node, changed: false };
+  }
+
+  const record = node as Record<string, unknown>;
+  let changed = false;
+  const nextNode: Record<string, unknown> = { ...record };
+
+  if (
+    nextNode.type === "collectionViewBlock" &&
+    nextNode.attrs &&
+    typeof nextNode.attrs === "object" &&
+    typeof (nextNode.attrs as { blockId?: unknown }).blockId === "string"
+  ) {
+    const attrs = nextNode.attrs as Record<string, unknown>;
+    const blockId = attrs.blockId as string;
+    if (blockIds.has(blockId) && attrs.viewId !== null) {
+      nextNode.attrs = {
+        ...attrs,
+        viewId: null,
+      };
+      changed = true;
+    }
+  }
+
+  if (Array.isArray(nextNode.content)) {
+    let contentChanged = false;
+    const nextContent = nextNode.content.map((entry) => {
+      const result = clearCollectionViewReferencesInJson(entry, blockIds);
+      if (result.changed) {
+        contentChanged = true;
+      }
+      return result.node;
+    });
+
+    if (contentChanged) {
+      nextNode.content = nextContent;
+      changed = true;
+    }
+  }
+
+  return { node: nextNode, changed };
 }
 
 async function migrateSingleToManyRelationValues(
@@ -877,6 +926,7 @@ export const collectionMutators = {
     z.object({
       collectionId: z.string(),
       organizationId: z.string(),
+      force: z.boolean().optional().default(false),
     }),
     async ({ tx, ctx, args }) => {
       hasOrganizationAccess(ctx, args.organizationId);
@@ -900,10 +950,56 @@ export const collectionMutators = {
           .where("collection_id", args.collectionId),
       );
 
-      if (activeUsages.length > 0) {
+      if (activeUsages.length > 0 && !args.force) {
         throw new Error(
           `This collection is referenced by ${activeUsages.length} view block${activeUsages.length === 1 ? "" : "s"}. Remove those references before deleting the collection.`,
         );
+      }
+
+      if (activeUsages.length > 0) {
+        const blockIdsByDocumentId = new Map<string, Set<string>>();
+
+        for (const usage of activeUsages) {
+          const existingBlockIds = blockIdsByDocumentId.get(usage.document_id) ?? new Set<string>();
+          existingBlockIds.add(usage.block_id);
+          blockIdsByDocumentId.set(usage.document_id, existingBlockIds);
+        }
+
+        for (const [documentId, blockIds] of blockIdsByDocumentId.entries()) {
+          const document = await maybeOne(
+            tx.run(
+              zql.documents
+                .where("id", documentId)
+                .where("organization_id", args.organizationId)
+                .where("deleted_at", "IS", null)
+                .one(),
+            ),
+          );
+
+          if (!document) {
+            continue;
+          }
+
+          const jsonContent = convertYjsToJson(document.yjs_state);
+          const result = clearCollectionViewReferencesInJson(jsonContent, blockIds);
+          if (!result.changed) {
+            continue;
+          }
+
+          const updatedYjsState = convertJsonToYjs(result.node);
+          if (!updatedYjsState) {
+            throw new Error("Failed to update documents that reference this collection");
+          }
+
+          await tx.mutate.documents.update({
+            id: documentId,
+            yjs_state: updatedYjsState,
+          });
+        }
+
+        for (const usage of activeUsages) {
+          await tx.mutate.collection_view_usages.delete({ id: usage.id });
+        }
       }
 
       await tx.mutate.collections.update({

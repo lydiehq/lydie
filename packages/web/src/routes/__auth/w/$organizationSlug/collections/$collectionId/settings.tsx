@@ -99,6 +99,13 @@ function CollectionSettings({ collection, organization }: CollectionSettingsProp
     }) as any,
   );
   const usageCount = (usages ?? []).length;
+  const referencingDocumentTitles = Array.from(
+    new Set(
+      (usages ?? [])
+        .map((usage: any) => usage.document?.title)
+        .filter((title: unknown): title is string => typeof title === "string" && title.length > 0),
+    ),
+  );
   const lookupSettings = getLookupSettings(collection.properties);
 
   const handleForm = useAppForm({
@@ -159,9 +166,13 @@ function CollectionSettings({ collection, organization }: CollectionSettingsProp
   });
 
   const handleDeleteCollection = async () => {
+    const referencingDocumentsMessage =
+      referencingDocumentTitles.length > 0
+        ? `\n\nReferenced in:\n${referencingDocumentTitles.map((title) => `- ${title}`).join("\n")}`
+        : "";
     const warning =
       usageCount > 0
-        ? `This collection is referenced by ${usageCount} view block${usageCount === 1 ? "" : "s"}. Remove those references first.`
+        ? `This collection is referenced by ${usageCount} view block${usageCount === 1 ? "" : "s"}. If you continue, those blocks will be disconnected from this collection.${referencingDocumentsMessage}`
         : "This action cannot be undone.";
 
     if (!window.confirm(`Delete collection "${collection.name}"?\n\n${warning}`)) {
@@ -173,13 +184,14 @@ function CollectionSettings({ collection, organization }: CollectionSettingsProp
         mutators.collection.delete({
           collectionId: collection.id,
           organizationId: organization.id,
+          force: usageCount > 0,
         }),
       );
       toast.success("Collection deleted");
       window.location.assign(`/w/${organization.slug}`);
     } catch (error) {
       console.error(error);
-      toast.error("This collection is still referenced by one or more views");
+      toast.error("Failed to delete collection");
     }
   };
 
