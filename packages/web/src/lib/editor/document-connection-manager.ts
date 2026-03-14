@@ -4,8 +4,6 @@ import * as Y from "yjs";
 
 import { getSharedWebSocket } from "./shared-websocket";
 
-const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001/yjs";
-
 interface DocumentConnection {
   provider: HocuspocusProvider;
   ydoc: Y.Doc;
@@ -36,7 +34,7 @@ class DocumentConnectionManager {
       Y.applyUpdate(ydoc, bytes);
     }
 
-    const sharedSocket = getSharedWebSocket(yjsServerUrl);
+    const sharedSocket = getSharedWebSocket();
 
     const provider = new HocuspocusProvider({
       websocketProvider: sharedSocket,

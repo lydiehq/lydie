@@ -1,15 +1,45 @@
 import { HocuspocusProviderWebsocket } from "@hocuspocus/provider";
 
-let sharedSocket: HocuspocusProviderWebsocket | null = null;
+const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001/yjs";
 
-export function getSharedWebSocket(url: string): HocuspocusProviderWebsocket {
+let sharedSocket: HocuspocusProviderWebsocket | null = null;
+let activeConsumers = 0;
+
+function createSharedSocket() {
+  sharedSocket = new HocuspocusProviderWebsocket({ url: yjsServerUrl });
+}
+
+function ensureSharedSocket() {
   if (!sharedSocket) {
-    sharedSocket = new HocuspocusProviderWebsocket({ url });
+    createSharedSocket();
   }
+
   return sharedSocket;
 }
 
-export function destroySharedWebSocket(): void {
+export function getSharedWebSocket() {
+  return ensureSharedSocket();
+}
+
+export function acquireSharedWebSocket() {
+  activeConsumers += 1;
+  return ensureSharedSocket();
+}
+
+export function releaseSharedWebSocket() {
+  if (activeConsumers > 0) {
+    activeConsumers -= 1;
+  }
+
+  if (activeConsumers === 0 && sharedSocket) {
+    sharedSocket.destroy();
+    sharedSocket = null;
+  }
+}
+
+export function destroySharedWebSocket() {
+  activeConsumers = 0;
+
   if (sharedSocket) {
     sharedSocket.destroy();
     sharedSocket = null;
