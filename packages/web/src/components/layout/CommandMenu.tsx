@@ -87,6 +87,116 @@ type NavigationRoute = {
 
 type MenuView = "root" | "switch-workspace";
 
+function MenuSectionsList({
+  sections,
+  onRunItem,
+}: {
+  sections: MenuSectionType[];
+  onRunItem: (item: MenuItem) => void;
+}) {
+  return sections.map((section) => (
+    <MenuSection key={section.id} id={section.id} className="col-span-full grid grid-cols-1 content-start">
+      <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">{section.heading}</Header>
+      {section.items.map((item) => {
+        const Icon = item.icon;
+        return (
+          <MenuItem
+            key={item.id}
+            id={item.id}
+            textValue={item.label}
+            onAction={() => {
+              onRunItem(item);
+            }}
+            className={`relative flex select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
+          >
+            {item.iconUrl ? (
+              <img src={item.iconUrl} alt="" className="size-4 rounded-sm shrink-0 mr-2" />
+            ) : (
+              Icon && <Icon className="size-4 text-gray-400 shrink-0 mr-2" />
+            )}
+            <Text slot="label" className="flex-1 min-w-0 truncate text-start">
+              {item.label}
+            </Text>
+          </MenuItem>
+        );
+      })}
+    </MenuSection>
+  ));
+}
+
+function DocumentResultsSection({
+  items,
+  onAction,
+  onPointerUp,
+}: {
+  items: DocumentItem[];
+  onAction: (item: DocumentItem) => void;
+  onPointerUp: (e: React.MouseEvent, item: DocumentItem) => void;
+}) {
+  return (
+    <MenuSection id="quick-results" className="col-span-full grid grid-cols-1 content-start">
+      <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">Quick results</Header>
+      {items.map((item) => (
+        <MenuItem
+          key={item.id}
+          id={item.id}
+          textValue={item.label}
+          onAction={() => onAction(item)}
+          onPointerUp={(e) => onPointerUp(e as unknown as React.MouseEvent, item)}
+          className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
+        >
+          <DocumentThumbnailIcon size="lg" className="shrink-0 mr-2" />
+          <div className="flex min-w-0 flex-1 flex-col text-start">
+            <Text slot="label" className="truncate">
+              {item.label}
+            </Text>
+            {item.collectionName && (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <DatabaseRegular className="size-3 shrink-0" />
+                <span className="truncate">{item.collectionName}</span>
+              </div>
+            )}
+          </div>
+        </MenuItem>
+      ))}
+    </MenuSection>
+  );
+}
+
+function CollectionResultsSection({
+  items,
+  onAction,
+  onPointerUp,
+}: {
+  items: CollectionItem[];
+  onAction: (item: CollectionItem) => void;
+  onPointerUp: (e: React.MouseEvent, item: CollectionItem) => void;
+}) {
+  return (
+    <MenuSection id="quick-collection-results" className="col-span-full grid grid-cols-1 content-start">
+      <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">Collections</Header>
+      {items.map((item) => (
+        <MenuItem
+          key={item.id}
+          id={item.id}
+          textValue={item.label}
+          onAction={() => onAction(item)}
+          onPointerUp={(e) => onPointerUp(e as unknown as React.MouseEvent, item)}
+          className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
+        >
+          <DatabaseRegular className="size-4 text-gray-400 shrink-0 mr-2" />
+          <div className="flex min-w-0 flex-col text-start">
+            <Text slot="label" className="truncate">
+              {item.label}
+            </Text>
+            <span className="text-xs text-gray-500 truncate">/{item.handle}</span>
+          </div>
+        </MenuItem>
+      ))}
+    </MenuSection>
+  );
+}
+
 export function CommandMenu() {
   const { createDocument, deleteDocument, publishDocument } = useDocumentActions();
   const params = useParams({ strict: false });
@@ -434,6 +544,18 @@ export function CommandMenu() {
 
   const menuSections = menuView === "root" ? rootMenuSections : workspaceMenuSections;
 
+  const runMenuItem = useCallback(
+    (item: MenuItem) => {
+      if (item.keepMenuOpen) {
+        item.action();
+        return;
+      }
+
+      handleCommand(item.action);
+    },
+    [handleCommand],
+  );
+
   // Handle document click - supports cmd+click to open in background
   const handleDocumentClick = useCallback(
     (e: React.MouseEvent, item: DocumentItem) => {
@@ -563,115 +685,23 @@ export function CommandMenu() {
                 </div>
               )}
             >
-              {menuSections.map((section) => (
-                <MenuSection
-                  key={section.id}
-                  id={section.id}
-                  className="col-span-full grid grid-cols-1 content-start"
-                >
-                  <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">
-                    {section.heading}
-                  </Header>
-                  {section.items.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <MenuItem
-                        key={item.id}
-                        id={item.id}
-                        textValue={item.label}
-                        onAction={() => {
-                          if (item.keepMenuOpen) {
-                            item.action();
-                            return;
-                          }
-                          handleCommand(item.action);
-                        }}
-                        className={`relative flex select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-75 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950 ${item.destructive ? "text-red-500 focus:text-red-600 data-focused:text-red-600" : ""}`}
-                      >
-                        {item.iconUrl ? (
-                          <img
-                            src={item.iconUrl}
-                            alt=""
-                            className="size-4 rounded-sm shrink-0 mr-2"
-                          />
-                        ) : (
-                          Icon && <Icon className="size-4 text-gray-400 shrink-0 mr-2" />
-                        )}
-                        <Text slot="label" className="flex-1 min-w-0 truncate text-start">
-                          {item.label}
-                        </Text>
-                      </MenuItem>
-                    );
-                  })}
-                </MenuSection>
-              ))}
+              <MenuSectionsList sections={menuSections} onRunItem={runMenuItem} />
 
               {/* Document search results */}
               {menuView === "root" && documentItems.length > 0 && (
-                <MenuSection
-                  id="quick-results"
-                  className="col-span-full grid grid-cols-1 content-start"
-                >
-                  <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">
-                    Quick results
-                  </Header>
-                  {documentItems.map((item) => (
-                    <MenuItem
-                      key={item.id}
-                      id={item.id}
-                      textValue={item.label}
-                      onAction={() => handleCommand(item.action)}
-                      onPointerUp={(e) =>
-                        handleDocumentClick(e as unknown as React.MouseEvent, item)
-                      }
-                      className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
-                    >
-                      <DocumentThumbnailIcon size="lg" className="shrink-0 mr-2" />
-                      <div className="flex min-w-0 flex-1 flex-col text-start">
-                        <Text slot="label" className="truncate">
-                          {item.label}
-                        </Text>
-                        {item.collectionName && (
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <DatabaseRegular className="size-3 shrink-0" />
-                            <span className="truncate">{item.collectionName}</span>
-                          </div>
-                        )}
-                      </div>
-                    </MenuItem>
-                  ))}
-                </MenuSection>
+                <DocumentResultsSection
+                  items={documentItems}
+                  onAction={(item) => handleCommand(item.action)}
+                  onPointerUp={handleDocumentClick}
+                />
               )}
 
               {menuView === "root" && collectionItems.length > 0 && (
-                <MenuSection
-                  id="quick-collection-results"
-                  className="col-span-full grid grid-cols-1 content-start"
-                >
-                  <Header className="col-span-full mb-1 px-3 text-gray-500 text-xs">
-                    Collections
-                  </Header>
-                  {collectionItems.map((item) => (
-                    <MenuItem
-                      key={item.id}
-                      id={item.id}
-                      textValue={item.label}
-                      onAction={() => handleCommand(item.action)}
-                      onPointerUp={(e) =>
-                        handleCollectionClick(e as unknown as React.MouseEvent, item)
-                      }
-                      className="relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-3 text-sm outline-none transition-colors duration-150 text-gray-800 focus:bg-gray-100 focus:text-gray-950 data-focused:bg-gray-100 data-focused:text-gray-950"
-                    >
-                      <DatabaseRegular className="size-4 text-gray-400 shrink-0 mr-2" />
-                      <div className="flex min-w-0 flex-col text-start">
-                        <Text slot="label" className="truncate">
-                          {item.label}
-                        </Text>
-                        <span className="text-xs text-gray-500 truncate">/{item.handle}</span>
-                      </div>
-                    </MenuItem>
-                  ))}
-                </MenuSection>
+                <CollectionResultsSection
+                  items={collectionItems}
+                  onAction={(item) => handleCommand(item.action)}
+                  onPointerUp={handleCollectionClick}
+                />
               )}
             </Menu>
 
