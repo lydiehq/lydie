@@ -137,6 +137,21 @@ type EnumOptionDraft = {
   stage?: PropertyOptionStage;
 };
 
+type StatusOption = {
+  id: string;
+  label: string;
+  color: string;
+  order: number;
+  stage: PropertyOptionStage;
+};
+
+type SelectOption = {
+  id: string;
+  label: string;
+  color: string;
+  order: number;
+};
+
 type OptionColor = {
   dot: string;
   pill: string;
@@ -251,6 +266,44 @@ function getOptionColor(color: string | null | undefined): OptionColor {
 
 function normalizeOptionColor(color: string | null | undefined): string {
   return OPTION_COLOR_CLASSNAMES[color ?? ""] ? (color as string) : DEFAULT_COLOR;
+}
+
+function buildStatusOptions(options: EnumOptionDraft[]): StatusOption[] {
+  return options
+    .map((option, index) => ({
+      id: option.id,
+      label: option.label.trim(),
+      color: normalizeOptionColor(option.color),
+      order: index,
+      stage: option.stage,
+    }))
+    .filter((option): option is StatusOption => option.label.length > 0 && option.stage !== undefined);
+}
+
+function buildSelectOptions(options: EnumOptionDraft[]): SelectOption[] {
+  return options
+    .map((option, index) => ({
+      id: option.id,
+      label: option.label.trim(),
+      color: normalizeOptionColor(option.color),
+      order: index,
+    }))
+    .filter((option) => option.label.length > 0);
+}
+
+function buildEnumOptions(
+  type: PropertyDefinition["type"],
+  options: EnumOptionDraft[],
+): StatusOption[] | SelectOption[] | undefined {
+  if (type === "status") {
+    return buildStatusOptions(options);
+  }
+
+  if (type === "select" || type === "multi-select") {
+    return buildSelectOptions(options);
+  }
+
+  return undefined;
 }
 
 function extractFieldValues(
@@ -437,37 +490,7 @@ export function CollectionTableView({
         return false;
       }
 
-      const enumOptions =
-        type === "status"
-          ? options
-              .map((option, index) => ({
-                id: option.id,
-                label: option.label.trim(),
-                color: normalizeOptionColor(option.color),
-                order: index,
-                stage: option.stage,
-              }))
-              .filter(
-                (
-                  option,
-                ): option is {
-                  id: string;
-                  label: string;
-                  color: string;
-                  order: number;
-                  stage: PropertyOptionStage;
-                } => option.label.length > 0 && option.stage !== undefined,
-              )
-          : type === "select" || type === "multi-select"
-            ? options
-                .map((option, index) => ({
-                  id: option.id,
-                  label: option.label.trim(),
-                  color: normalizeOptionColor(option.color),
-                  order: index,
-                }))
-                .filter((option) => option.label.length > 0)
-            : undefined;
+      const enumOptions = buildEnumOptions(type, options);
 
       if ((type === "select" || type === "multi-select" || type === "status") && !enumOptions) {
         return false;
@@ -579,25 +602,7 @@ export function CollectionTableView({
         }
 
         if (property.type === "status") {
-          const nextOptions = options
-            .map((option, index) => ({
-              id: option.id,
-              label: option.label.trim(),
-              color: normalizeOptionColor(option.color),
-              order: index,
-              stage: option.stage,
-            }))
-            .filter(
-              (
-                option,
-              ): option is {
-                id: string;
-                label: string;
-                color: string;
-                order: number;
-                stage: PropertyOptionStage;
-              } => option.label.length > 0 && option.stage !== undefined,
-            );
+          const nextOptions = buildStatusOptions(options);
 
           return {
             ...property,
@@ -606,14 +611,7 @@ export function CollectionTableView({
         }
 
         if (property.type === "select" || property.type === "multi-select") {
-          const nextOptions = options
-            .map((option, index) => ({
-              id: option.id,
-              label: option.label.trim(),
-              color: normalizeOptionColor(option.color),
-              order: index,
-            }))
-            .filter((option) => option.label.length > 0);
+          const nextOptions = buildSelectOptions(options);
 
           return {
             ...property,
