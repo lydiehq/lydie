@@ -1,9 +1,8 @@
 import { atom, getDefaultStore } from "jotai";
 
-export type MentionDocumentItem = {
-  id: string;
-  title: string | null;
-};
+import type { DocumentReference } from "@/types/document-reference";
+
+export type MentionDocumentItem = DocumentReference;
 
 export const mentionDocumentsAtom = atom<MentionDocumentItem[]>([]);
 

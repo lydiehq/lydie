@@ -32,15 +32,14 @@ import {
   useFilter,
 } from "react-aria-components";
 
+import type { DocumentReference } from "@/types/document-reference";
+
 type PopoverState =
   | { mode: "closed" }
   | { mode: "view"; href: string; text: string; linkElement: HTMLElement }
   | { mode: "edit"; href: string; text: string; linkElement: HTMLElement | null };
 
-interface SearchDocument {
-  id: string;
-  title: string | null;
-}
+type SearchDocument = DocumentReference;
 
 interface LinkPopoverProps {
   editor: Editor;

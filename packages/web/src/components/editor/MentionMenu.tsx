@@ -6,11 +6,9 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 
 import { getMentionDocuments } from "@/atoms/mention-documents";
+import type { DocumentReference } from "@/types/document-reference";
 
-type MentionItem = {
-  id: string;
-  title: string | null;
-};
+type MentionItem = DocumentReference;
 
 type MentionMenuProps = {
   items: MentionItem[];
