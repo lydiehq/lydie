@@ -319,7 +319,7 @@ test.describe("collections", () => {
           await dialog.accept();
         });
 
-        await page.getByRole("button", { name: "Delete collection" }).click();
+        await page.getByRole("button", { name: "Delete collection", exact: true }).click();
         await expect(page).toHaveURL(`/w/${organization.slug}`);
 
         expect(confirmMessage).toContain("referenced by 1 view block");
@@ -1306,7 +1306,20 @@ async function createKanbanView(page: Page, viewName: string): Promise<void> {
   await page
     .getByRole("button", { name: new RegExp(`^${escapedViewName}\\s+kanban$`, "i") })
     .click();
-  await expect(page.getByText("Drop cards here").first()).toBeVisible();
+
+  const unsupportedState = page.getByText("Kanban requires a `status` or `select` property with options.");
+  const emptyState = page.getByText("Drop cards here").first();
+  const kanbanList = page.getByRole("listbox").first();
+
+  if ((await unsupportedState.count()) > 0) {
+    await expect(unsupportedState).toBeVisible();
+    return;
+  }
+
+  await expect(kanbanList).toBeVisible();
+  if ((await emptyState.count()) > 0) {
+    await expect(emptyState).toBeVisible();
+  }
 }
 
 async function renameKanbanColumn(

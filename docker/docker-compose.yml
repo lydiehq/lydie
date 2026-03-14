@@ -152,9 +152,9 @@ services:
       context: ..
       dockerfile: packages/web/Dockerfile
       args:
-        VITE_API_URL: http://localhost:3000
-        VITE_ZERO_URL: http://localhost:3000
-        VITE_YJS_SERVER_URL: ws://localhost:3000/yjs
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_ZERO_URL: ${VITE_ZERO_URL:-http://localhost:3000}
+        VITE_YJS_SERVER_URL: ${VITE_YJS_SERVER_URL:-ws://localhost:3000/yjs}
     container_name: lydie-web
     ports:
       - "3000:80"
@@ -177,17 +177,15 @@ services:
       dockerfile: packages/web/Dockerfile.e2e
     container_name: lydie-e2e-runner
     environment:
-      # Use localhost:3000 which maps to the web container via host-gateway.
-      # This ensures the browser's origin matches the baked-in VITE URLs.
-      PLAYWRIGHT_BASE_URL: http://localhost:3000
-      PLAYWRIGHT_API_URL: http://localhost:3001
+      # In containerized e2e, use host gateway for host port mappings.
+      PLAYWRIGHT_BASE_URL: ${PLAYWRIGHT_BASE_URL:-http://host.docker.internal:3000}
+      PLAYWRIGHT_API_URL: ${PLAYWRIGHT_API_URL:-http://host.docker.internal:3001}
       DATABASE_URL: postgres://${POSTGRES_USER:-lydie}:${POSTGRES_PASSWORD:-lydie}@postgres:5432/${POSTGRES_DB:-lydie}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-change-me-in-production-at-least-32-chars}
       BETTER_AUTH_ENABLE_TEST_UTILS: ${BETTER_AUTH_ENABLE_TEST_UTILS:-false}
-    # The SPA has http://localhost:3000 baked in for API/Zero URLs.
-    # Map localhost to the Docker host so the browser reaches containers via port mappings.
+    # Ensure host.docker.internal resolves on Linux via host-gateway.
     extra_hosts:
-      - "localhost:host-gateway"
+      - "host.docker.internal:host-gateway"
     volumes:
       - ../packages/web/tests/e2e:/app/packages/web/tests/e2e
       - e2e-test-results:/app/packages/web/test-results

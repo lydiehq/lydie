@@ -48,7 +48,16 @@ async function createSession(
   const testHelpers = await getTestHelpers();
   const loginResult = await testHelpers.login({ userId });
   const sessionId = loginResult?.session?.id as string | undefined;
-  const cookies = (await testHelpers.getCookies({ userId, domain: "localhost" })) as Array<{
+  const cookieDomain = (() => {
+    const baseUrl = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
+    try {
+      return new URL(baseUrl).hostname;
+    } catch {
+      return "localhost";
+    }
+  })();
+
+  const cookies = (await testHelpers.getCookies({ userId, domain: cookieDomain })) as Array<{
     name: string;
     value: string;
   }>;
@@ -85,7 +94,8 @@ async function createSession(
 function createStorageState(sessionToken: string, expiresAt: Date, baseURL: string) {
   const url = new URL(baseURL);
   const isSecure = url.protocol === "https:";
-  const domain = isSecure ? ".lydie.co" : "localhost";
+  const hostname = url.hostname;
+  const domain = isSecure && hostname.endsWith("lydie.co") ? ".lydie.co" : hostname;
   const sameSite = isSecure ? ("None" as const) : ("Lax" as const);
 
   const cookies = [

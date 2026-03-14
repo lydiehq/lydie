@@ -16,14 +16,14 @@ test.describe("workspace management", () => {
     await page.waitForURL(/\/w\/[\w-]+(?:\/[\w-]+)?$/);
 
     const [createdWorkspace] = await db
-      .select({ id: organizationsTable.id })
+      .select({ id: organizationsTable.id, slug: organizationsTable.slug })
       .from(organizationsTable)
       .where(eq(organizationsTable.name, workspaceName))
       .limit(1);
 
     expect(createdWorkspace?.id).toBeTruthy();
     expect(page.url()).toContain("/w/");
-    expect(page.url()).toContain(createdWorkspace?.id ?? "");
+    expect(page.url()).toContain(`/w/${createdWorkspace?.slug ?? ""}`);
 
     await page.getByRole("button", { name: workspaceName }).first().click();
     await page.getByRole("menuitem", { name: "Switch workspace" }).click();
