@@ -41,8 +41,7 @@ import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { usePreloadMentionDocuments } from "@/hooks/use-mention-documents";
 import { useZero } from "@/services/zero";
-import { applyContentChanges } from "@/utils/document-changes";
-import { applyTitleChange } from "@/utils/title-changes";
+import { applyDocumentChange } from "@/utils/apply-document-change";
 
 type Props = {
   doc: NonNullable<QueryResultType<typeof queries.documents.byId>>;
@@ -197,46 +196,30 @@ export function Editor({ doc, organizationId, organizationSlug }: Props) {
       toast.info("Applying changes...");
 
       try {
-        let contentSuccess = true;
-        let titleSuccess = true;
+        const result = await applyDocumentChange({
+          titleEditor: session.titleEditor,
+          contentEditor: session.contentEditor,
+          documentId: doc.id,
+          organizationId: pendingChange.organizationId,
+          title: pendingChange.title,
+          replace: pendingChange.replace,
+          selectionWithEllipsis: pendingChange.selectionWithEllipsis,
+          z,
+        });
 
-        if (pendingChange.title) {
-          const titleResult = await applyTitleChange(
-            session.titleEditor,
-            pendingChange.title,
-            doc.id,
-            pendingChange.organizationId,
-            z,
-          );
-          titleSuccess = titleResult.success;
-          if (!titleSuccess) {
-            console.error("Failed to apply title change:", titleResult.error);
-          }
+        if (result.usedLLMFallback) {
+          console.info("✨ LLM-assisted replacement was used for this change");
         }
 
-        if (pendingChange.replace) {
-          const result = await applyContentChanges(
-            session.contentEditor,
-            [
-              {
-                selectionWithEllipsis: pendingChange.selectionWithEllipsis,
-                replace: pendingChange.replace,
-              },
-            ],
-            pendingChange.organizationId,
-          );
-
-          contentSuccess = result.success;
-          if (result.success) {
-            if (result.usedLLMFallback) {
-              console.info("✨ LLM-assisted replacement was used for this change");
-            }
-          } else {
-            console.error("Failed to apply content changes:", result.error);
-          }
+        if (!result.titleSuccess && result.titleError) {
+          console.error("Failed to apply title change:", result.titleError);
         }
 
-        if (contentSuccess && titleSuccess) {
+        if (!result.contentSuccess && result.contentError) {
+          console.error("Failed to apply content changes:", result.contentError);
+        }
+
+        if (result.success) {
           setPendingChangeStatus("applied");
           toast.success("Changes applied successfully");
         } else {

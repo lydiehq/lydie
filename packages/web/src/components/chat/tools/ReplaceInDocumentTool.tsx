@@ -21,10 +21,10 @@ import { useAuth } from "@/context/auth.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { useActiveDocumentId, useEditorSessions } from "@/hooks/use-editor";
 import { useZero } from "@/services/zero";
+import { applyDocumentChange } from "@/utils/apply-document-change";
 import { isAdmin } from "@/utils/admin";
-import { applyContentChanges, findChangeRange } from "@/utils/document-changes";
+import { findChangeRange } from "@/utils/document-changes";
 import { countWords } from "@/utils/text";
-import { applyTitleChange } from "@/utils/title-changes";
 
 export interface ReplaceInDocumentToolProps {
   tool: {
@@ -359,51 +359,30 @@ export function ReplaceInDocumentTool({
     }, 30000);
 
     try {
-      let contentSuccess = true;
-      let titleSuccess = true;
-      let contentError = "";
-      let titleError = "";
+      const result = await applyDocumentChange({
+        titleEditor,
+        contentEditor: editor,
+        documentId: currentDocId,
+        organizationId,
+        title: newTitle,
+        replace: replaceText,
+        selectionWithEllipsis,
+        z,
+        onLLMStateChange: (nextIsUsingLLM) => {
+          setIsUsingLLM(nextIsUsingLLM);
+        },
+      });
 
-      if (newTitle && titleEditor) {
-        const titleResult = await applyTitleChange(
-          titleEditor,
-          newTitle,
-          currentDocId,
-          organizationId,
-          z as any,
-        );
-        titleSuccess = titleResult.success;
-        if (!titleSuccess) {
-          titleError = titleResult.error || "Unknown title error";
-          console.error("Failed to apply title change:", titleResult.error);
-        }
+      if (result.usedLLMFallback) {
+        console.info("✨ LLM-assisted replacement was used for this change");
       }
 
-      if (replaceText && editor) {
-        const result = await applyContentChanges(
-          editor,
-          [
-            {
-              selectionWithEllipsis,
-              replace: replaceText,
-            },
-          ],
-          organizationId,
-          undefined, // onProgress
-          (isUsingLLM) => {
-            setIsUsingLLM(isUsingLLM);
-          },
-        );
+      if (!result.titleSuccess && result.titleError) {
+        console.error("Failed to apply title change:", result.titleError);
+      }
 
-        contentSuccess = result.success;
-        if (result.success) {
-          if (result.usedLLMFallback) {
-            console.info("✨ LLM-assisted replacement was used for this change");
-          }
-        } else {
-          contentError = result.error || "Unknown content error";
-          console.error("Failed to apply content changes:", result.error);
-        }
+      if (!result.contentSuccess && result.contentError) {
+        console.error("Failed to apply content changes:", result.contentError);
       }
 
       // Clear timeout on success/failure
@@ -412,12 +391,12 @@ export function ReplaceInDocumentTool({
         applyTimeoutRef.current = null;
       }
 
-      if (contentSuccess && titleSuccess) {
+      if (result.success) {
         setIsApplied(true);
         setApplyStatus("");
         setErrorMessage("");
       } else {
-        const errors = [contentError, titleError].filter(Boolean);
+        const errors = [result.contentError, result.titleError].filter(Boolean);
         const errorMsg =
           errors.length > 0
             ? `Failed: ${errors.join(", ")}`
