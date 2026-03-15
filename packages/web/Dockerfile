@@ -28,7 +28,6 @@ COPY packages/web ./packages/web
 COPY packages/zero ./packages/zero
 COPY packages/integrations ./packages/integrations
 COPY packages/scripts ./packages/scripts
-COPY packages/backend ./packages/backend
 
 # Build arguments for environment variables
 # Defaults point to the nginx reverse proxy origin (same host)

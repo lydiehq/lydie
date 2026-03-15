@@ -1,3 +1,33 @@
+# VCS
+.git
+.gitignore
 
-# sst
+# Dependencies and package manager artifacts
+node_modules
+**/node_modules
+
+# Build outputs and caches
+dist
+build
+.cache
+.turbo
+coverage
+**/coverage
+**/dist
+**/build
+
+# Test artifacts
+test-results
+playwright-report
+**/test-results
+**/playwright-report
+
+# Local env and editor files
+.env
+.env.local
+.DS_Store
+.idea
+.vscode
+
+# SST local state
 .sst
