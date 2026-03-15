@@ -7,13 +7,13 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "@fluentui/react-icons": "^2.0.320",
+    "@fluentui/react-icons": "^2.0.321",
     "@lydie/core": "workspace:*",
     "@tiptap/core": "catalog:",
     "@tiptap/react": "catalog:",
     "clsx": "^2.1.1",
     "cva": "^1.0.0-beta.4",
-    "motion": "^12.35.2",
+    "motion": "^12.36.0",
     "react": "catalog:",
     "react-aria": "^3.47.0",
     "react-aria-components": "^1.16.0",
@@ -21,7 +21,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@types/node": "^25.4.0",
+    "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "typescript": "^5.9.3"
