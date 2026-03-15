@@ -78,6 +78,11 @@ function RouteComponent() {
   });
 
   const handleRevokeApiKey = async (keyId: string, keyName: string) => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+
     confirmDialog({
       title: `Revoke API Key "${keyName}"`,
       message: "This action cannot be undone. The API key will be permanently revoked.",
@@ -114,10 +119,15 @@ function RouteComponent() {
   };
 
   const handleDeleteOrganization = () => {
+    if (!organization) {
+      toast.error("Organization not found");
+      return;
+    }
+
     try {
       z.mutate(mutators.organization.delete({ organizationId: organization.id }));
       toast.success("Organization deleted successfully");
-      navigate({ to: "/" });
+      navigate({ href: "/" });
     } catch (error) {
       toast.error("Failed to delete organization");
       console.error("Organization deletion error:", error);
@@ -182,7 +192,6 @@ function RouteComponent() {
       onConfirm: async () => {
         try {
           await authClient.organization.cancelInvitation({
-            organizationId: organization.id,
             invitationId,
           });
           toast.success("Invitation canceled");

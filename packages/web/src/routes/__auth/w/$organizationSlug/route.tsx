@@ -145,29 +145,30 @@ function RouteLayout() {
   const search = Route.useSearch();
   const params = Route.useParams();
   const { organization } = Route.useRouteContext();
+  const organizationId = organization?.id;
 
   const lastActiveOrgIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (organization && organization.id !== lastActiveOrgIdRef.current) {
-      lastActiveOrgIdRef.current = organization.id;
+    if (organizationId && organizationId !== lastActiveOrgIdRef.current) {
+      lastActiveOrgIdRef.current = organizationId;
 
       void authClient.organization.setActive({
-        organizationId: organization.id,
+        organizationId,
       });
     }
-  }, [organization]);
+  }, [organizationId]);
 
   useEffect(() => {
-    if (!session?.userId) {
+    if (!organizationId || !session?.userId) {
       return;
     }
 
     setTabStorageScope({
       userId: session.userId,
-      workspaceId: organization.id,
+      workspaceId: organizationId,
     });
-  }, [organization.id, session?.userId, setTabStorageScope]);
+  }, [organizationId, session?.userId, setTabStorageScope]);
 
   const dockedAssistantContainerRef = useCallback((node: HTMLDivElement | null) => {
     setDockedAssistantContainer(node);

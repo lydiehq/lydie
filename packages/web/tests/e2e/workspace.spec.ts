@@ -77,6 +77,50 @@ test.describe("workspace management", () => {
       await db.delete(organizationsTable).where(eq(organizationsTable.id, secondWorkspace.id));
     }
   });
+
+  test("should delete workspace and redirect to another workspace without runtime id errors", async ({
+    page,
+    organization,
+    user,
+  }) => {
+    const fallbackWorkspace = await createTestOrganization(user.id, {
+      prefix: "fallback-workspace",
+      name: `Fallback Workspace ${Date.now()}`,
+      slug: `fallback-workspace-${user.id}-${Date.now()}`,
+    });
+
+    const runtimeErrors: string[] = [];
+    page.on("pageerror", (error) => {
+      runtimeErrors.push(error.message);
+    });
+
+    try {
+      await page.goto(`/w/${organization.slug}/settings`, { waitUntil: "networkidle" });
+
+      await page.getByRole("button", { name: "Delete Organization" }).first().click();
+
+      const deleteDialog = page.getByRole("dialog");
+      await expect(deleteDialog.getByRole("heading", { name: "Delete Organization" })).toBeVisible();
+      await deleteDialog.getByRole("button", { name: "Delete Organization" }).click();
+
+      await expect(page).toHaveURL(new RegExp(`/w/${fallbackWorkspace.slug}(/.*)?$`));
+
+      const [deletedWorkspace] = await db
+        .select({ id: organizationsTable.id })
+        .from(organizationsTable)
+        .where(eq(organizationsTable.id, organization.id))
+        .limit(1);
+
+      expect(deletedWorkspace).toBeUndefined();
+      expect(
+        runtimeErrors.some((message) =>
+          message.includes("Cannot read properties of undefined (reading 'id')"),
+        ),
+      ).toBe(false);
+    } finally {
+      await db.delete(organizationsTable).where(eq(organizationsTable.id, fallbackWorkspace.id));
+    }
+  });
 });
 
 test.describe("workspace access isolation", () => {
