@@ -99,8 +99,8 @@ test.describe("workspace management", () => {
 
       await page.getByRole("button", { name: "Delete Organization" }).first().click();
 
-      const deleteDialog = page.getByRole("dialog");
-      await expect(deleteDialog.getByRole("heading", { name: "Delete Organization" })).toBeVisible();
+      const deleteDialog = page.getByRole("alertdialog");
+      await expect(deleteDialog.getByText("Are you absolutely sure you want to delete this organization?")).toBeVisible();
       await deleteDialog.getByRole("button", { name: "Delete Organization" }).click();
 
       await expect(page).toHaveURL(new RegExp(`/w/${fallbackWorkspace.slug}(/.*)?$`));
