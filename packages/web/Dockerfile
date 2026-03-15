@@ -1,5 +1,5 @@
 # Multi-stage build for web SPA
-FROM oven/bun:1.3.9 AS builder
+FROM mirror.gcr.io/oven/bun:1.3.8 AS builder
 
 WORKDIR /app
 

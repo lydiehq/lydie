@@ -12,7 +12,7 @@ COPY ./packages/integrations/package.json ./packages/integrations/package.json
 COPY ./packages/zero/package.json ./packages/zero/package.json
 COPY ./packages/editor/package.json ./packages/editor/package.json
 
-RUN bun install --ignore-scripts --production
+RUN bun install --ignore-scripts
 
 FROM mirror.gcr.io/oven/bun:1.3.8
 
@@ -44,6 +44,12 @@ COPY --from=deps /app/packages/database/package.json ./packages/database/package
 COPY --from=deps /app/packages/integrations/package.json ./packages/integrations/package.json
 COPY --from=deps /app/packages/zero/package.json ./packages/zero/package.json
 COPY --from=deps /app/packages/editor/package.json ./packages/editor/package.json
+COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
+COPY --from=deps /app/packages/backend/node_modules ./packages/backend/node_modules
+COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
+COPY --from=deps /app/packages/integrations/node_modules ./packages/integrations/node_modules
+COPY --from=deps /app/packages/zero/node_modules ./packages/zero/node_modules
+COPY --from=deps /app/packages/editor/node_modules ./packages/editor/node_modules
 
 COPY ./packages/backend ./packages/backend
 COPY ./packages/core ./packages/core
