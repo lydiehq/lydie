@@ -41,7 +41,8 @@ bun dev  # starts SST dev environment
 Copy `.env.example` to `.env` at the project root. Minimum required:
 
 ```env
-DATABASE_URL=postgres://lydie:lydie@localhost:5432/lydie
+DATABASE_URL_DIRECT=postgres://lydie:lydie@localhost:5432/lydie
+DATABASE_URL_POOLED=postgres://lydie:lydie@localhost:5432/lydie
 BETTER_AUTH_SECRET=change-this-to-a-secure-secret-in-production
 ```
 

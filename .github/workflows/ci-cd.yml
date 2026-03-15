@@ -90,7 +90,8 @@ jobs:
         run: bunx playwright test
         working-directory: packages/web
         env:
-          DATABASE_URL: postgres://lydie:lydie@localhost:5432/lydie
+          DATABASE_URL_DIRECT: postgres://lydie:lydie@localhost:5432/lydie
+          DATABASE_URL_POOLED: postgres://lydie:lydie@localhost:5432/lydie
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
           BETTER_AUTH_ENABLE_TEST_UTILS: "true"
 
@@ -155,7 +156,8 @@ jobs:
           SST_STAGE: production
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL_DIRECT: ${{ secrets.DATABASE_URL_DIRECT }}
+          DATABASE_URL_POOLED: ${{ secrets.DATABASE_URL_POOLED }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1

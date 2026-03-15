@@ -7,7 +7,8 @@ export const onboardingEmailProcessorFunction = new sst.aws.Function(
     handler: "packages/backend/src/handlers/onboarding.handler",
     timeout: "30 seconds",
     environment: {
-      DATABASE_URL: process.env.DATABASE_URL ?? "",
+      DATABASE_URL_POOLED: process.env.DATABASE_URL_POOLED ?? "",
+      DATABASE_URL_DIRECT: process.env.DATABASE_URL_DIRECT ?? "",
       APP_STAGE: $app.stage === "production" ? "production" : "development",
     },
     permissions: [

@@ -34,7 +34,8 @@ export const backend = new sst.aws.Service("Backend", {
     APP_STAGE: $app.stage === "production" ? "production" : "development",
 
     // Database
-    DATABASE_URL: process.env.DATABASE_URL,
+    DATABASE_URL_POOLED: process.env.DATABASE_URL_POOLED,
+    DATABASE_URL_DIRECT: process.env.DATABASE_URL_DIRECT,
 
     // Auth
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,

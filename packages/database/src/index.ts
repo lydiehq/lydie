@@ -4,10 +4,10 @@ import postgres from "postgres";
 import { relations } from "./relations";
 import * as schema from "./schema";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL_POOLED ?? process.env.DATABASE_URL_DIRECT;
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL is required");
+  throw new Error("DATABASE_URL_POOLED or DATABASE_URL_DIRECT is required");
 }
 
 const pg = postgres(connectionString);
