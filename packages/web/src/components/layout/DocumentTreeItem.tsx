@@ -4,7 +4,7 @@ import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { composeTailwindRenderProps, focusRing } from "@lydie/ui/components/generic/utils";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useSetAtom } from "jotai";
-import { type MouseEvent, type ReactElement, useRef, useState } from "react";
+import { type ReactElement, useState } from "react";
 import { Button, Collection, MenuTrigger, TreeItem, TreeItemContent } from "react-aria-components";
 
 import { openBackgroundTabAtom, openPersistentTabAtom, openPreviewTabAtom } from "@/atoms/tabs";
@@ -46,7 +46,6 @@ export function DocumentTreeItem({
   const openPersistentTab = useSetAtom(openPersistentTabAtom);
   const openPreviewTab = useSetAtom(openPreviewTabAtom);
   const openBackgroundTab = useSetAtom(openBackgroundTabAtom);
-  const lastClickTimeRef = useRef<number>(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isCurrent = currentDocId === item.id;
@@ -76,6 +75,14 @@ export function DocumentTreeItem({
       id={item.id}
       textValue={item.name}
       onAction={() => openDocument("preview")}
+      onDoubleClick={() => openDocument("persistent")}
+      onClick={(event) => {
+        if (event.metaKey || event.ctrlKey) {
+          event.preventDefault();
+          event.stopPropagation();
+          openDocument("background");
+        }
+      }}
       className={composeTailwindRenderProps(
         focusRing,
         sidebarItemStyles({

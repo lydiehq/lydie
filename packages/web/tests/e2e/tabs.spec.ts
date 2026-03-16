@@ -1,5 +1,6 @@
 import { expect, test } from "./fixtures/auth.fixture";
 import { createDocument, gotoWorkspace } from "./utils/document";
+import { createTestCollection, deleteTestCollection } from "./utils/db";
 
 test.describe("document tabs", () => {
   test("opens tabs when navigating to documents and supports basic interactions", async ({
@@ -89,6 +90,7 @@ test.describe("document tabs", () => {
     await sidebarTree.getByRole("row", { name: "Preview Test" }).click();
     const previewTab = getTab("Preview Test");
     await expect(previewTab).toBeVisible();
+    await expect(previewTab).toHaveClass(/italic/);
 
     // Close and test double-click on sidebar
     await previewTab.getByLabel(/^Close/).click();
@@ -98,6 +100,7 @@ test.describe("document tabs", () => {
     await sidebarTree.getByRole("row", { name: "Preview Test" }).dblclick();
     const hardTab = getTab("Preview Test");
     await expect(hardTab).toBeVisible();
+    await expect(hardTab).not.toHaveClass(/italic/);
 
     // Close and test cmd+click
     await hardTab.getByLabel(/^Close/).click();
@@ -109,6 +112,50 @@ test.describe("document tabs", () => {
     await row.click({ modifiers: [modifier] });
     const cmdClickTab = getTab("Preview Test");
     await expect(cmdClickTab).toBeVisible();
+    await expect(cmdClickTab).not.toHaveClass(/italic/);
+  });
+
+  test("supports collection preview/persistent tabs and removes tab on delete", async ({
+    page,
+    organization,
+  }) => {
+    const tabList = page.getByRole("grid", { name: "Open documents" });
+    const collectionsList = page.getByRole("grid", { name: "Collections" });
+    const collectionName = `Tab Collection ${Date.now()}`;
+    const collection = await createTestCollection(organization.id, {
+      name: collectionName,
+      handle: `tab-collection-${Date.now()}`,
+    });
+
+    const getTab = (title: string) => tabList.locator('[role="row"]', { hasText: title });
+    const getCollectionRow = () => collectionsList.getByRole("row", { name: collectionName });
+
+    try {
+      await gotoWorkspace(page, organization.slug);
+      await expect(getCollectionRow()).toBeVisible();
+
+      // Single click opens collection as preview tab.
+      await getCollectionRow().click();
+      const previewTab = getTab(collectionName);
+      await expect(previewTab).toBeVisible();
+      await expect(previewTab).toHaveClass(/italic/);
+
+      // Double-click makes the collection tab persistent.
+      await getCollectionRow().dblclick();
+      const persistentTab = getTab(collectionName);
+      await expect(persistentTab).toBeVisible();
+      await expect(persistentTab).not.toHaveClass(/italic/);
+
+      // Delete collection and verify its tab is removed.
+      await page.getByRole("button", { name: "Collection options" }).first().click();
+      await page.getByRole("menuitem", { name: "Delete" }).click();
+      await page.getByRole("button", { name: "Confirm" }).click();
+
+      await expect(page).toHaveURL(`/w/${organization.slug}`);
+      await expect(getTab(collectionName)).not.toBeVisible();
+    } finally {
+      await deleteTestCollection(collection.id);
+    }
   });
 
   test("preview tab is replaced when opening another document", async ({ page, organization }) => {

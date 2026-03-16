@@ -433,3 +433,49 @@ export const reorderTabsAtom = atom(
     set(storedTabsAtom, newTabs);
   },
 );
+
+// Action: Remove tabs for resources that no longer exist
+export const pruneInvalidTabsAtom = atom(
+  null,
+  (
+    _get,
+    set,
+    {
+      validDocumentIds,
+      validCollectionIds,
+    }: {
+      validDocumentIds: Set<string>;
+      validCollectionIds: Set<string>;
+    },
+  ) => {
+    const currentTabs = _get(storedTabsAtom);
+    const currentActiveId = _get(storedActiveTabIdAtom);
+    const collectionPrefix = "collection:";
+
+    const nextTabs = currentTabs.filter((tab) => {
+      if (tab.documentId.startsWith(collectionPrefix)) {
+        const collectionId = tab.documentId.slice(collectionPrefix.length);
+        return collectionId.length > 0 && validCollectionIds.has(collectionId);
+      }
+
+      return validDocumentIds.has(tab.documentId);
+    });
+
+    if (nextTabs.length === currentTabs.length) {
+      return;
+    }
+
+    set(storedTabsAtom, nextTabs);
+
+    if (!currentActiveId) {
+      return;
+    }
+
+    const isCurrentActiveStillOpen = nextTabs.some((tab) => tab.documentId === currentActiveId);
+    if (isCurrentActiveStillOpen) {
+      return;
+    }
+
+    set(storedActiveTabIdAtom, nextTabs[0]?.documentId ?? null);
+  },
+);

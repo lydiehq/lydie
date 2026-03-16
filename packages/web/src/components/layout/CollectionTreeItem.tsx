@@ -3,9 +3,11 @@ import { sidebarItemStyles, sidebarItemIconStyles } from "@lydie/ui/components/e
 import { Tooltip, TooltipTrigger } from "@lydie/ui/components/generic/Tooltip";
 import { useNavigate } from "@tanstack/react-router";
 import { cx } from "cva";
+import { useSetAtom } from "jotai";
 import { memo, useState } from "react";
 import { Button as RACButton, GridListItem, MenuTrigger } from "react-aria-components";
 
+import { openBackgroundTabAtom, openPersistentTabAtom, openPreviewTabAtom } from "@/atoms/tabs";
 import { CollectionMenu } from "@/components/collections/CollectionMenu";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 
@@ -33,7 +35,12 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
     params?: Record<string, string>;
     from?: string;
   }) => void;
+  const openPersistentTab = useSetAtom(openPersistentTabAtom);
+  const openPreviewTab = useSetAtom(openPreviewTabAtom);
+  const openBackgroundTab = useSetAtom(openBackgroundTabAtom);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const collectionTabId = `collection:${collection.id}`;
 
   const handleNavigate = () => {
     navigate({
@@ -41,6 +48,21 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
       params: { collectionId: collection.id },
       from: "/w/$organizationSlug",
     });
+  };
+
+  const openCollection = (mode: "preview" | "persistent" | "background") => {
+    if (mode === "background") {
+      openBackgroundTab({ documentId: collectionTabId, title: collection.name });
+      return;
+    }
+
+    if (mode === "persistent") {
+      openPersistentTab({ documentId: collectionTabId, title: collection.name });
+    } else {
+      openPreviewTab({ documentId: collectionTabId, title: collection.name });
+    }
+
+    handleNavigate();
   };
 
   const handleAddDocument = () => {
@@ -51,7 +73,15 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
     <GridListItem
       id={collection.id}
       textValue={collection.name}
-      onAction={handleNavigate}
+      onAction={() => openCollection("preview")}
+      onDoubleClick={() => openCollection("persistent")}
+      onClick={(event) => {
+        if (event.metaKey || event.ctrlKey) {
+          event.preventDefault();
+          event.stopPropagation();
+          openCollection("background");
+        }
+      }}
       className={cx(
         sidebarItemStyles({
           isCurrent: isActive,

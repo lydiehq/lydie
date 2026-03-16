@@ -4,6 +4,8 @@ import { Button } from "@lydie/ui/components/generic/Button";
 import { Tooltip } from "@lydie/ui/components/generic/Tooltip";
 import { CollectionItemIcon } from "@lydie/ui/components/icons/CollectionItemIcon";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
+import { queries } from "@lydie/zero/queries";
+import { useQuery } from "@rocicorp/zero/react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
@@ -23,9 +25,11 @@ import {
   documentTabsAtom,
   activeTabIdAtom,
   makeTabPersistentAtom,
+  pruneInvalidTabsAtom,
   syncDocumentTabAtom,
 } from "@/atoms/tabs";
 import { isSidebarCollapsedAtom, requestSidebarToggleAtom } from "@/atoms/workspace-settings";
+import { useOrganization } from "@/context/organization.context";
 import { useDocumentActions } from "@/hooks/use-document-actions";
 import { composeTailwindRenderProps, focusRing } from "@/utils/focus-ring";
 
@@ -51,12 +55,36 @@ function getCollectionIdFromTabId(tabId: string): string | null {
 }
 
 export function DocumentTabBar({ organizationSlug }: DocumentTabBarProps) {
+  const { organization } = useOrganization();
   const tabs = useAtomValue(documentTabsAtom);
   const activeTabId = useAtomValue(activeTabIdAtom);
   const setActiveTab = useSetAtom(activateDocumentTabAtom);
   const closeTab = useSetAtom(closeDocumentTabAtom);
   const makePersistent = useSetAtom(makeTabPersistentAtom);
+  const pruneInvalidTabs = useSetAtom(pruneInvalidTabsAtom);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  const [organizationDocuments] = useQuery(
+    queries.organizations.documents({
+      organizationSlug,
+    }),
+  );
+  const [collections] = useQuery(
+    queries.collections.byOrganization({
+      organizationId: organization.id,
+    }),
+  );
+
+  useEffect(() => {
+    if (!organizationDocuments || !collections) {
+      return;
+    }
+
+    pruneInvalidTabs({
+      validDocumentIds: new Set(organizationDocuments.documents.map((document) => document.id)),
+      validCollectionIds: new Set(collections.map((collection) => collection.id)),
+    });
+  }, [collections, organizationDocuments, pruneInvalidTabs]);
 
   const navigate = useNavigate() as (options: {
     to: string;
