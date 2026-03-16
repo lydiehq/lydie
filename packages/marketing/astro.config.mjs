@@ -8,7 +8,7 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
   site: "https://lydie.co",
   integrations: [mdx(), react()],
-  output: "static",
+  output: "server",
   adapter: aws(),
   devToolbar: {
     enabled: false,
