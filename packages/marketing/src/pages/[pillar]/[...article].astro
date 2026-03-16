@@ -96,7 +96,7 @@ try {
     }) || null;
 
   if (!currentDocument) {
-    throw new Error("Document not found");
+    return new Response(null, { status: 404 });
   }
 
   const resolvedDocument = currentDocument;
@@ -148,11 +148,7 @@ try {
     })
     .filter((doc) => doc.id !== resolvedDocument.id)
     .slice(0, 2);
-} catch (error) {
-  console.error(
-    `[Resource Hub] Failed to fetch document ${collectionHandle}${requestedPath}`,
-    error,
-  );
+} catch {
   return new Response(null, { status: 404 });
 }
 
