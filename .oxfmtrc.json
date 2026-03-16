@@ -3,5 +3,5 @@
   "experimentalSortImports": {
     "newlinesBetween": true
   },
-  "ignorePatterns": []
+  "ignorePatterns": ["sst-env.d.ts"]
 }
