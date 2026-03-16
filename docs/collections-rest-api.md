@@ -2,6 +2,42 @@
 
 Base URL: `/api/v1`
 
+## Collections
+
+### Create collection
+`POST /api/v1/collections`
+
+```json
+{
+  "name": "Blog",
+  "handle": "blog",
+  "properties": [
+    { "name": "slug", "type": "text", "required": false, "unique": true },
+    { "name": "excerpt", "type": "text", "required": false, "unique": false }
+  ]
+}
+```
+
+Notes:
+- `handle` is optional; if omitted, one is generated from `name`
+- Reserved handles are normalized (for example `api` -> `api-collection`)
+
+### Create properties
+`POST /api/v1/collections/{collectionId}/properties`
+
+```json
+{
+  "properties": [
+    { "name": "published_at", "type": "date", "required": false, "unique": false },
+    { "name": "draft", "type": "boolean", "required": false, "unique": false }
+  ]
+}
+```
+
+Notes:
+- Property names must be unique per collection
+- Existing properties are preserved; this endpoint appends
+
 ## Documents
 
 ### List documents
@@ -44,6 +80,36 @@ Response envelope:
 ### Get related
 `GET /api/v1/collections/{collectionId}/documents/{docId}/related?limit=5`
 
+### Create document
+`POST /api/v1/collections/{collectionId}/documents`
+
+```json
+{
+  "title": "4 Drone-Focused Companies That Are Hiring Right Now",
+  "published": true,
+  "fields": {
+    "slug": "drone-companies-hiring-now",
+    "excerpt": "Discover four drone trailblazers..."
+  },
+  "jsonContent": {
+    "type": "doc",
+    "content": []
+  }
+}
+```
+
+Notes:
+- `jsonContent` is optional; when provided, it is converted and stored as Yjs state
+- `coverImage` can be set via `coverImage: string | null`
+
+### Update document
+`PATCH /api/v1/collections/{collectionId}/documents/{docId}`
+
+Uses the same body shape as create. Provided fields are patched.
+
+### Delete document
+`DELETE /api/v1/collections/{collectionId}/documents/{docId}`
+
 ## Collection settings
 
 ### Update lookup + indexed fields
@@ -80,12 +146,8 @@ Validation:
 - `INVALID_FILTER_OPERATOR` (400)
 - `DEPTH_LIMIT_EXCEEDED` (400)
 - `INVALID_CURSOR` (400)
+- `INVALID_COLLECTION` (400)
+- `INVALID_PROPERTY` (400)
+- `PROPERTY_ALREADY_EXISTS` (409)
+- `INVALID_CONTENT` (400)
 - `SORT_FIELD_NOT_INDEXED` (200 + warning)
-
-## TODO endpoints
-
-- `TODO`: `POST /api/v1/collections/{collectionId}/documents` (create document)
-- `TODO`: `PATCH /api/v1/collections/{collectionId}/documents/{docId}` (update document)
-- `TODO`: `DELETE /api/v1/collections/{collectionId}/documents/{docId}` (delete document)
-- `TODO`: bulk mutation endpoints (batch create/update/delete)
-- `TODO`: full collection CRUD under `/api/v1/collections`

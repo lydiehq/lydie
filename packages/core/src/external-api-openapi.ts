@@ -7,6 +7,18 @@ export type ApiEndpointDefinition = {
 
 export const externalApiEndpoints: ApiEndpointDefinition[] = [
   {
+    method: "post",
+    path: "/collections",
+    summary: "Create collection",
+    description: "Creates a collection with optional initial properties.",
+  },
+  {
+    method: "post",
+    path: "/collections/{collectionId}/properties",
+    summary: "Create collection properties",
+    description: "Appends one or more properties to an existing collection.",
+  },
+  {
     method: "get",
     path: "/collections/{collectionId}/documents",
     summary: "List collection documents",

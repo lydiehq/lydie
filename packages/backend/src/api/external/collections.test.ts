@@ -88,6 +88,21 @@ vi.mock("@lydie/core/embedding/search", () => ({
   findRelatedDocuments: vi.fn(async () => []),
 }));
 
+vi.mock("@lydie/core/utils", () => ({
+  slugify: (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, ""),
+}));
+
+vi.mock("@lydie/core/yjs-to-json", () => ({
+  convertYjsToJson: vi.fn(() => ({ type: "doc", content: [] })),
+  convertJsonToYjs: vi.fn((value: unknown) => (value === "INVALID" ? null : "yjs-state")),
+}));
+
 vi.mock("../../utils/toc", () => ({
   extractTableOfContents: vi.fn(() => []),
 }));
@@ -181,6 +196,86 @@ describe("CollectionsApi", () => {
     expect(mocks.insertMock).toHaveBeenCalledTimes(2);
     const payload = (await res.json()) as { data: { title: string } };
     expect(payload.data.title).toBe("New Entry");
+  });
+
+  it("creates a collection", async () => {
+    queueSelectRows([]);
+
+    const res = await app.request("/collections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Blog",
+        properties: [{ name: "slug", type: "text", required: false, unique: true }],
+      }),
+    });
+
+    expect(res.status).toBe(201);
+    expect(mocks.insertMock).toHaveBeenCalledTimes(1);
+    expect(mocks.executeMock).toHaveBeenCalled();
+    const payload = (await res.json()) as {
+      data: { name: string; handle: string; properties: Array<{ name: string }> };
+    };
+    expect(payload.data.name).toBe("Blog");
+    expect(payload.data.handle).toBe("blog");
+    expect(payload.data.properties[0]?.name).toBe("slug");
+  });
+
+  it("adds collection properties", async () => {
+    queueSelectRows([{ id: "blog", name: "Blog", handle: "blog", properties: [] }]);
+
+    const res = await app.request("/collections/blog/properties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        properties: [
+          { name: "slug", type: "text", required: false, unique: true },
+          { name: "draft", type: "boolean", required: false, unique: false },
+        ],
+      }),
+    });
+
+    expect(res.status).toBe(201);
+    expect(mocks.updateMock).toHaveBeenCalledTimes(1);
+    const payload = (await res.json()) as { data: { totalProperties: number } };
+    expect(payload.data.totalProperties).toBe(2);
+  });
+
+  it("returns 409 when adding an existing property", async () => {
+    queueSelectRows([
+      {
+        id: "blog",
+        name: "Blog",
+        handle: "blog",
+        properties: [{ name: "slug", type: "text", required: false, unique: true }],
+      },
+    ]);
+
+    const res = await app.request("/collections/blog/properties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        properties: [{ name: "slug", type: "text", required: false, unique: true }],
+      }),
+    });
+
+    expect(res.status).toBe(409);
+    const payload = (await res.json()) as { error?: { code?: string } };
+    expect(payload.error?.code).toBe("PROPERTY_ALREADY_EXISTS");
+  });
+
+  it("returns 400 when creating document with invalid jsonContent", async () => {
+    queueSelectRows([{ id: "blog", name: "Blog", properties: [] }]);
+
+    const res = await app.request("/collections/blog/documents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "Bad Content", jsonContent: "INVALID" }),
+    });
+
+    expect(res.status).toBe(400);
+    const payload = (await res.json()) as { error?: { code?: string } };
+    expect(payload.error?.code).toBe("INVALID_CONTENT");
   });
 
   it("updates an existing document", async () => {

@@ -1,6 +1,7 @@
 import { findRelatedDocuments } from "@lydie/core/embedding/search";
 import { createId } from "@lydie/core/id";
-import { convertYjsToJson } from "@lydie/core/yjs-to-json";
+import { slugify } from "@lydie/core/utils";
+import { convertJsonToYjs, convertYjsToJson } from "@lydie/core/yjs-to-json";
 import { collectionFieldsTable, collectionsTable, db, documentsTable } from "@lydie/database";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { describeRoute, resolver, validator } from "hono-openapi";
@@ -13,6 +14,31 @@ import { transformDocumentLinksToInternalLinkMarks } from "../utils/link-transfo
 import { apiKeyAuth, externalRateLimit } from "./middleware";
 
 type FieldValue = string | number | boolean | string[] | null;
+type CollectionProperty = {
+  name: string;
+  type: "text" | "number" | "date" | "select" | "multi-select" | "status" | "boolean" | "relation";
+  required: boolean;
+  unique: boolean;
+  indexed?: boolean;
+  options?: Array<{
+    id: string;
+    label: string;
+    color?: string;
+    order: number;
+    archived?: boolean;
+    stage?: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+  }>;
+  relation?: {
+    targetCollectionId: string;
+    many?: boolean;
+  } | null;
+  derived?: {
+    sourceField: string;
+    transform: "slugify";
+    editable: boolean;
+    warnOnChangeAfterPublish?: boolean;
+  } | null;
+};
 type RowDocument = {
   id: string;
   title: string;
@@ -44,8 +70,39 @@ type FilterOp = "$eq" | "$in" | "$gt" | "$lt" | "$like" | "$null";
 type Filter = { field: string; op: FilterOp; rawValue: string };
 
 const SAFE_FIELD_RE = /^[a-z_][a-z0-9_]*$/;
+const COLLECTION_PROPERTY_TYPES = new Set([
+  "text",
+  "number",
+  "date",
+  "select",
+  "multi-select",
+  "status",
+  "boolean",
+  "relation",
+]);
+const RESERVED_HANDLES = new Set([
+  "api",
+  "v1",
+  "settings",
+  "admin",
+  "auth",
+  "public",
+  "static",
+  "assets",
+  "collections",
+  "documents",
+  "users",
+  "organizations",
+  "webhooks",
+  "integrations",
+]);
 const collectionParamsSchema = v.object({
   collectionId: v.string(),
+});
+const createCollectionBodySchema = v.object({
+  name: v.string(),
+  handle: v.optional(v.string()),
+  properties: v.optional(v.array(v.any())),
 });
 const documentLookupParamsSchema = v.object({
   collectionId: v.string(),
@@ -59,7 +116,12 @@ const documentBodySchema = v.object({
   title: v.optional(v.string()),
   parentId: v.optional(v.nullable(v.string())),
   fields: v.optional(v.record(v.string(), v.any())),
+  coverImage: v.optional(v.nullable(v.string())),
+  jsonContent: v.optional(v.any()),
   published: v.optional(v.boolean()),
+});
+const collectionPropertiesBodySchema = v.object({
+  properties: v.array(v.any()),
 });
 const collectionSettingsBodySchema = v.object({
   lookupKey: v.optional(v.nullable(v.string())),
@@ -172,6 +234,106 @@ function getLookupConfig(properties: unknown): { lookupKey: string | null; index
   }
 
   return { lookupKey, indexedFields };
+}
+
+function toCollectionProperties(properties: unknown): CollectionProperty[] {
+  if (!Array.isArray(properties)) return [];
+  return properties as CollectionProperty[];
+}
+
+function normalizeProperty(raw: unknown): { ok: true; property: CollectionProperty } | { ok: false; error: string } {
+  if (!raw || typeof raw !== "object") {
+    return { ok: false, error: "Property definition must be an object" };
+  }
+
+  const input = raw as Record<string, unknown>;
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  const type = typeof input.type === "string" ? input.type : "";
+
+  if (!name) {
+    return { ok: false, error: "Property name is required" };
+  }
+
+  if (!SAFE_FIELD_RE.test(name) || name.length > 64) {
+    return { ok: false, error: `Property '${name}' has an invalid name` };
+  }
+
+  if (!COLLECTION_PROPERTY_TYPES.has(type)) {
+    return {
+      ok: false,
+      error: `Property '${name}' has invalid type '${type}'. Allowed: ${Array.from(COLLECTION_PROPERTY_TYPES).join(", ")}`,
+    };
+  }
+
+  return {
+    ok: true,
+    property: {
+      ...input,
+      name,
+      type: type as CollectionProperty["type"],
+      required: input.required === true,
+      unique: input.unique === true,
+      ...(input.indexed === true ? { indexed: true } : {}),
+      ...(Array.isArray(input.options) ? { options: input.options as CollectionProperty["options"] } : {}),
+      ...(input.relation && typeof input.relation === "object"
+        ? { relation: input.relation as CollectionProperty["relation"] }
+        : {}),
+      ...(input.derived && typeof input.derived === "object"
+        ? { derived: input.derived as CollectionProperty["derived"] }
+        : {}),
+    },
+  };
+}
+
+function normalizeProperties(rawProperties: unknown): { ok: true; properties: CollectionProperty[] } | { ok: false; error: string } {
+  if (rawProperties === undefined) {
+    return { ok: true, properties: [] };
+  }
+
+  if (!Array.isArray(rawProperties)) {
+    return { ok: false, error: "properties must be an array" };
+  }
+
+  const names = new Set<string>();
+  const properties: CollectionProperty[] = [];
+
+  for (const rawProperty of rawProperties) {
+    const normalized = normalizeProperty(rawProperty);
+    if (!normalized.ok) {
+      return normalized;
+    }
+
+    if (names.has(normalized.property.name)) {
+      return { ok: false, error: `Duplicate property '${normalized.property.name}'` };
+    }
+
+    names.add(normalized.property.name);
+    properties.push(normalized.property);
+  }
+
+  return { ok: true, properties };
+}
+
+function normalizeHandle(input: string): string {
+  const base = slugify(input).trim() || `collection-${createId().slice(0, 4)}`;
+  return RESERVED_HANDLES.has(base) ? `${base}-collection` : base;
+}
+
+async function createUniqueCollectionHandle(organizationId: string, input: string): Promise<string> {
+  const normalizedBase = normalizeHandle(input);
+
+  let handle = normalizedBase;
+  let counter = 2;
+
+  while (true) {
+    const existing = await getCollectionByIdentifier(organizationId, handle);
+    if (!existing) {
+      return handle;
+    }
+
+    handle = `${normalizedBase}-${counter}`;
+    counter += 1;
+  }
 }
 
 function sanitizeIndexToken(value: string): string {
@@ -451,6 +613,71 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
   return new Hono()
   .use(authMiddleware)
   .use(rateLimitMiddleware)
+  .post(
+    "/collections",
+    describeRoute({
+      summary: "Create collection",
+      description: "Creates a collection with optional initial properties.",
+      responses: {
+        201: {
+          description: "Collection created",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("json", createCollectionBodySchema),
+    async (c) => {
+      const organizationId = c.get("organizationId");
+      const body = c.req.valid("json");
+
+      const name = body.name.trim();
+      if (!name) {
+        return c.json(documentError("INVALID_COLLECTION", "Collection name is required"), 400);
+      }
+
+      const normalizedProperties = normalizeProperties(body.properties);
+      if (!normalizedProperties.ok) {
+        return c.json(documentError("INVALID_PROPERTY", normalizedProperties.error), 400);
+      }
+
+      const handle = await createUniqueCollectionHandle(organizationId, body.handle?.trim() || name);
+      const id = createId();
+      const now = new Date();
+
+      await db.insert(collectionsTable).values({
+        id,
+        name,
+        handle,
+        organizationId,
+        properties: normalizedProperties.properties,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const lookupConfig = getLookupConfig(normalizedProperties.properties);
+      await syncCollectionFieldIndexes({
+        collectionId: id,
+        previousLookupKey: null,
+        previousIndexedFields: [],
+        lookupKey: lookupConfig.lookupKey,
+        indexedFields: lookupConfig.indexedFields,
+      });
+
+      return c.json(
+        {
+          data: {
+            id,
+            name,
+            handle,
+            properties: normalizedProperties.properties,
+            createdAt: now.toISOString(),
+            updatedAt: now.toISOString(),
+          },
+        },
+        201,
+      );
+    },
+  )
   .get(
     "/collections/:collectionId/documents",
     describeRoute({
@@ -717,6 +944,86 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
   },
   )
   .post(
+    "/collections/:collectionId/properties",
+    describeRoute({
+      summary: "Create collection properties",
+      description: "Appends new properties to an existing collection.",
+      responses: {
+        201: {
+          description: "Properties created",
+          content: { "application/json": { schema: resolver(defaultEnvelopeSchema) } },
+        },
+      },
+    }),
+    validator("param", collectionParamsSchema),
+    validator("json", collectionPropertiesBodySchema),
+    async (c) => {
+      const organizationId = c.get("organizationId");
+      const { collectionId: collectionIdentifier } = c.req.valid("param");
+      const body = c.req.valid("json");
+
+      const collection = await getCollectionByIdentifier(organizationId, collectionIdentifier);
+      if (!collection) {
+        return c.json(documentError("COLLECTION_NOT_FOUND", "Collection does not exist or is not accessible"), 404);
+      }
+
+      const normalizedProperties = normalizeProperties(body.properties);
+      if (!normalizedProperties.ok) {
+        return c.json(documentError("INVALID_PROPERTY", normalizedProperties.error), 400);
+      }
+
+      if (normalizedProperties.properties.length === 0) {
+        return c.json(documentError("INVALID_PROPERTY", "At least one property is required"), 400);
+      }
+
+      const existingProperties = toCollectionProperties(collection.properties);
+      const existingNames = new Set(existingProperties.map((property) => property.name));
+
+      for (const property of normalizedProperties.properties) {
+        if (existingNames.has(property.name)) {
+          return c.json(documentError("PROPERTY_ALREADY_EXISTS", `Property '${property.name}' already exists`), 409);
+        }
+      }
+
+      const previousLookupConfig = getLookupConfig(collection.properties);
+      const nextProperties = [...existingProperties, ...normalizedProperties.properties];
+      const nextLookupConfig = getLookupConfig(nextProperties);
+
+      await syncCollectionFieldIndexes({
+        collectionId: collection.id,
+        previousLookupKey: previousLookupConfig.lookupKey,
+        previousIndexedFields: previousLookupConfig.indexedFields,
+        lookupKey: nextLookupConfig.lookupKey,
+        indexedFields: nextLookupConfig.indexedFields,
+      });
+
+      await db
+        .update(collectionsTable)
+        .set({
+          properties: nextProperties,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(collectionsTable.id, collection.id),
+            eq(collectionsTable.organizationId, organizationId),
+          ),
+        );
+
+      return c.json(
+        {
+          data: {
+            id: collection.id,
+            handle: collection.handle,
+            created: normalizedProperties.properties,
+            totalProperties: nextProperties.length,
+          },
+        },
+        201,
+      );
+    },
+  )
+  .post(
     "/collections/:collectionId/documents",
     describeRoute({
       summary: "Create collection document",
@@ -745,7 +1052,13 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
     const title = body.title?.trim() || "Untitled";
     const parentId = body.parentId ?? null;
     const fields = body.fields ?? {};
+    const coverImage = body.coverImage ?? null;
     const published = body.published ?? true;
+    const yjsState = body.jsonContent !== undefined ? convertJsonToYjs(body.jsonContent) : null;
+
+    if (body.jsonContent !== undefined && !yjsState) {
+      return c.json(documentError("INVALID_CONTENT", "jsonContent is invalid or unsupported"), 400);
+    }
 
     await db.insert(documentsTable).values({
       id,
@@ -753,6 +1066,8 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
       parentId,
       collectionId: collection.id,
       organizationId,
+      coverImage,
+      yjsState,
       published,
       createdAt: now,
       updatedAt: now,
@@ -805,12 +1120,22 @@ export function createCollectionsApi(options?: CollectionsApiOptions) {
 
     const body = c.req.valid("json");
 
+    let yjsState: string | null | undefined;
+    if (body.jsonContent !== undefined) {
+      yjsState = convertJsonToYjs(body.jsonContent);
+      if (!yjsState) {
+        return c.json(documentError("INVALID_CONTENT", "jsonContent is invalid or unsupported"), 400);
+      }
+    }
+
     const now = new Date();
     await db
       .update(documentsTable)
       .set({
         ...(body.title !== undefined ? { title: body.title.trim() || "Untitled" } : {}),
         ...(body.parentId !== undefined ? { parentId: body.parentId } : {}),
+        ...(body.coverImage !== undefined ? { coverImage: body.coverImage } : {}),
+        ...(body.jsonContent !== undefined ? { yjsState } : {}),
         ...(body.published !== undefined ? { published: body.published } : {}),
         updatedAt: now,
       })
