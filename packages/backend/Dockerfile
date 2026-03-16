@@ -40,20 +40,17 @@ COPY --from=deps /app/tsconfig.json ./tsconfig.json
 COPY --from=deps /app/packages/core/package.json ./packages/core/package.json
 COPY --from=deps /app/packages/backend/package.json ./packages/backend/package.json
 COPY --from=deps /app/packages/database/package.json ./packages/database/package.json
-COPY --from=deps /app/packages/integrations/package.json ./packages/integrations/package.json
 COPY --from=deps /app/packages/zero/package.json ./packages/zero/package.json
 COPY --from=deps /app/packages/editor/package.json ./packages/editor/package.json
 COPY --from=deps /app/packages/core/node_modules ./packages/core/node_modules
 COPY --from=deps /app/packages/backend/node_modules ./packages/backend/node_modules
 COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
-COPY --from=deps /app/packages/integrations/node_modules ./packages/integrations/node_modules
 COPY --from=deps /app/packages/zero/node_modules ./packages/zero/node_modules
 COPY --from=deps /app/packages/editor/node_modules ./packages/editor/node_modules
 
 COPY ./packages/backend ./packages/backend
 COPY ./packages/core ./packages/core
 COPY ./packages/database ./packages/database
-COPY ./packages/integrations ./packages/integrations
 COPY ./packages/zero ./packages/zero
 COPY ./packages/editor ./packages/editor
 

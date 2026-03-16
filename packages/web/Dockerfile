@@ -12,7 +12,6 @@ COPY packages/ui/package.json ./packages/ui/package.json
 COPY packages/editor/package.json ./packages/editor/package.json
 COPY packages/web/package.json ./packages/web/package.json
 COPY packages/zero/package.json ./packages/zero/package.json
-COPY packages/integrations/package.json ./packages/integrations/package.json
 COPY packages/scripts/package.json ./packages/scripts/package.json
 COPY packages/backend/package.json ./packages/backend/package.json
 
@@ -26,7 +25,6 @@ COPY packages/ui ./packages/ui
 COPY packages/editor ./packages/editor
 COPY packages/web ./packages/web
 COPY packages/zero ./packages/zero
-COPY packages/integrations ./packages/integrations
 COPY packages/scripts ./packages/scripts
 
 # Build arguments for environment variables
