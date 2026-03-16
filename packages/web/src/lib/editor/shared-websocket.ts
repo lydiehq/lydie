@@ -7,11 +7,12 @@ let activeConsumers = 0;
 
 function createSharedSocket() {
   sharedSocket = new HocuspocusProviderWebsocket({ url: yjsServerUrl });
+  return sharedSocket;
 }
 
 function ensureSharedSocket() {
   if (!sharedSocket) {
-    createSharedSocket();
+    return createSharedSocket();
   }
 
   return sharedSocket;

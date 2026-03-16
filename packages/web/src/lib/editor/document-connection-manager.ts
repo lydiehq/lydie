@@ -40,7 +40,6 @@ class DocumentConnectionManager {
       websocketProvider: sharedSocket,
       name: documentId,
       document: ydoc,
-      token: "auth-token",
     });
 
     provider.attach();

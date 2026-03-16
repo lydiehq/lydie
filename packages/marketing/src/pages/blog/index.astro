@@ -1,12 +1,6 @@
 ---
 export const prerender = false;
 
-// ISR-like caching: CDN caches for 24 hours, serves stale for 7 days while revalidating
-Astro.response.headers.set(
-  "Cache-Control",
-  "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
-);
-
 import Layout from "../../layouts/Layout.astro";
 import { Container } from "../../components/Container";
 import Breadcrumbs from "../../components/Breadcrumbs.astro";
@@ -146,9 +140,7 @@ const prevURL = hasPreviousPage ? getBlogPageUrl(effectivePage - 1) : undefined;
 const nextURL = hasNextPage ? getBlogPageUrl(effectivePage + 1) : undefined;
 
 const pageTitle =
-  effectivePage === 1
-    ? "Blog - Lydie"
-    : `Blog - Page ${effectivePage} - Lydie`;
+  effectivePage === 1 ? "Blog - Lydie" : `Blog - Page ${effectivePage} - Lydie`;
 const pageDescription =
   effectivePage === 1
     ? "Resources on writing, working in teams, and technical insights into Lydie."
@@ -254,36 +246,38 @@ const pageDescription =
         )
       }
 
-      {(hasPreviousPage || hasNextPage) && (
-        <nav
-          class="mt-12 flex items-center justify-between border-t border-gray-100 pt-6"
-          aria-label="Blog pagination"
-        >
-          <div>
-            {previousPageHref && (
-              <a
-                href={previousPageHref}
-                rel="prev"
-                class="text-sm text-gray-700 hover:text-gray-900"
-              >
-                ← Newer posts
-              </a>
-            )}
-          </div>
-          <span class="text-xs text-gray-500">Page {effectivePage}</span>
-          <div>
-            {nextPageHref && (
-              <a
-                href={nextPageHref}
-                rel="next"
-                class="text-sm text-gray-700 hover:text-gray-900"
-              >
-                Older posts →
-              </a>
-            )}
-          </div>
-        </nav>
-      )}
+      {
+        (hasPreviousPage || hasNextPage) && (
+          <nav
+            class="mt-12 flex items-center justify-between border-t border-gray-100 pt-6"
+            aria-label="Blog pagination"
+          >
+            <div>
+              {previousPageHref && (
+                <a
+                  href={previousPageHref}
+                  rel="prev"
+                  class="text-sm text-gray-700 hover:text-gray-900"
+                >
+                  ← Newer posts
+                </a>
+              )}
+            </div>
+            <span class="text-xs text-gray-500">Page {effectivePage}</span>
+            <div>
+              {nextPageHref && (
+                <a
+                  href={nextPageHref}
+                  rel="next"
+                  class="text-sm text-gray-700 hover:text-gray-900"
+                >
+                  Older posts →
+                </a>
+              )}
+            </div>
+          </nav>
+        )
+      }
     </Container>
   </div>
 </Layout>
