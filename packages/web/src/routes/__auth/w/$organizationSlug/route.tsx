@@ -26,7 +26,6 @@ import { Surface } from "@/components/layout/Surface";
 import { PanelResizer } from "@/components/panels/PanelResizer";
 import { InstallTemplateDialog } from "@/components/templates/InstallTemplateDialog";
 import { useAuth } from "@/context/auth.context";
-import { useWorkspaceWebSocket } from "@/hooks/use-workspace-websocket";
 import { getCachedSession, revalidateSession, type ExtendedSessionData } from "@/lib/auth/session";
 import { loadOrganization } from "@/lib/organization/loadOrganization";
 import { resolveOrganizationRecovery } from "@/routes/__auth/w/$organizationSlug/-organization-recovery";
@@ -103,8 +102,6 @@ function RouteComponent() {
 }
 
 function RouteLayout() {
-  useWorkspaceWebSocket();
-
   const sidebarPanelRef = usePanelRef();
   const assistantPanelRef = usePanelRef();
   const [dockedAssistantContainer, setDockedAssistantContainer] = useState<HTMLDivElement | null>(

@@ -57,7 +57,6 @@
     "sso": "aws sso login --sso-session=lydie --use-device-code",
     "sdk:publish": "bun --filter=@lydie-app/sdk sdk:publish",
     "test": "bun --filter=@lydie/web test",
-    "test:e2e": "bun --filter=@lydie/web test:e2e",
     "copy-integration-assets": "bun --filter=@lydie/scripts copy-integration-assets",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --fix",

@@ -1,42 +1,45 @@
 import { HocuspocusProviderWebsocket } from "@hocuspocus/provider";
 
-const yjsServerUrl = import.meta.env.VITE_YJS_SERVER_URL || "ws://localhost:3001/yjs";
+function resolveYjsServerUrl() {
+  const explicitUrl = import.meta.env.VITE_YJS_SERVER_URL;
+  if (explicitUrl) {
+    return explicitUrl;
+  }
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl) {
+    try {
+      const url = new URL(apiUrl);
+      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      url.pathname = "/yjs";
+      url.search = "";
+      url.hash = "";
+      return url.toString();
+    } catch {
+      // Fall through to localhost default
+    }
+  }
+
+  return "ws://localhost:3001/yjs";
+}
+
+const yjsServerUrl = resolveYjsServerUrl();
 
 let sharedSocket: HocuspocusProviderWebsocket | null = null;
-let activeConsumers = 0;
 
 function createSharedSocket() {
-  sharedSocket = new HocuspocusProviderWebsocket({ url: yjsServerUrl });
-  return sharedSocket;
+  return new HocuspocusProviderWebsocket({ url: yjsServerUrl });
 }
 
-function ensureSharedSocket() {
+export function getSharedWebSocket() {
   if (!sharedSocket) {
-    return createSharedSocket();
+    sharedSocket = createSharedSocket();
   }
 
   return sharedSocket;
-}
-
-export function acquireSharedWebSocket() {
-  activeConsumers += 1;
-  return ensureSharedSocket();
-}
-
-export function releaseSharedWebSocket() {
-  if (activeConsumers > 0) {
-    activeConsumers -= 1;
-  }
-
-  if (activeConsumers === 0 && sharedSocket) {
-    sharedSocket.destroy();
-    sharedSocket = null;
-  }
 }
 
 export function destroySharedWebSocket() {
-  activeConsumers = 0;
-
   if (sharedSocket) {
     sharedSocket.destroy();
     sharedSocket = null;

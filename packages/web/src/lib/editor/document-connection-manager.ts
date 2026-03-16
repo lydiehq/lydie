@@ -2,7 +2,7 @@ import { HocuspocusProvider } from "@hocuspocus/provider";
 import { base64ToUint8Array } from "@lydie/core/lib/base64";
 import * as Y from "yjs";
 
-import { acquireSharedWebSocket, releaseSharedWebSocket } from "./shared-websocket";
+import { getSharedWebSocket } from "./shared-websocket";
 
 interface DocumentConnection {
   provider: HocuspocusProvider;
@@ -34,7 +34,7 @@ class DocumentConnectionManager {
       Y.applyUpdate(ydoc, bytes);
     }
 
-    const sharedSocket = acquireSharedWebSocket();
+    const sharedSocket = getSharedWebSocket();
 
     const provider = new HocuspocusProvider({
       websocketProvider: sharedSocket,
@@ -65,7 +65,6 @@ class DocumentConnectionManager {
 
     connection.provider.destroy();
     connection.ydoc.destroy();
-    releaseSharedWebSocket();
     this.connections.delete(documentId);
   }
 
@@ -77,7 +76,6 @@ class DocumentConnectionManager {
     for (const [, connection] of this.connections) {
       connection.provider.destroy();
       connection.ydoc.destroy();
-      releaseSharedWebSocket();
     }
     this.connections.clear();
   }

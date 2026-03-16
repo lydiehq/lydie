@@ -49,6 +49,14 @@ test.describe("documents", () => {
     await contentEditor.click();
     await contentEditor.fill(content);
     await expect(contentEditor).toContainText(content);
+
+    await page.reload();
+
+    const reloadedContentEditor = page
+      .getByLabel("Document content")
+      .locator('[contenteditable="true"]')
+      .first();
+    await expect(reloadedContentEditor).toContainText(content);
   });
 
   test("can delete a document from sidebar", async ({ page, organization }) => {

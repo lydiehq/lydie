@@ -9,10 +9,14 @@ This document provides guidelines for AI coding agents working in the Lydie repo
 bun dev                              # Start SST dev environment
 
 # Linting & Formatting
-bun run lint                         # Run oxlint (type-aware)
+bun run lint                         # Run oxlint (type-aware checks)
 bun run lint:fix                     # Run oxlint with auto-fix
 bun run fmt                          # Run oxfmt formatter
 bun run fmt:check                    # Check formatting without writing
+
+# Type checking policy
+# Use oxlint's type-aware checks via `bun run lint` for typecheck validation.
+# Do not use `bun run typecheck` / `tsc --noEmit` as a default validation step.
 
 # Unit Tests (Vitest)
 bun test                             # Run all tests
@@ -23,11 +27,13 @@ bun test:watch                       # Watch mode
 bun test:ui                          # UI mode
 
 # E2E Tests (Playwright)
-bun test:e2e                         # Run all e2e tests
-bun test:e2e -- tests/e2e/auth.spec.ts    # Run specific e2e file
-bun test:e2e -- --grep "should"     # Run tests matching pattern
-bun test:e2e:ui                      # Playwright UI mode
-bun test:e2e:debug                   # Debug mode
+bun run docker:e2e                   # Run e2e tests in Dockerized prod-like stack
+bun run docker:e2e tests/e2e/auth.spec.ts         # Run specific e2e file
+bun run docker:e2e -- --grep "should"            # Run tests matching pattern
+
+# E2E policy
+# Always run e2e via dockerized stack (`bun run docker:e2e`).
+# Do not use non-docker Playwright scripts as the default validation path.
 
 # Database
 bun run db:push                      # Push schema changes
