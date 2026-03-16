@@ -89,21 +89,16 @@ export const documentMutators = {
       title: z.string().optional(),
       parentId: z.string().optional(),
       collectionId: z.string().optional(),
-      integrationLinkId: z.string().optional(),
+      externalId: z.string().nullable().optional(),
       content: z.string().optional(),
     }),
     async ({ tx, ctx, args }) => {
       hasOrganizationAccess(ctx, args.organizationId);
 
-      let finalIntegrationLinkId = args.integrationLinkId;
-
       if (args.parentId) {
         const parentDocument = await getDocumentById(tx, args.parentId, args.organizationId);
         if (!parentDocument) {
           throw notFoundError("Parent document", args.parentId);
-        }
-        if (parentDocument.integration_link_id) {
-          finalIntegrationLinkId = parentDocument.integration_link_id;
         }
       }
 
@@ -143,13 +138,13 @@ export const documentMutators = {
           yjs_state: yjsState,
           user_id: ctx.userId,
           organization_id: args.organizationId,
-          integration_link_id: finalIntegrationLinkId || null,
           full_width: false,
           published: false,
           is_favorited: false,
           parent_id: args.parentId || null,
           sort_order: minSortOrder - 1,
           collection_id: args.collectionId || null,
+          external_id: args.externalId ?? null,
         }),
       );
 
@@ -266,7 +261,6 @@ export const documentMutators = {
     z.object({
       documentId: z.string(),
       targetParentId: z.string().optional().nullable(),
-      targetIntegrationLinkId: z.string().optional().nullable(),
       organizationId: z.string(),
       collectionId: z.string().nullable().optional(),
     }),
@@ -277,11 +271,6 @@ export const documentMutators = {
         zql.documents
           .where("organization_id", args.organizationId)
           .where("parent_id", args.targetParentId ? "=" : "IS", args.targetParentId || null)
-          .where(
-            "integration_link_id",
-            args.targetIntegrationLinkId ? "=" : "IS",
-            args.targetIntegrationLinkId || null,
-          )
           .where("deleted_at", "IS", null),
       );
 
@@ -296,9 +285,6 @@ export const documentMutators = {
       };
 
       if (args.targetParentId !== undefined) updates.parent_id = args.targetParentId;
-      if (args.targetIntegrationLinkId !== undefined) {
-        updates.integration_link_id = args.targetIntegrationLinkId;
-      }
       if (args.collectionId !== undefined) {
         updates.collection_id = args.collectionId;
       }
@@ -430,25 +416,11 @@ async function restoreDocumentTree(
 
 async function deleteDocumentTree(
   tx: any,
-  document: {
-    id: string;
-    integration_link_id: string | null;
-    external_id: string | null;
-  },
+  document: { id: string },
   organizationId: string,
 ): Promise<void> {
   const childIds = await findAllChildDocuments(tx, document.id, organizationId);
-  const isIntegrationDocument = Boolean(document.integration_link_id && document.external_id);
   const now = Date.now();
-
-  if (isIntegrationDocument) {
-    for (const childId of childIds) {
-      await tx.mutate.documents.delete({ id: childId });
-    }
-
-    await tx.mutate.documents.delete({ id: document.id });
-    return;
-  }
 
   for (const childId of childIds) {
     await tx.mutate.documents.update(withUpdatedTimestamp({ id: childId, deleted_at: now }));

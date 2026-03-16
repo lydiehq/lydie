@@ -95,18 +95,17 @@ async function createOnboardingDocumentsWithEmbeddings(
   const now = Date.now();
 
   await tx.mutate.documents.insert(
-    withTimestamps({
-      id: onboardingDocId,
-      title: guideTitle,
-      yjs_state: guideYjsState,
-      user_id: userId,
-      organization_id: organizationId,
-      integration_link_id: null,
-      full_width: false,
-      is_favorited: false,
-      published: false,
-      parent_id: null,
-      sort_order: 0,
+      withTimestamps({
+        id: onboardingDocId,
+        title: guideTitle,
+        yjs_state: guideYjsState,
+        user_id: userId,
+        organization_id: organizationId,
+        full_width: false,
+        is_favorited: false,
+        published: false,
+        parent_id: null,
+        sort_order: 0,
     }),
   );
 
@@ -154,7 +153,6 @@ async function createOnboardingDocumentsWithEmbeddings(
         yjs_state: yjsState,
         user_id: userId,
         organization_id: organizationId,
-        integration_link_id: null,
         is_favorited: false,
         full_width: false,
         published: false,

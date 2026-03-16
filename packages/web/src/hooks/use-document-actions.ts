@@ -18,7 +18,6 @@ export function useDocumentActions() {
 
   const createDocument = async (
     parentId?: string,
-    integrationLinkId?: string,
     initialContent?: string,
     title?: string,
     collectionId?: string,
@@ -32,7 +31,6 @@ export function useDocumentActions() {
         organizationId: organization.id,
         parentId,
         collectionId,
-        integrationLinkId,
         content: initialContent,
         title,
       }),
@@ -43,7 +41,6 @@ export function useDocumentActions() {
 
     trackEvent("document_created", {
       has_parent: !!parentId,
-      has_integration: !!integrationLinkId,
       has_collection: !!collectionId,
       has_initial_content: !!initialContent,
     });
@@ -56,7 +53,6 @@ export function useDocumentActions() {
   const deleteDocument = async (
     documentId: string,
     redirectAfterDelete = false,
-    integrationLinkId?: string | null,
     showToast = true,
   ) => {
     const performDelete = async () => {
@@ -69,7 +65,7 @@ export function useDocumentActions() {
         );
 
         trackEvent("document_deleted", {
-          has_integration: !!integrationLinkId,
+          has_integration: false,
         });
 
         // Remove the tab from the tab bar
@@ -93,23 +89,7 @@ export function useDocumentActions() {
       }
     };
 
-    if (integrationLinkId) {
-      const { confirmDialog } = require("@/atoms/confirm-dialog");
-      confirmDialog({
-        title: "Delete from Integration?",
-        message:
-          "This document is part of an integration. Deleting it will also delete the corresponding file in the external provider (e.g. GitHub). This action cannot be undone.",
-        confirmLabel: "Delete & Remove",
-        destuctive: true,
-        onConfirm: () => {
-          void performDelete();
-        },
-      });
-
-      return false;
-    } else {
-      return await performDelete();
-    }
+    return await performDelete();
   };
 
   const publishDocument = (documentId: string) => {

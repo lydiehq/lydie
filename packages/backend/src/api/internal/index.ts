@@ -8,7 +8,6 @@ import { AssistantRoute } from "./assistant";
 import { BillingRoute } from "./billing";
 import { DocumentContentRoute } from "./document-content";
 import { ImagesRoute } from "./images";
-import { IntegrationsRoute } from "./integrations";
 import { LLMReplaceRoute } from "./llm-replace";
 import { MDXImportRoute } from "./mdx-import";
 import { authenticatedWithOrganization, internalRateLimit } from "./middleware";
@@ -63,7 +62,6 @@ const organizationScopedRouter = new Hono<{
 export const InternalApi = new Hono()
   .route("/public", publicRouter)
   .route("/zero", ZeroRoute)
-  .route("/integrations", IntegrationsRoute)
   .route("/", organizationScopedRouter)
   .onError((err, c) => {
     console.error(err);

@@ -43,11 +43,6 @@ export function DocumentMenu({
   );
 
   const handleDelete = () => {
-    if (document?.integration_link_id) {
-      void deleteDocument(documentId, currentDocId === documentId, document.integration_link_id);
-      return;
-    }
-
     const itemName = documentName;
 
     confirmDialog({
@@ -161,9 +156,7 @@ export function DocumentMenu({
             Create template from page
           </MenuItem>
         )}
-        {document?.integration_link_id && !document?.published && (
-          <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>
-        )}
+        {!document?.published && <MenuItem onAction={() => publishDocument(documentId)}>Publish</MenuItem>}
         <MenuItem onAction={handleDelete}>Delete</MenuItem>
       </Menu>
 

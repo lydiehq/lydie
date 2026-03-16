@@ -108,9 +108,6 @@ export const organizationQueries = {
             .orderBy("sort_order", "asc")
             .orderBy("created_at", "desc")
             .related("collection"),
-        )
-        .related("integrationConnections", (q) =>
-          q.orderBy("created_at", "desc").related("links", (links) => links),
         );
     },
   ),

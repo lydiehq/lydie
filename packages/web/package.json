@@ -3,9 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "bun --filter=@lydie/scripts copy-integration-assets",
     "dev": "vite --port 3000",
-    "prebuild": "bun --filter=@lydie/scripts copy-integration-assets",
     "build": "vite build",
     "serve": "vite preview",
     "test": "vitest run",
@@ -27,7 +25,6 @@
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
-    "@lydie/integrations": "workspace:*",
     "@lydie/ui": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@rocicorp/zero": "catalog:",

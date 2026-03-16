@@ -6,8 +6,6 @@ import { moveDocumentMutation } from "./server-mutators/documents/move";
 import { publishDocumentMutation } from "./server-mutators/documents/publish";
 import { updateDocumentMutation } from "./server-mutators/documents/update";
 import { createFeedbackMutation } from "./server-mutators/feedback/create";
-import { createIntegrationLinkMutation } from "./server-mutators/integrations/create-link";
-import { disconnectIntegrationMutation } from "./server-mutators/integrations/disconnect";
 import { createOrganizationMutation } from "./server-mutators/organization/create";
 import { createTemplateMutation } from "./server-mutators/templates/create";
 
@@ -23,16 +21,10 @@ export function createServerMutators(asyncTasks: Array<() => Promise<void>>) {
       create: createOrganizationMutation(context),
     },
     document: {
-      publish: publishDocumentMutation(context),
+      publish: publishDocumentMutation(),
       update: updateDocumentMutation(context),
-      move: moveDocumentMutation(context),
-      delete: deleteDocumentMutation(context),
-    },
-    integrationConnection: {
-      disconnect: disconnectIntegrationMutation(context),
-    },
-    integration: {
-      createLink: createIntegrationLinkMutation(context),
+      move: moveDocumentMutation(),
+      delete: deleteDocumentMutation(),
     },
     feedback: {
       create: createFeedbackMutation(context),

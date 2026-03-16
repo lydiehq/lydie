@@ -499,7 +499,7 @@ export function ReplaceInDocumentTool({
     }
 
     try {
-      await createDocument(undefined, undefined, replaceText, newTitle);
+      await createDocument(undefined, replaceText, newTitle);
     } catch (error) {
       console.error("Failed to create page:", error);
     }

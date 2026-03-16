@@ -15,7 +15,6 @@
     "@aws-sdk/client-sqs": "^3.1009.0",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
-    "@lydie/integrations": "workspace:*",
     "@rocicorp/zero": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",

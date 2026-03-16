@@ -23,7 +23,6 @@
     "@hono/zod-validator": "^0.7.6",
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
-    "@lydie/integrations": "workspace:*",
     "@lydie/zero": "workspace:*",
     "@rocicorp/zero": "catalog:",
     "@sentry/node": "^10.43.0",

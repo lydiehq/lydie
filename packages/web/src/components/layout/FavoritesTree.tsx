@@ -22,7 +22,7 @@ export function FavoritesTree() {
   // Filter for favorited documents only and show them in a flat list
   const treeItems = useMemo(() => {
     const docs = orgData?.documents || [];
-    const favoritedDocs = docs.filter((doc) => doc.is_favorited && !doc.integration_link_id);
+    const favoritedDocs = docs.filter((doc) => doc.is_favorited);
 
     // Sort by sort_order
     const sortedDocs = [...favoritedDocs].sort((a, b) => {

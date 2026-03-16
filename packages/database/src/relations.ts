@@ -24,13 +24,8 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.documentsTable.id,
       to: r.collectionFieldsTable.documentId,
     }),
-    integrationLink: r.one.integrationLinksTable({
-      from: r.documentsTable.integrationLinkId,
-      to: r.integrationLinksTable.id,
-    }),
     embeddings: r.many.documentEmbeddingsTable(),
     titleEmbeddings: r.many.documentTitleEmbeddingsTable(),
-    syncMetadata: r.many.syncMetadataTable(),
     publications: r.many.documentPublicationsTable(),
     versions: r.many.documentVersionsTable(),
     collectionViewUsages: r.many.collectionViewUsagesTable({
@@ -187,7 +182,6 @@ export const relations = defineRelations(schema, (r) => ({
     apiKeys: r.many.apiKeysTable(),
     documentComponents: r.many.documentComponentsTable(),
     llmUsage: r.many.llmUsageTable(),
-    integrationConnections: r.many.integrationConnectionsTable(),
     settings: r.one.organizationSettingsTable({
       from: r.organizationsTable.id,
       to: r.organizationSettingsTable.organizationId,
@@ -307,44 +301,6 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
-  integrationConnectionsTable: {
-    organization: r.one.organizationsTable({
-      from: r.integrationConnectionsTable.organizationId,
-      to: r.organizationsTable.id,
-    }),
-    syncMetadata: r.many.syncMetadataTable(),
-    links: r.many.integrationLinksTable(),
-    logs: r.many.integrationActivityLogsTable(),
-  },
-
-  integrationLinksTable: {
-    connection: r.one.integrationConnectionsTable({
-      from: r.integrationLinksTable.connectionId,
-      to: r.integrationConnectionsTable.id,
-    }),
-    organization: r.one.organizationsTable({
-      from: r.integrationLinksTable.organizationId,
-      to: r.organizationsTable.id,
-    }),
-    documents: r.many.documentsTable(),
-  },
-
-  syncMetadataTable: {
-    document: r.one.documentsTable({
-      from: r.syncMetadataTable.documentId,
-      to: r.documentsTable.id,
-    }),
-    connection: r.one.integrationConnectionsTable({
-      from: r.syncMetadataTable.connectionId,
-      to: r.integrationConnectionsTable.id,
-    }),
-  },
-  integrationActivityLogsTable: {
-    connection: r.one.integrationConnectionsTable({
-      from: r.integrationActivityLogsTable.connectionId,
-      to: r.integrationConnectionsTable.id,
-    }),
-  },
   documentPublicationsTable: {
     document: r.one.documentsTable({
       from: r.documentPublicationsTable.documentId,

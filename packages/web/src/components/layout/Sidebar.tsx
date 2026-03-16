@@ -201,7 +201,7 @@ const FavoritesSection = memo(function FavoritesSection() {
   );
 
   const documents = orgData?.documents || [];
-  const hasFavorites = documents.some((doc) => doc.is_favorited && !doc.integration_link_id);
+  const hasFavorites = documents.some((doc) => doc.is_favorited);
 
   if (!hasFavorites) {
     return null;

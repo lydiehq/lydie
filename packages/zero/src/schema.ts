@@ -76,7 +76,6 @@ const documents = table("documents")
     parent_id: string().optional(),
     collection_id: string().optional(),
     organization_id: string(),
-    integration_link_id: string().optional(),
     external_id: string().optional(),
     cover_image: string().optional(),
     full_width: boolean(),
@@ -319,47 +318,6 @@ const organizationSettings = table("organization_settings")
   })
   .primaryKey("id");
 
-const integrationConnections = table("integration_connections")
-  .columns({
-    id: string(),
-    integration_type: string(),
-    organization_id: string(),
-    config: json(),
-    status: string(), // 'active', 'revoked', 'error', 'suspended'
-    status_message: string().optional(),
-    ...timestamps,
-  })
-  .primaryKey("id");
-
-// Integration links - configurable "symlinks" to external sources
-const integrationLinks = table("integration_links")
-  .columns({
-    id: string(),
-    name: string(),
-    connection_id: string(),
-    organization_id: string(),
-    integration_type: string(), // Denormalized from connection for easier querying
-    config: json(), // Integration-specific: { owner, repo, branch, path } for GitHub
-    last_synced_at: number().optional(),
-    sync_status: string().optional(), // 'idle', 'pulling', 'pushing', 'error'
-    ...timestamps,
-  })
-  .primaryKey("id");
-
-const syncMetadata = table("sync_metadata")
-  .columns({
-    id: string(),
-    document_id: string(),
-    connection_id: string(),
-    external_id: string(),
-    last_synced_at: number().optional(),
-    last_synced_hash: string().optional(),
-    sync_status: string(),
-    sync_error: string().optional(),
-    ...timestamps,
-  })
-  .primaryKey("id");
-
 const documentsRelations = relationships(documents, ({ one, many }) => ({
   parent: one({
     sourceField: ["parent_id"],
@@ -386,11 +344,6 @@ const documentsRelations = relationships(documents, ({ one, many }) => ({
     sourceField: ["organization_id"],
     destField: ["id"],
     destSchema: organizations,
-  }),
-  integrationLink: one({
-    sourceField: ["integration_link_id"],
-    destField: ["id"],
-    destSchema: integrationLinks,
   }),
   publications: many({
     sourceField: ["id"],
@@ -585,11 +538,6 @@ const organizationsRelations = relationships(organizations, ({ one, many }) => (
     destField: ["organization_id"],
     destSchema: llmUsage,
   }),
-  integrationConnections: many({
-    sourceField: ["id"],
-    destField: ["organization_id"],
-    destSchema: integrationConnections,
-  }),
   settings: one({
     sourceField: ["id"],
     destField: ["organization_id"],
@@ -744,72 +692,6 @@ const organizationSettingsRelations = relationships(organizationSettings, ({ one
   }),
 }));
 
-const integrationConnectionsRelations = relationships(integrationConnections, ({ one, many }) => ({
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  syncMetadata: many({
-    sourceField: ["id"],
-    destField: ["connection_id"],
-    destSchema: syncMetadata,
-  }),
-  links: many({
-    sourceField: ["id"],
-    destField: ["connection_id"],
-    destSchema: integrationLinks,
-  }),
-}));
-
-const integrationLinksRelations = relationships(integrationLinks, ({ one, many }) => ({
-  connection: one({
-    sourceField: ["connection_id"],
-    destField: ["id"],
-    destSchema: integrationConnections,
-  }),
-  organization: one({
-    sourceField: ["organization_id"],
-    destField: ["id"],
-    destSchema: organizations,
-  }),
-  documents: many({
-    sourceField: ["id"],
-    destField: ["integration_link_id"],
-    destSchema: documents,
-  }),
-}));
-
-const syncMetadataRelations = relationships(syncMetadata, ({ one }) => ({
-  document: one({
-    sourceField: ["document_id"],
-    destField: ["id"],
-    destSchema: documents,
-  }),
-  connection: one({
-    sourceField: ["connection_id"],
-    destField: ["id"],
-    destSchema: integrationConnections,
-  }),
-}));
-const integrationActivityLogs = table("integration_activity_logs")
-  .columns({
-    id: string(),
-    connection_id: string(),
-    activity_type: string(),
-    activity_status: string(),
-    integration_type: string(),
-    ...timestamps,
-  })
-  .primaryKey("id");
-
-const integrationActivityLogsRelations = relationships(integrationActivityLogs, ({ one }) => ({
-  connection: one({
-    sourceField: ["connection_id"],
-    destField: ["id"],
-    destSchema: integrationConnections,
-  }),
-}));
 const feedbackSubmissions = table("feedback_submissions")
   .columns({
     id: string(),
@@ -1114,10 +996,6 @@ export const schema = createSchema({
     llmUsage,
     userSettings,
     organizationSettings,
-    integrationConnections,
-    integrationLinks,
-    syncMetadata,
-    integrationActivityLogs,
     documentPublications,
     feedbackSubmissions,
     templates,
@@ -1153,10 +1031,6 @@ export const schema = createSchema({
     llmUsageRelations,
     userSettingsRelations,
     organizationSettingsRelations,
-    integrationConnectionsRelations,
-    integrationLinksRelations,
-    syncMetadataRelations,
-    integrationActivityLogsRelations,
     documentPublicationsRelations,
     feedbackSubmissionsRelations,
     templatesRelations,

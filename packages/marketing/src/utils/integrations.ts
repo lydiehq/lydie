@@ -1,4 +1,4 @@
-import { integrationMetadata } from "@lydie/integrations/metadata";
+import { integrations as integrationData } from "../data/integrations";
 
 export interface Integration {
   id: string;
@@ -8,13 +8,10 @@ export interface Integration {
   extendedDescription?: string;
 }
 
-// Map IntegrationMetadata to Integration format for landing pages
-export const integrations: Integration[] = integrationMetadata.map((meta) => ({
-  id: meta.id,
-  title: meta.name,
-  description: meta.description,
-  icon: meta.icon,
-  extendedDescription: meta.extendedDescription,
+export const integrations: Integration[] = integrationData.map((integration) => ({
+  id: integration.id,
+  title: integration.name,
+  description: integration.description,
 }));
 
 export function getIntegration(id: string): Integration | undefined {

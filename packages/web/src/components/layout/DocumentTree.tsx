@@ -66,7 +66,7 @@ export function DocumentTree({ renderEmptyState }: Props) {
   const treeDocuments = useMemo(
     () =>
       (orgData?.documents || []).filter((document) => {
-        return !document.collection_id && !document.integration_link_id;
+        return !document.collection_id;
       }),
     [orgData?.documents],
   );

@@ -19,7 +19,6 @@
     "@lydie/core": "workspace:*",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
-    "@lydie/integrations": "workspace:*",
     "@lydie/ui": "workspace:*",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-form": "^1.28.5",

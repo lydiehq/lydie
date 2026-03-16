@@ -1,8 +1,6 @@
 ---
 import { Container } from "../Container";
 import { Eyebrow } from "./Eyebrow";
-import githubLogo from "../../../public/integrations/github/assets/logo.png";
-import shopifyLogo from "../../../public/integrations/shopify/assets/logo.png";
 ---
 
 <section class="py-16 md:py-24 relative overflow-hidden">
@@ -26,7 +24,7 @@ import shopifyLogo from "../../../public/integrations/shopify/assets/logo.png";
         <!-- GitHub Integration -->
         <div class="integration-box integration-box-left">
           <div class="integration-logo-container">
-            <img src={githubLogo.src} alt="GitHub" class="integration-logo" />
+            <div class="integration-logo-text">GH</div>
           </div>
           <div class="integration-label">GitHub</div>
           <div class="integration-content-box">
@@ -53,7 +51,7 @@ import shopifyLogo from "../../../public/integrations/shopify/assets/logo.png";
         <!-- Shopify Integration -->
         <div class="integration-box integration-box-right">
           <div class="integration-logo-container">
-            <img src={shopifyLogo.src} alt="Shopify" class="integration-logo" />
+            <div class="integration-logo-text">S</div>
           </div>
           <div class="integration-label">Shopify</div>
           <div class="integration-content-box">
@@ -189,6 +187,14 @@ import shopifyLogo from "../../../public/integrations/shopify/assets/logo.png";
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  .integration-logo-text {
+    color: #111827;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
   }
 
   .lydie-logo {

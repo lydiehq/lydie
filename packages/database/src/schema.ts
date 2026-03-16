@@ -180,9 +180,6 @@ export const documentsTable = pgTable(
     organizationId: text("organization_id")
       .notNull()
       .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    integrationLinkId: text("integration_link_id").references(() => integrationLinksTable.id, {
-      onDelete: "set null",
-    }),
     externalId: text("external_id"),
     coverImage: text("cover_image"),
     fullWidth: boolean("full_width").notNull().default(false),
@@ -197,7 +194,6 @@ export const documentsTable = pgTable(
   (table) => [
     index("documents_parent_id_idx").on(table.parentId),
     index("documents_collection_id_idx").on(table.collectionId),
-    index("documents_integration_link_id_idx").on(table.integrationLinkId),
     // Below indexes are important for performance, don't delete!
     index("documents_org_created_id_not_deleted_idx")
       .on(table.organizationId, sql`${table.createdAt} DESC`, table.id)
@@ -569,117 +565,6 @@ export const organizationSettingsTable = pgTable("organization_settings", {
     .references(() => organizationsTable.id, { onDelete: "cascade" }),
   ...timestamps,
 });
-
-export const integrationConnectionsTable = pgTable(
-  "integration_connections",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    integrationType: text("integration_type").notNull(), // 'github', 'shopify', 'wordpress', etc.
-    organizationId: text("organization_id")
-      .notNull()
-      .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    config: jsonb("config").notNull(), // Platform-specific config (access tokens, etc.)
-    status: text("status").notNull().default("active"), // 'active', 'revoked', 'error', 'suspended'
-    statusMessage: text("status_message"), // Optional error/status details
-    ...timestamps,
-  },
-  (table) => [
-    index("integration_connections_organization_created_id_idx").on(
-      table.organizationId,
-      table.createdAt,
-      table.id,
-    ),
-  ],
-);
-
-export const integrationLinksTable = pgTable(
-  "integration_links",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    name: text("name").notNull(), // Display name (e.g., "Web Docs", "API Reference")
-    connectionId: text("connection_id")
-      .notNull()
-      .references(() => integrationConnectionsTable.id, {
-        onDelete: "cascade",
-      }),
-    organizationId: text("organization_id")
-      .notNull()
-      .references(() => organizationsTable.id, { onDelete: "cascade" }),
-    integrationType: text("integration_type").notNull(),
-    config: jsonb("config").notNull(),
-    lastSyncedAt: timestamp("last_synced_at"),
-    syncStatus: text("sync_status").default("idle"), // 'idle', 'pulling', 'pushing', 'error'
-    ...timestamps,
-  },
-  (table) => [
-    index("integration_links_connection_created_id_idx").on(
-      table.connectionId,
-      table.createdAt,
-      table.id,
-    ),
-    index("integration_links_integration_type_idx").on(table.integrationType),
-    index("integration_links_organization_created_id_idx").on(
-      table.organizationId,
-      table.createdAt,
-      table.id,
-    ),
-  ],
-);
-
-export const syncMetadataTable = pgTable(
-  "sync_metadata",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    documentId: text("document_id")
-      .notNull()
-      .references(() => documentsTable.id, { onDelete: "cascade" }),
-    connectionId: text("connection_id")
-      .notNull()
-      .references(() => integrationConnectionsTable.id, {
-        onDelete: "cascade",
-      }),
-    externalId: text("external_id").notNull(), // ID/path in external system
-    lastSyncedAt: timestamp("last_synced_at"),
-    lastSyncedHash: text("last_synced_hash"), // Content hash for change detection
-    syncStatus: text("sync_status").notNull().default("pending"), // 'synced', 'pending', 'conflict', 'error'
-    syncError: text("sync_error"), // Error message if sync failed
-    ...timestamps,
-  },
-  (table) => [
-    uniqueIndex("sync_metadata_document_connection_idx").on(table.documentId, table.connectionId),
-    index("sync_metadata_document_id_idx").on(table.documentId),
-    index("sync_metadata_connection_id_idx").on(table.connectionId),
-  ],
-);
-
-export const integrationActivityLogsTable = pgTable(
-  "integration_activity_logs",
-  {
-    id: text("id")
-      .primaryKey()
-      .notNull()
-      .$default(() => createId()),
-    connectionId: text("connection_id")
-      .notNull()
-      .references(() => integrationConnectionsTable.id, {
-        onDelete: "cascade",
-      }),
-    integrationType: text("integration_type").notNull(), // Denormalized from connection for easier querying with Zero
-    activityType: text("activity_type").notNull(), // 'push', 'pull', 'sync'
-    activityStatus: text("activity_status").notNull(), // 'success', 'failure', 'conflict', 'error'
-    ...timestamps,
-  },
-  (table) => [index("integration_activity_logs_connection_id_idx").on(table.connectionId)],
-);
 
 export const assetsTable = pgTable(
   "assets",

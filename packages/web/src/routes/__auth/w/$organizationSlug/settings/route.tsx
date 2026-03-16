@@ -9,7 +9,6 @@ import {
   SettingsFilled,
   ShieldErrorFilled,
   SparkleFilled,
-  TabDesktopMultiple16Filled,
 } from "@fluentui/react-icons";
 import { sidebarItemIconStyles, sidebarItemStyles } from "@lydie/ui/components/editor/styles";
 import { Eyebrow } from "@lydie/ui/components/layout/Eyebrow";
@@ -85,12 +84,6 @@ const settingsRoutes: SettingsSection[] = [
         path: "/w/$organizationSlug/settings/templates",
         label: "Templates",
         icon: DocumentCopyFilled,
-        adminOnly: true,
-      },
-      {
-        path: "/w/$organizationSlug/settings/integrations/",
-        label: "Integrations",
-        icon: TabDesktopMultiple16Filled,
         adminOnly: true,
       },
       {

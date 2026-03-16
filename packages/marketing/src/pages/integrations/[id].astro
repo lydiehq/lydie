@@ -38,17 +38,11 @@ if (!integration) {
     <div class="flex flex-col gap-y-6">
       <div class="flex flex-col gap-y-4">
         <div class="flex items-center gap-x-4">
-          {
-            integration.icon && (
-              <div class="rounded-lg p-2 ring ring-black/5">
-                <img
-                  src={`/integrations/${integration.id}/assets/${integration.icon}`}
-                  alt={`${integration.title} logo`}
-                  class="w-16 h-16 object-contain rounded"
-                />
-              </div>
-            )
-          }
+          <div class="rounded-lg p-2 ring ring-black/5 w-20 h-20 bg-gray-50 flex items-center justify-center">
+            <span class="text-gray-700 text-xl font-semibold">
+              {integration.title.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
           <div class="flex flex-col gap-y-2">
             <h1
               class="text-3xl font-heading font-medium tracking-tight text-gray-800"

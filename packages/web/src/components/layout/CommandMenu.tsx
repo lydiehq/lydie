@@ -8,12 +8,10 @@ import {
   DocumentCopyRegular,
   HomeFilled,
   PaymentRegular,
-  PlugConnectedRegular,
   SearchFilled,
   SettingsRegular,
   SparkleRegular,
 } from "@fluentui/react-icons";
-import { type IntegrationMetadata, integrationMetadata } from "@lydie/integrations/client";
 import { DocumentThumbnailIcon } from "@lydie/ui/components/icons/DocumentThumbnailIcon";
 import { mutators } from "@lydie/zero/mutators";
 import { queries } from "@lydie/zero/queries";
@@ -44,7 +42,6 @@ import { commandMenuOpenAtom } from "@/atoms/command-menu";
 import { confirmDialog } from "@/atoms/confirm-dialog";
 import { isAdmin } from "@/utils/admin";
 import { authClient } from "@/utils/auth";
-import { getIntegrationIconUrl } from "@/utils/integration-icons";
 
 interface MenuItem {
   id: string;
@@ -86,6 +83,11 @@ type NavigationRoute = {
 };
 
 type MenuView = "root" | "switch-workspace";
+type WorkspaceOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
 function MenuSectionsList({
   sections,
@@ -210,10 +212,20 @@ export function CommandMenu() {
 
   const [isOpen, setOpen] = useAtom(commandMenuOpenAtom);
   const [memberships] = useQuery(queries.organizations.byUser({}));
-  const organizations = useMemo(
-    () => memberships?.map((membership) => membership.organization) ?? [],
-    [memberships],
-  );
+  const organizations = useMemo<WorkspaceOrganization[]>(() => {
+    const list: WorkspaceOrganization[] = [];
+
+    for (const membership of memberships ?? []) {
+      const org = membership.organization;
+      if (!org) {
+        continue;
+      }
+
+      list.push({ id: org.id, name: org.name, slug: org.slug });
+    }
+
+    return list;
+  }, [memberships]);
 
   const currentDocumentId = params.id as string | undefined;
   const [currentDocument] = useQuery(
@@ -410,12 +422,6 @@ export function CommandMenu() {
         icon: ArrowUploadRegular,
         path: "/settings/import",
       },
-      {
-        id: "integrations",
-        label: "Go to integrations",
-        icon: PlugConnectedRegular,
-        path: "/settings/integrations",
-      },
     ];
 
     const adminNavigationRoutes: NavigationRoute[] = [
@@ -464,14 +470,6 @@ export function CommandMenu() {
           navigateByPath(`${workspaceBasePath}${route.path}`);
         },
       })),
-      ...integrationMetadata.map((integration: IntegrationMetadata) => ({
-        id: `integration-${integration.id}`,
-        label: `Go to ${integration.name} integration`,
-        iconUrl: getIntegrationIconUrl(integration.id) || undefined,
-        action: () => {
-          navigateByPath(`${workspaceBasePath}/settings/integrations/${integration.id}`);
-        },
-      })),
       ...(userIsAdmin
         ? adminNavigationRoutes.map((route) => ({
             id: route.id,
@@ -509,15 +507,15 @@ export function CommandMenu() {
 
   const workspaceMenuSections = useMemo<MenuSectionType[]>(() => {
     const workspaceItems: MenuItem[] = organizations.map((org) => ({
-      id: `workspace-${org.id}`,
-      label: `${org.name}${org.slug === organization.slug ? " (current)" : ""}`,
-      action: () => {
-        if (org.slug === organization.slug) {
-          return;
-        }
-        goToOrganization(org);
-      },
-    }));
+        id: `workspace-${org.id}`,
+        label: `${org.name}${org.slug === organization.slug ? " (current)" : ""}`,
+        action: () => {
+          if (org.slug === organization.slug) {
+            return;
+          }
+          goToOrganization(org);
+        },
+      }));
 
     return [
       {
@@ -529,17 +527,17 @@ export function CommandMenu() {
         id: "workspace-actions",
         heading: "Actions",
         items: [
-            {
-              id: "create-workspace",
-              label: "Create new workspace",
-              icon: AddRegular,
-              action: () => {
-                navigateByPath("/new");
-              },
+          {
+            id: "create-workspace",
+            label: "Create new workspace",
+            icon: AddRegular,
+            action: () => {
+              navigateByPath("/new");
             },
-          ],
-        },
-      ];
+          },
+        ],
+      },
+    ];
   }, [goToOrganization, navigateByPath, organization.slug, organizations]);
 
   const menuSections = menuView === "root" ? rootMenuSections : workspaceMenuSections;

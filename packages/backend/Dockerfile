@@ -8,7 +8,6 @@ COPY ./tsconfig.json ./
 COPY ./packages/core/package.json ./packages/core/package.json
 COPY ./packages/backend/package.json ./packages/backend/package.json
 COPY ./packages/database/package.json ./packages/database/package.json
-COPY ./packages/integrations/package.json ./packages/integrations/package.json
 COPY ./packages/zero/package.json ./packages/zero/package.json
 COPY ./packages/editor/package.json ./packages/editor/package.json
 

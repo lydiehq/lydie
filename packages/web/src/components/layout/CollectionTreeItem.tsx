@@ -44,7 +44,7 @@ export const CollectionTreeItem = memo(function CollectionTreeItem({
   };
 
   const handleAddDocument = () => {
-    void createDocument(undefined, undefined, undefined, undefined, collection.id);
+    void createDocument(undefined, undefined, undefined, collection.id);
   };
 
   return (

@@ -192,9 +192,7 @@ function ItemContextMenu({
         <ActionButton
           ariaLabel="Add sub document"
           icon={Add12Regular}
-          onPress={() =>
-            createDocument(itemId, undefined, undefined, undefined, defaultCollectionId)
-          }
+          onPress={() => createDocument(itemId, undefined, undefined, defaultCollectionId)}
           tooltip="Add page inside"
         />
       )}

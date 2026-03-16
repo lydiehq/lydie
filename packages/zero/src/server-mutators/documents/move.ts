@@ -1,40 +1,22 @@
-import { convertYjsToJson } from "@lydie/core/yjs-to-json";
-import { db } from "@lydie/database";
-import { integrationRegistry } from "@lydie/integrations";
 import { defineMutator } from "@rocicorp/zero";
 import { z } from "zod";
 
 import { hasOrganizationAccess } from "../../auth";
 import { mutators as sharedMutators } from "../../mutators/index";
-import { zql } from "../../schema";
-import { MutatorContext } from "../../server-mutators";
 
-export const moveDocumentMutation = ({ asyncTasks }: MutatorContext) =>
+export const moveDocumentMutation = () =>
   defineMutator(
     z.object({
       documentId: z.string(),
       targetParentId: z.string().optional().nullable(),
-      targetIntegrationLinkId: z.string().optional().nullable(),
       organizationId: z.string(),
     }),
     async ({
       tx,
       ctx,
-      args: { documentId, targetParentId, targetIntegrationLinkId, organizationId },
+      args: { documentId, targetParentId, organizationId },
     }) => {
       hasOrganizationAccess(ctx, organizationId);
-
-      // Get current document state
-      const doc = await tx.run(
-        zql.documents.where("id", documentId).where("organization_id", organizationId).one(),
-      );
-
-      if (!doc) {
-        throw new Error(`Document not found: ${documentId}`);
-      }
-
-      const previousIntegrationLinkId = doc.integration_link_id;
-      const isPublished = doc.published;
 
       // Perform the move in the database using the generic move mutator
       await sharedMutators.document.move.fn({
@@ -43,124 +25,8 @@ export const moveDocumentMutation = ({ asyncTasks }: MutatorContext) =>
         args: {
           documentId,
           targetParentId: targetParentId || null,
-          targetIntegrationLinkId: targetIntegrationLinkId || null,
           organizationId,
         },
       });
-
-      // Handle Side Effects
-      const isMovingOut = previousIntegrationLinkId && !targetIntegrationLinkId && doc.external_id; // Only delete if it was synced
-
-      const isMovingIn = !previousIntegrationLinkId && targetIntegrationLinkId && isPublished;
-
-      // 1. Handle Drag OUT -> Delete from external
-      if (isMovingOut) {
-        asyncTasks.push(async () => {
-          await deleteFromIntegration(documentId, doc.external_id!, previousIntegrationLinkId!);
-        });
-      }
-
-      // 2. Handle Drag IN (Published) -> Push to external
-      if (isMovingIn) {
-        asyncTasks.push(async () => {
-          await pushToIntegration(documentId, targetIntegrationLinkId!);
-        });
-      }
     },
   );
-
-// --- Helper Functions (Reused/Adapted) ---
-
-async function deleteFromIntegration(
-  documentId: string,
-  externalId: string,
-  integrationLinkId: string,
-) {
-  try {
-    const link = await db.query.integrationLinksTable.findFirst({
-      where: { id: integrationLinkId },
-      with: { connection: true },
-    });
-
-    if (!link || !link.connection) return;
-
-    const integration = integrationRegistry.get(link.connection.integrationType);
-    if (!integration) return;
-
-    const mergedConfig = {
-      ...(link.connection.config as Record<string, any>),
-      ...(link.config as Record<string, any>),
-    };
-
-    console.log(`[Move] Deleting document ${documentId} from integration (moved out)`);
-
-    await integration.delete({
-      documentId,
-      externalId,
-      connection: {
-        id: link.connection.id,
-        integrationType: link.connection.integrationType,
-        organizationId: link.connection.organizationId,
-        config: mergedConfig,
-        createdAt: link.connection.createdAt,
-        updatedAt: link.connection.updatedAt,
-      },
-      commitMessage: `Delete ${externalId} (moved out of integration)`,
-    });
-  } catch (error) {
-    console.error(`[Move] Error removing document from integration:`, error);
-  }
-}
-
-async function pushToIntegration(documentId: string, integrationLinkId: string) {
-  try {
-    const link = await db.query.integrationLinksTable.findFirst({
-      where: { id: integrationLinkId },
-      with: { connection: true },
-    });
-
-    if (!link || !link.connection) return;
-
-    const document = await db.query.documentsTable.findFirst({
-      where: { id: documentId },
-    });
-
-    if (!document || !document.published) return;
-
-    const integration = integrationRegistry.get(link.connection.integrationType);
-    if (!integration) return;
-
-    const mergedConfig = {
-      ...(link.connection.config as Record<string, any>),
-      ...(link.config as Record<string, any>),
-    };
-
-    console.log(`[Move] Pushing document ${documentId} to integration (moved in)`);
-
-    const jsonContent = convertYjsToJson(document.yjsState);
-
-    await integration.push({
-      document: {
-        id: document.id,
-        title: document.title,
-        content: jsonContent,
-        published: document.published,
-        updatedAt: document.updatedAt,
-        organizationId: document.organizationId,
-        externalId: document.externalId,
-        parentId: document.parentId,
-      },
-      connection: {
-        id: link.connection.id,
-        integrationType: link.connection.integrationType,
-        organizationId: link.connection.organizationId,
-        config: mergedConfig,
-        createdAt: link.connection.createdAt,
-        updatedAt: link.connection.updatedAt,
-      },
-      commitMessage: `Add ${document.title} to integration (moved in)`,
-    });
-  } catch (error) {
-    console.error(`[Move] Error pushing document to integration:`, error);
-  }
-}
