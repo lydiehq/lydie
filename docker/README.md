@@ -76,6 +76,8 @@ This is the same flow CI uses. It:
 2. Runs the Playwright e2e test container (`--profile test`)
 3. Tears everything down
 
+Note: the e2e script uses a dedicated compose project name (`lydie-e2e`), so teardown only removes e2e resources and does not touch your regular local Postgres data volume.
+
 ## Scripts
 
 | Command | Description |
