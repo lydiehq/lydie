@@ -260,22 +260,6 @@ const MessagePart = memo(function MessagePart({
     return null;
   }
 
-  if (part.type?.startsWith("tool-") && import.meta.env.DEV) {
-    console.log("Unknown tool type:", part.type, part);
-    return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2 text-sm">
-        <div className="font-medium text-yellow-800">Debug: Unknown Tool</div>
-        <div className="text-yellow-700 text-xs mt-1">Type: {part.type}</div>
-        <details className="mt-2">
-          <summary className="text-xs cursor-pointer text-yellow-600">Show raw data</summary>
-          <pre className="text-xs mt-1 bg-yellow-100 p-2 rounded overflow-auto">
-            {JSON.stringify(part, null, 2)}
-          </pre>
-        </details>
-      </div>
-    );
-  }
-
   return null;
 });
 

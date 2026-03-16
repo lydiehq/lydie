@@ -4,7 +4,7 @@ import {
   getDefaultAgentByName,
   isDefaultAgentId,
 } from "@lydie/core/ai/agents/defaults";
-import { getDefaultModel, getModelById, type LLMModel } from "@lydie/core/ai/models";
+import { getDefaultModel, getModelById } from "@lydie/core/ai/models";
 import { createCollection } from "@lydie/core/ai/tools/create-collection";
 import { createCollectionEntry } from "@lydie/core/ai/tools/create-collection-entry";
 import { createDocument } from "@lydie/core/ai/tools/create-document";
@@ -66,6 +66,72 @@ const BASE_PROVIDER_OPTIONS: Record<string, any> = {
     order: ["groq", "cerebras", "baseten"],
   },
 };
+
+const SANITIZED_TOOL_ERROR_MESSAGE = "This tool is temporarily unavailable.";
+
+function isAbortError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeError = error as { name?: string; code?: string };
+  return maybeError.name === "AbortError" || maybeError.code === "ABORT_ERR";
+}
+
+function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
+  return !!value && typeof (value as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === "function";
+}
+
+function sanitizeToolErrorOutput() {
+  return {
+    state: "error",
+    error: SANITIZED_TOOL_ERROR_MESSAGE,
+    message: SANITIZED_TOOL_ERROR_MESSAGE,
+  };
+}
+
+function withSanitizedToolErrors(toolName: string, toolDefinition: any) {
+  if (!toolDefinition || typeof toolDefinition.execute !== "function") {
+    return toolDefinition;
+  }
+
+  const execute = toolDefinition.execute;
+
+  return {
+    ...toolDefinition,
+    execute: async (...args: any[]) => {
+      try {
+        const result = await execute(...args);
+
+        if (isAsyncIterable(result)) {
+          return (async function* () {
+            try {
+              for await (const chunk of result) {
+                yield chunk;
+              }
+            } catch (error) {
+              if (isAbortError(error)) {
+                throw error;
+              }
+
+              console.error(`[Assistant Tool Error] ${toolName}`, error);
+              yield sanitizeToolErrorOutput();
+            }
+          })();
+        }
+
+        return result;
+      } catch (error) {
+        if (isAbortError(error)) {
+          throw error;
+        }
+
+        console.error(`[Assistant Tool Error] ${toolName}`, error);
+        return sanitizeToolErrorOutput();
+      }
+    },
+  };
+}
 
 export const messageMetadataSchema = z
   .object({
@@ -234,7 +300,7 @@ export const AssistantRoute = new Hono<{
 
     // Save user message asynchronously to avoid blocking streaming start
     // This saves 20-50ms of latency per request
-    const userMessageSavePromise = saveMessage({
+    const _userMessageSavePromise = saveMessage({
       conversationId,
       parts: latestMessage.parts,
       role: "user",
@@ -316,22 +382,58 @@ export const AssistantRoute = new Hono<{
       // web_search: openai.tools.webSearch({
       //   searchContextSize: "low",
       // }),
-      find_documents: findDocuments(userId, organizationId, currentDocument?.id),
-      read_document: readDocument(userId, organizationId),
-      read_collection: readCollection(userId, organizationId),
-      create_collection: createCollection(userId, organizationId),
-      update_collection: updateCollection(userId, organizationId),
-      delete_collection: deleteCollection(userId, organizationId),
-      create_collection_entry: createCollectionEntry(userId, organizationId),
-      update_collection_entry: updateCollectionEntry(userId, organizationId),
-      scan_documents: scanDocuments(userId, organizationId, currentDocument?.id),
-      show_documents: showDocuments(userId, organizationId, currentDocument?.id),
-      move_documents: moveDocuments(userId, organizationId),
-      create_document: createDocument(userId, organizationId),
+      find_documents: withSanitizedToolErrors(
+        "find_documents",
+        findDocuments(userId, organizationId, currentDocument?.id),
+      ),
+      read_document: withSanitizedToolErrors("read_document", readDocument(userId, organizationId)),
+      read_collection: withSanitizedToolErrors(
+        "read_collection",
+        readCollection(userId, organizationId),
+      ),
+      create_collection: withSanitizedToolErrors(
+        "create_collection",
+        createCollection(userId, organizationId),
+      ),
+      update_collection: withSanitizedToolErrors(
+        "update_collection",
+        updateCollection(userId, organizationId),
+      ),
+      delete_collection: withSanitizedToolErrors(
+        "delete_collection",
+        deleteCollection(userId, organizationId),
+      ),
+      create_collection_entry: withSanitizedToolErrors(
+        "create_collection_entry",
+        createCollectionEntry(userId, organizationId),
+      ),
+      update_collection_entry: withSanitizedToolErrors(
+        "update_collection_entry",
+        updateCollectionEntry(userId, organizationId),
+      ),
+      scan_documents: withSanitizedToolErrors(
+        "scan_documents",
+        scanDocuments(userId, organizationId, currentDocument?.id),
+      ),
+      show_documents: withSanitizedToolErrors(
+        "show_documents",
+        showDocuments(userId, organizationId, currentDocument?.id),
+      ),
+      move_documents: withSanitizedToolErrors(
+        "move_documents",
+        moveDocuments(userId, organizationId),
+      ),
+      create_document: withSanitizedToolErrors(
+        "create_document",
+        createDocument(userId, organizationId),
+      ),
     };
 
     if (currentDocument?.id) {
-      tools.replace_in_document = replaceInDocument();
+      tools.replace_in_document = withSanitizedToolErrors(
+        "replace_in_document",
+        replaceInDocument(),
+      );
     }
 
     if (!gateway) {
