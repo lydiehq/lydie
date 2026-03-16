@@ -118,16 +118,37 @@ function RouteComponent() {
     setShowKey(false);
   };
 
-  const handleDeleteOrganization = () => {
+  const [memberships] = useQuery(queries.organizations.byUser({}));
+  const organizations =
+    memberships
+      ?.map((membership) => membership.organization)
+      .filter((org): org is NonNullable<typeof org> => Boolean(org)) ?? [];
+  const fallbackOrganization =
+    organizations
+      .filter((org) => org.id !== organization.id)
+      .sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0))[0] ?? null;
+
+  const handleDeleteOrganization = async () => {
     if (!organization) {
       toast.error("Organization not found");
       return;
     }
 
     try {
-      z.mutate(mutators.organization.delete({ organizationId: organization.id }));
+      await z.mutate(mutators.organization.delete({ organizationId: organization.id }));
       toast.success("Organization deleted successfully");
-      navigate({ href: "/" });
+
+      if (fallbackOrganization) {
+        await authClient.organization.setActive({
+          organizationId: fallbackOrganization.id,
+        });
+
+        navigate({ href: `/w/${fallbackOrganization.slug}`, replace: true });
+
+        return;
+      }
+
+      navigate({ href: "/new", replace: true });
     } catch (error) {
       toast.error("Failed to delete organization");
       console.error("Organization deletion error:", error);
