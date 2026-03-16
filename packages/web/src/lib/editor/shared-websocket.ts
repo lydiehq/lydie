@@ -18,10 +18,6 @@ function ensureSharedSocket() {
   return sharedSocket;
 }
 
-export function getSharedWebSocket() {
-  return ensureSharedSocket();
-}
-
 export function acquireSharedWebSocket() {
   activeConsumers += 1;
   return ensureSharedSocket();
