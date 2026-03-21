@@ -17,19 +17,19 @@
       "drizzle-orm": "^1.0.0-beta.15-9485290",
       "better-auth": "^1.5.5",
       "@better-auth/drizzle-adapter": "^1.5.5",
-      "@ai-sdk/google": "^3.0.43",
-      "@ai-sdk/openai": "^3.0.41",
-      "ai": "^6.0.116",
-      "@tiptap/core": "^3.20.1",
-      "@tiptap/pm": "^3.20.1",
-      "@tiptap/react": "^3.20.1",
-      "@tiptap/starter-kit": "^3.20.1",
+      "@ai-sdk/google": "^3.0.52",
+      "@ai-sdk/openai": "^3.0.47",
+      "ai": "^6.0.134",
+      "@tiptap/core": "^3.20.4",
+      "@tiptap/pm": "^3.20.4",
+      "@tiptap/react": "^3.20.4",
+      "@tiptap/starter-kit": "^3.20.4",
       "@tiptap/y-tiptap": "^3.0.2",
-      "@tiptap/extension-drag-handle": "^3.20.1",
-      "@tiptap/extension-drag-handle-react": "^3.20.1",
-      "@tiptap/extension-mention": "^3.20.1",
-      "@tiptap/extension-node-range": "^3.20.1",
-      "@tiptap/extension-placeholder": "^3.20.1",
+      "@tiptap/extension-drag-handle": "^3.20.4",
+      "@tiptap/extension-drag-handle-react": "^3.20.4",
+      "@tiptap/extension-mention": "^3.20.4",
+      "@tiptap/extension-node-range": "^3.20.4",
+      "@tiptap/extension-placeholder": "^3.20.4",
       "stripe": "^20.4.1"
     }
   },
@@ -65,24 +65,24 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/gateway": "^3.0.66",
+    "@ai-sdk/gateway": "^3.0.77",
     "@fontsource/reenie-beanie": "^5.2.8",
     "@hocuspocus/provider": "^3.4.4",
-    "@tanstack/react-query-persist-client": "^5.90.24",
-    "@tiptap/extension-code": "^3.20.1",
-    "@tiptap/extension-table-of-contents": "^3.20.1",
-    "framer-motion": "^12.36.0"
+    "@tanstack/react-query-persist-client": "^5.90.27",
+    "@tiptap/extension-code": "^3.20.4",
+    "@tiptap/extension-table-of-contents": "^3.20.4",
+    "framer-motion": "^12.38.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/user-event": "^14.6.1",
     "@tsconfig/node20": "^20.1.9",
-    "@types/bun": "^1.3.10",
+    "@types/bun": "^1.3.11",
     "@vitest/ui": "^4.1.0",
-    "jsdom": "^29.0.0",
-    "oxfmt": "^0.40.0",
-    "oxlint": "^1.55.0",
-    "oxlint-tsgolint": "^0.16.0",
+    "jsdom": "^29.0.1",
+    "oxfmt": "^0.41.0",
+    "oxlint": "^1.56.0",
+    "oxlint-tsgolint": "^0.17.1",
     "sst": "v3.18.6",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
@@ -93,7 +93,7 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "packageManager": "bun@1.3.10",
+  "packageManager": "bun@1.3.11",
   "trustedDependencies": [
     "@rocicorp/zero-sqlite3"
   ]
