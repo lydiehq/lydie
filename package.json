@@ -8,7 +8,7 @@
     ],
     "catalog": {
       "@fluentui/react-icons": "^2.0.321",
-      "@rocicorp/zero": "0.26.0",
+      "@rocicorp/zero": "0.26.2",
       "sst": "v3.18.6",
       "zod": "^4.3.6",
       "react": "^19.2.4",
