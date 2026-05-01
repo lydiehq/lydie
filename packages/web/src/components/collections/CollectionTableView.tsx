@@ -1792,6 +1792,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
               ? "number"
               : "text"
         }
+        multiline={fieldDef?.type === "text"}
         initialValue={value}
         onCommit={(nextValue) => {
           setValue(nextValue);
@@ -1893,7 +1894,7 @@ function EditableGridCell({ context }: { context: TableCellContext }) {
         </Link>
       ) : null}
       <div className="min-w-0 flex flex-1 items-center overflow-hidden text-left text-sm">
-        <span className="block w-full">{content}</span>
+        <span className="block w-full whitespace-nowrap overflow-hidden text-ellipsis">{content}</span>
       </div>
     </div>
   );
