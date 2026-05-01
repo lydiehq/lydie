@@ -13,7 +13,7 @@
     "@aws-sdk/client-sesv2": "^3.1014.0",
     "@aws-sdk/s3-request-presigner": "^3.1014.0",
     "@better-auth/drizzle-adapter": "catalog:",
-    "@hocuspocus/provider": "3",
+    "@hocuspocus/provider": "^4.0.0",
     "@lydie/database": "workspace:*",
     "@lydie/editor": "workspace:*",
     "@tiptap/core": "catalog:",

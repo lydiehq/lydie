@@ -1,5 +1,6 @@
-import { createNodeWebSocket } from "@hono/node-ws";
+import type { ClientConnection } from "@hocuspocus/server";
 import { Hono } from "hono";
+import { createBunWebSocket } from "hono/bun";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
@@ -55,19 +56,52 @@ export const app = new Hono()
   .route("/api/v1", ExternalApi)
   .route("/public", PublicApi);
 
-export const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
-  app,
-});
+const hocuspocusConnections = new WeakMap<object, ClientConnection>();
+
+export const { upgradeWebSocket, websocket } = createBunWebSocket();
 
 app.get(
   "/yjs",
   upgradeWebSocket((c) => {
     return {
       onOpen(_evt, ws) {
-        if (!ws.raw) {
+        const socket = ws.raw as object | undefined;
+        if (!socket) {
           throw new Error("WebSocket not available");
         }
-        hocuspocus.handleConnection(ws.raw, c.req.raw as any);
+
+        const connection = hocuspocus.handleConnection(ws.raw, c.req.raw);
+        hocuspocusConnections.set(socket, connection);
+      },
+      onMessage(event, ws) {
+        const socket = ws.raw as object | undefined;
+        if (!socket) {
+          return;
+        }
+
+        const connection = hocuspocusConnections.get(socket);
+        if (!connection) {
+          return;
+        }
+
+        connection.handleMessage(event.data);
+      },
+      onClose(event, ws) {
+        const socket = ws.raw as object | undefined;
+        if (!socket) {
+          return;
+        }
+
+        const connection = hocuspocusConnections.get(socket);
+        if (!connection) {
+          return;
+        }
+
+        connection.handleClose({
+          code: event.code,
+          reason: event.reason,
+        });
+        hocuspocusConnections.delete(socket);
       },
     };
   }),

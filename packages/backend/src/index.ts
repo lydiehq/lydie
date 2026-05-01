@@ -1,7 +1,6 @@
-import { serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
 
-import { app, injectWebSocket } from "./api";
+import { app, websocket } from "./api";
 import { env } from "./env";
 
 if (env.SENTRY_DSN) {
@@ -13,9 +12,8 @@ if (env.SENTRY_DSN) {
 
 const port = 3001;
 
-const server = serve({
+Bun.serve({
   fetch: app.fetch,
+  websocket,
   port,
 });
-
-injectWebSocket(server);

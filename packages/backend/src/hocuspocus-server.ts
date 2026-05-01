@@ -1,5 +1,5 @@
 import { Database } from "@hocuspocus/extension-database";
-import { Hocuspocus, onAuthenticatePayload } from "@hocuspocus/server";
+import { Hocuspocus } from "@hocuspocus/server";
 import { authClient } from "@lydie/core/auth";
 import { registerHocuspocusAccessor } from "@lydie/core/document-state";
 import { processDocumentEmbedding } from "@lydie/core/embedding/document-processing";
@@ -14,6 +14,11 @@ import * as Y from "yjs";
 const lastVersionTime = new Map<string, number>();
 const VERSION_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes minimum between auto-versions
 const MAX_VERSIONS_PER_DOCUMENT = 100; // Keep only the most recent 100 versions
+
+type HocuspocusContext = {
+  id: string;
+  name: string | null;
+};
 
 async function verifyDocumentAccess(documentId: string, userId: string): Promise<boolean> {
   try {
@@ -44,7 +49,7 @@ async function verifyDocumentAccess(documentId: string, userId: string): Promise
   }
 }
 
-export const hocuspocus = new Hocuspocus({
+export const hocuspocus = new Hocuspocus<HocuspocusContext>({
   quiet: true,
   extensions: [
     new Database({
@@ -173,7 +178,7 @@ export const hocuspocus = new Hocuspocus({
     }),
   ],
 
-  async onAuthenticate({ documentName, request, token }: onAuthenticatePayload): Promise<any> {
+  async onAuthenticate({ documentName, request }) {
     if (!request?.headers) {
       console.error("[Hocuspocus Auth] No request headers available");
       throw new Error("Authentication required");
@@ -181,7 +186,7 @@ export const hocuspocus = new Hocuspocus({
 
     try {
       const session = await authClient.api.getSession({
-        headers: request.headers as any,
+        headers: request.headers,
       });
 
       if (!session?.user) {
@@ -213,23 +218,6 @@ export const hocuspocus = new Hocuspocus({
       }
       throw new Error("Authentication failed");
     }
-  },
-
-  async onDisconnect({ documentName, document }) {
-    // Save immediately when any client disconnects
-    // This prevents stale data when:
-    // 1. User refreshes page before debounce fires
-    // 2. User leaves while others are still editing (their changes should persist)
-    const yjsState = Y.encodeStateAsUpdate(document);
-    const base64State = Buffer.from(yjsState).toString("base64");
-
-    await db
-      .update(documentsTable)
-      .set({
-        yjsState: base64State,
-        updatedAt: new Date(),
-      })
-      .where(eq(documentsTable.id, documentName));
   },
 
   debounce: 5000,
