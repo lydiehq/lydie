@@ -1,4 +1,4 @@
-import { docIdOf, LAYOUT_VERSION } from "@lydie/contract";
+import { docIdOf, HOME_PATH, LAYOUT_VERSION } from "@lydie/contract";
 import type {
   Layout,
   LayoutNode,
@@ -62,25 +62,43 @@ export const HISTORY_LIMIT = 50;
 // No pane gets smaller than this fraction when resizing.
 export const MIN_SIZE = 0.05;
 
+// A new layout: one window showing Home.
 export function emptyLayout(newId: () => string): Layout {
   const windowId = newId();
   return {
     version: LAYOUT_VERSION,
-    windows: [emptyWindow(windowId, newId())],
+    windows: [newWindow(windowId, newId(), newTab(newId(), HOME_PATH))],
     activeWindowId: windowId,
   };
 }
 
-function emptyWindow(id: string, groupId: string): LayoutWindow {
-  return {
-    id,
-    root: { type: "group", id: groupId, tabs: [], activeTabId: null },
-    activeGroupId: groupId,
-  };
+function newWindow(id: string, groupId: string, tab: Tab): LayoutWindow {
+  return { id, root: soleGroup(groupId, tab), activeGroupId: groupId };
+}
+
+function soleGroup(id: string, tab: Tab): TabGroup {
+  return { type: "group", id, tabs: [tab], activeTabId: tab.id };
 }
 
 function newTab(id: string, path: TabPath, state: TabState = {}): Tab {
   return { id, path, state, back: [], forward: [], pinned: false };
+}
+
+function tabCount(window: LayoutWindow): number {
+  let count = 0;
+  for (const group of groupsOf(window.root)) count += group.tabs.length;
+  return count;
+}
+
+// Layouts saved before every window kept a tab could hold a window with none: it gets Home.
+export function fillEmptyWindows(layout: Layout, newId: () => string): Layout {
+  let changed = false;
+  const windows = layout.windows.map((w) => {
+    if (w.root.type !== "group" || w.root.tabs.length > 0 || w.root.activeTabId !== null) return w;
+    changed = true;
+    return { ...w, root: soleGroup(w.root.id, newTab(newId(), HOME_PATH)) };
+  });
+  return changed ? { ...layout, windows } : layout;
 }
 
 // ---- Lookup
@@ -167,9 +185,9 @@ function updateTab(layout: Layout, tabId: string, fn: (t: Tab) => Tab): Layout {
   });
 }
 
-// Removes empty groups (unless a window would have none), collapses splits with one child, merges
-// a split into a parent with the same direction, renormalises sizes and repairs active ids.
-function normalizeWindow(window: LayoutWindow): LayoutWindow {
+// Removes empty groups, collapses splits with one child, merges a split into a parent with the
+// same direction, renormalises sizes and repairs active ids. A window left without tabs shows Home.
+function normalizeWindow(window: LayoutWindow, newId: () => string): LayoutWindow {
   const clean = (node: LayoutNode): LayoutNode | null => {
     if (node.type === "group") {
       if (node.tabs.length === 0) return null;
@@ -204,18 +222,9 @@ function normalizeWindow(window: LayoutWindow): LayoutWindow {
     if (!changed && normalized.every((s, i) => Math.abs(s - node.sizes[i]!) < 1e-12)) return node;
     return { ...node, children, sizes: normalized };
   };
-  // A window keeps one group even when it has no tabs.
   const root =
-    window.root.type === "group" && window.root.tabs.length === 0
-      ? window.root.activeTabId === null
-        ? window.root
-        : { ...window.root, activeTabId: null }
-      : (clean(window.root) ?? {
-          type: "group" as const,
-          id: groupsOf(window.root).next().value!.id,
-          tabs: [],
-          activeTabId: null,
-        });
+    clean(window.root) ??
+    soleGroup(groupsOf(window.root).next().value!.id, newTab(newId(), HOME_PATH));
   const groups = [...groupsOf(root)];
   const activeGroupId = groups.some((g) => g.id === window.activeGroupId)
     ? window.activeGroupId
@@ -225,10 +234,10 @@ function normalizeWindow(window: LayoutWindow): LayoutWindow {
     : { ...window, root, activeGroupId };
 }
 
-function normalize(layout: Layout): Layout {
+function normalize(layout: Layout, newId: () => string): Layout {
   let changed = false;
   const windows = layout.windows.map((w) => {
-    const next = normalizeWindow(w);
+    const next = normalizeWindow(w, newId);
     if (next !== w) changed = true;
     return next;
   });
@@ -319,7 +328,7 @@ function splitBeside(
 // ---- The reducer
 
 export function reduceLayout(layout: Layout, action: LayoutAction, newId: () => string): Layout {
-  return normalize(apply(layout, action, newId));
+  return normalize(apply(layout, action, newId), newId);
 }
 
 function apply(layout: Layout, action: LayoutAction, newId: () => string): Layout {
@@ -348,8 +357,12 @@ function apply(layout: Layout, action: LayoutAction, newId: () => string): Layou
         mode !== "background",
       );
     }
-    case "close":
+    case "close": {
+      const found = findTab(layout, action.tabId);
+      // A window's last tab closes to Home, so closing Home there changes nothing.
+      if (found?.tab.path === HOME_PATH && tabCount(found.window) === 1) return layout;
       return removeTab(layout, action.tabId);
+    }
     case "closeOthers": {
       const found = findTab(layout, action.tabId);
       if (!found) return layout;
@@ -465,11 +478,9 @@ function apply(layout: Layout, action: LayoutAction, newId: () => string): Layou
       });
     case "openWindow": {
       if (layout.windows.some((w) => w.id === action.windowId)) return layout;
-      const window = emptyWindow(action.windowId, newId());
-      const next = { ...layout, windows: [...layout.windows, window], activeWindowId: window.id };
-      return action.path
-        ? insertTab(next, window.activeGroupId, newTab(newId(), action.path), 0, true)
-        : next;
+      const tab = newTab(newId(), action.path ?? HOME_PATH);
+      const window = newWindow(action.windowId, newId(), tab);
+      return { ...layout, windows: [...layout.windows, window], activeWindowId: window.id };
     }
     case "closeWindow": {
       // The last window stays: closing it quits the app, and its layout is what restores.
@@ -499,10 +510,18 @@ function navigate(layout: Layout, tabId: string, path: TabPath, state: TabState 
           ...t,
           path,
           state,
-          back: [...t.back, { path: t.path, state: t.state }].slice(-HISTORY_LIMIT),
+          // Home with no history is a blank tab (a new one, or a window's last): what replaces it
+          // does not go back to it.
+          back: isBlank(t)
+            ? []
+            : [...t.back, { path: t.path, state: t.state }].slice(-HISTORY_LIMIT),
           forward: [],
         },
   );
+}
+
+function isBlank(tab: Tab): boolean {
+  return tab.path === HOME_PATH && tab.back.length === 0 && tab.forward.length === 0;
 }
 
 function leaveDocs(
@@ -588,14 +607,9 @@ export function checkLayout(layout: Layout): string[] {
     const visit = (node: LayoutNode, parent: LayoutSplit | null) => {
       unique(node.id, node.type);
       if (node.type === "group") {
-        if (node.tabs.length === 0 && (groups.length > 1 || parent)) {
-          problems.push(`group ${node.id} is empty`);
-        }
-        if (node.tabs.length > 0 && !node.tabs.some((t) => t.id === node.activeTabId)) {
+        if (node.tabs.length === 0) problems.push(`group ${node.id} is empty`);
+        else if (!node.tabs.some((t) => t.id === node.activeTabId)) {
           problems.push(`group ${node.id} has no active tab`);
-        }
-        if (node.tabs.length === 0 && node.activeTabId !== null) {
-          problems.push(`empty group ${node.id} has an active tab`);
         }
         for (const tab of node.tabs) unique(tab.id, "tab");
         return;

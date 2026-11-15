@@ -2,7 +2,6 @@ import { docIdOf, docPath, HOME_PATH } from "@lydie/contract";
 import type { Layout, LayoutNode, Tab, TabGroup, TabPath } from "@lydie/contract";
 import {
   DRAG_TYPES,
-  formatKeybinding,
   TabProvider,
   useContributions,
   useShortcut,
@@ -18,7 +17,6 @@ import {
   CloseRegular,
   ContextMenu,
   EmptyState,
-  FirstDocumentIllustration,
   focusRingClass,
   SyncIndicator,
   WithTooltip,
@@ -399,7 +397,6 @@ const GroupView = memo(function GroupView({
         }}
         onDrop={onDrop}
       >
-        {tabIds.length === 0 && <EmptyGroup />}
         {mounted.map((id) => (
           <TabSlot
             key={id}
@@ -414,46 +411,6 @@ const GroupView = memo(function GroupView({
     </section>
   );
 });
-
-function EmptyGroup() {
-  const host = useHostInternal();
-  const binding = (id: string) => {
-    const command = host.app.commands().find((c) => c.id === id);
-    const key = command?.keybindings[0];
-    return key ? formatKeybinding(key, host.mac) : null;
-  };
-  const hasSwitcher = host.app.commands().some((c) => c.id === "quick-switcher.open");
-  return (
-    <EmptyState
-      className="h-full"
-      title="No open documents"
-      illustration={<FirstDocumentIllustration />}
-      description="Create a document or open one from the sidebar."
-      action={
-        <div className="flex gap-2">
-          <Button size="sm" onPress={() => void host.app.runCommand("core.newDocument")}>
-            New document{" "}
-            {binding("core.newDocument") && (
-              <span className="opacity-60">{binding("core.newDocument")}</span>
-            )}
-          </Button>
-          {hasSwitcher && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={() => void host.app.runCommand("quick-switcher.open")}
-            >
-              Open…{" "}
-              {binding("quick-switcher.open") && (
-                <span className="opacity-60">{binding("quick-switcher.open")}</span>
-              )}
-            </Button>
-          )}
-        </div>
-      }
-    />
-  );
-}
 
 function useTabPath(tabId: string): TabPath | null {
   const host = useHostInternal();

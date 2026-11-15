@@ -134,6 +134,10 @@ type LayoutAction = open (replace | tab | background) | close | closeOthers | ac
   closeWindow | focusWindow | focusGroup
 // leaveDocs { ids, fallback?: { [id]: path }, windowId? }: trashed documents leave every tab's
 // history; a tab showing one goes back, else to its fallback, else closes
+// A window always has a tab: emptyLayout and openWindow without a path start with Home
+// (HOME_PATH), and a window left without tabs gets a new Home tab (closing that one is a no-op).
+// Home with no history is blank: navigating from it does not add it to the tab's back history.
+// fillEmptyWindows(layout, newId): what parseLayout uses to give older saved empty windows Home
 createLayoutController({ initial?, persist?, debounceMs? (300), newId? }) → { getState, dispatch,
   subscribe, subscribeTab(id), getTab(id), subscribeGroup(id), getGroup(id), flush, close }
 openLayoutController({ persist: { load, save }, ... })   // restores (invalid → empty layout);

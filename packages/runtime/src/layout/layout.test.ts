@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
-import { docIdOf } from "@lydie/contract";
-import type { Layout, LayoutNode, LayoutSplit, TabPath } from "@lydie/contract";
+import { docIdOf, HOME_PATH } from "@lydie/contract";
+import type { Layout, LayoutNode, LayoutSplit, TabGroup, TabPath } from "@lydie/contract";
 
 import { createLayoutController, openLayoutController, parseLayout } from "./controller.ts";
 import {
@@ -67,10 +67,17 @@ describe("tabs", () => {
     expect(titles(layout)).toEqual([["001", "002*"]]);
   });
 
+  it("starts with Home", () => {
+    expect(window0(emptyLayout(ids())).root).toMatchObject({
+      type: "group",
+      tabs: [{ path: HOME_PATH, back: [] }],
+    });
+  });
+
   it("closes tabs, activating the right neighbour, then the left", () => {
     const newId = ids();
-    let layout = emptyLayout(newId);
-    for (const n of [1, 2, 3])
+    let layout = reduceLayout(emptyLayout(newId), { type: "open", path: doc(1) }, newId);
+    for (const n of [2, 3])
       layout = reduceLayout(layout, { type: "open", path: doc(n), mode: "tab" }, newId);
     const [a, b, c] = activeGroup(layout).tabs.map((t) => t.id);
     layout = reduceLayout(layout, { type: "activate", tabId: b! }, newId);
@@ -79,9 +86,29 @@ describe("tabs", () => {
     layout = reduceLayout(layout, { type: "close", tabId: c! }, newId);
     expect(activeGroup(layout).activeTabId).toBe(a!);
     layout = reduceLayout(layout, { type: "close", tabId: a! }, newId);
-    // A window keeps one empty group.
-    expect(window0(layout).root).toMatchObject({ type: "group", tabs: [], activeTabId: null });
+    // The last tab closes to Home, and closing Home then changes nothing.
+    const home = activeGroup(layout).tabs;
+    expect(home).toMatchObject([{ path: HOME_PATH, back: [] }]);
+    expect(activeGroup(layout).activeTabId).toBe(home[0]!.id);
     expect(checkLayout(layout)).toEqual([]);
+    expect(reduceLayout(layout, { type: "close", tabId: home[0]!.id }, newId)).toBe(layout);
+  });
+
+  it("gives a new window, and one whose last tab moves away, Home", () => {
+    const newId = ids();
+    let layout = emptyLayout(newId);
+    for (const action of [
+      { type: "open", path: doc(1) },
+      { type: "openWindow", windowId: "w2" },
+    ] as const)
+      layout = reduceLayout(layout, action, newId);
+    const second = layout.windows[1]!.root as TabGroup;
+    expect(second.tabs).toMatchObject([{ path: HOME_PATH }]);
+    const tab = (window0(layout).root as TabGroup).tabs[0]!;
+    const moved = reduceLayout(layout, { type: "move", tabId: tab.id, groupId: second.id }, newId);
+    expect(checkLayout(moved)).toEqual([]);
+    expect(window0(moved).root).toMatchObject({ tabs: [{ path: HOME_PATH }] });
+    expect(findTab(moved, tab.id)!.window.id).toBe("w2");
   });
 
   it("navigates with per-tab back and forward history and state", () => {
@@ -96,7 +123,8 @@ describe("tabs", () => {
     step({ type: "back", tabId: id });
     step({ type: "back", tabId: id });
     expect(findTab(layout, id)!.tab).toMatchObject({ path: doc(1), state: { scrollTop: 120 } });
-    step({ type: "back", tabId: id }); // nothing further back
+    // Nothing further back: the blank Home the tab started on is not history.
+    step({ type: "back", tabId: id });
     step({ type: "forward", tabId: id });
     expect(findTab(layout, id)!.tab.path).toEqual(doc(2));
     step({ type: "navigate", tabId: id, path: doc(4) });
@@ -436,7 +464,8 @@ describe("controller", () => {
       },
     };
     const controller = await openLayoutController({ persist, debounceMs: 20, newId: ids() });
-    for (const n of [1, 2, 3]) controller.dispatch({ type: "open", path: doc(n), mode: "tab" });
+    controller.dispatch({ type: "open", path: doc(1) });
+    for (const n of [2, 3]) controller.dispatch({ type: "open", path: doc(n), mode: "tab" });
     const tabId = activeGroup(controller.getState()).tabs[0]!.id;
     controller.dispatch({ type: "setTabState", tabId, state: { scrollTop: 42 } });
     expect(saves).toBe(0);
@@ -482,13 +511,30 @@ describe("controller", () => {
     });
   });
 
-  it("starts empty when the saved layout is invalid", async () => {
+  it("gives a saved window without tabs Home", () => {
+    const saved = {
+      version: 2,
+      windows: [
+        {
+          id: "w",
+          activeGroupId: "g",
+          root: { type: "group", id: "g", tabs: [], activeTabId: null },
+        },
+      ],
+      activeWindowId: "w",
+    };
+    const layout = parseLayout(saved, ids())!;
+    expect(checkLayout(layout)).toEqual([]);
+    expect(window0(layout).root).toMatchObject({ id: "g", tabs: [{ path: HOME_PATH }] });
+  });
+
+  it("starts with Home when the saved layout is invalid", async () => {
     for (const bad of [null, { version: 99 }, { version: 1, windows: [], activeWindowId: "x" }]) {
       const controller = await openLayoutController({
         persist: { load: async () => bad, save: async () => {} },
       });
       expect(checkLayout(controller.getState())).toEqual([]);
-      expect(activeGroup(controller.getState()).tabs).toEqual([]);
+      expect(activeGroup(controller.getState()).tabs).toMatchObject([{ path: HOME_PATH }]);
     }
     const broken = emptyLayout(ids());
     (broken.windows[0]!.root as { activeTabId: string | null }).activeTabId = "ghost";

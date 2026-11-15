@@ -152,7 +152,8 @@ describe("shell", () => {
     }
     render(<LydieApp host={host} />);
     await act(async () => {
-      for (const doc of docs) host.app.openDoc(doc.id, { mode: "tab" });
+      // The first replaces the window's Home tab.
+      docs.forEach((doc, i) => host.app.openDoc(doc.id, { mode: i === 0 ? "replace" : "tab" }));
     });
     await waitFor(() => screen.queryByText("Three body") !== null);
     // Visit every tab once so all are pooled.
@@ -202,8 +203,8 @@ describe("shell", () => {
     for (let i = 0; i < 12; i++)
       docs.push(await backend.ops.doc.create({ workspaceId: WS, title: `D${i}` }));
     render(<LydieApp host={host} />);
-    for (const doc of docs) {
-      await act(async () => host.app.openDoc(doc.id, { mode: "tab" }));
+    for (const [i, doc] of docs.entries()) {
+      await act(async () => host.app.openDoc(doc.id, { mode: i === 0 ? "replace" : "tab" }));
       await settle(5);
     }
     await settle(50);

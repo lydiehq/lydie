@@ -52,10 +52,10 @@ const ILLUSTRATIONS: Illustration[] = [
   },
   {
     id: "first-document",
-    name: "No open documents",
-    where: "layout · empty pane",
-    title: "No open documents",
-    description: "Create a document or open one from the sidebar.",
+    name: "First document",
+    where: "not used yet",
+    title: "No documents yet",
+    description: "Create a document to get started.",
     component: FirstDocumentIllustration,
   },
   {

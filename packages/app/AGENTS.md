@@ -81,6 +81,8 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
 - **Tabs**: the layout tree comes from `@lydie/runtime/layout`, saved per workspace and window
   (`window:<workspaceId>:<windowId>`) through `backend.layouts`. Views subscribe per tab
   (`subscribeTab`/`subscribeGroup` with selectors), so a change in one tab re-renders nothing else.
+  A window always has a tab: closing the last one leaves Home (the reducer's rule), so there is
+  no empty pane.
   A pool (`host/tab-pool.ts`, default 8) keeps recently used tab views mounted but hidden
   (`visibility: hidden; content-visibility: hidden; inert`), so switching mounts nothing; evicted
   views remount and restore from the tab state bag (scroll, selection).

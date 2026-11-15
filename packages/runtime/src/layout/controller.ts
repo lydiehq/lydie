@@ -2,7 +2,7 @@ import { docPath, HOME_PATH, Layout } from "@lydie/contract";
 import type { Layout as LayoutValue, Tab, TabGroup } from "@lydie/contract";
 
 import { uuid } from "../uuid.ts";
-import { checkLayout, emptyLayout, groupsOf, reduceLayout } from "./reducer.ts";
+import { checkLayout, emptyLayout, fillEmptyWindows, groupsOf, reduceLayout } from "./reducer.ts";
 import type { LayoutAction } from "./reducer.ts";
 
 export type LayoutPersistence = {
@@ -36,10 +36,11 @@ export type LayoutControllerOptions = {
 };
 
 // Parses a saved layout; anything invalid (a corrupt row) yields null.
-export function parseLayout(value: unknown): LayoutValue | null {
+export function parseLayout(value: unknown, newId: () => string = uuid): LayoutValue | null {
   const parsed = Layout.safeParse(upgradeLayout(value));
   if (!parsed.success) return null;
-  return checkLayout(parsed.data).length === 0 ? parsed.data : null;
+  const layout = fillEmptyWindows(parsed.data, newId);
+  return checkLayout(layout).length === 0 ? layout : null;
 }
 
 // Version 1 kept what a tab shows as a route object; version 2 keeps its path.
@@ -182,13 +183,13 @@ export function createLayoutController(options: LayoutControllerOptions = {}): L
   };
 }
 
-// Restores the saved layout (or starts empty) and keeps saving it.
+// Restores the saved layout (or starts with Home) and keeps saving it.
 export async function openLayoutController(
   options: Omit<LayoutControllerOptions, "initial"> & { persist: LayoutPersistence },
 ): Promise<LayoutController> {
   let initial: LayoutValue | null = null;
   try {
-    initial = parseLayout(await options.persist.load());
+    initial = parseLayout(await options.persist.load(), options.newId);
   } catch (error) {
     (options.onError ?? console.error)(error);
   }
