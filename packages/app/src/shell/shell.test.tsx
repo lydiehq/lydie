@@ -488,6 +488,41 @@ describe("shell", () => {
     expect(runs).toEqual(["pear"]);
   });
 
+  test("palette: a switch shows what running it will do, and its own name still finds it", async () => {
+    let on = false;
+    const lamp = definePlugin({
+      id: "test-lamp",
+      name: "Test lamp",
+      activate(ctx) {
+        ctx.commands.register({
+          id: "test.toggleLamp",
+          title: "Toggle lamp",
+          paletteTitle: () => (on ? "Turn off lamp" : "Turn on lamp"),
+          run: () => {
+            on = !on;
+          },
+        });
+      },
+    });
+    const { host } = await setup({ plugins: [lamp] });
+    render(<LydieApp host={host} />);
+    const search = async (text: string) => {
+      await act(async () => host.app.runCommand("core.palette"));
+      const box = await screen.findByRole("combobox", { name: "Command palette" });
+      await act(async () => fireEvent.change(box, { target: { value: text } }));
+      return box;
+    };
+    const box = await search("lamp");
+    expect(screen.getAllByRole("option")[0]!.textContent).toBe("Turn on lamp");
+    await act(async () => fireEvent.keyDown(box, { key: "Enter" }));
+    await settle();
+    expect(on).toBe(true);
+    await search("toggle lamp");
+    expect(screen.getAllByRole("option")[0]!.textContent).toBe("Turn off lamp");
+    // Settings → Keyboard shortcuts lists it by its own name.
+    expect(host.app.commands().find((c) => c.id === "test.toggleLamp")?.title).toBe("Toggle lamp");
+  });
+
   test("Cmd+Z outside the editor undoes the active tab's operations", async () => {
     const { host, backend } = await setup();
     const doc = await backend.ops.doc.create({ workspaceId: WS, title: "Before" });

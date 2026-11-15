@@ -55,7 +55,7 @@ import { Breadcrumbs } from "./Breadcrumbs.tsx";
 import { BubbleMenu } from "./BubbleMenu.tsx";
 import { ConflictBanner, EXTERNAL, useFileSession } from "./file-session.tsx";
 import { FindBar } from "./FindBar.tsx";
-import { PageMenu } from "./PageMenu.tsx";
+import { PageMenu, shownFullWidth } from "./PageMenu.tsx";
 import { rankSlash, recordSlashUse } from "./slash-ranking.ts";
 import type { SlashRecents } from "./slash-ranking.ts";
 
@@ -90,6 +90,10 @@ export function DocView({ tab }: ViewProps) {
   // Hosted, before the first download: a page that is not here may still be on its way.
   const arriving = useStatus().awaitingFirstSync === true;
   const fullWidth = pageFullWidthOf(entry?.document.properties);
+  const shownId = entry?.document.id;
+  useEffect(() => {
+    if (shownId) shownFullWidth.set(shownId, fullWidth);
+  }, [shownId, fullWidth]);
   const root = useWidthTransition(entry?.document.id ?? null, fullWidth);
   const bar = useRef<HTMLDivElement>(null);
   // In a host's panel (the collections' page panel) the bar is left to the host's own controls.

@@ -2,7 +2,7 @@ import { definePlugin, docIdOf, pageFullWidthOf, prefetchDoc } from "@lydie/plug
 
 import { DocTabTitle, DocView } from "./DocView.tsx";
 import { registerFind } from "./FindBar.tsx";
-import { fullWidthInput } from "./PageMenu.tsx";
+import { fullWidthInput, shownFullWidth } from "./PageMenu.tsx";
 
 export const editorViewPlugin = definePlugin({
   id: "editor-view",
@@ -22,6 +22,10 @@ export const editorViewPlugin = definePlugin({
     ctx.commands.register({
       id: "editor-view.toggle-full-width",
       title: "Toggle full width",
+      paletteTitle: (app) =>
+        shownFullWidth.get(docIdOf(app.activeTab()?.path) ?? "")
+          ? "Turn off full width"
+          : "Turn on full width",
       group: "Document",
       scope: "document",
       when: (app) => docIdOf(app.activeTab()?.path) !== null,

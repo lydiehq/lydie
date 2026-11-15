@@ -70,7 +70,10 @@ ctx: { plugin, app, commands, views, sidebar, panels, statusBar, settings, overl
   documentMenu, links, editor, documents }    // each .register(def) → disposer
 CommandDef { id, title, group?, icon? (ReactNode, shown in the palette), keybinding? ("Mod+O"), inText?, hidden?,
   bindable? (false: not in Settings → Keyboard shortcuts; sign out, export, What's new),
-  operation?, when?, choices?, run({ app, source, args }) }
+  operation?, when?, choices?, paletteTitle?(app), run({ app, source, args }) }
+//   paletteTitle: for a switch, the palette's title for how things are now, so it says what
+//   running it will do ("Remove from favorites", "Turn off full width"); synchronous. `title`
+//   stays its name in Settings → Keyboard shortcuts, and the palette matches both
 //   choices: CommandChoices { placeholder?, list(query, app) → CommandChoice[] | Promise }: the
 //   palette opens them as a page of its own (the command as its pill; Escape or Backspace goes
 //   back) and runs the command with the chosen id as `args`; run any other way, `args` is

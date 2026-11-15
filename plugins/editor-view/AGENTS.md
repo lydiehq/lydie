@@ -54,7 +54,9 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   undoable); then every `documentMenu` contribution, the same items as the sidebar's row menu,
   with their icons, one section per `group` (`menuGroups`: groups by their first item's `order`).
   Command `editor-view.toggle-full-width` ("Toggle full width") does the
-  same from the palette. Full width passes `fullWidth` to the editor and widens the title column
+  same from the palette, where it reads "Turn on full width" or "Turn off full width": its
+  `paletteTitle` reads `shownFullWidth` (`PageMenu.tsx`), which each `DocView` fills with the
+  width it draws. Full width passes `fullWidth` to the editor and widens the title column
   (`pageColumnClass`); page options stop there on purpose: text size and font are not per page.
   Toggling glides (300 ms, ease-in-out): `useWidthTransition` sets `data-width-transition` on the
   view while it runs, only for a toggle on the same page, so opening another page snaps.

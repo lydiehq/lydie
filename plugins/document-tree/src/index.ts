@@ -38,6 +38,10 @@ export const documentTreePlugin = definePlugin({
     ctx.commands.register({
       id: "document-tree.toggleFavorite",
       title: "Add to or remove from favorites",
+      paletteTitle: (app) =>
+        favoritesOf(app).has(docIdOf(app.activeTab()?.path) ?? "")
+          ? "Remove from favorites"
+          : "Add to favorites",
       group: "Document",
       scope: "document",
       icon: createElement(StarRegular),

@@ -180,6 +180,14 @@ function contextItems(
   ];
 }
 
+// A command's title as the palette shows it ("Remove from favorites") or its own name ("Add to or
+// remove from favorites"), whichever matches better.
+function titleScore(query: string, c: CommandInfo): number | null {
+  const shown = fuzzyScore(query, c.paletteTitle ?? c.title);
+  const name = c.paletteTitle ? fuzzyScore(query, c.title) : null;
+  return shown === null ? name : name === null ? shown : Math.max(shown, name);
+}
+
 // While typing, like Linear: the context's matching actions lead, then commands whose own title
 // matches without a heading (their group as a breadcrumb), then documents, then every other match
 // under its group, best group first. Without a context, document actions are left out.
@@ -192,7 +200,7 @@ function paletteItems(
 ): PickerItem[] {
   const item = (c: CommandInfo, extra: Partial<PickerItem> = {}): PickerItem => ({
     id: c.id,
-    title: c.title,
+    title: c.paletteTitle ?? c.title,
     icon: c.icon ?? <RightRegular />,
     ...(c.keybindings[0] ? { hint: formatKeybinding(c.keybindings[0], mac) } : {}),
     ...extra,
@@ -213,15 +221,23 @@ function paletteItems(
         .map((c) => item(c, { group: c.group ?? OTHER_GROUP })),
     ];
   }
+  const byId = new Map(all.map((c) => [c.id, c]));
   const matchedActions = actions
-    .map((a) => ({ a, score: fuzzyScore(query, a.title) }))
+    .map((a) => {
+      const c = byId.get(a.id);
+      return { a, score: c ? titleScore(query, c) : fuzzyScore(query, a.title) };
+    })
     .filter((x) => x.score !== null)
     .sort((a, b) => b.score! - a.score!)
     .map((x) => x.a);
   const scored = commands
     .map((c) => {
-      const title = fuzzyScore(query, c.title);
-      return { c, title, score: title ?? fuzzyScore(query, `${c.group ?? ""} ${c.title}`) };
+      const title = titleScore(query, c);
+      return {
+        c,
+        title,
+        score: title ?? fuzzyScore(query, `${c.group ?? ""} ${c.paletteTitle ?? c.title}`),
+      };
     })
     .filter((x) => x.score !== null)
     .sort((a, b) => b.score! - a.score!);
@@ -294,7 +310,7 @@ function CommandPalette({ close }: { close: () => void }) {
         height="fixed"
         emptyText="No matches"
         // Backspace in the empty search, the pill's button or Escape go back to the commands.
-        context={{ label: nested.title, icon: nested.icon, onRemove: back }}
+        context={{ label: nested.paletteTitle ?? nested.title, icon: nested.icon, onRemove: back }}
         onBack={back}
         onClose={close}
         onSelect={(item) => {

@@ -27,6 +27,10 @@ export function fullWidthInput(id: string, on: boolean) {
   return on ? { id, set: { [PAGE_FULL_WIDTH_KEY]: true } } : { id, unset: [PAGE_FULL_WIDTH_KEY] };
 }
 
+// Whether each page on screen is full width, as its view last drew it: the palette's title for
+// "Toggle full width" has to say which way it goes without waiting for a query.
+export const shownFullWidth = new Map<string, boolean>();
+
 type Item = { id: string; def: DocumentMenuItemDef & { pluginId: string } };
 
 // Groups in the order of their first item (by `order`), items by `order` within a group.

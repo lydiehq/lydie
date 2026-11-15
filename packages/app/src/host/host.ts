@@ -417,18 +417,22 @@ export function createHost(options: HostOptions): Host {
   const activeBindings = (bindings: readonly string[]): string[] =>
     browserTab ? bindings.filter((b) => !isBrowserShortcut(b, mac)) : [...bindings];
 
-  const commandInfo = (command: CommandDef & { pluginId: string }): CommandInfo => ({
-    id: command.id,
-    title: command.title,
-    group: command.group ?? null,
-    icon: command.icon ?? commandIcons[command.id],
-    keybindings: activeBindings(keymap.bindings(command.id, command.keybinding)),
-    bindable: command.bindable ?? true,
-    source: command.pluginId === "core" && command.id.startsWith("op.") ? "operation" : "plugin",
-    scope: command.scope ?? null,
-    enabled: command.when ? command.when(app) : true,
-    ...(command.choices ? { choices: command.choices } : {}),
-  });
+  const commandInfo = (command: CommandDef & { pluginId: string }): CommandInfo => {
+    const enabled = command.when ? command.when(app) : true;
+    return {
+      id: command.id,
+      title: command.title,
+      group: command.group ?? null,
+      icon: command.icon ?? commandIcons[command.id],
+      keybindings: activeBindings(keymap.bindings(command.id, command.keybinding)),
+      bindable: command.bindable ?? true,
+      source: command.pluginId === "core" && command.id.startsWith("op.") ? "operation" : "plugin",
+      scope: command.scope ?? null,
+      enabled,
+      ...(enabled && command.paletteTitle ? { paletteTitle: command.paletteTitle(app) } : {}),
+      ...(command.choices ? { choices: command.choices } : {}),
+    };
+  };
 
   const runCommand = async (
     id: string,

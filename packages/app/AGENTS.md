@@ -108,6 +108,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   page icon", "Set page cover") opens a page of them in the same dialog, the command as its pill
   in place of the document's; Escape, Backspace in the empty search or the pill's button go back,
   and the chosen id runs the command as `args` (`useChoices`, `nestedId` in `CommandPalette`).
+  A switch shows its `paletteTitle` (what it will do now: "Add to favorites" or "Remove from
+  favorites") in place of its `title`; a query matches either (`titleScore`). The host reads it
+  in `commandInfo`, only while the command is enabled.
 - **Toasts** (`shell/Toasts.tsx`, after Sonner): `app.notify` only appends to `host.toasts` (at
   most 10); the toaster times them out, so hovering, keyboard focus, a swipe or a hidden page
   pauses every timer. The newest three stack at the bottom right, older ones peeking 14 px above

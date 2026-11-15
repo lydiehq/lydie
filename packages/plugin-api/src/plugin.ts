@@ -81,6 +81,10 @@ export type CommandDef = {
   // Namespaced: "<plugin>.<name>", e.g. "quick-switcher.open".
   id: string;
   title: string;
+  // For a command that switches something on or off: the palette's title for how things are now,
+  // so it says what running it will do ("Remove from favorites"). Must be quick and synchronous.
+  // `title` stays its name elsewhere (Settings → Keyboard shortcuts) and still finds it.
+  paletteTitle?: (app: AppApi) => string;
   group?: string;
   // Shown in the command palette, e.g. `<FileNewRegular />` (sized by the palette).
   icon?: ReactNode;
@@ -111,6 +115,7 @@ export type CommandDef = {
 export type CommandInfo = {
   id: string;
   title: string;
+  paletteTitle?: string;
   group: string | null;
   icon?: ReactNode;
   keybindings: readonly string[];
