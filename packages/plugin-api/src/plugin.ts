@@ -9,6 +9,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import type { Backend, BackendInfo } from "./backend.ts";
 import type { HostServices, PluginsApi } from "./hosted.ts";
+import type { ImporterDef } from "./import/plan.ts";
 
 export type {
   AppLock,
@@ -343,6 +344,13 @@ export type EditorFacilities = {
   outline(markdown: string): DocumentOutline;
   // Gives top-level block `index` a `^id` (Obsidian style) if it has none, touching only that block.
   assignBlockId(markdown: string, index: number): { markdown: string; id: string };
+  // HTML as Lydie Markdown, read with the editor's parse rules (as pasting it would). Importers
+  // shape their source into the editor's HTML first: `a[data-type="wiki-link"]`,
+  // `div[data-type="embed"]`, `div[data-type="callout"]`, task lists, math, columns.
+  fromHtml(html: string): string;
+  // A Markdown file's frontmatter properties (null without any, or when it is not a YAML mapping)
+  // and its body, which is what a document stores.
+  splitFrontmatter(markdown: string): { properties: Record<string, unknown> | null; body: string };
   extensions(): AnyExtension[];
   slashItems(): readonly SlashCommandItem[];
 };
@@ -454,6 +462,8 @@ export type PluginContext = {
   documents: { register(def: DocumentSlotDef): Disposable };
   workspaceMenu: { register(def: WorkspaceMenuItemDef): Disposable };
   documentTree: { register(def: DocumentTreeDef): Disposable };
+  // Sources Settings → Import and export can import from.
+  importers: { register(def: ImporterDef): Disposable };
 };
 
 export type PluginDef = {
@@ -490,6 +500,7 @@ export type Contributions = {
   documentSlot: DocumentSlotDef;
   workspaceMenu: WorkspaceMenuItemDef;
   documentTree: DocumentTreeDef;
+  importer: ImporterDef;
 };
 
 export type ContributionKind = keyof Contributions;

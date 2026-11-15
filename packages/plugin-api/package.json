@@ -20,7 +20,8 @@
     "@lydie/contract": "workspace:*",
     "@lydie/editor": "workspace:*",
     "@lydie/platform": "workspace:*",
-    "@lydie/ui": "workspace:*"
+    "@lydie/ui": "workspace:*",
+    "fflate": "0.8.3"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "21.0.4",

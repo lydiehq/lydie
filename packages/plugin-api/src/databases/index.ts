@@ -50,6 +50,7 @@ export type {
   GroupBy,
   GroupKey,
   PropertyConfig,
+  PropertyConfigInput,
   PropertyType,
   PropertyValue,
   RelatedRow,

@@ -109,7 +109,9 @@ AppApi { backend, workspace, open(path, { mode: replace|tab|background|split, si
   notify({ title, description?, kind?: info|success|warning|error, action?: { label, onPress },
     duration? /* ms; 4 s, errors 6 s; Infinity stays */ }),
   setColorScheme("light" | "dark" | "system"),   // native menus and dialogs (desktop)
-  editor: { fromMarkdown(md) → { content, source }, toMarkdown(original, content), extensions(), slashItems() },
+  editor: { fromMarkdown(md) → { content, source }, toMarkdown(original, content), extensions(), slashItems(),
+    fromHtml(html) → Lydie Markdown (the editor's parse rules; for importers),
+    splitFrontmatter(md) → { properties | null, body } },
   storage: { get, set },   // per device
   shortcuts?: { quickCapture(), setQuickCapture(accelerator | null) },   // desktop only
   appLock?: AppLock   // @lydie/platform's; the lock screen is the shell's, desktop only
@@ -334,3 +336,47 @@ measured); fixed row height per grid; keep interaction state in the store, data 
   { docId, tabId }), readOnly? }`, buttons in the selection toolbar after the formatting ones
   (the editor-view plugin draws them). `readOnly: true` actions are also shown, on their own, to
   someone who may comment on the page but not edit it.
+
+## Importers (`src/import/`)
+
+Sources Settings → Import and export offers (the settings plugin draws the list and the dialog).
+An importer only reads; writing is `runImport`, so every source writes the same way, in every
+kind of workspace (operations reach a folder, this browser's database and a cloud workspace's
+replica alike).
+
+```ts
+ctx.importers.register(ImporterDef { id, name, description, icon?, order?, accept /* ".zip" */,
+  instructions? /* ReactNode: how to get the files out of the source */,
+  read(files, { app, onProgress({ done, total, label? }), signal }) → Promise<ImportPlan> })
+//   contribution kind "importer"; throw an Error with a message for the person
+
+ImportPlan { rootTitle, pages: ImportPage[] /* parents first */, files: ImportFile[], warnings }
+ImportPage { id /* newImportId() */, parentId /* a plan page or null: the root */, title, markdown,
+  properties? /* frontmatter, icon, cover */, database?: { titleName?, properties: ImportProperty[] },
+  values? /* a row's, by ImportProperty.id; relations hold page ids, files importFileRef */ }
+ImportProperty { id, name, type, key?, config? /* relation.databaseId: a plan page */ }
+ImportFile { id, name, contentType, pageId, size, read() }
+ImportWarning { message, source? }
+importLink(pageId), importDatabaseEmbed(pageId), importFileRef(fileId)   // placeholders in bodies:
+//   [[importLink(id)|alias]], ![[importDatabaseEmbed(id)]], ![[importFileRef(id)]]
+newImportId()   // version 7 UUID
+
+runImport(app, plan, { onProgress?({ phase, done, total }), signal? }) → ImportResult
+//   { rootId, rootTitle, pages, databases, files, failedFiles, warnings, stopped }
+//   phases: pages (all created, no bodies), databases (database.create on every one, then
+//   addProperty), bodies (doc.updateBody, placeholders resolved), files (attachments.add), values
+//   (database.setValues, a value at a time for a step the database refuses). Small transactions,
+//   history: false. The root page goes at the top level with a number if its title is taken;
+//   attachment names get one too. Links are the page's path from the top ("Notion/Projects/Plan")
+//   or its id when the path is not unique or has [ ] | # ^ /.
+importTitle, uniqueName, uniqueFileName, linkTargets, resolvePlaceholders   // its pure parts
+
+importEntries(files, { stripRoot? }) → ImportEntry[] { path, size, read(), text() }
+//   picked files flattened: zips opened (and zips at their top), hidden paths left out
+openZip(blob) → ZipEntry[] { path, size, modified, blob(), read(), text() }   // one entry
+//   inflated at a time, from slices of the file (zip64 aware); ZipError
+```
+
+Tests: `src/import/*.test.ts` (zip, placeholders, names, ids); `runImport` against a real local
+backend in @lydie/app `src/backend/import.test.ts`; `fromHtml` in @lydie/app
+`src/host/editor-facilities.test.ts`.

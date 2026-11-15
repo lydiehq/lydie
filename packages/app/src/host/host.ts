@@ -820,6 +820,7 @@ export function createHost(options: HostOptions): Host {
       workspaceMenu: { register: register("workspaceMenu") },
       documents: { register: register("documentSlot") },
       documentTree: { register: register("documentTree") },
+      importers: { register: register("importer") },
     };
     try {
       const cleanup = plugin.activate(ctx);

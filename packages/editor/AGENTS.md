@@ -63,6 +63,9 @@ Headless:
   document; enables Mod-Alt-9 and the `+` menu), `pageRender` (the `+` menu), `nodeViews`,
   `extensions` (extra, e.g. from plugins).
 - `getLydieSchema()`, `describeSchema(schema)`, `LYDIE_NODE_NAMES`, `LYDIE_MARK_NAMES`.
+- `parseHtml(node)` (`html.ts`): a DOM node as a Lydie document (JSON) through the editor's parse
+  rules, as pasting reads HTML. Needs a DOM when called, not when imported. Importers reach it
+  through the host's `app.editor.fromHtml`.
 - `contentLineStart(fullWidth)`: the `--editor-content-line-start` value the editor sets (where
   the text column starts; tables line up with it). Share pages set it on their body too.
 - Extensions: Callout, WikiLink, WikiLinkSuggestions, Embed, MathInline, MathBlock,

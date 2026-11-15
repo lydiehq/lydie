@@ -1,4 +1,5 @@
-import { assignBlockId, extract, parse, save } from "@lydie/markdown";
+import { parseHtml } from "@lydie/editor";
+import { assignBlockId, extract, parse, save, serialize } from "@lydie/markdown";
 import type { ParseResult } from "@lydie/markdown";
 import type {
   AnyExtension,
@@ -9,6 +10,18 @@ import type {
 } from "@lydie/plugin-api";
 
 import type { ContributionRegistry } from "./contributions.ts";
+
+// The editor's images are blocks; Markdown's are inline (LYD-156). An image among blocks goes in a
+// paragraph of its own, which is what `![](src)` on its own line reads back as.
+function inlineImages(node: JSONContent): JSONContent {
+  if (!node.content) return node;
+  const content = node.content.map((child) =>
+    child.type === "image" && node.type !== "paragraph"
+      ? { type: "paragraph", content: [child] }
+      : inlineImages(child),
+  );
+  return { ...node, content };
+}
 
 // Markdown ⇄ editor document for plugins, through @lydie/markdown (which plugins cannot import).
 export function createEditorFacilities(contributions: ContributionRegistry): EditorFacilities {
@@ -23,6 +36,18 @@ export function createEditorFacilities(contributions: ContributionRegistry): Edi
           ? original
           : ((original as ParsedDocument).source as ParseResult);
       return save({ original: base, doc: content as { type: string } }).source;
+    },
+    fromHtml(html) {
+      const dom = new DOMParser().parseFromString(html, "text/html");
+      return serialize(inlineImages(parseHtml(dom.body)) as { type: string });
+    },
+    splitFrontmatter(markdown) {
+      const result = parse(markdown);
+      const start = result.frontmatter?.to ?? 0;
+      return {
+        properties: result.properties,
+        body: start ? markdown.slice(start) : markdown.replace(/^﻿/, ""),
+      };
     },
     outline(markdown) {
       const info = extract(markdown);

@@ -8,6 +8,7 @@ export {
 } from "./extensions";
 export type { LydieExtensionsOptions, LydieMarkName, LydieNodeName } from "./extensions";
 export { getLydieSchema } from "./schema";
+export { parseHtml } from "./html";
 export { describeSchema } from "./schema-description";
 export type { NodeDescription } from "./schema-description";
 export { contentLineStart } from "./content-layout";
