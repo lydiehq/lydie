@@ -136,7 +136,7 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   icon" has the macOS app icon variants and theme colour (its mark is `MARK_PATH`).
   "Empty states" (`src/playground/empty-states/`) shows every empty-state drawing from `@lydie/ui`
   with the text it has in the app, in `EmptyState` or alone, light or dark, at panel and page
-  sizes.
+  sizes, and the collection view drawings at menu size.
 - Pages outside the app, lazy-loaded (`App.tsx`), sharing one session and an inline sign-in form
   (`src/standalone.tsx`): `/invite?token=` (accept an invitation), `/s/<slug>` (a public page) and
   `/oauth/consent?request=` (an app asks to use the hosted MCP server: client, scopes in plain

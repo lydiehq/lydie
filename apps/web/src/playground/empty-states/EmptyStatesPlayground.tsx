@@ -2,9 +2,13 @@ import { useApp } from "@lydie/plugin-api";
 import {
   BacklinksIllustration,
   BoardIllustration,
+  BoardViewIllustration,
   Button,
+  CalendarViewIllustration,
   EmptyState,
   FirstDocumentIllustration,
+  GalleryViewIllustration,
+  ListViewIllustration,
   MarkIllustration,
   NoAccessIllustration,
   NoDocumentIllustration,
@@ -13,6 +17,7 @@ import {
   NotFoundIllustration,
   SearchIllustration,
   SyncIllustration,
+  TableViewIllustration,
   TemplatesIllustration,
   TrashIllustration,
   VersionsIllustration,
@@ -30,6 +35,8 @@ type Illustration = {
   description?: string;
   /** Side panels are narrow; their drawings sit smaller. */
   panel?: boolean;
+  /** Drawn beside a label in a menu, at its smallest. */
+  menu?: boolean;
   component: (props: IllustrationProps) => ReactNode;
 };
 
@@ -149,6 +156,51 @@ const ILLUSTRATIONS: Illustration[] = [
     title: "This document does not exist",
     component: NotFoundIllustration,
   },
+  {
+    id: "view-table",
+    name: "Table view",
+    where: "databases · new view",
+    title: "Table",
+    description: "Pages and properties in a grid",
+    menu: true,
+    component: TableViewIllustration,
+  },
+  {
+    id: "view-board",
+    name: "Board view",
+    where: "databases · new view",
+    title: "Board",
+    description: "Cards in columns",
+    menu: true,
+    component: BoardViewIllustration,
+  },
+  {
+    id: "view-list",
+    name: "List view",
+    where: "databases · new view",
+    title: "List",
+    description: "One page per line",
+    menu: true,
+    component: ListViewIllustration,
+  },
+  {
+    id: "view-calendar",
+    name: "Calendar view",
+    where: "databases · new view",
+    title: "Calendar",
+    description: "Pages on their dates",
+    menu: true,
+    component: CalendarViewIllustration,
+  },
+  {
+    id: "view-gallery",
+    name: "Gallery view",
+    where: "databases · new view",
+    title: "Gallery",
+    description: "Cards with covers",
+    menu: true,
+    component: GalleryViewIllustration,
+  },
 ];
 
 const STORAGE_KEY = "playground.emptyStates";
@@ -164,11 +216,11 @@ type Settings = { size: Size; dark: boolean; context: boolean };
 
 const DEFAULTS: Settings = { size: "auto", dark: false, context: true };
 
-// Auto is what the app uses: md on a page, sm in a side panel.
-function sizeProps(size: Size, panel: boolean): IllustrationProps {
+// Auto is what the app uses: md on a page, sm in a side panel, xs in a menu.
+function sizeProps(size: Size, illustration: Illustration): IllustrationProps {
   if (size === "small") return { className: "h-20" };
   if (size === "large") return { className: "h-44" };
-  return { size: panel ? "sm" : "md" };
+  return { size: illustration.menu ? "xs" : illustration.panel ? "sm" : "md" };
 }
 
 export function EmptyStatesPlayground() {
@@ -251,7 +303,7 @@ export function EmptyStatesPlayground() {
               <Card
                 key={`${illustration.id}-${round}`}
                 illustration={illustration}
-                sizing={sizeProps(settings.size, illustration.panel ?? false)}
+                sizing={sizeProps(settings.size, illustration)}
                 context={settings.context}
               />
             ))}

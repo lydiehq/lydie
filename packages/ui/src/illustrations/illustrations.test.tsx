@@ -4,14 +4,15 @@ import { cleanup, render, screen } from "@testing-library/react";
 
 import { EmptyState } from "../layout/States";
 import * as illustrations from "./illustrations";
+import * as views from "./views";
 
 afterEach(() => cleanup());
 
 describe("illustrations", () => {
-  const drawings = Object.entries(illustrations);
+  const drawings = [...Object.entries(illustrations), ...Object.entries(views)];
 
   it("exports every drawing", () => {
-    expect(drawings.length).toBe(14);
+    expect(drawings.length).toBe(19);
   });
 
   for (const [name, Drawing] of drawings) {

@@ -5,17 +5,22 @@ import { VIEW_TYPES } from "@lydie/plugin-api/databases";
 import type { DatabaseDefinition, DatabaseView, ViewType } from "@lydie/plugin-api/databases";
 import {
   AddRegular,
+  BoardViewIllustration,
   CalendarRegular,
+  CalendarViewIllustration,
   Columns2Regular,
+  GalleryViewIllustration,
   Input,
+  ListViewIllustration,
   More1Regular,
   PicRegular,
   Rows3Regular,
   TableRegular,
+  TableViewIllustration,
 } from "@lydie/plugin-api/ui";
-import type { Icon } from "@lydie/plugin-api/ui";
+import type { Icon, IllustrationProps } from "@lydie/plugin-api/ui";
 import { useState } from "react";
-import type { DragEvent } from "react";
+import type { DragEvent, ReactNode } from "react";
 
 import { MenuButtonItem, PanelSection, PopoverButton } from "./ui.tsx";
 
@@ -33,6 +38,23 @@ export const VIEW_ICONS: Record<ViewType, Icon> = {
   list: Rows3Regular,
   calendar: CalendarRegular,
   gallery: PicRegular,
+};
+
+// The "New view" menu draws each type rather than showing its icon.
+const VIEW_DRAWINGS: Record<ViewType, (props: IllustrationProps) => ReactNode> = {
+  table: TableViewIllustration,
+  board: BoardViewIllustration,
+  list: ListViewIllustration,
+  calendar: CalendarViewIllustration,
+  gallery: GalleryViewIllustration,
+};
+
+const VIEW_HINTS: Record<ViewType, string> = {
+  table: "Pages and properties in a grid",
+  board: "Cards in columns",
+  list: "One page per line",
+  calendar: "Pages on their dates",
+  gallery: "Cards with covers",
 };
 
 const VIEW_MIME = "application/x-lydie-db-view";
@@ -205,21 +227,28 @@ export function ViewTabs({
         <PopoverButton label="Add a view" button={<AddRegular aria-hidden />} size="icon-sm">
           {(close) => (
             <PanelSection title="New view">
-              {VIEW_TYPES.map((type) => {
-                const TypeIcon = VIEW_ICONS[type];
-                return (
-                  <MenuButtonItem
-                    key={type}
-                    onPress={() => {
-                      close();
-                      void addView(type);
-                    }}
-                  >
-                    <TypeIcon aria-hidden className="size-3.5 text-gray-500" />
-                    {VIEW_LABELS[type]}
-                  </MenuButtonItem>
-                );
-              })}
+              <div className="w-64">
+                {VIEW_TYPES.map((type) => {
+                  const Drawing = VIEW_DRAWINGS[type];
+                  return (
+                    <MenuButtonItem
+                      key={type}
+                      onPress={() => {
+                        close();
+                        void addView(type);
+                      }}
+                    >
+                      <span className="flex h-12 w-16 shrink-0 items-center justify-center">
+                        <Drawing size="xs" />
+                      </span>
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="font-medium text-gray-900">{VIEW_LABELS[type]}</span>
+                        <span className="truncate text-xs text-gray-500">{VIEW_HINTS[type]}</span>
+                      </span>
+                    </MenuButtonItem>
+                  );
+                })}
+              </div>
             </PanelSection>
           )}
         </PopoverButton>

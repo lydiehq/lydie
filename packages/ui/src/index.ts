@@ -42,6 +42,7 @@ export * from "./layout/SidebarNotice";
 export * from "./layout/States";
 export * from "./layout/Timeline";
 export * from "./illustrations/illustrations";
+export * from "./illustrations/views";
 export type { IllustrationProps, IllustrationSize } from "./illustrations/kit";
 export * from "./icons/CollapseArrow";
 export * from "./icons/CollectionItemIcon";

@@ -130,7 +130,8 @@ Licence: AGPL-3.0-only.
   The panel's left edge resizes it with the sidebar's elastic handle (`useElasticPanel` /
   `ElasticHandle` from the UI package): width per device in `databases.peekWidth`, half the tab
   by default; dragged shut it closes.
-- `ViewTabs.tsx` (add/rename/duplicate/change type/delete/drag to reorder), `Toolbar.tsx` (
+- `ViewTabs.tsx` (add/rename/duplicate/change type/delete/drag to reorder; "New view" lists the
+  types with their `xs` drawings from the UI package and a line on each), `Toolbar.tsx` (
   "Filter", "Display" = sort, group/sub-group, card or calendar settings and properties with order
   and visibility in one popover, a search icon that opens the field, New; keep the
   toolbar to these, new settings go inside Display; row height and board column colours have no

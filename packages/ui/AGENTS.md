@@ -153,7 +153,10 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   VersionsIllustration, NoHeadingsIllustration, BacklinksIllustration, SyncIllustration,
   BoardIllustration, NoAccessIllustration, NotFoundIllustration, FirstDocumentIllustration,
   TemplatesIllustration; MarkIllustration, the mark's two pieces lying flat, one dropped after
-  the other, not used yet). `size` is `md` on a page, `sm` in a side panel; `className` overrides
+  the other, not used yet). `views.tsx`: one per collection view type (TableViewIllustration,
+  BoardViewIllustration, ListViewIllustration, CalendarViewIllustration,
+  GalleryViewIllustration), each lying flat in the same footprint, for the "New view" menu.
+  `size` is `md` on a page, `sm` in a side panel, `xs` beside a label in a menu; `className` overrides
   (tailwind-merge). Solid objects in ink on paper, grey thickness, dashed outlines for what is
   missing; every tone is mixed from `surface` and the gray ramp, so dark mode follows. `kit.tsx`
   draws flat shapes on three planes given thickness (`Solid`, `Dashed`, `Rise`, `Enter`); the

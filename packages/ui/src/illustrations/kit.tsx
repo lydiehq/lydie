@@ -367,14 +367,14 @@ const viewBoxOf = (points: readonly P3[], pad = 6) => {
 
 const loadFeatures = () => import("./motion-features").then((module) => module.default);
 
-export type IllustrationSize = "sm" | "md";
+export type IllustrationSize = "xs" | "sm" | "md";
 export type IllustrationProps = {
-  /** md for a page, sm for a side panel. */
+  /** md for a page, sm for a side panel, xs beside a label in a menu. */
   size?: IllustrationSize;
   className?: string;
 };
 
-const SIZES: Record<IllustrationSize, string> = { sm: "h-24", md: "h-32" };
+const SIZES: Record<IllustrationSize, string> = { xs: "h-11", sm: "h-24", md: "h-32" };
 
 export function Drawing({
   size = "md",
