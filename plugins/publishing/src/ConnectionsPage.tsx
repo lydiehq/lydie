@@ -6,6 +6,7 @@ import {
   EmptyState,
   Heading,
   Input,
+  LoadingState,
   Modal,
   Radio,
   RadioGroup,
@@ -20,8 +21,9 @@ import {
   TextField,
 } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 
+import { useIsAdmin } from "./admin.ts";
 import { fieldsOf, initialValues, toValue, validate } from "./schema-form.ts";
 import type { FormValues, JsonSchema } from "./schema-form.ts";
 import { SchemaForm } from "./SchemaForm.tsx";
@@ -324,7 +326,26 @@ export function ConnectionsPage({
       />
     );
   }
-  return <Connections path={path} navigate={navigate} />;
+  return (
+    <AdminsOnly>
+      <Connections path={path} navigate={navigate} />
+    </AdminsOnly>
+  );
+}
+
+// The page can still be reached by deep link; the panel uses this too.
+export function AdminsOnly({ children }: { children: ReactNode }) {
+  const isAdmin = useIsAdmin();
+  if (isAdmin === null) return <LoadingState />;
+  if (!isAdmin) {
+    return (
+      <EmptyState
+        title="Publishing is for workspace admins"
+        description="For now, only the workspace's owner and admins can connect destinations and publish documents."
+      />
+    );
+  }
+  return <>{children}</>;
 }
 
 function Connections({

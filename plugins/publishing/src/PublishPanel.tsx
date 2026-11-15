@@ -12,7 +12,7 @@ import {
 } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
 
-import { errorText } from "./ConnectionsPage.tsx";
+import { AdminsOnly, errorText } from "./ConnectionsPage.tsx";
 import { divergenceView } from "./divergence.ts";
 import { refreshFolderMarks } from "./folder-marks.ts";
 import { fieldsOf, initialValues, toValue, validate } from "./schema-form.ts";
@@ -57,7 +57,11 @@ export function PublishPanel({ activeTab }: { activeTab: TabInfo | null }) {
     );
   }
   if (!documentId) return <EmptyState title="Open a document to publish it" />;
-  return <Publications key={documentId} documentId={documentId} />;
+  return (
+    <AdminsOnly>
+      <Publications key={documentId} documentId={documentId} />
+    </AdminsOnly>
+  );
 }
 
 function Publications({ documentId }: { documentId: string }) {

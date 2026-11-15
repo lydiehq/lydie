@@ -18,7 +18,11 @@ Licence: AGPL-3.0-only.
 
 ## What it does
 
-Hosted windows only. Settings → Publishing (`/settings/connections`, the OAuth return address):
+Hosted windows only, and for now workspace owners and admins only (`admin.ts`, unit-tested: the
+role from the synced `workspace.members` rows). For anyone else the settings page is left out of
+the navigation, the "Publish this document" command is off, and the page (by deep link) and the
+panel say publishing is for admins. Connected-folder marks still show for everyone.
+Settings → Publishing (`/settings/connections`, the OAuth return address):
 connected destinations (details: settings form, Test connection, Remove) and the connectors the
 server offers, each with a Connect dialog built from its JSON Schemas (`schema-form.ts`,
 unit-tested: credentials, settings), token, OAuth (redirect to the provider) or a generated
