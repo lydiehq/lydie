@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 import { useHostInternal, useSelector } from "./context.ts";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { windowOf } from "./LayoutView.tsx";
+import { panelToggleRoom } from "./PanelToggle.tsx";
 import { dragStyle, noDragStyle, useTitleBarInset } from "./title-bar.ts";
 
 // The right panel: one plugin panel at a time, chosen by a small tab strip. Panels get the
@@ -38,10 +39,11 @@ export function RightPanel() {
       className="flex h-full min-h-0 flex-col"
       data-testid="right-panel"
     >
-      {/* Panel tabs on the window background, in line with the tab bars; the panel in a card. */}
+      {/* Panel tabs on the window background, in line with the tab bars; the panel in a card.
+          The panel's toggle sits over the row's end. */}
       <div
         className="flex h-10 shrink-0 items-center"
-        style={{ paddingRight: inset.right, ...(inset.custom ? dragStyle : {}) }}
+        style={{ paddingRight: panelToggleRoom(inset), ...(inset.custom ? dragStyle : {}) }}
       >
         <div
           role="tablist"

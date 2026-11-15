@@ -9,6 +9,7 @@ import type { Host } from "../host/host.ts";
 import { HostInternalContext } from "./context.ts";
 import { WindowLayout } from "./LayoutView.tsx";
 import { Confirms, Overlays } from "./Overlays.tsx";
+import { PanelToggle } from "./PanelToggle.tsx";
 import { PeekHint } from "./PeekHint.tsx";
 import { RightPanel } from "./RightPanel.tsx";
 import { useSidebarPeek } from "./sidebar-peek.ts";
@@ -203,7 +204,7 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
               <main
                 ref={mainRef}
                 className={clsx(
-                  "flex min-w-0 grow flex-col pr-1.5 pb-1.5",
+                  "relative flex min-w-0 grow flex-col pr-1.5 pb-1.5",
                   // Open, the card meets the sidebar's edge, so its items' 8 px padding is the gap
                   // on both sides (window edge on the left, card on the right).
                   sidebar.collapsed && "pl-1.5",
@@ -243,6 +244,7 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
                     </div>
                   </div>
                 </div>
+                <PanelToggle />
                 {/* Persistent status that needs action sits under the cards, away from the
                     title-bar row. */}
                 {banner && (
