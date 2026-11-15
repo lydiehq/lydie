@@ -196,8 +196,8 @@ Licence: AGPL-3.0-only.
   another cell moves the editor there, and scrolling commits and closes it; a checkbox flips; computed cells are only selected), Cmd/Ctrl+click selects without
   editing, drag or Shift+click selects a range. Picked pages get a floating dark bar at the bottom
   of the tab (`BulkBar.tsx`, a portal on the tab's panel, so it stays put while the page or an
-  embed's page scrolls), as wide as the page's text column (`pageColumnClass(ctx.fullWidth)`; an
-  embed reads its page's `full-width`). In a collection's page panel it stays on its table. Header, summary and group lines use the rows' `border-gray-100`.
+  embed's page scrolls), as wide as its buttons and centred, at most a normal page's text column
+  (`pageColumnClass(false)`, also on a full-width page). In a collection's page panel it stays on its table. Header, summary and group lines use the rows' `border-gray-100`.
   Keys: arrows/Tab/Enter/Escape, Shift+arrows, Cmd/Ctrl+arrows (data edges), Shift+Space (row),
   Ctrl+Space or Shift/Mod+click a header (column), typing edits, Delete clears, Space peeks (toggles
   a checkbox; on a range, checks all its checkbox cells, or unchecks them when all are checked), X / Shift+X pick rows, Cmd/Ctrl+A picks all, Shift+F adds a filter, Cmd/Ctrl+D /

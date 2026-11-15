@@ -24,7 +24,7 @@ export function BulkBar({
   onClear: () => void;
   onSelectAll: () => void;
 }) {
-  const { definition, databaseId, fullWidth } = useViewContext();
+  const { definition, databaseId } = useViewContext();
   const ops = useOps();
   const app = useApp();
   const tab = useTab();
@@ -47,17 +47,16 @@ export function BulkBar({
   const action =
     "text-surface hover:bg-surface/10 hover:text-surface pressed:bg-surface/15 disabled:opacity-40 [--button-radius:var(--radius-lg)]";
   const bar = (
-    // A floating bar at the bottom of the page, as wide as its text column, dark on any theme
-    // (gray-950 with text-surface).
+    // A floating bar at the bottom of the page, as wide as its buttons and at most as wide as a
+    // normal page's text column (also on a full-width page), dark on any theme (gray-950 with
+    // text-surface).
     <div className="pointer-events-none absolute inset-x-0 bottom-4 z-[40]">
-      <div
-        className={container ? pageColumnClass(fullWidth) : "mx-auto w-fit max-w-[calc(100%-2rem)]"}
-      >
+      <div className={container ? pageColumnClass(false) : "mx-auto max-w-[calc(100%-2rem)]"}>
         <div
           role="toolbar"
           // The end-to-end suite finds the bar by this name.
           aria-label="Selected rows"
-          className="pointer-events-auto flex flex-wrap items-center gap-1 rounded-xl bg-gray-950 py-1 pr-1 pl-3 text-sm text-surface shadow-xl ring ring-surface/10"
+          className="pointer-events-auto mx-auto flex w-fit flex-wrap items-center gap-1 rounded-xl bg-gray-950 py-1 pr-1 pl-3 text-sm text-surface shadow-xl ring ring-surface/10"
         >
           <span
             className="mr-1 flex items-center border-r border-surface/20 pr-3 font-medium"
@@ -157,12 +156,12 @@ export function BulkBar({
           </Button>
           <Button
             variant="ghost"
-            size="icon-md"
+            size="icon-sm"
             aria-label="Clear selection"
             onPress={onClear}
-            className={`${action} ml-auto`}
+            className={action}
           >
-            <CloseRegular aria-hidden />
+            <CloseRegular aria-hidden className="size-3.5" />
           </Button>
         </div>
       </div>
