@@ -118,10 +118,13 @@ export function DocView({ tab }: ViewProps) {
       data-doc-id={route.id}
       data-full-width={fullWidth || undefined}
     >
-      {/* `--page-header-start`: room a host keeps for its own controls (the collection's panel). */}
-      <div className="flex shrink-0 items-center justify-between gap-2 pr-2 pl-[var(--page-header-start,0px)]">
+      {/* `--page-header-start`: room a host keeps for its own controls (the collection's panel).
+          The breadcrumbs sit in the middle between two equal columns; when the trail is long
+          the left one gives way first, as the actions never shrink below their width. */}
+      <div className="flex h-9 shrink-0 items-center gap-2 pr-2 pl-[var(--page-header-start,0px)]">
+        <div aria-hidden className="flex-1 basis-0" />
         <Breadcrumbs doc={ref} />
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex flex-1 basis-0 items-center justify-end gap-1">
           <DocumentSlots slot="actions" docId={route.id} />
           <PageMenu doc={ref} fullWidth={fullWidth} />
         </div>

@@ -58,7 +58,9 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   (`pageColumnClass`); page options stop there on purpose: text size and font are not per page.
   Toggling glides (300 ms, ease-in-out): `useWidthTransition` sets `data-width-transition` on the
   view while it runs, only for a toggle on the same page, so opening another page snaps.
-- **Breadcrumbs** (`Breadcrumbs.tsx`, as in v1): a bar above the page, parents › title.
+- **Breadcrumbs** (`Breadcrumbs.tsx`, as in v1): a bar above the page, parents › title, centred
+  between an empty column and the actions (equal `flex-1 basis-0` columns). Each crumb has the
+  ghost `xs` button look (`buttonStyles`), muted, so it hovers like Share and •••.
   Each parent is a live `doc.get` (at most 8 up) and opens on click (`app.modeFor(event)`; middle
   click too). A long trail truncates; the bar starts at `--page-header-start` (default 0), which
   a host sets to keep room for its own controls (the collections panel's ×, full page, to the side).

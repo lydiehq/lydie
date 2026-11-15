@@ -2,13 +2,18 @@
 // `doc.get`, so a rename or a move shows at once.
 import { useApp, useDocPrefetch, useQuerySelect } from "@lydie/plugin-api";
 import type { DocumentRef } from "@lydie/plugin-api";
-import { RightRegular } from "@lydie/plugin-api/ui";
+import { buttonStyles, RightRegular } from "@lydie/plugin-api/ui";
 
 // Guards against a parent cycle and keeps a deep page's bar to one line's worth of lookups.
 const MAX_DEPTH = 8;
 
-// Plain buttons: a middle click opens a tab, which a react-aria press does not report.
-const crumb = "truncate rounded-md px-1 py-0.5 hover:bg-gray-950/5 hover:text-gray-700";
+// Plain buttons: a middle click opens a tab, which a react-aria press does not report. They take
+// the look of the bar's ghost buttons (Share, •••), muted, so a crumb hovers the same way.
+const crumb = buttonStyles({
+  variant: "ghost",
+  size: "xs",
+  className: "min-w-0 shrink font-normal text-gray-400 hover:text-gray-700",
+});
 
 function Separator() {
   return <RightRegular aria-hidden className="size-3 shrink-0 text-gray-300" />;
@@ -22,7 +27,7 @@ function Ancestors({ id, depth }: { id: string; depth: number }) {
   return (
     <>
       {doc.parentId && depth < MAX_DEPTH && <Ancestors id={doc.parentId} depth={depth + 1} />}
-      <li className="flex min-w-0 items-center gap-1">
+      <li className="flex min-w-0 items-center gap-0.5">
         <button
           type="button"
           className={crumb}
@@ -32,7 +37,7 @@ function Ancestors({ id, depth }: { id: string; depth: number }) {
             if (event.button === 1) app.openDoc(id, { mode: app.modeFor(event) });
           }}
         >
-          {doc.title || "Untitled"}
+          <span className="truncate">{doc.title || "Untitled"}</span>
         </button>
         <Separator />
       </li>
@@ -42,12 +47,12 @@ function Ancestors({ id, depth }: { id: string; depth: number }) {
 
 export function Breadcrumbs({ doc }: { doc: DocumentRef }) {
   return (
-    <nav aria-label="Breadcrumbs" className="flex min-w-0 items-center p-2 text-xs text-gray-400">
-      <ol className="flex min-w-0 items-center gap-1">
+    <nav aria-label="Breadcrumbs" className="flex min-w-0 items-center text-xs text-gray-400">
+      <ol className="flex min-w-0 items-center gap-0.5">
         {doc.parentId && <Ancestors id={doc.parentId} depth={0} />}
         <li className="flex min-w-0 items-center">
-          <span aria-current="page" className="truncate px-1 py-0.5 text-gray-600">
-            {doc.title || "Untitled"}
+          <span aria-current="page" className="flex h-5.5 min-w-0 items-center px-2 text-gray-600">
+            <span className="truncate">{doc.title || "Untitled"}</span>
           </span>
         </li>
       </ol>
