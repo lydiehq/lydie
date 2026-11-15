@@ -576,11 +576,18 @@ describe("page icons and quick capture", () => {
     await note("Rocket", "Launch plans");
     await note("Mission", "See [[Rocket]]");
     await treeItem(page, "Rocket").click();
-    await page
-      .locator("[data-testid=tab-view][data-focused]")
-      .getByRole("button", { name: "Page options" })
-      .click();
-    await page.getByRole("menuitem", { name: "Set icon" }).click();
+    const view = page.locator("[data-testid=tab-view][data-focused]");
+    // Hidden until the title (or the buttons' own row) is hovered, and kept while the picker is open.
+    await view.getByRole("textbox", { name: "Title" }).hover();
+    const add = view.getByTestId("page-decor").getByRole("button", { name: "Add icon" });
+    await add.click();
+    await page.getByRole("button", { name: "Icon 🚀" }).waitFor();
+    await page.mouse.move(0, 0);
+    await until(
+      async () => (await add.evaluate((el) => getComputedStyle(el.parentElement!).opacity)) === "1",
+      2000,
+      "buttons stay while the picker is open",
+    );
     await page.getByRole("button", { name: "Icon 🚀" }).click();
     await tabs(page).filter({ hasText: "Rocket" }).locator("[data-page-icon='🚀']").waitFor();
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());

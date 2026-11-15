@@ -361,7 +361,8 @@ function PageDecor({ docId }: DocumentSlotProps) {
   );
   const [picking, setPicking] = useState(false);
   const [coloring, setColoring] = useState(false);
-  const anchor = useRef<HTMLDivElement>(null);
+  const iconAnchor = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const take = () => {
       if (requested?.docId !== docId) return;
@@ -392,13 +393,15 @@ function PageDecor({ docId }: DocumentSlotProps) {
       { label: value ? "Set page icon" : "Remove page icon" },
     );
   };
+  // The buttons sit in the room the page already has above the title, so a page without an icon
+  // or a cover is no taller for them.
+  const barPlace = icon ? "translate-y-0.5" : cover ? "translate-y-3" : "translate-y-4";
   return (
-    <div className="flex flex-col" data-testid="page-decor">
+    <div className="group/decor flex flex-col" data-testid="page-decor">
       {cover && <Cover docId={docId} cover={cover} position={position} />}
-      <div className={`${column} ${icon ? `-mb-8 ${cover ? "" : "pt-10"}` : ""}`}>
-        {/* Empty without an icon: then only where the pickers open, above the title. */}
-        <div ref={anchor} className={`relative w-fit ${icon && cover ? "-mt-10" : ""}`}>
-          {icon && (
+      <div className={`${column} ${icon ? (cover ? "-mb-8" : "-mb-4 pt-10") : ""}`}>
+        {icon && (
+          <div ref={iconAnchor} className={`relative w-fit ${cover ? "-mt-10" : ""}`}>
             <WithTooltip label="Change page icon">
               <button
                 type="button"
@@ -409,17 +412,39 @@ function PageDecor({ docId }: DocumentSlotProps) {
                 {icon}
               </button>
             </WithTooltip>
+          </div>
+        )}
+        {/* Hidden until the pointer is on them, the cover or the title (`data-page-title`, the
+            doc view's), as in Notion; they stay while one of their pickers is open. Always
+            rendered: the pickers the page menu asks for open here too. */}
+        <div
+          ref={bar}
+          className={`relative -mb-7 -ml-1.5 flex h-7 w-fit gap-1 transition-opacity duration-100 ${barPlace} ${
+            picking || coloring
+              ? "opacity-100"
+              : "opacity-0 group-hover/decor:opacity-100 group-has-[~*_[data-page-title]:hover]/decor:opacity-100 focus-within:opacity-100"
+          }`}
+        >
+          {!icon && (
+            <Button size="xs" variant="ghost" onPress={() => setPicking(!picking)}>
+              Add icon
+            </Button>
+          )}
+          {!cover && (
+            <Button size="xs" variant="ghost" onPress={() => setColoring(!coloring)}>
+              Add cover
+            </Button>
           )}
         </div>
         <IconPicker
-          anchor={anchor}
+          anchor={icon ? iconAnchor : bar}
           isOpen={picking}
           onPick={setIcon}
           onRemove={icon ? () => setIcon(null) : undefined}
           onClose={() => setPicking(false)}
         />
         <ColorPicker
-          anchor={anchor}
+          anchor={bar}
           isOpen={coloring}
           current={fill && cover ? cover.toLowerCase() : null}
           placement="bottom start"

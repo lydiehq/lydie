@@ -742,6 +742,8 @@ function TitleField({
     <textarea
       ref={ref}
       aria-label="Title"
+      // Hovering the title shows what a "top" slot keeps hidden above it (page-decor's buttons).
+      data-page-title=""
       rows={1}
       value={value}
       placeholder="Untitled"
