@@ -5,6 +5,7 @@ import { FileRegular, PickerDialog, Table2Regular } from "@lydie/plugin-api/ui";
 import { useState } from "react";
 
 import { COLLECTION_STATE_KEY, CollectionBody } from "./CollectionPage.tsx";
+import { CollectionsSection } from "./CollectionsSection.tsx";
 import { InlineDatabase, isBaseTarget } from "./InlineDatabase.tsx";
 import { preloadDatabaseViews } from "./lazy.tsx";
 import { collectionSlashItems } from "./slash.ts";
@@ -142,6 +143,8 @@ export const databasesPlugin = definePlugin({
       component: InlineDatabase,
     });
     ctx.overlays.register({ id: "databases.pick", component: CollectionPicker });
+    // Between Favorites (9) and the documents (10).
+    ctx.sidebar.register({ id: "collections", order: 9.5, component: CollectionsSection });
     const app = ctx.app;
     ctx.editor.register({
       slashItems: collectionSlashItems({
