@@ -226,8 +226,10 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   it slides along the row and the other tabs glide aside (transforms; a spacer keeps its room).
   Away from the rows it floats under the pointer as a small card. Pressing a tab selects it. A
   document dragged in from the sidebar still opens a ghost pill in the row (`TabDropGap`).
-- **Opening a tab**: a tab that joins a row grows in from no width and fades in (350ms, CSS
-  `@starting-style`), pushing what follows along. Not the tabs a row starts with (a restored
+- **Opening a tab**: a tab that joins a row grows in from no width and fades in (CSS
+  `@starting-style`), pushing what follows along. The growth is 350ms on `ease`, which starts
+  gently, so the new tab button glides over rather than jumps (an ease-out did); the fade waits
+  50ms and takes 250ms, so the label does not show squeezed. Not the tabs a row starts with (a restored
   layout, a new split), nor a tab a drag drops there.
 - **Workspace menu**: the sidebar's workspace button opens a popover of `workspaceMenu`
   contributions (`shell/WorkspaceMenu.tsx`); without any it runs `core.openSettings`, which opens

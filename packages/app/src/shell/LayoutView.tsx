@@ -864,7 +864,9 @@ const TabButton = memo(function TabButton({
   // This tab is the one being dragged: drawn where the drag has it, out of the row's flow.
   dragging: boolean;
   // Newly opened: the tab grows into the row and fades in, and what follows it slides along
-  // from where it stood (the starting margin takes back the row's gap).
+  // from where it stood (the starting margin takes back the row's gap). The growth starts gently,
+  // so the new tab button beside it glides over instead of jumping, and the tab fades in once it
+  // has some room, so its label does not show squeezed.
   opening: boolean;
   onOpened: () => void;
   // How far along the row the tab stands aside for the dragged one, and whether it glides there.
@@ -961,7 +963,7 @@ const TabButton = memo(function TabButton({
           floating && "surface-depth bg-surface opacity-90",
           opening &&
             !dragging &&
-            "transition-[width,min-width,padding,margin,opacity] duration-350 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
+            "transition-[width,min-width,padding,margin,opacity] duration-[350ms,350ms,350ms,350ms,250ms] ease-[ease] [transition-delay:0ms,0ms,0ms,0ms,50ms] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
           animate &&
             !dragging &&
             !opening &&
