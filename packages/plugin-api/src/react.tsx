@@ -1,6 +1,13 @@
 // React bindings for plugins. The host provides the values; plugins only call the hooks.
 import type { TabState } from "@lydie/contract";
-import { createContext, use, useCallback, useMemo, useSyncExternalStore } from "react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -50,8 +57,14 @@ export type HostBridge = {
     get(tabId: string): { state: TabState } | null;
     subscribe(tabId: string, listener: () => void): () => void;
     setState(tabId: string, state: TabState): void;
+    // Paints the active tab with what its view has at the top (`useTabTint`); null clears it.
+    setTint?(tabId: string, tint: TabTint | null): void;
   };
 };
+
+// A colour for the active tab, so it runs on into what its view shows at the top (a page's
+// cover). `tone`: how light the colour is, so the tab's ink can contrast with it.
+export type TabTint = { color: string; tone: "light" | "dark" };
 
 const HostContext = createContext<HostBridge | null>(null);
 
@@ -244,6 +257,21 @@ export function useTabState<T>(key: string, initial: T): [T, (value: T) => void]
     [host, tabId, key],
   );
   return [stored === undefined ? initial : stored, set];
+}
+
+// Paints the tab the view is in with `tint` while it is given; null, unmounting or a tab outside
+// the layout leaves the tab as it is. Not kept: the view sets it again when it mounts.
+export function useTabTint(tint: TabTint | null): void {
+  const host = useHost();
+  const tabId = useTab()?.id ?? null;
+  const color = tint?.color ?? null;
+  const tone = tint?.tone ?? null;
+  // Before paint, so the tab changes in the frame the view does.
+  useLayoutEffect(() => {
+    if (!tabId || !color || !tone) return;
+    host.tabs.setTint?.(tabId, { color, tone });
+    return () => host.tabs.setTint?.(tabId, null);
+  }, [host, tabId, color, tone]);
 }
 
 // Reads the tab's state bag once, without subscribing (for restoring on mount). A tab outside the

@@ -24,6 +24,7 @@ import type {
   PluginContext,
   PluginDef,
   TabInfo,
+  TabTint,
   ToastOptions,
 } from "@lydie/plugin-api";
 import { coreHandlers } from "@lydie/runtime";
@@ -102,6 +103,8 @@ export type Host = {
   readonly overlay: Store<OverlayState>;
   readonly toasts: Store<readonly Toast[]>;
   readonly confirms: Store<readonly ConfirmRequest[]>;
+  // What the views ask their tab to be painted with (`useTabTint`), by tab id.
+  readonly tabTints: Store<ReadonlyMap<string, TabTint>>;
   readonly pluginErrors: Store<readonly { pluginId: string; error: Error }[]>;
   readonly mac: boolean;
   dispatch(action: LayoutAction): void;
@@ -189,6 +192,7 @@ export function createHost(options: HostOptions): Host {
   const services = carryOnHandoff(options.services, storage, backend.info.workspaceId);
   const toasts = createStore<readonly Toast[]>([]);
   const confirms = createStore<readonly ConfirmRequest[]>([]);
+  const tabTints = createStore<ReadonlyMap<string, TabTint>>(new Map());
   const pluginErrors = createStore<readonly { pluginId: string; error: Error }[]>([]);
   const closed: { path: TabPath; state: TabState; groupId: string }[] = [];
   let toastId = 0;
@@ -562,6 +566,14 @@ export function createHost(options: HostOptions): Host {
       get: (tabId) => layout.getTab(tabId),
       subscribe: (tabId, listener) => layout.subscribeTab(tabId, listener),
       setState: (tabId, state) => layout.dispatch({ type: "setTabState", tabId, state }),
+      setTint: (tabId, tint) =>
+        tabTints.set((previous) => {
+          if (!tint && !previous.has(tabId)) return previous;
+          const next = new Map(previous);
+          if (tint) next.set(tabId, tint);
+          else next.delete(tabId);
+          return next;
+        }),
     },
   };
 
@@ -982,6 +994,7 @@ export function createHost(options: HostOptions): Host {
     overlay,
     toasts,
     confirms,
+    tabTints,
     pluginErrors,
     mac,
     dispatch,

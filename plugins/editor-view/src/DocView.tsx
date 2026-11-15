@@ -22,6 +22,7 @@ import {
   useQuerySelect,
   useStatus,
   useTabStateSnapshot,
+  useTabTint,
 } from "@lydie/plugin-api";
 import type {
   AppApi,
@@ -29,6 +30,7 @@ import type {
   JSONContent,
   ParsedDocument,
   SlashCommandItem,
+  TabTint,
   ViewProps,
 } from "@lydie/plugin-api";
 import { defaultSlashItems, Extension, LydieEditor } from "@lydie/plugin-api/editor";
@@ -97,6 +99,7 @@ export function DocView({ tab }: ViewProps) {
     bar,
     pageCoverOf(entry?.document.properties) !== null && !entry?.document.deletedAt,
   );
+  useTabTint(bare ? null : coverTint(overlay));
   if (!route) return null;
   if (error) return <ErrorState title="Could not open this document" error={error} />;
   if (!entry) {
@@ -145,6 +148,7 @@ export function DocView({ tab }: ViewProps) {
           <div
             aria-hidden
             className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-20 bg-linear-to-b to-transparent transition-opacity duration-150 ${
+              // Literal classes for Tailwind; FADE says the same for the tab.
               overlay.tone === "light" ? "from-white/25" : "from-black/20"
             } ${overlay.over ? "opacity-100" : "opacity-0"}`}
           />
@@ -197,7 +201,22 @@ const INK = {
     "[&_*]:text-black/60! [&_button:hover]:bg-black/8! [&_button:hover]:text-black/90! [&_button:hover_*]:text-black/90!",
 } as const;
 
-type CoverOverlay = { tone: "light" | "dark"; over: boolean };
+// The fade from the top of the view down over a cover, behind the bar, by the cover's tone.
+const FADE = { light: { color: "white", alpha: 25 }, dark: { color: "black", alpha: 20 } } as const;
+
+// A colour cover runs on into the tab while the bar is over it: the tab takes the colour the
+// cover has at the top, under the fade (the fade's top over the cover's colour).
+function coverTint(overlay: CoverOverlay | null): TabTint | null {
+  if (!overlay?.over || !overlay.color) return null;
+  const fade = FADE[overlay.tone];
+  return {
+    color: `color-mix(in srgb, ${overlay.color} ${100 - fade.alpha}%, ${fade.color})`,
+    tone: overlay.tone,
+  };
+}
+
+// `color`: the cover's computed background when it is a colour (`data-cover-color`), else null.
+type CoverOverlay = { tone: "light" | "dark"; over: boolean; color: string | null };
 
 // When the page opens on a cover (page-decor's `data-page-cover` at the very top of the scroll
 // container), the bar lies over it instead of taking a row of its own: `over` while the cover is
@@ -224,10 +243,15 @@ function useCoverOverlay(
           next = {
             tone: cover.dataset.coverTone === "light" ? "light" : "dark",
             over: box.bottom > bar.current.getBoundingClientRect().bottom,
+            color: cover.dataset.coverColor ? getComputedStyle(cover).backgroundColor : null,
           };
         }
       }
-      setOverlay((prev) => (prev?.tone === next?.tone && prev?.over === next?.over ? prev : next));
+      setOverlay((prev) =>
+        prev?.tone === next?.tone && prev?.over === next?.over && prev?.color === next?.color
+          ? prev
+          : next,
+      );
     };
     let frame = 0;
     const schedule = () => {
@@ -242,7 +266,7 @@ function useCoverOverlay(
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ["data-cover-tone"],
+      attributeFilter: ["data-cover-tone", "data-cover-color"],
     });
     // Scroll does not bubble: caught on the way down to the scroll container.
     el.addEventListener("scroll", schedule, { capture: true, passive: true });

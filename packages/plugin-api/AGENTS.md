@@ -125,6 +125,9 @@ useOps() (records on the tab's / active tab's undo scope), useHistory(scope?), u
 <Portal container> (render into another element; plugins do not import react-dom),
 useTab(), useActiveTab(), useTabState(key, initial) (the tab's persisted state bag),
 useTabStateSnapshot(), useContributions(kind), <DocumentSlots slot docId tab? fallback? />
+useTabTint(TabTint { color, tone: "light" | "dark" } | null)   // paints the view's tab (while
+//   active) so it runs on into the view's top (the doc view: a colour cover); not kept, cleared
+//   on unmount; host side `HostBridge.tabs.setTint?`
 useShortcut(commandId) → key caps | null   // for the tooltip of a button that runs the command
 Providers (host only): BackendProvider, HostProvider (HostBridge), TabProvider ({ tab, state? }:
   `state` is the state bag of a tab outside the layout, such as the collections' page panel,

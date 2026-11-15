@@ -67,7 +67,9 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   trash, not under a banner) the bar lies over the cover instead of taking a row: its ink (`INK`,
   set on the bar so plugins' controls follow) and a 80 px fade from the top follow the cover's
   `data-cover-tone` (dark until known); once the cover scrolls out from under it, the bar takes
-  `bg-surface` over the text. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
+  `bg-surface` over the text. Meanwhile a colour cover (`data-cover-color`) tints the tab
+  (`useTabTint`, not in a host's panel) with its computed background under the fade's top
+  (`coverTint`, `FADE`: keep it in step with the fade's classes), so tab and cover read as one. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
   find bar keeps clear of. A long trail truncates. With `bare: true` in the tab state (a host's
   panel: the collections' page panel, which puts its ×, full page and to the side there) the bar
   stays but shows no breadcrumbs, actions or •••.

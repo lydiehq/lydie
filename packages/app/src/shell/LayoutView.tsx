@@ -967,6 +967,13 @@ const TabButton = memo(function TabButton({
   const pinned = livePath ? livePinned : last.pinned;
   const closeKeys = useShortcut("core.closeTab");
   const views = useContributions("view");
+  const tintOf = useSelector(
+    host.tabTints.subscribe,
+    host.tabTints.get,
+    (tints) => tints.get(tabId) ?? null,
+  );
+  // Only the active tab is drawn as part of the card, and only that runs on into the view.
+  const tint = active && !floating ? tintOf : null;
   if (!path) return null;
   const view = findView(views, path);
   const Title = view?.tabTitle;
@@ -1063,7 +1070,10 @@ const TabButton = memo(function TabButton({
                 pinned ? "max-w-[190px]" : frozen ? "w-(--tab-frozen-width)" : "w-[190px]",
               ),
           active
-            ? clsx("z-10", groupFocused ? "text-gray-900" : "text-gray-700")
+            ? clsx(
+                "z-10",
+                tint ? TINT_INK[tint.tone] : groupFocused ? "text-gray-900" : "text-gray-700",
+              )
             : "text-gray-600 hover:bg-gray-950/3",
           floating && "surface-depth bg-surface opacity-90",
           opening &&
@@ -1092,7 +1102,9 @@ const TabButton = memo(function TabButton({
               : undefined
         }
       >
-        {active && !floating && <ActiveTabShape atEdge={atEdge && !dragging} />}
+        {active && !floating && (
+          <ActiveTabShape atEdge={atEdge && !dragging} tint={tint?.color ?? null} />
+        )}
         {/* The title runs to the tab's padding and fades out instead of an ellipsis (also a
             plugin's `tabTitle`); where the close button shows, it fades out before it, so the
             button lies over the end of the title instead of taking its room. A mask, so it
@@ -1159,21 +1171,30 @@ const TabButton = memo(function TabButton({
 // around it and its feet flare out into the card's top edge. It reaches 7px below the tab, to the
 // bottom of the tab list (2px into the card), and 3px above it so the label sits near its middle.
 // As in Dia, its top edge catches the light (`--depth-shine`, dark mode only), fading down the sides.
-function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
+// `tint`: the colour its view has at the top (`useTabTint`: a page's cover), in place of the card's.
+function ActiveTabShape({ atEdge, tint }: { atEdge: boolean; tint: string | null }) {
   return (
     <span
       aria-hidden
       className="pointer-events-none absolute inset-x-0 -top-[3px] -bottom-[7px] -z-10"
     >
-      <TabSide foot={!atEdge} />
+      <TabSide foot={!atEdge} tint={tint} />
       <span
-        className="absolute inset-y-0 border-t border-(--depth-shine) bg-surface"
-        style={{ left: TAB_CORNER, right: TAB_CORNER }}
+        className="absolute inset-y-0 border-t border-(--depth-shine) bg-surface transition-colors duration-150"
+        style={{ left: TAB_CORNER, right: TAB_CORNER, ...(tint ? { backgroundColor: tint } : {}) }}
       />
-      <TabSide foot right />
+      <TabSide foot right tint={tint} />
     </span>
   );
 }
+
+// The ink of a tinted tab, by how light the tint is; literal white and black, as the bar's over a
+// cover. On the tab rather than on its parts, so a view's `tabTitle` follows.
+const TINT_INK = {
+  dark: "text-white/90 [&_*]:text-white/85! [&_button:hover]:bg-white/15! [&_button:hover]:text-white!",
+  light:
+    "text-black/80 [&_*]:text-black/60! [&_button:hover]:bg-black/8! [&_button:hover]:text-black/90!",
+} as const;
 
 // Measured from Dia's tabs: round top corners, and feet that are wider than tall, leaving the
 // side quickly and running a long way along the card's edge.
@@ -1190,7 +1211,7 @@ const FOOT_BASE_HANDLE = 0.7;
 // One side of the active tab as a single path, so the hairline runs unbroken from the card's top
 // edge, round the foot, up the side and round the top corner. Coordinates are hairline centres;
 // the right side is the left one mirrored.
-function TabSide({ foot, right }: { foot: boolean; right?: boolean }) {
+function TabSide({ foot, right, tint }: { foot: boolean; right?: boolean; tint: string | null }) {
   const shine = useId();
   const f = foot ? TAB_FOOT_WIDTH : 0;
   const width = f + TAB_CORNER;
@@ -1220,7 +1241,11 @@ function TabSide({ foot, right }: { foot: boolean; right?: boolean }) {
         <stop offset="0" style={{ stopColor: "var(--depth-shine)" }} />
         <stop offset="1" style={{ stopColor: "var(--depth-border)" }} />
       </linearGradient>
-      <path d={`${outline}L${width} ${h}L0.5 ${h}Z`} className="fill-surface" />
+      <path
+        d={`${outline}L${width} ${h}L0.5 ${h}Z`}
+        className="fill-surface transition-[fill] duration-150"
+        style={tint ? { fill: tint } : undefined}
+      />
       <path d={outline} fill="none" stroke={`url(#${shine})`} />
     </svg>
   );
