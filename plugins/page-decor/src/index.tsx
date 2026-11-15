@@ -367,7 +367,7 @@ function PageDecor({ docId }: DocumentSlotProps) {
                 aria-label="Change page icon"
                 data-page-icon={icon}
                 onClick={() => setPicking(!picking)}
-                className="flex h-15 items-center rounded-lg px-1 text-5xl leading-none hover:bg-gray-950/5"
+                className="flex size-15 items-center justify-center rounded-lg text-5xl leading-none hover:bg-gray-950/5"
               >
                 <PageIcon icon={icon} size={48} />
               </button>
