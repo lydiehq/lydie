@@ -97,13 +97,13 @@ export function Sidebar({ footer }: Props) {
     <div className="flex shrink-0 flex-col">
       <ActionRow
         label="Search"
-        icon={<Search2Regular aria-hidden className="size-4 text-gray-500" />}
+        icon={<Search2Regular aria-hidden className="size-4 shrink-0 text-gray-500" />}
         hotkeys={searchKeys}
         onPress={() => void host.app.runCommand("core.palette")}
       />
       <ActionRow
         label="New document"
-        icon={<AddRegular aria-hidden className="size-4 text-gray-500" />}
+        icon={<AddRegular aria-hidden className="size-4 shrink-0 text-gray-500" />}
         hotkeys={newKeys}
         onPress={() => void host.app.runCommand("core.newDocument")}
       />
@@ -118,8 +118,9 @@ export function Sidebar({ footer }: Props) {
     <section
       key={`${section.pluginId}:${section.id}`}
       aria-label={section.title ?? section.id}
-      // A section that renders nothing (no favorites yet) takes no room in the column.
-      className={`group/section empty:hidden ${section.fill ? "flex min-h-0 flex-1 flex-col" : "flex shrink-0 flex-col"}`}
+      // A section whose component renders nothing (no favorites yet) takes no room in the
+      // column, title and all.
+      className={`group/section has-[>[data-section-body]:empty]:hidden ${section.fill ? "flex min-h-0 flex-1 flex-col" : "flex shrink-0 flex-col"}`}
     >
       {section.title && (
         <div className="flex items-center gap-px pr-3 pb-1 pl-4">
@@ -140,9 +141,11 @@ export function Sidebar({ footer }: Props) {
           ))}
         </div>
       )}
-      <ErrorBoundary label={`Sidebar (${section.pluginId})`} compact>
-        <section.component />
-      </ErrorBoundary>
+      <div data-section-body className="contents">
+        <ErrorBoundary label={`Sidebar (${section.pluginId})`} compact>
+          <section.component />
+        </ErrorBoundary>
+      </div>
     </section>
   );
 
