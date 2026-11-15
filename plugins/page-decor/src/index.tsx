@@ -385,10 +385,7 @@ function Cover({
                 onPreview(null);
               }}
               onPreview={onPreview}
-              onPick={(color) => {
-                setColoring(false);
-                onColor(color);
-              }}
+              onPick={onColor}
             />
             <Button
               size="xs"
@@ -457,7 +454,8 @@ function PageDecor({ docId }: DocumentSlotProps) {
   const cover = preview ?? decor?.cover ?? null;
   const position = decor?.position ?? 50;
   const fill = coverFillOf(cover);
-  // The preview stays until the page has the colour, so the cover does not flash back.
+  // The picker stays open, so colours can be tried one after another; Escape or a press outside
+  // closes it. The preview stays until the page has the colour, so the cover does not flash back.
   const setCover = (color: string) => {
     void ops.doc
       .setProperties(
@@ -547,10 +545,7 @@ function PageDecor({ docId }: DocumentSlotProps) {
             setPreview(null);
           }}
           onPreview={setPreview}
-          onPick={(color) => {
-            setColoring(false);
-            setCover(color);
-          }}
+          onPick={setCover}
         />
       </div>
     </div>
