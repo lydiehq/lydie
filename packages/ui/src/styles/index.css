@@ -168,8 +168,8 @@
 
 /* Animated checkbox checkmark */
 .checkbox-checkmark {
-  width: calc(100% - 0.35rem);
-  height: calc(100% - 0.35rem);
+  width: calc(100% - 0.5rem);
+  height: calc(100% - 0.5rem);
   fill: none;
   stroke: var(--color-surface);
   stroke-width: 3.5px;
