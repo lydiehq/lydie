@@ -113,6 +113,14 @@ Licence: AGPL-3.0-only.
   stays beside them; an embed shows Filter and Display as icons);
   chips are 24px segmented pills ("icon label | operator | value | ×") in `text-xs`; menus have a
   fixed width.
+- The board's look (its classes are in `skeleton.tsx`, so `BoardSkeleton` has the same sizes):
+  columns on a light gray (`gray-950/[0.035]`, darker while a card is dragged over), the option's
+  pill and the count on top, "+" on hover and "New page" at the bottom. Cards are raised
+  (`bg-elevated`, lighter than the column in dark mode; a hairline ring and a soft shadow) and
+  leave out the properties the column and lane already say. A card drags whole; a grip at its top
+  right shows on hover. The dragged card fades in place and the drop line is drawn in the gap
+  between cards, so nothing moves while dragging; a column clears its line by the pointer's
+  position (`relatedTarget` is null in Safari).
 - `PageSheet.tsx`: `ctx.peekRow` ("Open" on a page, Space in the table, a new page from the
   toolbar) shows the page in a panel that slides in from the right over half of the tab: the
   registered `doc` view rendered in a portal on the tab's panel with a tab of its own to read (not

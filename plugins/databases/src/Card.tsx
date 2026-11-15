@@ -26,7 +26,7 @@ export const Card = memo(function Card({
   const { view } = useViewContext();
   const cover = view.config.layout.cover;
   return (
-    <div className="flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden rounded-[inherit]">
       {cover && coverHeight > 0 && (
         <div className="shrink-0 overflow-hidden bg-gray-50" style={{ height: coverHeight }}>
           {cover.type === "property" ? (
@@ -40,8 +40,8 @@ export const Card = memo(function Card({
           )}
         </div>
       )}
-      <div className="flex flex-col gap-1 p-2">
-        <span className="text-sm font-medium break-words text-gray-900">
+      <div className="flex flex-col gap-1.5 p-2.5">
+        <span className="text-sm leading-snug font-medium break-words text-gray-900">
           {row.title || <span className="text-gray-400">Untitled</span>}
         </span>
         {columns.slice(1).map((column) => {

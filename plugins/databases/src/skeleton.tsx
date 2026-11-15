@@ -77,27 +77,40 @@ export function CardSkeleton({ index, coverHeight = 0 }: { index: number; coverH
   );
 }
 
+// The board's look, here so that its skeleton (outside the lazy chunk) has the same sizes and
+// nothing moves when the pages arrive.
+export const BOARD_LANE = "flex items-start gap-2";
+export const BOARD_COLUMN = "flex w-68 shrink-0 flex-col rounded-xl py-1.5";
+export const BOARD_COLUMN_BG = "bg-gray-950/[0.035]";
+export const BOARD_HEADER = "flex h-8 shrink-0 items-center gap-1.5 pr-1.5 pl-2";
+// Room on every side, so the cards' rings, shadows and focus rings are not cut off by the
+// scrolling list or by each card's `content-visibility` (which clips to its box).
+export const BOARD_LIST = "flex flex-col gap-1.5 px-1.5 py-1";
+// Elevated: the same as the surface in light mode, lighter than the column in dark mode.
+export const BOARD_CARD = "rounded-lg bg-elevated shadow-xs ring-1 ring-gray-950/[0.07]";
+export const BOARD_FOOTER = "mx-1.5 mt-1 h-7.5 shrink-0";
+
 // The board before its columns are known.
 export function BoardSkeleton() {
   return (
     <div
       role="status"
       aria-label="Loading board"
-      className="flex min-h-0 grow items-start gap-3 overflow-hidden p-2"
+      className={`${BOARD_LANE} min-h-0 grow overflow-hidden p-2`}
     >
       {[3, 2, 4, 1].map((cards, column) => (
-        <div
-          key={column}
-          className="flex w-64 shrink-0 flex-col gap-1.5 rounded-lg bg-gray-50 p-1.5"
-        >
-          <div className="flex h-6 items-center px-1">
+        <div key={column} className={`${BOARD_COLUMN} ${BOARD_COLUMN_BG}`}>
+          <div className={BOARD_HEADER}>
             <Skeleton className={`h-3 ${column % 2 ? "w-20" : "w-14"}`} />
           </div>
-          {Array.from({ length: cards }, (_, i) => (
-            <div key={i} className="rounded-md bg-surface shadow-sm ring-1 ring-gray-950/5">
-              <CardSkeleton index={column + i} />
-            </div>
-          ))}
+          <div className={BOARD_LIST}>
+            {Array.from({ length: cards }, (_, i) => (
+              <div key={i} className={BOARD_CARD}>
+                <CardSkeleton index={column + i} />
+              </div>
+            ))}
+          </div>
+          <div className={BOARD_FOOTER} />
         </div>
       ))}
     </div>

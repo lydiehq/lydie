@@ -9,16 +9,27 @@ import {
   AddRegular,
   BoardIllustration,
   Button,
+  DotsVerticalRegular,
   EmptyState,
   Select,
   SelectItem,
 } from "@lydie/plugin-api/ui";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, MouseEvent } from "react";
 
 import { Card } from "../Card.tsx";
 import { useViewContext } from "../context.tsx";
-import { BoardSkeleton, CardSkeleton } from "../skeleton.tsx";
+import {
+  BOARD_CARD,
+  BOARD_COLUMN,
+  BOARD_COLUMN_BG,
+  BOARD_FOOTER,
+  BOARD_HEADER,
+  BOARD_LANE,
+  BOARD_LIST,
+  BoardSkeleton,
+  CardSkeleton,
+} from "../skeleton.tsx";
 import { groupLabel, visibleColumns } from "../view-model.ts";
 
 const CARD_MIME = "application/x-lydie-db-card";
@@ -35,7 +46,11 @@ export function BoardView({ maxHeight }: { maxHeight?: number | undefined }) {
   const subProperty = definition.properties.find(
     (p) => p.id === view.config.subGroupBy?.propertyId,
   );
-  const columns = useMemo(() => visibleColumns(definition, view), [definition, view]);
+  // A card leaves out what its column and lane already say.
+  const columns = useMemo(() => {
+    const grouped = [view.config.groupBy?.propertyId, view.config.subGroupBy?.propertyId];
+    return visibleColumns(definition, view).filter((c) => !grouped.includes(c.property.id));
+  }, [definition, view]);
 
   if (!groupBy || !groupProperty) {
     const candidates = definition.properties.filter(
@@ -92,15 +107,17 @@ export function BoardView({ maxHeight }: { maxHeight?: number | undefined }) {
         <section
           key={JSON.stringify(sub)}
           aria-label={subProperty ? groupLabel(sub, subProperty) : "Board"}
-          className="mb-4"
+          className="mb-6 last:mb-0"
         >
           {subProperty && (
-            <h3 className="mb-1 flex items-center gap-2 px-1 text-sm font-medium text-gray-800">
+            <h3 className="mb-1.5 flex h-7 items-center gap-2 px-2 text-sm font-medium text-gray-800">
               {groupLabel(sub, subProperty)}
-              <span className="text-xs font-normal text-gray-500">{laneTotal(sub)}</span>
+              <span className="text-xs font-normal text-gray-400 tabular-nums">
+                {laneTotal(sub)}
+              </span>
             </h3>
           )}
-          <div className="flex items-start gap-3">
+          <div className={BOARD_LANE}>
             {keys.map((key) => {
               const count = counts.get(JSON.stringify([sub, key]));
               if (count === undefined) return null;
@@ -153,6 +170,16 @@ function BoardColumn({
   const app = useApp();
   const [limit, setLimit] = useState(PAGE);
   const [dropAt, setDropAt] = useState<number | null>(null);
+  // The card being dragged from this column, faded in its place.
+  const [dragging, setDragging] = useState<string | null>(null);
+  useEffect(() => {
+    if (!dragging) return;
+    // A card dropped in another column has left this one before its dragend fires, so that
+    // never arrives here: any drop ends the drag too.
+    const end = () => setDragging(null);
+    window.addEventListener("drop", end, true);
+    return () => window.removeEventListener("drop", end, true);
+  }, [dragging]);
   const list = useRef<HTMLDivElement>(null);
   const win = useDatabaseView({
     ...params,
@@ -178,8 +205,11 @@ function BoardColumn({
     return out;
   }, [win.rows, pending, groupKey, subKey]);
   const option = groupKey !== null ? optionFor(property, groupKey) : null;
+  // Darker while a card is dragged over it.
   const tint =
-    view.config.layout.colorColumns && option ? OPTION_COLORS[option.color] : "bg-gray-50";
+    view.config.layout.colorColumns && option
+      ? OPTION_COLORS[option.color]
+      : `${BOARD_COLUMN_BG} data-drop-target:bg-gray-950/[0.06]`;
   const coverHeight = view.config.layout.cover ? 120 : 0;
   const manual = view.config.sorts.length === 0;
 
@@ -243,53 +273,64 @@ function BoardColumn({
     if (event.metaKey || event.ctrlKey || event.button === 1) ctx.openRow(row.id, event);
     else ctx.peekRow(row.id);
   };
+  const create = () =>
+    void ctx
+      .createRow({ group: groupKey, ...(subKey !== undefined ? { subGroup: subKey } : {}) })
+      .then((id) => ctx.peekRow(id));
+  const label = groupLabel(groupKey, property);
+  // The drop line sits in the gap above (or, at the end, below) a card, drawn over it so the
+  // cards do not move while dragging. Each card's wrapper has 4px of room around the card.
+  const line = "pointer-events-none absolute inset-x-2 h-0.5 rounded-full bg-blue-500";
 
   return (
     <div
       role="group"
-      aria-label={`${groupLabel(groupKey, property)} column`}
+      aria-label={`${label} column`}
       data-group={JSON.stringify(groupKey)}
-      className={`flex w-64 shrink-0 flex-col rounded-lg ${tint} p-1.5`}
+      data-drop-target={dropAt !== null || undefined}
+      className={`group/column ${BOARD_COLUMN} ${tint} transition-[background-color] duration-150`}
       onDragOver={(event) => {
         if (!event.dataTransfer.types.includes(CARD_MIME)) return;
         event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
         const i = indexAt(event);
         setDropAt((d) => (d === i ? d : i));
       }}
       onDragLeave={(event) => {
-        if (!(event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null))
-          setDropAt(null);
+        // By position: leaving one card for the next also fires here, and `relatedTarget` (where
+        // the pointer went) is null in Safari, which would clear the line between cards.
+        const box = event.currentTarget.getBoundingClientRect();
+        const { clientX: x, clientY: y } = event;
+        if (x <= box.left || x >= box.right || y <= box.top || y >= box.bottom) setDropAt(null);
       }}
       onDrop={onDrop}
     >
-      <div className="flex items-center gap-2 px-1 pb-1.5 text-sm">
+      <div className={BOARD_HEADER}>
         {option ? (
-          <span className={`rounded px-1.5 text-xs leading-5 ${OPTION_COLORS[option.color]}`}>
+          <span
+            className={`min-w-0 truncate rounded px-1.5 text-xs leading-5 font-medium ${OPTION_COLORS[option.color]}`}
+          >
             {groupKey}
           </span>
         ) : (
-          <span className="font-medium text-gray-700">{groupLabel(groupKey, property)}</span>
+          <span className="min-w-0 truncate text-sm font-medium text-gray-700">{label}</span>
         )}
-        <span className="text-xs text-gray-500" data-testid="column-count">
+        <span className="text-xs text-gray-400 tabular-nums" data-testid="column-count">
           {count}
         </span>
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label={`New in ${groupLabel(groupKey, property)}`}
-          onPress={() =>
-            void ctx
-              .createRow({ group: groupKey, ...(subKey !== undefined ? { subGroup: subKey } : {}) })
-              .then((id) => ctx.peekRow(id))
-          }
-          className="ml-auto text-gray-500"
+          aria-label={`New in ${label}`}
+          onPress={create}
+          className="ml-auto text-gray-500 opacity-0 group-hover/column:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
         >
           <AddRegular aria-hidden />
         </Button>
       </div>
       <div
         ref={list}
-        className="flex max-h-[70vh] flex-col gap-1.5 overflow-y-auto"
+        className={`${BOARD_LIST} relative max-h-[70vh] overflow-y-auto`}
         onScroll={(event) => {
           const el = event.currentTarget;
           if (el.scrollTop + el.clientHeight > el.scrollHeight - 200 && limit < count)
@@ -297,11 +338,16 @@ function BoardColumn({
         }}
       >
         {rows.map((row, i) => (
-          <div key={row.id}>
-            {dropAt === i && <div className="h-0.5 rounded bg-blue-500" />}
+          // Paint-contained (fast with hundreds of cards), so it reaches 4px past the card.
+          <div
+            key={row.id}
+            className="relative -m-1 p-1 [contain-intrinsic-size:auto_72px] [content-visibility:auto]"
+          >
+            {dropAt === i && <div className={`${line} top-0`} />}
             {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- the card's button opens it from the keyboard */}
             <div
               data-card={row.id}
+              data-dragging={dragging === row.id || undefined}
               draggable
               onDragStart={(event) => {
                 event.dataTransfer.setData(
@@ -309,9 +355,11 @@ function BoardColumn({
                   JSON.stringify({ row, key: groupKey, sub: subKey ?? null }),
                 );
                 event.dataTransfer.effectAllowed = "move";
+                setDragging(row.id);
               }}
+              onDragEnd={() => setDragging(null)}
               onClick={(event) => open(row, event)}
-              className="cursor-pointer rounded-md bg-surface shadow-sm ring-1 ring-gray-950/5 hover:ring-gray-950/15 [content-visibility:auto]"
+              className={`group/card relative cursor-pointer ${BOARD_CARD} outline-solid outline-0 outline-offset-2 outline-blue-600 transition-[box-shadow,opacity] duration-150 hover:shadow-sm hover:ring-gray-950/[0.12] has-[:focus-visible]:outline-2 data-dragging:opacity-40`}
             >
               {/* Plain: one per card (columns hold hundreds) and visually hidden, so no look to share. */}
               <button
@@ -325,14 +373,27 @@ function BoardColumn({
                 Open {row.title || "Untitled"}
               </button>
               <Card row={row} columns={columns} coverHeight={coverHeight} />
+              {/* The grip shows that the card can be dragged (the whole card drags); it covers the
+                  title's end on hover, like the table rows' grip. */}
+              <span
+                aria-hidden
+                title="Drag to move"
+                className="absolute top-1.5 right-1.5 flex size-5 cursor-grab items-center justify-center rounded bg-elevated text-gray-400 opacity-0 shadow-xs ring-1 ring-gray-950/[0.07] transition-opacity group-hover/card:opacity-100 hover:text-gray-700 active:cursor-grabbing pointer-coarse:hidden"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <DotsVerticalRegular aria-hidden className="size-3 rotate-90" />
+              </span>
             </div>
+            {dropAt === rows.length && i === rows.length - 1 && (
+              <div className={`${line} bottom-0`} />
+            )}
           </div>
         ))}
-        {dropAt !== null && dropAt >= rows.length && <div className="h-0.5 rounded bg-blue-500" />}
+        {dropAt !== null && rows.length === 0 && <div className={`${line} top-0`} />}
         {win.isLoading &&
           rows.length === 0 &&
           Array.from({ length: Math.min(count, 3) }, (_, i) => (
-            <div key={i} className="rounded-md bg-surface shadow-sm ring-1 ring-gray-950/5">
+            <div key={i} className={BOARD_CARD}>
               <CardSkeleton index={i} coverHeight={coverHeight} />
             </div>
           ))}
@@ -347,6 +408,15 @@ function BoardColumn({
           </Button>
         )}
       </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onPress={create}
+        className={`${BOARD_FOOTER} justify-start gap-1.5 px-2.5 font-normal text-gray-500`}
+      >
+        <AddRegular aria-hidden data-icon="inline-start" />
+        New page
+      </Button>
     </div>
   );
 }
