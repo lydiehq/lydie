@@ -18,8 +18,8 @@ import { Toasts } from "./Toasts.tsx";
 
 type Props = {
   host: Host;
-  // Bottom of the sidebar, e.g. the account entry point ("Join the cloud waitlist", "Sign in to
-  // sync" or the sync state).
+  // Bottom of the sidebar, e.g. the account entry point ("Sign in to Lydie Cloud" or the sync
+  // state).
   sidebarFooter?: ReactNode;
   // Under the content cards, for states that need the person (a session that ended, lost access).
   banner?: ReactNode;

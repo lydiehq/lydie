@@ -13,38 +13,14 @@ import {
 
 import { AvatarCard } from "./AvatarCard.tsx";
 import { SecuritySections } from "./Security.tsx";
-import { toCloud, useSignUpMode } from "./sign-up.ts";
+import { toCloud } from "./sign-up.ts";
 import { SyncDetailsBody } from "./SyncStatus.tsx";
 
 export function AccountPage() {
   const app = useApp();
   const { api, state } = useAccount();
   const details = useObservable(api?.sync?.details);
-  const signUp = useSignUpMode();
   if (!api) return <EmptyState title="Accounts are not available in this window" />;
-  if (state.status === "signed-out" && signUp === "waitlist") {
-    return (
-      <EmptyState
-        title="Not signed in"
-        illustration={<SyncIllustration />}
-        description="Lydie Cloud keeps your notes on all your devices and lets you write with your team. Accounts are opening gradually: join the waitlist and we will email you when yours is ready. Already have an account? Sign in."
-        action={
-          <div className="flex gap-2">
-            <Button size="sm" onPress={() => app.overlays.open("account.waitlist")}>
-              Join the cloud waitlist
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onPress={() => app.overlays.open("account.signIn")}
-            >
-              Sign in
-            </Button>
-          </div>
-        }
-      />
-    );
-  }
   if (state.status === "signed-out") {
     return (
       <EmptyState

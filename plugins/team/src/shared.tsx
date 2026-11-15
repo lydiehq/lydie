@@ -87,44 +87,32 @@ export function useMembers() {
   return { ...query, members, me, meId, canManage: me?.role === "owner" || me?.role === "admin" };
 }
 
-// Team settings exist only in a cloud workspace; elsewhere say how to get one. While cloud
-// accounts open gradually (the server's `waitlist.status`), a signed-out window offers the cloud
-// waitlist (the account plugin's `account.waitlist` dialog, which also leads to signing in).
+// Team settings exist only in a cloud workspace; elsewhere say how to get one.
 export function HostedOnly({ children, what }: { children: ReactNode; what: string }) {
   const app = useApp();
   const { api, state } = useAccount();
   const signedOut = state.status === "signed-out";
-  const signUp = useHostedQuery("waitlist.status", api && signedOut ? {} : null);
   if (api && api.scope.kind === "hosted") return <>{children}</>;
-  const waitlist = signedOut && signUp.data?.signUp !== "open";
   return (
     <EmptyState
       title={`${what} need a cloud workspace`}
       illustration={<SyncIllustration />}
-      description={
-        waitlist
-          ? "This workspace lives on this device only. Lydie Cloud, for inviting people and sharing pages, is opening gradually: join the waitlist, or sign in if you have an account."
-          : "This workspace lives on this device only. Put it in Lydie Cloud to invite people and share pages."
-      }
+      description="This workspace lives on this device only. Put it in Lydie Cloud to invite people and share pages."
       action={
         api ? (
           <Button
             size="sm"
             onPress={() =>
-              waitlist
-                ? app.overlays.open("account.waitlist", { then: "handoff" })
-                : signedOut
-                  ? app.overlays.open("account.signIn", { then: "handoff" })
-                  : app.overlays.open("account.handoff")
+              signedOut
+                ? app.overlays.open("account.signIn", { then: "handoff" })
+                : app.overlays.open("account.handoff")
             }
           >
-            {waitlist
-              ? "Join the cloud waitlist"
-              : signedOut
-                ? "Sign in to Lydie Cloud"
-                : api.handoff?.discard
-                  ? "Move to cloud…"
-                  : "Copy to cloud…"}
+            {signedOut
+              ? "Sign in to Lydie Cloud"
+              : api.handoff?.discard
+                ? "Move to cloud…"
+                : "Copy to cloud…"}
           </Button>
         ) : undefined
       }

@@ -4,15 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { continueAfterSignIn } from "./after-sign-in.ts";
-import {
-  authMessage,
-  isSignUpClosed,
-  providerMessage,
-  TWO_FACTOR_REQUIRED,
-  twoFactorMessage,
-} from "./format.ts";
-import { useSignUpMode } from "./sign-up.ts";
-import type { WaitlistProps } from "./WaitlistDialog.tsx";
+import { authMessage, providerMessage, TWO_FACTOR_REQUIRED, twoFactorMessage } from "./format.ts";
 
 export type SignInProps = {
   mode?: "sign-in" | "sign-up";
@@ -44,19 +36,8 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
   // The password was right and the account asks for a code too.
   const [secondFactor, setSecondFactor] = useState<"app" | "backup" | null>(null);
   const [code, setCode] = useState("");
-  // The last attempt was refused because only approved emails can create an account.
-  const [closed, setClosed] = useState(Boolean(options.error && isSignUpClosed(options.error)));
-  const signUpMode = useSignUpMode();
 
   if (!api) return null;
-
-  const joinWaitlist = () => {
-    close();
-    app.overlays.open("account.waitlist", {
-      ...(email.trim() ? { email: email.trim() } : {}),
-      ...(options.then ? { then: options.then } : {}),
-    } satisfies WaitlistProps);
-  };
 
   const signedIn = async (how: "sign-in" | "sign-up") => {
     close();
@@ -70,7 +51,6 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
 
   const google = async () => {
     setError(null);
-    setClosed(false);
     setWaiting(true);
     try {
       // The web app leaves the page here and finishes when it comes back.
@@ -78,7 +58,6 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
       await signedIn("sign-in");
     } catch (e) {
       setError(providerMessage(e));
-      setClosed(isSignUpClosed(e));
     } finally {
       setWaiting(false);
     }
@@ -88,7 +67,6 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
     event.preventDefault();
     setBusy(true);
     setError(null);
-    setClosed(false);
     try {
       if (mode === "sign-up") {
         await api.signUp({
@@ -107,7 +85,6 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
         return;
       }
       setError(authMessage(e, mode));
-      setClosed(isSignUpClosed(e));
     } finally {
       setBusy(false);
     }
@@ -202,11 +179,7 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
           </Heading>
           <p className="text-sm text-gray-600">
             {options.reason ??
-              (signUp
-                ? signUpMode === "waitlist"
-                  ? "Accounts are opening gradually. Use the email address that was approved on the cloud waitlist."
-                  : "Lydie Cloud keeps your notes on all your devices and lets you write with your team."
-                : "Lydie Cloud keeps your notes on all your devices and lets you write with your team.")}
+              "Lydie Cloud keeps your notes on all your devices and lets you write with your team."}
           </p>
           {waiting ? (
             <div className="flex items-center justify-between gap-3 rounded-lg bg-gray-950/3 px-3 py-2.5 text-sm text-gray-700">
@@ -263,11 +236,6 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
             <p role="alert" className="text-sm text-red-600">
               {error}
             </p>
-          )}
-          {closed && (
-            <Button variant="secondary" size="sm" onPress={joinWaitlist}>
-              Join the cloud waitlist
-            </Button>
           )}
           <div className="mt-1 flex items-center justify-between gap-2">
             <Button

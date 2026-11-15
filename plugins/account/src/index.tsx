@@ -26,7 +26,6 @@ import { toCloud } from "./sign-up.ts";
 import { SignInDialog } from "./SignInDialog.tsx";
 import type { SignInProps } from "./SignInDialog.tsx";
 import { AccountStatusItem } from "./SyncStatus.tsx";
-import { WaitlistDialog } from "./WaitlistDialog.tsx";
 import { AccountSection, WorkspaceSection } from "./WorkspaceSection.tsx";
 
 export type { SignInProps } from "./SignInDialog.tsx";
@@ -196,7 +195,6 @@ export const accountPlugin = definePlugin({
     const api = app.services?.account;
     if (!api) return;
     ctx.overlays.register({ id: "account.signIn", component: SignInDialog });
-    ctx.overlays.register({ id: "account.waitlist", component: WaitlistDialog });
     ctx.overlays.register({ id: "account.handoff", component: HandoffDialog });
     ctx.overlays.register({ id: "account.createWorkspace", component: CreateWorkspaceDialog });
     ctx.workspaceMenu.register({ id: "workspaces", order: 10, component: WorkspaceSection });
@@ -241,7 +239,6 @@ export const accountPlugin = definePlugin({
         "sync",
         "email",
         "password",
-        "waitlist",
         "cloud",
         "two-step verification",
         "2fa",
@@ -260,15 +257,6 @@ export const accountPlugin = definePlugin({
       bindable: false,
       when: () => api.state.get().status !== "signed-in",
       run: () => app.overlays.open("account.signIn", {} satisfies SignInProps),
-    });
-    ctx.commands.register({
-      id: "account.joinWaitlist",
-      title: "Join the cloud waitlist",
-      icon: <User3Regular />,
-      group: "Account",
-      bindable: false,
-      when: () => api.state.get().status === "signed-out",
-      run: () => app.overlays.open("account.waitlist"),
     });
     ctx.commands.register({
       id: "account.signOut",

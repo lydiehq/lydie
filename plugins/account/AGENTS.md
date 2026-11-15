@@ -23,11 +23,11 @@ Only active when the composition offers `app.services.account`. Sign in / create
 browser's workspace or, on desktop, the recent folders with their parent folder as a hint; the
 account's cloud workspaces; "New cloud workspace…", "Open folder…" where `openFolder` exists,
 "Copy to cloud…"; a switch that fails is a toast) and its last section (`AccountSection`,
-after the settings plugin's row: waitlist, sign in, or "Sign out" as the last row; every action row
+after the settings plugin's row: sign in, or "Sign out" as the last row; every action row
 has an icon), the hand-off
 dialog (`account.handoff`: choose a new or existing hosted workspace → dry-run summary → progress
-→ "Open"; reopening switches the window's scope), the sidebar status item (in a local window "Join the cloud waitlist" while the server's
-`waitlist.status` says accounts go through the waitlist, else "Sign in to Lydie Cloud"; in a hosted one the sync state with a details popover: pending changes, last synced,
+→ "Open"; reopening switches the window's scope), the sidebar status item (in a local window "Sign in to Lydie Cloud" while signed out, from
+`localEntry()` in `sign-up.ts`; in a hosted one the sync state with a details popover: pending changes, last synced,
 retry time, Retry now, Sign in again, refused changes with dismiss), the Account settings page,
 and `HostedBanner` (session ended / no longer a member: the workspace is missing from the
 account's list, checked on open, focus, every minute and when a change is refused), which the web
@@ -85,10 +85,9 @@ open by themselves only for an account with no cloud workspace yet. A folder win
 is. The browser copy is forgotten only when the plan left nothing behind, which excludes pages the
 target already had (LYD-423).
 
-Cloud waitlist: `account.waitlist` (`WaitlistDialog`: email → `waitlist.join` with source "app",
-also a command and a workspace-menu row), `useSignUpMode()` / `localEntry()` in `sign-up.ts` (unknown
-reads as "waitlist"). "Sign in" stays available everywhere; a sign-up refused because the email is
-not approved offers the waitlist.
+Anyone can create a Lydie Cloud account: signed out, every entry point offers sign in, and the
+sign-in dialog switches to "Create an account". A refused sign-up (`sign_up_closed`, Google's
+`signup_disabled`) only shows a short message (`format.ts`); it does not happen while sign-up is open.
 
 The window's scope never changes while it is open: switching workspaces, signing out of a hosted
 window or finishing a hand-off reopens it (`account.openScope`, `openLocalWorkspace`). On desktop a

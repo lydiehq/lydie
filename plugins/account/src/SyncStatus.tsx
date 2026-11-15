@@ -4,7 +4,7 @@ import { Button, CloseRegular, Dialog, Popover } from "@lydie/plugin-api/ui";
 import { useEffect, useRef, useState } from "react";
 
 import { describeRejected, plural, relativeTime } from "./format.ts";
-import { localEntry, toCloud, useSignUpMode } from "./sign-up.ts";
+import { localEntry, toCloud } from "./sign-up.ts";
 
 const LABELS: Record<SyncDetails["state"], string> = {
   "signed-out": "Signed out",
@@ -113,14 +113,13 @@ export function SyncDetailsBody({ details }: { details: SyncDetails }) {
   );
 }
 
-// The sidebar footer's account entry: in a local window "Join the cloud waitlist" (while accounts
-// open gradually) or "Sign in to Lydie Cloud", the sync state (with its details) in a hosted one.
+// The sidebar footer's account entry: in a local window "Sign in to Lydie Cloud" (or "Copy to
+// cloud" once signed in), the sync state (with its details) in a hosted one.
 export function AccountStatusItem() {
   const app = useApp();
   const { api, state } = useAccount();
   const details = useObservable(api?.sync?.details);
   const status = useStatus();
-  const signUp = useSignUpMode();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   if (!api) return null;
@@ -129,7 +128,6 @@ export function AccountStatusItem() {
     const entry = localEntry({
       signedOut: state.status === "signed-out",
       wanted: api.wanted !== null,
-      signUp,
       toCloud: toCloud(api),
     });
     return (

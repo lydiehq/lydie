@@ -18,7 +18,7 @@ export function authMessage(error: unknown, mode: "sign-in" | "sign-up"): string
   }
   if (code === "PASSWORD_TOO_SHORT") return "Use at least 8 characters for the password.";
   if (code === "SIGN_UP_CLOSED" || code === "SIGNUP_DISABLED") {
-    return "This email is not on the approved list yet. Join the cloud waitlist and we will email you when your account is ready.";
+    return "An account cannot be created for this email right now. Try again later.";
   }
   if (mode === "sign-in" && e?.status === 401) return "That email and password do not match.";
   return errorMessage(error);
@@ -44,24 +44,6 @@ export function twoFactorMessage(error: unknown): string {
   return errorMessage(error);
 }
 
-// Joining the cloud waitlist did not work, in plain words.
-export function waitlistMessage(error: unknown): string {
-  const e = error as HostedApiError | null;
-  if (e?.code === "invalid_input") return "Enter a valid email address.";
-  return errorMessage(error);
-}
-
-// The sign-up was refused because only approved emails can create an account for now (an error,
-// or a provider's error code).
-export function isSignUpClosed(errorOrCode: unknown): boolean {
-  const code = (
-    typeof errorOrCode === "string"
-      ? errorOrCode
-      : ((errorOrCode as HostedApiError | null)?.code ?? "")
-  ).toLowerCase();
-  return code === "sign_up_closed" || code === "signup_disabled";
-}
-
 // A provider sign-in that did not complete, in plain words; null when the user cancelled it.
 export function providerMessage(errorOrCode: unknown): string | null {
   const code = (
@@ -71,7 +53,7 @@ export function providerMessage(errorOrCode: unknown): string | null {
   ).toLowerCase();
   if (code === "cancelled" || code === "superseded") return null;
   if (code.includes("signup_disabled") || code === "unable_to_create_user") {
-    return "There is no Lydie account for this Google account yet, and its email is not on the approved list. Join the cloud waitlist and we will email you when your account is ready.";
+    return "There is no Lydie account for this Google account yet, and one could not be created right now. Try again later.";
   }
   if (code === "access_denied") return "Google sign-in was cancelled.";
   if (code.includes("account_not_linked")) {

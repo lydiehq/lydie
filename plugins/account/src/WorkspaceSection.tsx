@@ -7,7 +7,6 @@ import {
   ExitRegular,
   focusRingInsetClass,
   FolderOpenRegular,
-  MailRegular,
   SpaceIcon,
   User3Regular,
 } from "@lydie/plugin-api/ui";
@@ -16,7 +15,7 @@ import type { ReactNode } from "react";
 
 import clsx from "./clsx.ts";
 import { errorMessage } from "./format.ts";
-import { toCloud, useSignUpMode } from "./sign-up.ts";
+import { toCloud } from "./sign-up.ts";
 
 function Row({
   children,
@@ -207,7 +206,6 @@ export function WorkspaceSection({ close }: { close: () => void }) {
 export function AccountSection({ close }: { close: () => void }) {
   const app = useApp();
   const { api, state } = useAccount();
-  const signUp = useSignUpMode();
   if (!api) return null;
   const open = (overlay: string) => {
     close();
@@ -216,16 +214,9 @@ export function AccountSection({ close }: { close: () => void }) {
   return (
     <div className="flex flex-col py-1">
       {state.status === "signed-out" ? (
-        <>
-          {signUp === "waitlist" && (
-            <Row glyph={<MailRegular />} onPress={() => open("account.waitlist")}>
-              Join the cloud waitlist…
-            </Row>
-          )}
-          <Row glyph={<User3Regular />} onPress={() => open("account.signIn")}>
-            Sign in…
-          </Row>
-        </>
+        <Row glyph={<User3Regular />} onPress={() => open("account.signIn")}>
+          Sign in…
+        </Row>
       ) : (
         <>
           {state.status === "expired" && (

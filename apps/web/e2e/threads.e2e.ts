@@ -42,10 +42,9 @@ beforeEach(async () => {
   errors = watchErrors(page);
 });
 
-// The app asks a core on this machine for the waitlist status: the core refuses the preview
-// server's origin, or is not running. Not what this suite is about.
+// Requests to a core on this machine fail: the core refuses the preview server's origin, or is not
+// running. Not what this suite is about.
 const unrelated = (error: string) =>
-  error.includes("/v1/waitlist/status") ||
   error === "Failed to load resource: net::ERR_FAILED" ||
   error === "Failed to load resource: net::ERR_CONNECTION_REFUSED";
 

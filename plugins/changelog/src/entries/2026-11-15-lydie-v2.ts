@@ -34,7 +34,7 @@ export const lydieV2: ChangelogEntry = {
     {
       heading: "Together in the cloud",
       paragraphs: [
-        "Cloud workspaces sync between your devices. Invite your team, write together in real time, comment in the margin and share a page with a public link. You can export a workspace as a zip of plain Markdown files at any time, or have it backed up daily or weekly. Accounts are opening gradually.",
+        "Cloud workspaces sync between your devices. Invite your team, write together in real time, comment in the margin and share a page with a public link. You can export a workspace as a zip of plain Markdown files at any time, or have it backed up daily or weekly. Lydie Cloud is free for now; fair use applies.",
       ],
     },
     {
@@ -51,7 +51,7 @@ export const lydieV2: ChangelogEntry = {
     },
   ],
   links: [
-    { label: "Join the Lydie Cloud waitlist", href: "https://lydie.co/cloud" },
+    { label: "Create a free Lydie Cloud account", href: "https://app.lydie.co" },
     { label: "Read the developer docs", href: "https://developers.lydie.co" },
     { label: "See the source on GitHub", href: "https://github.com/lydiehq/lydie/tree/v2" },
   ],

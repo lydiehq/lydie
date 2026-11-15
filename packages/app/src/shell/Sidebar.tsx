@@ -18,8 +18,7 @@ import { dragStyle, useTitleBarInset } from "./title-bar.ts";
 import { WorkspaceMenu } from "./WorkspaceMenu.tsx";
 
 type Props = {
-  // Rendered at the bottom (e.g. the app's account entry point: "Join the cloud waitlist" or
-  // "Sign in to Lydie Cloud").
+  // Rendered at the bottom (e.g. the app's account entry point: "Sign in to Lydie Cloud").
   footer?: ReactNode;
 };
 
