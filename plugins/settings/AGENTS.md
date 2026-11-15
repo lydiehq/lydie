@@ -26,8 +26,7 @@ contributed pages grouped by `SettingsPageDef.group` (`navigation.ts`, unit-test
 an optional details panel (`SettingsDetailsPanel` from `@lydie/ui`). Escape closes the innermost
 layer first. Closing fades out like the other dialogs: the Modal closes, and the overlay is
 closed once the content has unmounted (`CloseWhenGone`); the host closing it (Back) is instant. Pages: General (a synced workspace's picture, `AvatarEditor` on a squircle saved with
-`workspace.setImage`, owners and admins only; workspace name, theme, editor font size/line width/spellcheck, where
-new notes go, and on desktop a Privacy section, `PrivacySetting.tsx`: the app lock
+`workspace.setImage`, owners and admins only; workspace name, theme, editor font size/line width/spellcheck, and on desktop a Privacy section, `PrivacySetting.tsx`: the app lock
 (`AppLockSetting.tsx` over `app.appLock`: turn on, lock now, change, turn off, idle time, Touch ID)
 and "Hide from screen sharing" over `app.screenCapture`), Keyboard shortcuts (record, conflict detection with "Use it here", clear, reset,
 reset all, filter), Files & links (folder workspaces through `app.services.vault`: attachments folder, excluded
@@ -75,10 +74,10 @@ Theme commands: "Switch to light/dark theme", "Use system theme", and "Toggle da
 
 Preferences are per device (`app.storage`, keys in `preferences.ts`); `applyPreferences` applies
 theme (`.dark`/`.system` on `<html>`, and `app.setColorScheme` for native menus), `--editor-font-size`, `--editor-block-max-width` and
-`spellcheck` on `<html>`. "New notes" (`NewNoteSetting.tsx`, on General and Files & links) is the
+`spellcheck` on `<html>`. "New documents" (`NewNoteSetting.tsx`, on Files & links) is the
 folder's setting in folder windows (top level, next to the current note, or a folder path, saved
-together with the path) and per workspace on this device elsewhere (`workspace:<id>:newNote`); the
-host's New document command reads either.
+together with the path), which the host's New document command reads; other windows always put
+new documents at the top level.
 
 ## Tests
 

@@ -24,7 +24,7 @@ import type { Theme } from "./preferences.ts";
 import { SettingsShell } from "./SettingsShell.tsx";
 import type { SettingsOverlayProps } from "./SettingsShell.tsx";
 
-export { newNoteLocationKey, PREFS } from "./preferences.ts";
+export { PREFS } from "./preferences.ts";
 export type { SettingsOverlayProps } from "./SettingsShell.tsx";
 
 const THEME_COMMANDS: { value: Theme; title: string; icon: ReactNode }[] = [

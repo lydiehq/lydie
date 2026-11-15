@@ -55,25 +55,17 @@ function NewTabView() {
 }
 
 // Where "New document" puts the note. A folder window follows the folder's setting (the top
-// level, next to the open note, or a folder by path, made when missing); other windows the device's
-// (Settings → General, per workspace: the top level, next to the open note, or inside it).
+// level, next to the open note, or a folder by path, made when missing); other windows the top level.
 async function newDocumentParent(app: AppApi): Promise<PathMatch> {
   const top: PathMatch = { id: null, missing: [] };
-  const openId = docIdOf(app.activeTab()?.path);
-  const sibling = async (id: string): Promise<PathMatch> => {
-    const [open] = await app.backend.query("doc.get", { id });
-    return { id: open?.document.parentId ?? null, missing: [] };
-  };
   const folder = app.services?.vault?.settings?.current();
-  if (folder) {
-    if (folder.newNoteLocation === "folder") return resolvePath(app, folder.newNoteFolder ?? "");
-    if (folder.newNoteLocation === "current" && openId) return sibling(openId);
-    return top;
+  if (folder?.newNoteLocation === "folder") return resolvePath(app, folder.newNoteFolder ?? "");
+  const openId = docIdOf(app.activeTab()?.path);
+  if (folder?.newNoteLocation === "current" && openId) {
+    const [open] = await app.backend.query("doc.get", { id: openId });
+    return { id: open?.document.parentId ?? null, missing: [] };
   }
-  const where = app.storage.get<string>(`workspace:${app.workspace.workspaceId}:newNote`);
-  if (!where || where === "root" || !openId) return top;
-  if (where === "child") return { id: openId, missing: [] };
-  return sibling(openId);
+  return top;
 }
 
 export const corePlugin = definePlugin({

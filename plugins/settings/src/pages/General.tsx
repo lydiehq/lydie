@@ -23,7 +23,6 @@ import {
 } from "@lydie/plugin-api/ui";
 import { useState } from "react";
 
-import { NewNoteSetting } from "../NewNoteSetting.tsx";
 import { DEFAULTS, FONT_SIZES, LINE_WIDTHS, PREFS } from "../preferences.ts";
 import type { LineWidth, Theme } from "../preferences.ts";
 import { PrivacySection } from "../PrivacySetting.tsx";
@@ -137,8 +136,6 @@ export function GeneralPage() {
               {status.sync === "local-only" ? "Off" : status.sync}
             </span>
           </SettingsRow>
-          {/* Folder windows keep it with the folder, under Files & links. */}
-          {!app.services?.vault?.settings && <NewNoteSetting />}
         </SettingsCard>
       </SettingsSection>
 

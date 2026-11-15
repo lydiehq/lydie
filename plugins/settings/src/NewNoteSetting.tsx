@@ -1,10 +1,7 @@
-import { useApp, useDeviceSetting } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
 import type { FolderSettings, VaultApi } from "@lydie/plugin-api";
 import { Select, SelectItem, SettingsRow, SettingsTextInput } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
-
-import { NEW_NOTE_LOCATIONS, newNoteLocationKey } from "./preferences.ts";
-import type { NewNoteLocation } from "./preferences.ts";
 
 const FOLDER_LOCATIONS: Record<FolderSettings["newNoteLocation"], string> = {
   root: "At the top level",
@@ -12,39 +9,11 @@ const FOLDER_LOCATIONS: Record<FolderSettings["newNoteLocation"], string> = {
   folder: "In a folder",
 };
 
-// Where "New document" puts a document: kept with the folder in folder windows (like Obsidian's
-// "Default location for new notes"), per workspace on this device elsewhere. Folder windows show it
-// under Files & links, other windows under General.
+// Where "New document" puts a document in a folder window, kept with the folder (like Obsidian's
+// "Default location for new notes"), under Files & links. Other windows always use the top level.
 export function NewNoteSetting() {
   const settings = useApp().services?.vault?.settings ?? null;
-  return settings ? <FolderNewNote settings={settings} /> : <DeviceNewNote />;
-}
-
-function DeviceNewNote() {
-  const app = useApp();
-  const [where, setWhere] = useDeviceSetting<NewNoteLocation>(
-    newNoteLocationKey(app.workspace.workspaceId),
-    "root",
-  );
-  return (
-    <SettingsRow
-      label="New documents"
-      description="Where “New document” puts them. Applies to this device."
-    >
-      <Select
-        aria-label="Where new documents go"
-        className="w-56"
-        selectedKey={where}
-        onSelectionChange={(key) => setWhere(key as NewNoteLocation)}
-      >
-        {Object.entries(NEW_NOTE_LOCATIONS).map(([id, label]) => (
-          <SelectItem key={id} id={id}>
-            {label}
-          </SelectItem>
-        ))}
-      </Select>
-    </SettingsRow>
-  );
+  return settings ? <FolderNewNote settings={settings} /> : null;
 }
 
 function FolderNewNote({ settings }: { settings: NonNullable<VaultApi["settings"]> }) {

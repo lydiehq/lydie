@@ -85,8 +85,7 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   (`visibility: hidden; content-visibility: hidden; inert`), so switching mounts nothing; evicted
   views remount and restore from the tab state bag (scroll, selection).
 - **Per-workspace device settings follow a hand-off** (`host/workspace-storage.ts`): plugins key
-  some settings by workspace id (favorites, Home's recent pages, expanded folders, the new-note
-  location). The host wraps `services.account.handoff`: once a run succeeds, every `app.storage`
+  some settings by workspace id (favorites, Home's recent pages, expanded folders). The host wraps `services.account.handoff`: once a run succeeds, every `app.storage`
   key with this workspace's id as a `:` segment is copied under the hosted workspace's id, with the
   ids the hand-off changed (`outcome.renamed`, the Getting started page) changed in the values.
   Keys the target already has on this device are kept. Test: `workspace-storage.test.ts`.

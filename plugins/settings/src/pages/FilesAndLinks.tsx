@@ -115,11 +115,13 @@ export function FilesAndLinksPage() {
         </SettingsCard>
       </SettingsSection>
 
-      <SettingsSection title="New documents">
-        <SettingsCard>
-          <NewNoteSetting />
-        </SettingsCard>
-      </SettingsSection>
+      {vault.settings && (
+        <SettingsSection title="New documents">
+          <SettingsCard>
+            <NewNoteSetting />
+          </SettingsCard>
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="Links"

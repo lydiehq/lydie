@@ -31,17 +31,6 @@ export const LINE_WIDTHS: Record<LineWidth, { label: string; css: string | null 
   full: { label: "Full width", css: "none" },
 };
 
-// Where "New document" puts the note, per workspace on this device.
-export type NewNoteLocation = "root" | "sibling" | "child";
-
-export const newNoteLocationKey = (workspaceId: string) => `workspace:${workspaceId}:newNote`;
-
-export const NEW_NOTE_LOCATIONS: Record<NewNoteLocation, string> = {
-  root: "At the top level",
-  sibling: "Next to the open document",
-  child: "Inside the open document",
-};
-
 // Applies the theme, the editor's measurements and spellchecking to the window, now and whenever they change.
 // Returns the cleanup.
 export function applyPreferences(app: AppApi): () => void {
