@@ -19,6 +19,7 @@ import {
   Button,
   Checkbox,
   CloseRegular,
+  DatePicker,
   Select,
   SelectItem,
   TextField,
@@ -511,12 +512,12 @@ function DateValue({
         ]}
       </Select>
       {!relative && (
-        <TextField
+        <DatePicker
           size="sm"
-          type="date"
           aria-label="Exact date"
-          value={typeof value === "string" ? value.slice(0, 10) : ""}
-          onChange={(text) => onChange(text)}
+          value={typeof value === "string" ? value.slice(0, 10) || null : null}
+          onChange={(iso) => onChange(iso ?? "")}
+          className="w-36"
         />
       )}
     </span>

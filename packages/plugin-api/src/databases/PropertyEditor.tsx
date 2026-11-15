@@ -8,13 +8,16 @@ import {
   AttachmentRegular,
   Button,
   buttonStyles,
+  Calendar,
   Checkbox,
   CheckRegular,
   CloseRegular,
+  DateField,
   dropdownItemStyles,
   Input,
   LinkButton,
   More1Regular,
+  RangeCalendar,
   Switch,
   TextArea,
 } from "@lydie/ui";
@@ -536,7 +539,6 @@ function DateEditor({ property, value, onChange, onClose }: PropertyEditorProps)
   const parts = parseDateValue(value);
   const includeTime = property.config.includeTime ?? Boolean(parts?.start.includes("T"));
   const hasEnd = Boolean(parts?.end);
-  const inputType = includeTime ? "datetime-local" : "date";
   const shown = (iso: string | null | undefined) =>
     !iso
       ? ""
@@ -545,6 +547,9 @@ function DateEditor({ property, value, onChange, onClose }: PropertyEditorProps)
           ? iso.slice(0, 16)
           : `${iso}T09:00`
         : iso.slice(0, 10);
+  // A day picked on the calendar keeps the time the value had.
+  const onDay = (day: string, previous: string | null | undefined) =>
+    includeTime ? `${day}${shown(previous ?? day).slice(10)}` : day;
   const write = (start: string, end: string | null) => {
     if (!start) return onChange(null);
     onChange(joinDate({ start, end: end || null }));
@@ -564,27 +569,47 @@ function DateEditor({ property, value, onChange, onClose }: PropertyEditorProps)
         }
       }}
     >
-      {/* The fields sit where the value was; a range stacks start over end. */}
-      <Input
-        size="sm"
-        // oxlint-disable-next-line jsx-a11y/no-autofocus -- the popover opened to edit this value
-        autoFocus
-        type={inputType}
-        aria-label={hasEnd ? "Start date" : "Date"}
-        value={shown(parts?.start)}
-        onChange={(event) => write(event.target.value, parts?.end ?? null)}
-        className={dateInputClass}
-      />
-      {hasEnd && (
-        <Input
+      {/* The fields sit where the value was; a range puts the end beside the start (under it
+          with a time, for the room). */}
+      <div className={`flex gap-1 ${hasEnd && includeTime ? "flex-col" : ""}`}>
+        <DateField
           size="sm"
-          type={inputType}
-          aria-label="End date"
-          value={shown(parts?.end)}
-          onChange={(event) => write(parts?.start ?? todayIso(), event.target.value)}
-          className={dateInputClass}
+          // oxlint-disable-next-line jsx-a11y/no-autofocus -- the popover opened to edit this value
+          autoFocus
+          withTime={includeTime}
+          aria-label={hasEnd ? "Start date" : "Date"}
+          value={shown(parts?.start) || null}
+          onChange={(iso) => write(iso ?? "", parts?.end ?? null)}
+          className="flex-1"
         />
-      )}
+        {hasEnd && (
+          <DateField
+            size="sm"
+            withTime={includeTime}
+            aria-label="End date"
+            value={shown(parts?.end) || null}
+            onChange={(iso) => write(parts?.start ?? todayIso(), iso)}
+            className="flex-1"
+          />
+        )}
+      </div>
+      <div className="flex justify-center px-1 pt-1.5 pb-0.5">
+        {hasEnd ? (
+          <RangeCalendar
+            aria-label={property.name}
+            value={parts?.end ? { start: parts.start, end: parts.end } : null}
+            onChange={(range) =>
+              write(onDay(range.start, parts?.start), onDay(range.end, parts?.end))
+            }
+          />
+        ) : (
+          <Calendar
+            aria-label={property.name}
+            value={parts?.start ?? null}
+            onChange={(day) => write(onDay(day, parts?.start), null)}
+          />
+        )}
+      </div>
       <div role="separator" className={separator} />
       <Switch
         isSelected={hasEnd}
@@ -635,7 +660,6 @@ function DateEditor({ property, value, onChange, onClose }: PropertyEditorProps)
   );
 }
 
-const dateInputClass = `${inputClass} bg-gray-950/3 focus:bg-surface`;
 const separator = "-mx-1 my-1 h-px bg-gray-950/6";
 // Rows read like a menu's (dropdownItemStyles): label left, switch right.
 const switchRow =

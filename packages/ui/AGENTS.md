@@ -53,6 +53,14 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   { placement, offset, hotkeys, delay }; `hotkeys` are key caps, one list or one list per step
   of a sequence, shown as muted text after the label ("⌘K", "Ctrl+K", "G then H"); `KeyCaps`
   draws them elsewhere),
+  Calendar and RangeCalendar (a month after Notion's: the month and arrows on top, short weekday
+  names, days as soft squares, the selected day solid blue-600, a range on a pale blue band between
+  its ends, a dot under today; the month shown follows a value changed from outside), DateField
+  (typed segment by segment in the locale's order; `withTime` adds hour and minute) and DatePicker
+  (the field with a calendar button and the calendar in a Popover): all four take and give ISO text
+  (`"2026-11-15"`, `"2026-11-15T09:30"`; a range `{ start, end }`), so callers never handle
+  `@internationalized/date`; DateField reports a part-typed date only once it is whole, and null
+  when every segment is cleared. Use these, never the browser's `type="date"` input),
   Checkbox/CheckboxGroup, ComboBox(+Item, Section), ConfirmDialog (on Modal + Dialog, laid out
   like Numina's confirm; 16 px padding, 4 px under the title, 32 px above the buttons, the same
   in AlertDialog; controlled `request` + `onResolve(confirmed)`, type ConfirmOptions
@@ -289,8 +297,8 @@ working. So:
 
 Removed as not needed by a writing app yet (bring back from v1 when a feature needs them): the colour
 components (ColorArea, ColorField, ColorPicker, ColorSlider, ColorSwatch, ColorSwatchPicker,
-ColorThumb, ColorWheel), the date and time components (Calendar, RangeCalendar, DateField,
-DatePicker, DateRangePicker, TimeField), Slider, Meter, CircularProgress, the data Table,
+ColorThumb, ColorWheel), DateRangePicker and TimeField (Calendar, RangeCalendar, DateField and DatePicker
+are back since Nov 2026, with an ISO text API), Slider, Meter, CircularProgress, the data Table,
 GrainyGradientBackground with its CSS, and the `COLORS` palette.
 
 Removed on 2026-11-13 because the app shell and its virtualised tree replace them or nothing uses
