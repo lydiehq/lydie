@@ -201,8 +201,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   sidebar stays mounted (hidden, inert) while collapsed. No animation library.
 - **Sidebar peek** (`shell/sidebar-peek.ts`, as in Linear and Notion): collapsed, resting on the
   window's left edge (an 8 px ledge below the tab row) or the sidebar toggle for 100 ms shows the
-  same mounted sidebar as a card over the content, level with the content cards (fixed, so the
-  collapsed panel does not clip it). It slides in and out (WAAPI), and closes 300 ms after the
+  same mounted sidebar as a card over the content (fixed, so the collapsed panel does not clip
+  it), floating 4 px inside the content card like the collections' page sheet: `shadow-popover`,
+  `rounded-lg`, its left corners following the card's (8 px less hairline and gap). It slides in and out (WAAPI), and closes 300 ms after the
   pointer leaves card and triggers, when it leaves the window, or on Escape. One document
   `pointermove`/`dragover` listener decides from what is under the pointer; anything drawn
   outside the shell (menus and their underlays) holds it as it is, so a menu opened from it keeps

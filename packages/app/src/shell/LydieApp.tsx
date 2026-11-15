@@ -170,15 +170,17 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
                       : undefined
                   }
                 >
-                  {/* Peeking, the same sidebar floats over the content as a card level with the
-                      content cards (fixed, so the collapsed panel does not clip it). */}
+                  {/* Peeking, the same sidebar floats over the content (fixed, so the collapsed
+                      panel does not clip it), 4 px inside the content card as the collections'
+                      page sheet does: the card's top and left hairlines, then the gap. Its corners
+                      by the card's follow them (8 px less the hairline and the gap). */}
                   <div
                     ref={sidebarRef}
                     data-peek={peeking ? peek : undefined}
                     data-testid={peeking ? "sidebar-peek" : undefined}
                     className={clsx(
                       peeking
-                        ? "fixed top-10 bottom-1.5 left-1.5 z-40 overflow-hidden rounded-xl bg-elevated shadow-dialog"
+                        ? "fixed top-[45px] bottom-[11px] left-[11px] z-40 overflow-hidden rounded-lg rounded-l-[3px] bg-elevated shadow-popover"
                         : "h-full",
                       peek === "leaving" && "pointer-events-none",
                     )}
