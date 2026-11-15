@@ -133,8 +133,9 @@ export function Sidebar({ footer }: Props) {
     <nav aria-label="Sidebar" className="flex h-full min-h-0 flex-col" data-testid="sidebar">
       {/* As in Linear: a drawn title bar gets a row of its own for the window buttons; without
           one (web, native frame) the workspace row is level with the tab row. The sidebar's
-          toggle starts the tab row (`TabBar` in LayoutView.tsx), open or collapsed. */}
-      {inset.custom && <div className="h-10 shrink-0" style={dragStyle} />}
+          toggle starts the tab row (`TabBar` in LayoutView.tsx), open or collapsed. Peeking, the
+          sidebar starts below the tab row, which holds the window buttons. */}
+      {inset.custom && <div className="h-10 shrink-0 [[data-peek]_&]:hidden" style={dragStyle} />}
       <div className="flex h-10 shrink-0 items-center gap-1 px-2">
         <WorkspaceMenu />
       </div>

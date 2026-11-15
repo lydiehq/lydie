@@ -580,6 +580,54 @@ describe("shell", () => {
     expect(host.app.activeTab()?.path).toBe(docPath(a.id));
   });
 
+  test("collapsed, the left edge and the toggle peek at the sidebar until the pointer leaves", async () => {
+    const { host } = await setup();
+    host.shell.set((s) => ({ ...s, sidebarOpen: false }));
+    render(<LydieApp host={host} />);
+    await settle();
+    const ledge = document.querySelector<HTMLElement>("div[data-sidebar-peek-trigger]")!;
+    const toggle = screen.getByRole("button", { name: /^Expand sidebar/ });
+    const away = screen.getByTestId("tab-bar");
+    const peek = () => screen.queryByTestId("sidebar-peek")?.dataset.peek ?? "closed";
+    // The pointer has to have been elsewhere first (a toggle that just collapsed it).
+    fireEvent.pointerMove(ledge);
+    await settle(150);
+    expect(peek()).toBe("closed");
+    fireEvent.pointerMove(away);
+    fireEvent.pointerMove(ledge);
+    await settle(150);
+    expect(peek()).toBe("open");
+    expect(screen.getByTestId("sidebar").closest("[inert]")).toBeNull();
+    fireEvent.pointerMove(screen.getByTestId("sidebar"));
+    await settle(400);
+    expect(peek()).toBe("open");
+    // A menu opened from the peek is drawn outside the shell and holds it open.
+    const portal = document.body.appendChild(document.createElement("div"));
+    fireEvent.pointerMove(portal);
+    await settle(400);
+    expect(peek()).toBe("open");
+    portal.remove();
+    fireEvent.pointerMove(away);
+    await settle(300);
+    expect(peek()).toBe("leaving");
+    await settle(300);
+    expect(peek()).toBe("closed");
+    expect(screen.getByTestId("sidebar").closest("[inert]")).not.toBeNull();
+    fireEvent.pointerMove(toggle);
+    await settle(150);
+    expect(peek()).toBe("open");
+    fireEvent.keyDown(window, { key: "Escape" });
+    await settle(250);
+    expect(peek()).toBe("closed");
+    // Opened for good, the sidebar is in the layout again.
+    fireEvent.pointerMove(toggle);
+    await settle(150);
+    await act(async () => fireEvent.click(toggle));
+    await settle();
+    expect(peek()).toBe("closed");
+    expect(document.querySelector("div[data-sidebar-peek-trigger]")).toBeNull();
+  });
+
   test("a browser tab has no back and forward buttons", async () => {
     const { host } = await setup({ platform: { capabilities: { browserTab: true } } });
     render(<LydieApp host={host} />);

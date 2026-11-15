@@ -10,6 +10,7 @@ import { HostInternalContext } from "./context.ts";
 import { WindowLayout } from "./LayoutView.tsx";
 import { Confirms, Overlays } from "./Overlays.tsx";
 import { RightPanel } from "./RightPanel.tsx";
+import { useSidebarPeek } from "./sidebar-peek.ts";
 import { Sidebar } from "./Sidebar.tsx";
 import { SwipeNavigation } from "./SwipeNavigation.tsx";
 import { Toasts } from "./Toasts.tsx";
@@ -73,6 +74,9 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
   });
   const sidebarHidden = sidebar.collapsed && !sidebar.switching;
   const panelHidden = panel.collapsed && !panel.switching;
+  const shellRef = useRef<HTMLDivElement>(null);
+  const peek = useSidebarPeek({ enabled: sidebarHidden, shell: shellRef, card: sidebarRef });
+  const peeking = peek !== "closed";
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -120,6 +124,12 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
     }
   }, [shell.sidebarOpen]);
 
+  // And out of the peek as it goes, before it turns inert.
+  useEffect(() => {
+    if (peek !== "leaving" || !sidebarRef.current?.contains(document.activeElement)) return;
+    mainRef.current?.querySelector<HTMLElement>("[role=tab][aria-selected=true]")?.focus();
+  }, [peek]);
+
   useEffect(() => {
     if (!shell.panelOpen) return;
     const active = document.activeElement;
@@ -133,6 +143,7 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
         <HostProvider host={host.bridge}>
           <HostInternalContext value={host}>
             <div
+              ref={shellRef}
               className="flex h-dvh w-full overflow-hidden bg-canvas text-gray-900"
               data-testid="app-shell"
             >
@@ -146,22 +157,44 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
                     back instantly with its tree state. It fades while the width animates. */}
                 <div
                   ref={attachSidebarContent}
-                  inert={sidebar.collapsed}
+                  inert={sidebar.collapsed && !peeking}
                   className={clsx(
                     "h-full transition-opacity duration-150 motion-reduce:transition-none",
-                    sidebar.collapsed ? "opacity-0" : "opacity-100 delay-75",
+                    peeking && "transition-none",
+                    sidebar.collapsed && !peeking ? "opacity-0" : "opacity-100 delay-75",
                   )}
                   style={
-                    sidebarHidden
+                    sidebarHidden && !peeking
                       ? { visibility: "hidden", contentVisibility: "hidden" }
                       : undefined
                   }
                 >
-                  <div ref={sidebarRef} className="h-full">
+                  {/* Peeking, the same sidebar floats over the content as a card level with the
+                      content cards (fixed, so the collapsed panel does not clip it). */}
+                  <div
+                    ref={sidebarRef}
+                    data-peek={peeking ? peek : undefined}
+                    data-testid={peeking ? "sidebar-peek" : undefined}
+                    className={clsx(
+                      peeking
+                        ? "fixed top-10 bottom-1.5 left-1.5 z-40 overflow-hidden rounded-xl bg-canvas shadow-dialog"
+                        : "h-full",
+                      peek === "leaving" && "pointer-events-none",
+                    )}
+                    style={peeking ? { width: shell.sidebarWidth } : undefined}
+                  >
                     <Sidebar footer={sidebarFooter} />
                   </div>
                 </div>
               </div>
+              {/* Collapsed, the window's left edge opens the peek (`useSidebarPeek`). */}
+              {sidebarHidden && (
+                <div
+                  aria-hidden
+                  data-sidebar-peek-trigger=""
+                  className="fixed top-10 bottom-0 left-0 z-40 w-2"
+                />
+              )}
               <ElasticHandle panel={sidebar} controls="app-sidebar" label="Resize sidebar" />
               <main
                 ref={mainRef}

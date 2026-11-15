@@ -199,6 +199,15 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   every frame, never through React state, and the contents keep their width while collapsing so
   they clip instead of reflowing. Escape cancels a drag; a double-click resets the width. The full
   sidebar stays mounted (hidden, inert) while collapsed. No animation library.
+- **Sidebar peek** (`shell/sidebar-peek.ts`, as in Linear and Notion): collapsed, resting on the
+  window's left edge (an 8 px ledge below the tab row) or the sidebar toggle for 100 ms shows the
+  same mounted sidebar as a card over the content, level with the content cards (fixed, so the
+  collapsed panel does not clip it). It slides in and out (WAAPI), and closes 300 ms after the
+  pointer leaves card and triggers, when it leaves the window, or on Escape. One document
+  `pointermove`/`dragover` listener decides from what is under the pointer; anything drawn
+  outside the shell (menus and their underlays) holds it as it is, so a menu opened from it keeps
+  it open. After a collapse the triggers wait until the pointer has been elsewhere. Opening the
+  sidebar for good ends the peek at once. Test: "collapsed, the left edge…" in `shell.test.tsx`.
 - **Drop indicators** (`shell/LayoutView.tsx`, after Dia): dragging a tab or document over a group
   shows `DropPreview`, a frosted inset card over the half (or whole) it would take, with a pill
   naming the result ("Split right"). It glides between zones (top/right/bottom/left transitions)
