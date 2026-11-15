@@ -9,6 +9,7 @@ import {
   markdownHref,
   PAGE_WIDTH_TRANSITION_MS,
   pageColumnClass,
+  pageCoverOf,
   pageFullWidthOf,
   pageIconOf,
   parseDocPath,
@@ -88,6 +89,12 @@ export function DocView({ tab }: ViewProps) {
   const arriving = useStatus().awaitingFirstSync === true;
   const fullWidth = pageFullWidthOf(entry?.document.properties);
   const root = useWidthTransition(entry?.document.id ?? null, fullWidth);
+  const bar = useRef<HTMLDivElement>(null);
+  const overlay = useCoverOverlay(
+    root,
+    bar,
+    pageCoverOf(entry?.document.properties) !== null && !entry?.document.deletedAt,
+  );
   if (!route) return null;
   if (error) return <ErrorState title="Could not open this document" error={error} />;
   if (!entry) {
@@ -113,7 +120,9 @@ export function DocView({ tab }: ViewProps) {
   return (
     <div
       ref={root}
-      className="flex min-h-0 grow flex-col"
+      // `isolate`: the bar's z-index stays inside the view, under a host's own controls.
+      className="relative isolate flex min-h-0 grow flex-col"
+      style={overlay ? { ["--page-bar-overlay" as string]: "2.25rem" } : undefined}
       data-testid="doc-view"
       data-doc-id={route.id}
       data-full-width={fullWidth || undefined}
@@ -121,7 +130,24 @@ export function DocView({ tab }: ViewProps) {
       {/* `--page-header-start`: room a host keeps for its own controls (the collection's panel).
           The breadcrumbs sit in the middle between two equal columns; when the trail is long
           the left one gives way first, as the actions never shrink below their width. */}
-      <div className="flex h-9 shrink-0 items-center gap-2 pr-2 pl-[var(--page-header-start,0px)]">
+      <div
+        ref={bar}
+        data-testid="page-bar"
+        data-over-cover={overlay?.over ? overlay.tone : undefined}
+        className={`flex h-9 shrink-0 items-center gap-2 pr-2 pl-[var(--page-header-start,0px)] ${
+          overlay
+            ? `absolute inset-x-0 top-0 z-10 transition-colors duration-150 ${overlay.over ? INK[overlay.tone] : "bg-surface"}`
+            : ""
+        }`}
+      >
+        {overlay && (
+          <div
+            aria-hidden
+            className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-20 bg-linear-to-b to-transparent transition-opacity duration-150 ${
+              overlay.tone === "light" ? "from-white/40" : "from-black/35"
+            } ${overlay.over ? "opacity-100" : "opacity-0"}`}
+          />
+        )}
         <div aria-hidden className="flex-1 basis-0" />
         <Breadcrumbs doc={ref} />
         <div className="flex flex-1 basis-0 items-center justify-end gap-1">
@@ -155,6 +181,74 @@ export function DocView({ tab }: ViewProps) {
       />
     </div>
   );
+}
+
+// The bar's ink over a cover, by how light the cover is there. On the bar rather than on each
+// control, so the controls plugins put in it (Share, comments) follow. Literal white and black:
+// the cover keeps its colours in both themes.
+const INK = {
+  dark: "[&_*]:text-white/85! [&_button:hover]:bg-white/15! [&_button:hover]:text-white! [&_button:hover_*]:text-white!",
+  light:
+    "[&_*]:text-black/60! [&_button:hover]:bg-black/8! [&_button:hover]:text-black/90! [&_button:hover_*]:text-black/90!",
+} as const;
+
+type CoverOverlay = { tone: "light" | "dark"; over: boolean };
+
+// When the page opens on a cover (page-decor's `data-page-cover` at the very top of the scroll
+// container), the bar lies over it instead of taking a row of its own: `over` while the cover is
+// under the whole bar, with its `data-cover-tone` (dark until known). Null otherwise, also when a
+// banner sits above the cover. The editor's own changes are skipped: they never move the cover.
+function useCoverOverlay(
+  root: RefObject<HTMLElement | null>,
+  bar: RefObject<HTMLElement | null>,
+  enabled: boolean,
+): CoverOverlay | null {
+  const [overlay, setOverlay] = useState<CoverOverlay | null>(null);
+  useLayoutEffect(() => {
+    const el = root.current;
+    if (!enabled || !el) return;
+    const measure = () => {
+      frame = 0;
+      const scroller = el.querySelector<HTMLElement>("[data-scroll-root]");
+      const cover = scroller?.querySelector<HTMLElement>("[data-page-cover]");
+      let next: CoverOverlay | null = null;
+      if (scroller && cover && bar.current) {
+        const box = cover.getBoundingClientRect();
+        const top = box.top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+        if (top < 1) {
+          next = {
+            tone: cover.dataset.coverTone === "light" ? "light" : "dark",
+            over: box.bottom > bar.current.getBoundingClientRect().bottom,
+          };
+        }
+      }
+      setOverlay((prev) => (prev?.tone === next?.tone && prev?.over === next?.over ? prev : next));
+    };
+    let frame = 0;
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    const inEditor = (node: Node) =>
+      (node instanceof Element ? node : node.parentElement)?.closest("[data-doc-content]") != null;
+    const observer = new MutationObserver((records) => {
+      if (records.some((r) => !inEditor(r.target))) schedule();
+    });
+    observer.observe(el, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-cover-tone"],
+    });
+    // Scroll does not bubble: caught on the way down to the scroll container.
+    el.addEventListener("scroll", schedule, { capture: true, passive: true });
+    measure();
+    return () => {
+      observer.disconnect();
+      el.removeEventListener("scroll", schedule, { capture: true });
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [root, bar, enabled]);
+  return enabled ? overlay : null;
 }
 
 // Marks the view with `data-width-transition` while the page glides to or from full width
