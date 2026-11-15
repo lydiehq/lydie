@@ -31,6 +31,7 @@ import { findView } from "../host/views.ts";
 import { jsonEqual, useHostInternal, useSelector } from "./context.ts";
 import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { NavigationButtons } from "./NavigationButtons.tsx";
+import { panelToggleRoom } from "./PanelToggle.tsx";
 import { ResizeHandle } from "./ResizeHandle.tsx";
 import { SidebarIcon } from "./SidebarIcon.tsx";
 import { hideDragImage, prepareDragImage, tabDrag } from "./tab-drag.ts";
@@ -524,7 +525,6 @@ function TabBar({
   const panelOpen = useSyncExternalStore(host.shell.subscribe, () => host.shell.get().panelOpen);
   const sidebarKeys = useShortcut("core.toggleSidebar");
   const newTabKeys = useShortcut("core.newTab");
-  const panelKeys = useShortcut("core.togglePanel");
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const drag = useSyncExternalStore(tabDrag.subscribe, tabDrag.strip, tabDrag.strip);
@@ -841,23 +841,10 @@ function TabBar({
       </Button>
       <div data-tab-bar-space="" className="h-full min-w-4 grow" />
       {topRight && !sidebarOpen && <OfflineStatus />}
-      {topRight && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={panelOpen ? "Hide right panel" : "Show right panel"}
-          aria-pressed={panelOpen}
-          tooltipOptions={{ hotkeys: panelKeys }}
-          className={clsx("shrink-0 text-gray-500", topRowButtonClass)}
-          style={noDragStyle}
-          onPress={() => host.app.panels.toggle("right")}
-        >
-          <SidebarIcon right collapsed={!panelOpen} />
-        </Button>
-      )}
-      {/* With the right panel open, its header is the rightmost element of the row. */}
-      {topRight && !panelOpen && inset.right > 0 && (
-        <div className="shrink-0" style={{ width: inset.right }} />
+      {/* The right panel's toggle (`PanelToggle`) sits over the end of this row, or of the
+          panel's own row while the panel is open. */}
+      {topRight && !panelOpen && (
+        <div className="shrink-0" style={{ width: panelToggleRoom(inset) }} />
       )}
       <ContextMenu
         label="Tab actions"
@@ -1066,7 +1053,7 @@ const TabButton = memo(function TabButton({
           opening &&
             !dragging &&
             !leaving &&
-            "transition-[width,min-width,padding,margin,opacity] duration-[220ms,220ms,220ms,220ms,160ms] ease-[ease] [transition-delay:0ms,0ms,0ms,0ms,40ms] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
+            "transition-[width,min-width,padding,margin,opacity] duration-[160ms,160ms,160ms,160ms,120ms] ease-[ease] [transition-delay:0ms,0ms,0ms,0ms,30ms] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
           animate &&
             !dragging &&
             !opening &&
