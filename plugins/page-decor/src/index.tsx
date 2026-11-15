@@ -14,6 +14,7 @@ import {
   pageColumnClass,
   pageCoverOf,
   pageFullWidthOf,
+  PageIcon,
   pageIconOf,
   useCoverUrl,
   useOps,
@@ -25,8 +26,7 @@ import {
   Button,
   EmojiRegular,
   focusRingClass,
-  focusRingInsetClass,
-  Input,
+  IconPicker,
   PicRegular,
   Popover,
   WithTooltip,
@@ -34,52 +34,11 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 
-const EMOJIS = [
-  "📄",
-  "📝",
-  "📌",
-  "📎",
-  "📚",
-  "📖",
-  "🗂️",
-  "🗒️",
-  "✅",
-  "☑️",
-  "⭐",
-  "🔥",
-  "🚀",
-  "💡",
-  "🎯",
-  "🧭",
-  "🧪",
-  "🛠️",
-  "⚙️",
-  "🔒",
-  "🌱",
-  "🌍",
-  "🏠",
-  "🏢",
-  "💼",
-  "💰",
-  "📈",
-  "📊",
-  "🗓️",
-  "⏰",
-  "✈️",
-  "🎨",
-  "🎵",
-  "🎬",
-  "📷",
-  "❤️",
-  "😀",
-  "🤔",
-  "👋",
-  "🙌",
-  "🐛",
-  "🧠",
-  "🍀",
-  "☕",
-];
+// Emoji a page is often about, offered first on the picker's emoji tab.
+const SUGGESTED =
+  "📄 📝 📌 📎 📚 📖 🗂️ 🗓️ ✅ ⭐ 🔥 🚀 💡 🎯 🧭 🧪 🛠️ 🔒 🌱 🌍 🏠 🏢 💼 💰 📈 📊 ⏰ 🎨 🎵 🎬 📷 ❤️ 😀 🤔 👋 🙌 🐛 🧠 🍀 ☕".split(
+    " ",
+  );
 
 function isUrl(value: string) {
   return /^https?:\/\//i.test(value);
@@ -124,7 +83,7 @@ function DecorPopover({
       placement={placement}
     >
       <AriaDialog aria-label={label} className={`p-2 outline-none ${className ?? ""}`}>
-        <FocusFirst>{children}</FocusFirst>
+        {children}
       </AriaDialog>
     </Popover>
   );
@@ -143,20 +102,23 @@ function FocusFirst({ children }: { children: ReactNode }) {
   );
 }
 
-function IconPicker({
+function IconPopover({
   anchor,
   isOpen,
+  icon,
   onPick,
+  onRecolor,
   onRemove,
   onClose,
 }: {
   anchor: RefObject<HTMLElement | null>;
   isOpen: boolean;
+  icon: string | null;
   onPick: (icon: string) => void;
+  onRecolor: (icon: string) => void;
   onRemove?: () => void;
   onClose: () => void;
 }) {
-  const [custom, setCustom] = useState("");
   return (
     <DecorPopover
       anchor={anchor}
@@ -164,42 +126,14 @@ function IconPicker({
       onClose={onClose}
       label="Choose an icon"
       placement="bottom start"
-      className="flex w-72 flex-col gap-2"
     >
-      <div className="grid grid-cols-8 gap-0.5">
-        {EMOJIS.map((emoji) => (
-          // Plain grid cells, not Buttons: a Button's padding and height scale would not fit 8 across.
-          <button
-            key={emoji}
-            type="button"
-            aria-label={`Icon ${emoji}`}
-            onClick={() => onPick(emoji)}
-            className={`rounded-md p-1 text-lg hover:bg-gray-950/5 ${focusRingInsetClass}`}
-          >
-            {emoji}
-          </button>
-        ))}
-      </div>
-      <form
-        className="flex gap-1"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (custom.trim()) onPick(custom.trim().slice(0, 8));
-        }}
-      >
-        <Input
-          size="sm"
-          aria-label="Any emoji"
-          value={custom}
-          onChange={(e) => setCustom(e.target.value)}
-          placeholder="Or type/paste any emoji"
-        />
-        {onRemove && (
-          <Button size="sm" variant="ghost" onPress={onRemove}>
-            Remove
-          </Button>
-        )}
-      </form>
+      <IconPicker
+        value={icon}
+        onPick={onPick}
+        onRecolor={onRecolor}
+        onRemove={onRemove}
+        suggested={SUGGESTED}
+      />
     </DecorPopover>
   );
 }
@@ -230,16 +164,18 @@ function ColorPicker({
       placement={placement}
       className="flex gap-1.5"
     >
-      {COLOR_NAMES.map((color) => (
-        <button
-          key={color}
-          type="button"
-          aria-label={`Cover colour ${color}`}
-          aria-pressed={current === color}
-          onClick={() => onPick(color)}
-          className={`size-6 rounded-full ring-1 ring-inset ${current === color ? "ring-gray-950/60" : "ring-gray-950/10"} ${COVER_COLORS[color]} ${focusRingClass}`}
-        />
-      ))}
+      <FocusFirst>
+        {COLOR_NAMES.map((color) => (
+          <button
+            key={color}
+            type="button"
+            aria-label={`Cover colour ${color}`}
+            aria-pressed={current === color}
+            onClick={() => onPick(color)}
+            className={`size-6 rounded-full ring-1 ring-inset ${current === color ? "ring-gray-950/60" : "ring-gray-950/10"} ${COVER_COLORS[color]} ${focusRingClass}`}
+          />
+        ))}
+      </FocusFirst>
     </DecorPopover>
   );
 }
@@ -384,8 +320,8 @@ function PageDecor({ docId }: DocumentSlotProps) {
   const cover = decor?.cover ?? null;
   const position = decor?.position ?? 50;
   const fill = coverFillOf(cover);
-  const setIcon = (value: string | null) => {
-    setPicking(false);
+  const setIcon = (value: string | null, keepOpen = false) => {
+    if (!keepOpen) setPicking(false);
     void ops.doc.setProperties(
       value
         ? { id: docId, set: { [PAGE_ICON_KEY]: value } }
@@ -393,27 +329,14 @@ function PageDecor({ docId }: DocumentSlotProps) {
       { label: value ? "Set page icon" : "Remove page icon" },
     );
   };
-  // The buttons sit in the room the page already has above the title, so a page without an icon
-  // or a cover is no taller for them.
-  const barPlace = icon ? "translate-y-0.5" : cover ? "translate-y-3" : "translate-y-4";
+  // The buttons sit in the room the page already has above the title, or above the icon when
+  // there is one (the icon is close to the title), so a page is no taller for them.
+  const barPlace = icon ? "-translate-y-8" : cover ? "translate-y-3" : "translate-y-4";
   return (
     <div className="group/decor flex flex-col" data-testid="page-decor">
       {cover && <Cover docId={docId} cover={cover} position={position} />}
-      <div className={`${column} ${icon ? (cover ? "-mb-8" : "-mb-4 pt-10") : ""}`}>
-        {icon && (
-          <div ref={iconAnchor} className={`relative w-fit ${cover ? "-mt-10" : ""}`}>
-            <WithTooltip label="Change page icon">
-              <button
-                type="button"
-                aria-label="Change page icon"
-                onClick={() => setPicking(!picking)}
-                className="rounded-lg px-1 text-5xl leading-tight hover:bg-gray-950/5"
-              >
-                {icon}
-              </button>
-            </WithTooltip>
-          </div>
-        )}
+      {/* The icon is 16 px above the title (whose own room above is 48 px), with or without a cover. */}
+      <div className={`${column} ${icon ? `-mb-8 ${cover ? "" : "pt-10"}` : ""}`}>
         {/* Hidden until the pointer is on them, the cover or the title (`data-page-title`, the
             doc view's), as in Notion; they stay while one of their pickers is open. Always
             rendered: the pickers the page menu asks for open here too. */}
@@ -436,11 +359,28 @@ function PageDecor({ docId }: DocumentSlotProps) {
             </Button>
           )}
         </div>
-        <IconPicker
+        {icon && (
+          <div ref={iconAnchor} className={`relative w-fit ${cover ? "-mt-10" : ""}`}>
+            <WithTooltip label="Change page icon">
+              <button
+                type="button"
+                aria-label="Change page icon"
+                data-page-icon={icon}
+                onClick={() => setPicking(!picking)}
+                className="flex h-15 items-center rounded-lg px-1 text-5xl leading-none hover:bg-gray-950/5"
+              >
+                <PageIcon icon={icon} size={48} />
+              </button>
+            </WithTooltip>
+          </div>
+        )}
+        <IconPopover
           anchor={icon ? iconAnchor : bar}
           isOpen={picking}
+          icon={icon}
           onPick={setIcon}
-          onRemove={icon ? () => setIcon(null) : undefined}
+          onRecolor={(value) => setIcon(value, true)}
+          {...(icon ? { onRemove: () => setIcon(null) } : {})}
           onClose={() => setPicking(false)}
         />
         <ColorPicker

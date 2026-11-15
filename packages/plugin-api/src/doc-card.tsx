@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { editedAgo, summarizeDoc, wordsLabel } from "./doc-summary.ts";
 import type { ExcerptLine, Span } from "./doc-summary.ts";
-import { coverFillOf, pageCoverOf, pageIconOf, useCoverUrl } from "./page-icon.tsx";
+import { coverFillOf, pageCoverOf, PageIcon, pageIconOf, useCoverUrl } from "./page-icon.tsx";
 import { useApp, useQuery } from "./react.tsx";
 
 // On top of the floating card's or hover card's own styles, which already draw the edge
@@ -83,7 +83,7 @@ export function DocCard({ id, entry: known, section }: Props) {
             data-page-icon={icon}
             className={`relative flex size-9 items-center justify-center text-[28px] leading-none ${cover ? "-mt-8 rounded-lg bg-elevated shadow-document-icon" : ""}`}
           >
-            {icon}
+            <PageIcon icon={icon} />
           </span>
         )}
         {entry ? (

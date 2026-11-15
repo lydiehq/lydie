@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "bun test",
+    "generate:emoji": "bun scripts/build-emoji.ts",
     "typecheck": "bun check"
   },
   "dependencies": {

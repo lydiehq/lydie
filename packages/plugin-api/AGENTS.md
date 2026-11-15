@@ -221,9 +221,11 @@ setDocumentMarks(owner, Map<docId, DocumentMark { connector, label }>), useDocum
 setConnectedPages(owner, Map<docId, DocumentMark>), useConnectedPage(id)   // the pages inside a
 //   connected folder (not its root), apart from the icon marks: the properties panel adds keys to
 //   such a page's own frontmatter instead of offering a collection
-DocIcon({ properties, id?, hasChildren?, className? }) (page icon emoji, else v1's document icons:
+DocIcon({ properties, id?, hasChildren?, className? }) (page icon, an emoji or a doodle, else v1's document icons:
   a page with lines, a shorter page with another popping out with `hasChildren`, a small table for a collection with `id`), useIsDatabase(id), useDatabaseIds(),
-  pageIconOf(properties), PAGE_ICON_KEY "icon", PAGE_COVER_KEY "cover",
+  pageIconOf(properties), PageIcon({ icon, size?, className? }) (draws the icon text: an emoji as
+  is, `doodle:star:blue` as the doodle; show an icon with it, never as bare text),
+  fillPageIcon(element, icon) (the same into a DOM element), PAGE_ICON_KEY "icon", PAGE_COVER_KEY "cover",
   PAGE_COVER_POSITION_KEY "cover-position"   // page icons and covers are frontmatter
 pageFullWidthOf(properties) → boolean, PAGE_FULL_WIDTH_KEY "full-width"   // `full-width: true`;
   // off is the key's absence (the doc view's page menu and "Toggle full width" set and unset it)

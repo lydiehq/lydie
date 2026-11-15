@@ -1,11 +1,21 @@
 // Page icons and covers are frontmatter properties, so a vault stays readable elsewhere:
-//   icon: "🚀"                  an emoji (or any short text)
+//   icon: "🚀"                  an emoji (or any short text), or one of our doodles:
+//                                `doodle:star`, in a colour `doodle:star:blue`
 //   cover: "banner.png"          an attachment file name, an http(s) URL, or a colour
 //                                (`blue`, see COVER_COLORS, or a hex such as "#e8d5c4")
 //   cover-position: 35           vertical focus of a cover image, 0 (top) to 100 (bottom)
 //   full-width: true             the page uses the window's width
 // Every place that shows a document (tree, tabs, switcher, links) uses `DocIcon`.
-import { CollectionItemIcon, DocumentThumbnailIcon, GitHubIcon, LinkRegular } from "@lydie/ui";
+import {
+  CollectionItemIcon,
+  DocumentThumbnailIcon,
+  DOODLE_COLORS,
+  DoodleIcon,
+  doodleMarkup,
+  GitHubIcon,
+  LinkRegular,
+  parseDoodleIcon,
+} from "@lydie/ui";
 import { useEffect, useMemo, useState } from "react";
 
 import { useDocumentMark } from "./doc-marks.ts";
@@ -74,6 +84,41 @@ export function pageCoverOf(
     cover: cover.trim(),
     position: Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 50,
   };
+}
+
+// A page's icon as it is drawn: the emoji as text, a doodle as its drawing, as tall as the text
+// around it unless `size` (px) is given.
+export function PageIcon({
+  icon,
+  size,
+  className,
+}: {
+  icon: string;
+  size?: number;
+  // For the doodle's drawing, e.g. `size-full` to fill an icon box.
+  className?: string;
+}) {
+  const doodle = parseDoodleIcon(icon);
+  if (!doodle) return icon;
+  return (
+    <DoodleIcon
+      doodle={doodle.doodle}
+      color={doodle.color}
+      className={className}
+      {...(size === undefined ? {} : { size })}
+    />
+  );
+}
+
+// The same into an element, where React does not draw (an editor decoration).
+export function fillPageIcon(element: HTMLElement, icon: string): void {
+  const doodle = parseDoodleIcon(icon);
+  if (!doodle) {
+    element.textContent = icon;
+    return;
+  }
+  element.innerHTML = doodleMarkup(doodle.doodle);
+  element.classList.add(DOODLE_COLORS[doodle.color]);
 }
 
 function isUrl(value: string) {
@@ -156,7 +201,7 @@ export function useIsDatabase(id: string | null | undefined): boolean {
   return useDatabaseIds(Boolean(id)).has(id ?? "");
 }
 
-// A page icon (emoji) when set; otherwise a page with lines of text, a shorter page with another
+// A page icon (emoji or doodle) when set; otherwise a page with lines of text, a shorter page with another
 // popping out behind when it has pages inside (`hasChildren`, the tree), and with `id`, a small
 // table for a database. `className` sizes the box the icon is centred in.
 export function DocIcon({
@@ -177,7 +222,7 @@ export function DocIcon({
   if (icon)
     return (
       <span aria-hidden data-page-icon={icon} className={`${box} leading-none`}>
-        {icon}
+        <PageIcon icon={icon} className="size-full" />
       </span>
     );
   // A connected folder shows where it is connected to, in place of the plain page or table.

@@ -581,14 +581,21 @@ describe("page icons and quick capture", () => {
     await view.getByRole("textbox", { name: "Title" }).hover();
     const add = view.getByTestId("page-decor").getByRole("button", { name: "Add icon" });
     await add.click();
-    await page.getByRole("button", { name: "Icon 🚀" }).waitFor();
+    const picker = page.getByTestId("icon-picker");
+    await picker.getByRole("tab", { name: "Doodles", selected: true }).waitFor();
     await page.mouse.move(0, 0);
     await until(
       async () => (await add.evaluate((el) => getComputedStyle(el.parentElement!).opacity)) === "1",
       2000,
       "buttons stay while the picker is open",
     );
-    await page.getByRole("button", { name: "Icon 🚀" }).click();
+    // One search covers doodles and emoji, the open tab's first. Enter takes the first match;
+    // the text typed is never the icon.
+    await picker.getByRole("tab", { name: "Emoji" }).click();
+    const search = picker.getByRole("searchbox", { name: "Search icons" });
+    await search.fill("rocket");
+    await picker.getByRole("button", { name: "rocket", exact: true }).waitFor();
+    await search.press("Enter");
     await tabs(page).filter({ hasText: "Rocket" }).locator("[data-page-icon='🚀']").waitFor();
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press(`${MOD}+o`);
@@ -613,6 +620,15 @@ describe("page icons and quick capture", () => {
       3000,
       "icon undone",
     );
+    // A doodle in a colour, kept as text in the page's properties.
+    await view.getByRole("textbox", { name: "Title" }).hover();
+    await add.click();
+    await picker.getByRole("button", { name: "Colour blue" }).click();
+    await picker.getByRole("button", { name: "Spiral" }).click();
+    await tabs(page)
+      .filter({ hasText: "Rocket" })
+      .locator("[data-page-icon='doodle:spiral:blue'] svg[data-doodle=spiral]")
+      .waitFor();
   });
 
   test("quick capture appends to the inbox", async () => {

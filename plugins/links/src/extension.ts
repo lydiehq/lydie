@@ -1,3 +1,4 @@
+import { fillPageIcon } from "@lydie/plugin-api";
 import type { OpenGesture } from "@lydie/plugin-api";
 // Link behaviour inside the editor: the link menu on the selection, modifier clicks, Mod+K, Escape,
 // and the unresolved-link decoration. The hover preview is the overlay's (LinkLayer). State lives in a small per-editor store the overlay (LinkLayer)
@@ -208,7 +209,7 @@ function iconWidget(icon: string) {
     span.style.marginRight = "0.15em";
     span.dataset.pageIcon = icon;
     span.setAttribute("aria-hidden", "true");
-    span.textContent = icon;
+    fillPageIcon(span, icon);
     return span;
   };
 }
