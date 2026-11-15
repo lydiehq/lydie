@@ -140,10 +140,7 @@ function IconPopover({
 
 const COLOR_NAMES = Object.keys(COVER_COLORS) as CoverColor[];
 
-// As the place icons (ConfirmDialog's tile): a true squircle where `corner-shape` works, else
-// rounded corners close to it.
-const SWATCH =
-  "size-6 rounded-[28%] ring-1 ring-inset supports-[corner-shape:squircle]:rounded-[50%] supports-[corner-shape:squircle]:[corner-shape:squircle]";
+const SWATCH = "size-6 rounded-full ring-1 ring-inset";
 const swatchRing = (selected: boolean) => (selected ? "ring-gray-950/60" : "ring-gray-950/10");
 
 // `#abc` as `#aabbcc`, the only form a colour input takes.
@@ -153,14 +150,17 @@ function longHex(hex: string) {
 
 // Any colour, from the system's picker: a colour input laid over a rainbow swatch (the colour
 // itself once it is one), so a press on the swatch opens it. Kept as a hex (`cover: "#3b82f6"`).
-// Written once the picker closes (the input's `change`, which React does not expose: its onChange
-// is every `input` while dragging).
+// Each `input` while the picker is open is a preview (the cover follows, nothing is written);
+// the colour is written once the picker closes (the input's `change`, which React does not
+// expose: its onChange is every `input`).
 function CustomColor({
   current,
   onPick,
+  onPreview,
 }: {
   current: string | null;
   onPick: (hex: string) => void;
+  onPreview: (hex: string) => void;
 }) {
   const swatch = useRef<HTMLSpanElement>(null);
   // On the swatch: `change` bubbles, and the tooltip wraps the input.
@@ -185,6 +185,7 @@ function CustomColor({
           type="color"
           aria-label="Any cover colour"
           defaultValue={hex ?? "#3b82f6"}
+          onInput={(event) => onPreview(event.currentTarget.value)}
           className="absolute inset-0 size-full cursor-pointer opacity-0"
         />
       </WithTooltip>
@@ -197,6 +198,7 @@ function ColorPicker({
   isOpen,
   current,
   onPick,
+  onPreview,
   onClose,
   placement,
 }: {
@@ -204,6 +206,7 @@ function ColorPicker({
   isOpen: boolean;
   current: string | null;
   onPick: (color: string) => void;
+  onPreview: (color: string) => void;
   onClose: () => void;
   placement: "bottom start" | "top end";
 }) {
@@ -227,7 +230,7 @@ function ColorPicker({
             className={`${SWATCH} ${swatchRing(current === color)} ${COVER_COLORS[color]} ${focusRingClass}`}
           />
         ))}
-        <CustomColor current={current} onPick={onPick} />
+        <CustomColor current={current} onPick={onPick} onPreview={onPreview} />
       </FocusFirst>
     </DecorPopover>
   );
@@ -278,7 +281,19 @@ function barToneOfImage(img: HTMLImageElement, position: number) {
   );
 }
 
-function Cover({ docId, cover, position }: { docId: string; cover: string; position: number }) {
+function Cover({
+  docId,
+  cover,
+  position,
+  onColor,
+  onPreview,
+}: {
+  docId: string;
+  cover: string;
+  position: number;
+  onColor: (color: string) => void;
+  onPreview: (color: string | null) => void;
+}) {
   const ops = useOps();
   const url = useCoverUrl(cover);
   const fill = coverFillOf(cover);
@@ -365,17 +380,14 @@ function Cover({ docId, cover, position }: { docId: string; cover: string; posit
               isOpen={coloring}
               current={fill ? cover.toLowerCase() : null}
               placement="top end"
-              onClose={() => setColoring(false)}
+              onClose={() => {
+                setColoring(false);
+                onPreview(null);
+              }}
+              onPreview={onPreview}
               onPick={(color) => {
                 setColoring(false);
-                void ops.doc.setProperties(
-                  {
-                    id: docId,
-                    set: { [PAGE_COVER_KEY]: color },
-                    unset: [PAGE_COVER_POSITION_KEY],
-                  },
-                  { label: "Change cover" },
-                );
+                onColor(color);
               }}
             />
             <Button
@@ -420,6 +432,8 @@ function PageDecor({ docId }: DocumentSlotProps) {
   );
   const [picking, setPicking] = useState(false);
   const [coloring, setColoring] = useState(false);
+  // A colour shown while the system's colour picker is open, before it is written.
+  const [preview, setPreview] = useState<string | null>(null);
   const iconAnchor = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -440,9 +454,18 @@ function PageDecor({ docId }: DocumentSlotProps) {
   const icon = pageIconOf(properties);
   const decor = pageCoverOf(properties);
   const column = pageColumnClass(pageFullWidthOf(properties));
-  const cover = decor?.cover ?? null;
+  const cover = preview ?? decor?.cover ?? null;
   const position = decor?.position ?? 50;
   const fill = coverFillOf(cover);
+  // The preview stays until the page has the colour, so the cover does not flash back.
+  const setCover = (color: string) => {
+    void ops.doc
+      .setProperties(
+        { id: docId, set: { [PAGE_COVER_KEY]: color }, unset: [PAGE_COVER_POSITION_KEY] },
+        { label: decor ? "Change cover" : "Add cover" },
+      )
+      .finally(() => setPreview(null));
+  };
   const setIcon = (value: string | null, keepOpen = false) => {
     if (!keepOpen) setPicking(false);
     void ops.doc.setProperties(
@@ -457,7 +480,15 @@ function PageDecor({ docId }: DocumentSlotProps) {
   const barPlace = icon ? "-translate-y-8" : cover ? "translate-y-3" : "translate-y-4";
   return (
     <div className="group/decor flex flex-col" data-testid="page-decor">
-      {cover && <Cover docId={docId} cover={cover} position={position} />}
+      {cover && (
+        <Cover
+          docId={docId}
+          cover={cover}
+          position={position}
+          onColor={setCover}
+          onPreview={setPreview}
+        />
+      )}
       {/* The icon is 16 px above the title (whose own room above is 48 px), with or without a cover. */}
       <div className={`${column} ${icon ? `-mb-8 ${cover ? "" : "pt-10"}` : ""}`}>
         {/* Hidden until the pointer is on them, the cover or the title (`data-page-title`, the
@@ -511,13 +542,14 @@ function PageDecor({ docId }: DocumentSlotProps) {
           isOpen={coloring}
           current={fill && cover ? cover.toLowerCase() : null}
           placement="bottom start"
-          onClose={() => setColoring(false)}
+          onClose={() => {
+            setColoring(false);
+            setPreview(null);
+          }}
+          onPreview={setPreview}
           onPick={(color) => {
             setColoring(false);
-            void ops.doc.setProperties(
-              { id: docId, set: { [PAGE_COVER_KEY]: color }, unset: [PAGE_COVER_POSITION_KEY] },
-              { label: cover ? "Change cover" : "Add cover" },
-            );
+            setCover(color);
           }}
         />
       </div>
