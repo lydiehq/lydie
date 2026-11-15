@@ -40,6 +40,8 @@
     "@lydie/plugin-document-tree": "workspace:*",
     "@lydie/plugin-editor-view": "workspace:*",
     "@lydie/plugin-home": "workspace:*",
+    "@lydie/plugin-import-markdown": "workspace:*",
+    "@lydie/plugin-import-notion": "workspace:*",
     "@lydie/plugin-links": "workspace:*",
     "@lydie/plugin-mdx-components": "workspace:*",
     "@lydie/plugin-mentions": "workspace:*",

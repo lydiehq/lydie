@@ -5,6 +5,8 @@ import { databasesPlugin } from "@lydie/plugin-databases";
 import { documentTreePlugin } from "@lydie/plugin-document-tree";
 import { editorViewPlugin } from "@lydie/plugin-editor-view";
 import { homePlugin } from "@lydie/plugin-home";
+import { importMarkdownPlugin } from "@lydie/plugin-import-markdown";
+import { importNotionPlugin } from "@lydie/plugin-import-notion";
 import { linksPlugin } from "@lydie/plugin-links";
 import { mdxComponentsPlugin } from "@lydie/plugin-mdx-components";
 import { mentionsPlugin } from "@lydie/plugin-mentions";
@@ -93,6 +95,8 @@ export const plugins = [
   quickCapturePlugin,
   mentionsPlugin,
   settingsPlugin,
+  importNotionPlugin,
+  importMarkdownPlugin,
   accountPlugin,
   teamPlugin,
   sharingPlugin,

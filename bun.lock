@@ -70,6 +70,8 @@
         "@lydie/plugin-document-tree": "workspace:*",
         "@lydie/plugin-editor-view": "workspace:*",
         "@lydie/plugin-home": "workspace:*",
+        "@lydie/plugin-import-markdown": "workspace:*",
+        "@lydie/plugin-import-notion": "workspace:*",
         "@lydie/plugin-links": "workspace:*",
         "@lydie/plugin-mdx-components": "workspace:*",
         "@lydie/plugin-mentions": "workspace:*",
@@ -305,6 +307,7 @@
         "@lydie/editor": "workspace:*",
         "@lydie/platform": "workspace:*",
         "@lydie/ui": "workspace:*",
+        "fflate": "0.8.3",
       },
       "devDependencies": {
         "@happy-dom/global-registrator": "21.0.4",
@@ -529,6 +532,40 @@
       },
       "devDependencies": {
         "@testing-library/react": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "catalog:",
+      },
+    },
+    "plugins/import-markdown": {
+      "name": "@lydie/plugin-import-markdown",
+      "version": "0.0.0",
+      "dependencies": {
+        "@lydie/plugin-api": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "catalog:",
+      },
+    },
+    "plugins/import-notion": {
+      "name": "@lydie/plugin-import-notion",
+      "version": "0.0.0",
+      "dependencies": {
+        "@lydie/plugin-api": "workspace:*",
+      },
+      "devDependencies": {
         "@types/bun": "catalog:",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
@@ -1046,6 +1083,10 @@
     "@lydie/plugin-editor-view": ["@lydie/plugin-editor-view@workspace:plugins/editor-view"],
 
     "@lydie/plugin-home": ["@lydie/plugin-home@workspace:plugins/home"],
+
+    "@lydie/plugin-import-markdown": ["@lydie/plugin-import-markdown@workspace:plugins/import-markdown"],
+
+    "@lydie/plugin-import-notion": ["@lydie/plugin-import-notion@workspace:plugins/import-notion"],
 
     "@lydie/plugin-links": ["@lydie/plugin-links@workspace:plugins/links"],
 
