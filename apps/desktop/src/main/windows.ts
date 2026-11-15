@@ -224,7 +224,7 @@ export class WindowManager {
       show: false,
       // The app shell's gray-100 in each theme (packages/ui/src/styles/dark.css); the renderer applies
       // the saved theme before its first paint.
-      backgroundColor: nativeTheme.shouldUseDarkColors ? "#0b0b0b" : "#faf9f6",
+      backgroundColor: nativeTheme.shouldUseDarkColors ? "#141414" : "#faf9f6",
       title: scope.kind === "local" ? scope.folder.name : "Lydie",
       ...(isMac ? { titleBarStyle: "hiddenInset", trafficLightPosition: TRAFFIC_LIGHTS } : {}),
       webPreferences: {
