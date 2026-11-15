@@ -80,7 +80,9 @@ queries.listTree(ws, { rootId?, includeDeleted?, expanded? }) | children(ws, par
   rows(ws, parentId, { filters?: PropertyFilter[], sorts?: PropertySort[], limit?, offset? }) |
   databases(ws) (DatabaseSummary) | database(id) | databaseProperties(id, { includeDeleted? }) |
   databaseViews(id, { includeDeleted? }) | workspace(ws) (0/1 WorkspaceRow) | workspaceMembers(ws) | teamspaces(ws) |
-  teamspaceMembers(teamspaceId) | grants(docId) | myAccess(docId) (DocumentAccess)
+  teamspaceMembers(teamspaceId) | grants(docId) | myAccess(docId) (DocumentAccess) |
+  publicPages(ws) (pages with a live public link) | publicAccess(docId) (0/1: the nearest page
+  whose link reaches it, through live, unrestricted pages; expiry checked when the query runs)
   : StoreQuery<T> { name, sql, parameters, map, key, tables? }
 ViewParams = { databaseId, viewId?, view?: { type?, config? }, window?: ViewWindow, me?, today? }
 ViewItem = { kind: "row", key, row: ViewRow } | { kind: "group", key, group: ViewGroup }
@@ -115,8 +117,10 @@ the core's Postgres tables):
 - `teamspaces(id, workspace_id, name, description, icon, visibility, is_default, created_by, created_at,
   updated_at)`, `teamspace_members(id, workspace_id, teamspace_id, user_id, role, created_at)`,
   `access_scope_members(id, scope_id, workspace_id, level)`, `document_grants(id, workspace_id,
-  document_id, principal_type, principal_id, level, scope_id, created_by, created_at, updated_at)` —
-  hosted only (the core's client schema); empty in local mode.
+  document_id, principal_type, principal_id, level, scope_id, created_by, created_at, updated_at)`,
+  `share_links(id, workspace_id, document_id, include_subpages, expires_at, scope_id, created_by,
+  created_at, updated_at)` (public links without token or password; migration 11 is an empty step
+  for it) — hosted only (the core's client schema); empty in local mode.
 - `documents(id, workspace_id, parent_id, title, sort_key, properties JSON, created_at, updated_at,
   deleted_at, created_by, updated_by, teamspace_id, private_owner_id, restricted, scope_id)` — indexes
   (workspace_id, parent_id, sort_key), (parent_id). No deleted_at index on purpose (SQLite would prefer

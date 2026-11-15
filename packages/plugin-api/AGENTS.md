@@ -169,7 +169,11 @@ ctx.workspaceMenu.register({ id, order?, component({ close }) })   // the worksp
 SettingsPageDef += { group?, description?, keywords?, icon?, when?(app) };
   component gets { path, navigate(path) } (`/settings/<id>/<path>`)
 StatusItemDef += { replacesSyncIndicator? }   PluginDef += { essential? }
-Live queries += "workspace.teamspaces" | "teamspace.members" | "doc.access" | "doc.grants"
+Live queries += "workspace.teamspaces" | "teamspace.members" | "doc.access" | "doc.grants" |
+  "workspace.publicPages" ({ workspaceId } → PublicPageRow { documentId, includeSubpages }: pages
+  with a live public link of their own) | "doc.publicAccess" ({ id } → 0/1 PublicAccess
+  { documentId, sourceId, sourceTitle, links }: the nearest page whose link reaches this one,
+  itself or one above with subpages, as the core's public read resolves it)
 TEAMSPACES_UI (false: hidden for the alpha; the one switch), teamspacesShown(teamspaces) /* the
   switch, or `workspace.teamspaces` rows other than one default teamspace */,
   useTeamspacesShown(), spaceName(teamspace, shown) /* "Workspace" for the default one while

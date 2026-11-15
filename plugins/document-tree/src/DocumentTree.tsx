@@ -13,6 +13,7 @@ import {
   useContributions,
   useDocPrefetch,
   useOps,
+  useQuery,
   useTab,
 } from "@lydie/plugin-api";
 import type {
@@ -28,6 +29,7 @@ import {
   Button,
   CollapseArrow,
   ContextMenu,
+  GlobeRegular,
   LoadingState,
   More1Regular,
   useHoverCard,
@@ -179,6 +181,12 @@ export function DocumentTree(props: DocumentTreeProps) {
   const activeTab = useActiveTab();
   const activeDocId = docIdOf(activeTab?.path);
   const menuItems = useContributions("documentMenu");
+  // Pages with a public link of their own get a globe (hosted workspaces only).
+  const publicPages = useQuery(
+    "workspace.publicPages",
+    backend.info.mode === "synced" ? { workspaceId: backend.info.workspaceId } : null,
+  ).data;
+  const published = new Set(publicPages.map((p) => p.documentId));
   const tabId = useTab()?.id ?? null;
   const historyScope = () => tabId ?? app.historyScope();
 
@@ -699,6 +707,7 @@ export function DocumentTree(props: DocumentTreeProps) {
               focused={row.doc.id === focusedId}
               renaming={row.doc.id === renamingId}
               menuOpen={menu?.doc.id === row.doc.id}
+              published={published.has(row.doc.id)}
               dimmed={dragging.has(row.doc.id)}
               drop={drop && drop.id === row.doc.id ? drop.where : null}
               onToggle={() => model.setExpanded(row.doc.id, !row.expanded)}
@@ -761,6 +770,8 @@ type ItemProps = {
   renaming: boolean;
   // Its context menu is open: the caret and the actions stay shown.
   menuOpen: boolean;
+  // Has a public link of its own.
+  published: boolean;
   // Being dragged.
   dimmed: boolean;
   drop: "before" | "after" | "inside" | "end" | null;
@@ -786,6 +797,7 @@ const TreeItem = memo(function TreeItem({
   focused,
   renaming,
   menuOpen,
+  published,
   dimmed,
   drop,
   onToggle,
@@ -920,7 +932,20 @@ const TreeItem = memo(function TreeItem({
         {renaming ? (
           <RenameInput initial={doc.title} onCommit={onRename} onCancel={onCancelRename} />
         ) : (
-          <span className="min-w-0 grow truncate">{doc.title || "Untitled"}</span>
+          <>
+            <span className={`min-w-0 truncate ${published ? "" : "grow"}`}>
+              {doc.title || "Untitled"}
+            </span>
+            {published && (
+              <GlobeRegular
+                role="img"
+                aria-hidden={false}
+                aria-label="Published to web"
+                data-testid="tree-row-public"
+                className="mr-auto size-3.5 shrink-0 text-gray-400"
+              />
+            )}
+          </>
         )}
         {/* Out of the layout until shown, so titles use the full width. Kept while the row's menu
             is open, as in v1. */}

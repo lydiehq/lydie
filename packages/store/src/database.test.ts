@@ -663,6 +663,57 @@ describe("team and access tables", () => {
       restricted: false,
     });
   });
+
+  it("finds the public link that reaches a page", async () => {
+    const { store, runtime } = await openTestStore();
+    const { ops } = runtime;
+    const top = await ops.doc.create({ workspaceId: WS, title: "Top" });
+    const mid = await ops.doc.create({ workspaceId: WS, title: "Mid", parentId: top.id });
+    const leaf = await ops.doc.create({ workspaceId: WS, title: "Leaf", parentId: mid.id });
+    const shut = await ops.doc.create({ workspaceId: WS, title: "Shut", parentId: top.id });
+    const under = await ops.doc.create({ workspaceId: WS, title: "Under", parentId: shut.id });
+    expect(await store.query(queries.publicPages(WS))).toEqual([]);
+    expect(await store.query(queries.publicAccess(leaf.id))).toEqual([]);
+
+    await store.db.execute("UPDATE documents SET restricted = 1 WHERE id = ?", [shut.id]);
+    const at = "2026-03-01 00:00:00Z";
+    const link = (id: string, doc: string, subpages: boolean, expires: string | null = null) =>
+      store.db.execute(
+        "INSERT INTO share_links (id, workspace_id, document_id, include_subpages, expires_at, scope_id, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'scope1', 'u1', ?, ?)",
+        [id, WS, doc, subpages ? 1 : 0, expires, at, at],
+      );
+    await link("l1", top.id, true);
+    await link("l2", top.id, false);
+    await link("l3", mid.id, false);
+    // Expired: counts for nothing.
+    await link("l4", leaf.id, false, "2000-01-01 00:00:00Z");
+
+    expect(await store.query(queries.publicPages(WS))).toEqual(
+      [
+        { documentId: top.id, includeSubpages: true },
+        { documentId: mid.id, includeSubpages: false },
+      ].sort((a, b) => a.documentId.localeCompare(b.documentId)),
+    );
+    expect(await store.query(queries.publicAccess(top.id))).toEqual([
+      { documentId: top.id, sourceId: top.id, sourceTitle: "Top", links: 2 },
+    ]);
+    // The nearest page wins, even when a link further up has more reach.
+    expect(await store.query(queries.publicAccess(mid.id))).toEqual([
+      { documentId: mid.id, sourceId: mid.id, sourceTitle: "Mid", links: 1 },
+    ]);
+    // Mid's link leaves out subpages; Top's with subpages reaches Leaf.
+    expect(await store.query(queries.publicAccess(leaf.id))).toEqual([
+      { documentId: leaf.id, sourceId: top.id, sourceTitle: "Top", links: 1 },
+    ]);
+    // A restricted page and what is under it are not reached from above.
+    expect(await store.query(queries.publicAccess(shut.id))).toEqual([]);
+    expect(await store.query(queries.publicAccess(under.id))).toEqual([]);
+
+    // Pages in the trash are not on the web (the subtree goes with Top).
+    await ops.doc.delete({ id: top.id });
+    expect(await store.query(queries.publicPages(WS))).toEqual([]);
+    expect(await store.query(queries.publicAccess(leaf.id))).toEqual([]);
+  });
 });
 
 describe("Yjs persistence", () => {

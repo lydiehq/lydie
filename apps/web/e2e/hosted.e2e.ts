@@ -452,7 +452,8 @@ describe.skipIf(!up)("team and sharing", () => {
     // Restricted, it is only the listed people's: Bob loses it.
     await a.waitForTimeout(1500);
     let share = await openShare(a, "Guest brief");
-    await share.getByRole("switch", { name: /Restricted/ }).click();
+    // The label, not the switch: its hidden input sits under the drawn track.
+    await share.getByText(/^Restricted:/).click();
     await item(b, "Guest brief").waitFor({ state: "detached", timeout: 30_000 });
 
     // A restricted page shared with a guest, who sees only that page.
@@ -486,6 +487,13 @@ describe.skipIf(!up)("team and sharing", () => {
     const url = await share.getByRole("textbox", { name: "Public link" }).inputValue();
     expect(url).toContain("/s/");
     await a.screenshot({ path: "/tmp/lydie-sharing-dialog.png" });
+    // The page shows it is on the web, in the tree and beside Share, also to Gus, who can see it.
+    await item(a, "Guest brief")
+      .getByRole("img", { name: "Published to web" })
+      .waitFor({ timeout: 20_000 });
+    await g!.getByRole("button", { name: "Published to web" }).waitFor({ timeout: 30_000 });
+    await item(g!, "Guest brief").getByRole("img", { name: "Published to web" }).waitFor();
+    await g!.screenshot({ path: "/tmp/lydie-sharing-published.png" });
     const anon = await (async () => {
       const context = await browser.newContext();
       contexts.push(context);

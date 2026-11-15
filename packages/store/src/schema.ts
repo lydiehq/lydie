@@ -14,6 +14,7 @@ export const SYNCED_TABLES = [
   "access_scope_members",
   "documents",
   "document_grants",
+  "share_links",
   "links",
   "attachments",
   "threads",
@@ -91,6 +92,21 @@ export function createSchema(mode: StoreMode = "local") {
         principal_id: column.text,
         // "view" | "comment" | "edit" | "full"
         level: column.text,
+        scope_id: column.text,
+        created_by: column.text,
+        created_at: column.text,
+        updated_at: column.text,
+      },
+      { ...shared, indexes: { document: ["document_id"] } },
+    ),
+    // Public links without their token or password (the core keeps those): which pages are on
+    // the web. Revoked links leave the table.
+    share_links: new Table(
+      {
+        workspace_id: column.text,
+        document_id: column.text,
+        include_subpages: column.integer,
+        expires_at: column.text,
         scope_id: column.text,
         created_by: column.text,
         created_at: column.text,

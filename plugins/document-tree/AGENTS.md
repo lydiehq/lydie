@@ -61,6 +61,9 @@ documents; its title is the sidebar's) lists the ones that are live documents (a
 restored) and renders nothing while there are none, which hides the title too. A row opens like a tree row, shows a star on
 hover that removes it, and has its own context menu. Tests: `favorites.test.ts`.
 
+In a hosted workspace a page with a public link of its own has a grey globe after its title
+("Published to web"; one live `workspace.publicPages` per tree). Subpages a link reaches show none.
+
 Rows and favorites fetch their page ahead of the click (`useDocPrefetch`, `prefetchDoc` from the
 plugin API: after a 60 ms rest and on the press), so it opens whole.
 

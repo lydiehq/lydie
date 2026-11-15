@@ -10,6 +10,8 @@ import type {
   DocumentAccess,
   DocumentGrantRow,
   OutgoingLink,
+  PublicAccess,
+  PublicPageRow,
   SearchHit,
   TeamspaceMemberRow,
   TeamspaceRow,
@@ -40,6 +42,8 @@ import {
   toMention,
   toOutgoingLink,
   toProperty,
+  toPublicAccess,
+  toPublicPage,
   toSearchHit,
   toTeamspace,
   toTeamspaceMember,
@@ -689,6 +693,49 @@ export function myAccess(documentId: string): StoreQuery<DocumentAccess> {
   };
 }
 
+// A public link counts until it is revoked (the row leaves) or expires. Timestamps arrive as
+// Postgres text ("2026-11-16 10:00:00Z"), which julianday reads as well as ISO.
+const LIVE_LINK = "(s.expires_at IS NULL OR julianday(s.expires_at) > julianday('now'))";
+
+// Live pages with a live public link of their own. Expiry is checked when the query runs: a link
+// that lapses later shows until the next change to the tables.
+export function publicPages(workspaceId: string): StoreQuery<PublicPageRow> {
+  return {
+    name: "publicPages",
+    sql: `SELECT s.document_id AS id, MAX(s.include_subpages) AS include_subpages
+          FROM share_links s JOIN documents d ON d.id = s.document_id
+          WHERE s.workspace_id = ? AND d.deleted_at IS NULL AND ${LIVE_LINK}
+          GROUP BY s.document_id ORDER BY s.document_id`,
+    parameters: [workspaceId],
+    map: toPublicPage,
+    key: (p) => p.documentId,
+  };
+}
+
+// Zero or one row: the nearest page whose public link reaches this one, as the core's public read
+// resolves it: the page's own links, or a link with subpages on a page above, through live pages
+// and up to (and including) the first restricted one.
+export function publicAccess(documentId: string): StoreQuery<PublicAccess> {
+  return {
+    name: "publicAccess",
+    sql: `WITH RECURSIVE up(id, parent_id, restricted, title, depth) AS (
+            SELECT id, parent_id, restricted, title, 0 FROM documents
+            WHERE id = ? AND deleted_at IS NULL
+            UNION ALL
+            SELECT d.id, d.parent_id, d.restricted, d.title, up.depth + 1
+            FROM up JOIN documents d ON d.id = up.parent_id
+            WHERE COALESCE(up.restricted, 0) = 0 AND d.deleted_at IS NULL AND up.depth < 1000
+          )
+          SELECT ? AS id, up.id AS source_id, up.title AS source_title, COUNT(*) AS links
+          FROM up JOIN share_links s ON s.document_id = up.id
+          WHERE (up.depth = 0 OR s.include_subpages = 1) AND ${LIVE_LINK}
+          GROUP BY up.id, up.title, up.depth ORDER BY up.depth LIMIT 1`,
+    parameters: [documentId, documentId],
+    map: toPublicAccess,
+    key: (a) => a.documentId,
+  };
+}
+
 export const queries = {
   listTree,
   children,
@@ -713,5 +760,7 @@ export const queries = {
   teamspaceMembers,
   grants,
   myAccess,
+  publicPages,
+  publicAccess,
   databaseTemplates,
 };

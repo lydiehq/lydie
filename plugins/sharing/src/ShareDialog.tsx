@@ -484,7 +484,14 @@ export function ShareDialog({ close, props }: { close: () => void; props: unknow
 
               <section aria-label="Publish to web" className="flex flex-col gap-2">
                 <h3 className="text-xs font-medium text-gray-500">Publish to web</h3>
-                <PublicLinks documentId={documentId} canManage={canManage} />
+                <PublicLinks
+                  documentId={documentId}
+                  canManage={canManage}
+                  openPage={(id) => {
+                    close();
+                    app.openDoc(id);
+                  }}
+                />
               </section>
             </>
           )}

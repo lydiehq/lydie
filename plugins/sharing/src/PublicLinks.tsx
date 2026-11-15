@@ -1,6 +1,15 @@
-import { useApp, useHostedQuery } from "@lydie/plugin-api";
+import { useApp, useHostedQuery, useQuery } from "@lydie/plugin-api";
 import type { ShareLink } from "@lydie/plugin-api";
-import { Button, Input, Select, SelectItem, Switch, TextField } from "@lydie/plugin-api/ui";
+import {
+  Button,
+  focusRingClass,
+  GlobeRegular,
+  Input,
+  Select,
+  SelectItem,
+  Switch,
+  TextField,
+} from "@lydie/plugin-api/ui";
 import { useState } from "react";
 
 import { errorText } from "./errors.ts";
@@ -18,11 +27,21 @@ const expiresAt = (choice: string) => {
 };
 
 // "Publish to web": public, view-only links to the page (and its subpages). A link's token is shown
-// once, when it is created; the list shows its last characters.
-export function PublicLinks({ documentId, canManage }: { documentId: string; canManage: boolean }) {
+// once, when it is created; the list shows its last characters. Above them, whether the page is
+// already on the web, from the synced links (the list itself needs full access).
+export function PublicLinks({
+  documentId,
+  canManage,
+  openPage,
+}: {
+  documentId: string;
+  canManage: boolean;
+  openPage: (id: string) => void;
+}) {
   const app = useApp();
   const api = app.services!.account!;
   const links = useHostedQuery("shareLink.list", canManage ? { documentId } : null);
+  const publicAccess = useQuery("doc.publicAccess", { id: documentId }).data[0];
   const [creating, setCreating] = useState(false);
   const [password, setPassword] = useState("");
   const [expiry, setExpiry] = useState("never");
@@ -32,9 +51,36 @@ export function PublicLinks({ documentId, canManage }: { documentId: string; can
   const [fresh, setFresh] = useState<{ url: string; id: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const status = publicAccess && (
+    <p className="flex items-start gap-1.5 text-xs text-gray-600" data-testid="public-status">
+      <GlobeRegular aria-hidden className="mt-px size-3.5 shrink-0 text-blue-600" />
+      {publicAccess.sourceId === documentId ? (
+        <span>Anyone with a link to this page can view it.</span>
+      ) : (
+        <span>
+          Anyone with the link to{" "}
+          <button
+            type="button"
+            className={`rounded-xs underline decoration-gray-400/50 hover:decoration-gray-400 ${focusRingClass}`}
+            onClick={() => openPage(publicAccess.sourceId)}
+          >
+            {publicAccess.sourceTitle || "Untitled"}
+          </button>{" "}
+          can view this page: the link includes subpages.
+        </span>
+      )}
+    </p>
+  );
+
   if (!canManage) {
     return (
-      <p className="text-xs text-gray-500">Only people with full access can publish this page.</p>
+      <div className="flex flex-col gap-2">
+        {status}
+        <p className="text-xs text-gray-500">
+          Only people with full access can{" "}
+          {publicAccess ? "change public links" : "publish this page"}.
+        </p>
+      </div>
     );
   }
 
@@ -63,6 +109,7 @@ export function PublicLinks({ documentId, canManage }: { documentId: string; can
   const list = links.data?.shareLinks ?? [];
   return (
     <div className="flex flex-col gap-2" data-testid="public-links">
+      {!fresh && status}
       {fresh && (
         <div className="flex flex-col gap-1 rounded-md bg-green-50 p-2 text-xs text-green-900">
           <span>Anyone with this link can view the page. Copy it now: it is not shown again.</span>

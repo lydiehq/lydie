@@ -21,6 +21,8 @@ import type {
   LinkSyntax,
   OutgoingLink,
   Properties,
+  PublicAccess,
+  PublicPageRow,
   SearchHit,
   TeamspaceMemberRow,
   TeamspaceRow,
@@ -448,6 +450,19 @@ export function toGrant(row: Row): DocumentGrantRow {
     createdBy: str(row.created_by),
     createdAt: String(row.created_at),
     updatedAt: str(row.updated_at),
+  };
+}
+
+export function toPublicPage(row: Row): PublicPageRow {
+  return { documentId: String(row.id), includeSubpages: Number(row.include_subpages) === 1 };
+}
+
+export function toPublicAccess(row: Row): PublicAccess {
+  return {
+    documentId: String(row.id),
+    sourceId: String(row.source_id),
+    sourceTitle: String(row.source_title ?? ""),
+    links: Number(row.links),
   };
 }
 

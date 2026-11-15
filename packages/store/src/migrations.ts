@@ -230,6 +230,12 @@ export const MIGRATIONS: readonly Migration[] = [
     name: "threads: notes and comments beside a document",
     async up() {},
   },
+  {
+    version: 11,
+    // `share_links` is a PowerSync table (no SQL); bumped for the same reason as 10.
+    name: "share_links: which pages are on the web",
+    async up() {},
+  },
 ];
 
 // Plain tables that name ids (the derived ones are rebuilt instead).

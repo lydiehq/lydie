@@ -29,5 +29,10 @@ unless the arrows picked a suggestion) (`share.invite`: member → grant,
 account → guest, otherwise an invitation; teamspaces only while they show, `useTeamspacesShown`
 from the plugin API, and a grant to the default one reads "Workspace" while they do not), the "restricted" switch, and public links
 ("Publish to web": optional password, expiry, subpages; the token is shown once; change and
-revoke). Controls are disabled below full access. The public page `/s/<token>` is rendered by
+revoke). Controls are disabled below full access.
+
+Whether a page is on the web comes from the synced links (`doc.publicAccess`), so everyone who can
+see the page knows: a blue globe before Share ("Published to web", or "… with <page above>" when a
+link with subpages on a page above reaches it; it opens the dialog), and a line above the links in
+the dialog, naming the page above with a link to it. The tree's globe is the document-tree plugin's. The public page `/s/<token>` is rendered by
 `apps/web` (it needs no workspace).

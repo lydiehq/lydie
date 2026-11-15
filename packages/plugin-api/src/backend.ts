@@ -18,6 +18,8 @@ import type {
   Operations,
   OutgoingLink,
   OutputOf,
+  PublicAccess,
+  PublicPageRow,
   SearchHit,
   TeamspaceMemberRow,
   TeamspaceRow,
@@ -147,6 +149,11 @@ export type LiveQueries = {
   "teamspace.members": { params: { teamspaceId: string }; row: TeamspaceMemberRow };
   "doc.access": { params: { id: string }; row: DocumentAccess };
   "doc.grants": { params: { id: string }; row: DocumentGrantRow };
+  // Hosted only (empty in local mode): pages on the web through a public link. Pages with live
+  // links of their own, and zero or one row for why a page is public (its own link or one on a
+  // page above that includes subpages). Only links on pages the user can see are known.
+  "workspace.publicPages": { params: { workspaceId: string }; row: PublicPageRow };
+  "doc.publicAccess": { params: { id: string }; row: PublicAccess };
 };
 
 // ---- Databases (shapes of @lydie/store's view queries)

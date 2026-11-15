@@ -179,6 +179,8 @@ const storeQueries: StoreBacked = {
   "teamspace.members": (p) => queries.teamspaceMembers(p.teamspaceId),
   "doc.access": (p) => queries.myAccess(p.id),
   "doc.grants": (p) => queries.grants(p.id),
+  "doc.publicAccess": (p) => queries.publicAccess(p.id),
+  "workspace.publicPages": (p) => queries.publicPages(p.workspaceId),
 };
 
 export function createLocalBackend(options: LocalBackendOptions): LocalBackend {

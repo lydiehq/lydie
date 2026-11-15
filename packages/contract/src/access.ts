@@ -81,6 +81,26 @@ export const DocumentGrantRow = z
   .meta({ id: "DocumentGrantRow" });
 export type DocumentGrantRow = z.infer<typeof DocumentGrantRow>;
 
+// A page with a live public link of its own (not revoked, not expired). Its subpages are on the web
+// too when `includeSubpages`, except restricted ones.
+export const PublicPageRow = z
+  .object({ documentId: Uuid, includeSubpages: z.boolean() })
+  .meta({ id: "PublicPageRow" });
+export type PublicPageRow = z.infer<typeof PublicPageRow>;
+
+// Why a page is on the web: the nearest page whose live public link reaches it, which is the page
+// itself (`sourceId` = `documentId`) or a page above with a link that includes subpages. A hosted
+// client knows only the links on pages it can see.
+export const PublicAccess = z
+  .object({
+    documentId: Uuid,
+    sourceId: Uuid,
+    sourceTitle: z.string(),
+    links: z.number().int(),
+  })
+  .meta({ id: "PublicAccess" });
+export type PublicAccess = z.infer<typeof PublicAccess>;
+
 // Where a document lives and what the signed-in user may do with it. `level` is null in local
 // mode (no access rows: everything is the user's own) and when the user has no access.
 export const DocumentAccess = z
