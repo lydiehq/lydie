@@ -9,6 +9,7 @@ import type { Host } from "../host/host.ts";
 import { HostInternalContext } from "./context.ts";
 import { WindowLayout } from "./LayoutView.tsx";
 import { Confirms, Overlays } from "./Overlays.tsx";
+import { PeekHint } from "./PeekHint.tsx";
 import { RightPanel } from "./RightPanel.tsx";
 import { useSidebarPeek } from "./sidebar-peek.ts";
 import { Sidebar } from "./Sidebar.tsx";
@@ -195,6 +196,7 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
                   className="fixed top-10 bottom-0 left-0 z-40 w-2"
                 />
               )}
+              <PeekHint open={shell.sidebarOpen} peeking={peeking} />
               <ElasticHandle panel={sidebar} controls="app-sidebar" label="Resize sidebar" />
               <main
                 ref={mainRef}

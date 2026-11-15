@@ -628,6 +628,31 @@ describe("shell", () => {
     expect(document.querySelector("div[data-sidebar-peek-trigger]")).toBeNull();
   });
 
+  test("the first collapse on a device points at the edge that peeks; the peek puts it away", async () => {
+    const { host } = await setup();
+    render(<LydieApp host={host} />);
+    await settle();
+    const hint = () => screen.queryByTestId("peek-hint")?.dataset.shown !== undefined;
+    const setOpen = (sidebarOpen: boolean) =>
+      act(async () => host.shell.set((s) => ({ ...s, sidebarOpen })));
+    expect(hint()).toBe(false);
+    await setOpen(false);
+    await settle();
+    expect(hint()).toBe(true);
+    expect(screen.getByText(/left edge to show the sidebar/).tagName).toBe("OUTPUT");
+    const ledge = () => document.querySelector<HTMLElement>("div[data-sidebar-peek-trigger]");
+    await waitFor(() => ledge() !== null);
+    expect(hint()).toBe(true);
+    fireEvent.pointerMove(screen.getByTestId("tab-bar"));
+    fireEvent.pointerMove(ledge()!);
+    await settle(150);
+    expect(hint()).toBe(false);
+    await setOpen(true);
+    await setOpen(false);
+    await settle();
+    expect(hint()).toBe(false);
+  });
+
   test("a browser tab has no back and forward buttons", async () => {
     const { host } = await setup({ platform: { capabilities: { browserTab: true } } });
     render(<LydieApp host={host} />);

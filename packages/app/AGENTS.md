@@ -208,6 +208,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   outside the shell (menus and their underlays) holds it as it is, so a menu opened from it keeps
   it open. After a collapse the triggers wait until the pointer has been elsewhere. Opening the
   sidebar for good ends the peek at once. Test: "collapsed, the left edge…" in `shell.test.tsx`.
+  The first collapse on a device (`shell.peekHintSeen`) shows `PeekHint`: a pulsing mark on the
+  edge and "Hover the edge to show the sidebar" beside it, for 6 s or until the peek opens; it
+  never takes the pointer. Test: "the first collapse on a device…".
 - **Drop indicators** (`shell/LayoutView.tsx`, after Dia): dragging a tab or document over a group
   shows `DropPreview`, a frosted inset card over the half (or whole) it would take, with a pill
   naming the result ("Split right"). It glides between zones (top/right/bottom/left transitions)
