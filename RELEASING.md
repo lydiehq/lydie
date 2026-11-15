@@ -23,10 +23,11 @@ files to the run as an artifact, without creating a release.
 
 ## Signing and notarisation
 
-Without secrets the app is ad-hoc signed, every file ends in `-unsigned` and the release says so.
-macOS quarantines such a download ("Lydie is damaged and can't be opened";
-`xattr -dr com.apple.quarantine /Applications/Lydie.app` gets past it) and the updater cannot
-install it (see below). Set these repository secrets (Settings → Secrets and variables → Actions)
+Without secrets the app is ad-hoc signed, every file ends in `-unsigned` and the release's notes
+tell people how to open it. macOS quarantines such a download (Privacy & Security → "Open
+Anyway", or for "Lydie is damaged and can't be opened",
+`xattr -dr com.apple.quarantine /Applications/Lydie.app`) and the updater cannot install it (see
+below). Set these repository secrets (Settings → Secrets and variables → Actions)
 to sign and notarise:
 
 | Secret             | Value                                                                                |

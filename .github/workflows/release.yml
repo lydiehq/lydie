@@ -151,17 +151,26 @@ jobs:
           title="Lydie $VERSION"
           notes="$RUNNER_TEMP/notes.md"
           : > "$notes"
+          echo "Download the \`.dmg\` for your Mac: \`arm64\` for Apple silicon, \`x64\` for Intel." >> "$notes"
           if [ "$SIGNED" != true ]; then
             title="$title (unsigned)"
             {
-              echo "> [!WARNING]"
-              echo "> Unsigned build: not signed with a Developer ID and not notarised. macOS will"
-              echo "> refuse to open it unless the quarantine flag is removed, and the in-app"
-              echo "> updater cannot install it. For testing the release pipeline only."
               echo
+              echo "> [!WARNING]"
+              echo "> This build is not signed by Apple yet, so macOS blocks it the first time."
+              echo "> Drag Lydie to Applications and open it once. Then open System Settings →"
+              echo "> Privacy & Security and click **Open Anyway**. If macOS says Lydie \"is"
+              echo "> damaged\", run this in Terminal instead:"
+              echo ">"
+              echo "> \`\`\`"
+              echo "> xattr -dr com.apple.quarantine /Applications/Lydie.app"
+              echo "> \`\`\`"
+              echo ">"
+              echo "> The app cannot update itself until it is signed: get new versions from"
+              echo "> the [releases page](https://github.com/$GH_REPO/releases)."
             } >> "$notes"
           fi
-          echo "Download the \`.dmg\` for your Mac: \`arm64\` for Apple silicon, \`x64\` for Intel." >> "$notes"
+          echo >> "$notes"
           flags=(--draft --verify-tag --title "$title" --notes-file "$notes" --generate-notes)
           if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
           gh release create "$TAG" "${flags[@]}" release/*
