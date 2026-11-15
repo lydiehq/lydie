@@ -7,6 +7,7 @@ import {
   definePlugin,
   docIdOf,
   docPath,
+  HOME_PATH,
   prefetchDoc,
   useQuery,
   useQuerySelect,
@@ -14,6 +15,7 @@ import {
 import type { PluginDef, ViewProps } from "@lydie/plugin-api";
 import { pageRowViewParams } from "@lydie/plugin-api/databases";
 import { createRuntime } from "@lydie/runtime";
+import { groupsOf } from "@lydie/runtime/layout";
 import { openNodeStore } from "@lydie/store/node";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { useEffect } from "react";
@@ -583,6 +585,37 @@ describe("shell", () => {
     // Cmd+1 goes to the first tab of the focused group.
     await key({ key: "1", code: "Digit1" });
     expect(host.app.activeTab()).not.toBeNull();
+  });
+
+  test("close all tabs: every pane's unpinned tabs go, and reopen one at a time", async () => {
+    const { host, backend } = await setup();
+    const [a, b, c] = await Promise.all(
+      ["A", "B", "C"].map((title) => backend.ops.doc.create({ workspaceId: WS, title })),
+    );
+    render(<LydieApp host={host} />);
+    await act(async () => host.app.openDoc(a!.id));
+    await act(async () => host.app.openDoc(b!.id, { mode: "tab" }));
+    await act(async () => host.app.openDoc(c!.id, { mode: "split" }));
+    await settle();
+    const paths = () =>
+      [...groupsOf(host.layout.getState().windows[0]!.root)].flatMap((g) =>
+        g.tabs.map((t) => t.path),
+      );
+    const first = groupsOf(host.layout.getState().windows[0]!.root).next().value!.tabs[0]!;
+    await act(async () => host.dispatch({ type: "pin", tabId: first.id, pinned: true }));
+    expect(paths()).toEqual([docPath(a!.id), docPath(b!.id), docPath(c!.id)]);
+
+    await act(async () => host.app.runCommand("core.closeAllTabs"));
+    expect(paths()).toEqual([docPath(a!.id)]);
+    expect(screen.getAllByTestId("tab-group")).toHaveLength(1);
+    await act(async () => host.app.runCommand("core.reopenTab"));
+    expect(paths()).toContain(docPath(c!.id));
+
+    await act(async () => host.dispatch({ type: "pin", tabId: first.id, pinned: false }));
+    await act(async () => host.app.runCommand("core.closeAllTabs"));
+    expect(paths()).toEqual([HOME_PATH]);
+    // Only Home left: nothing to close.
+    expect(host.app.commands().find((cmd) => cmd.id === "core.closeAllTabs")?.enabled).toBe(false);
   });
 
   test("Linear's keys: G then X sequences and bare keys, only outside text, dialogs and lists", async () => {

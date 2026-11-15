@@ -30,6 +30,9 @@ export type LayoutAction =
   | { type: "close"; tabId: string }
   // Close every unpinned tab of the tab's group except it.
   | { type: "closeOthers"; tabId: string }
+  // Close every unpinned tab of a window (the active one without `windowId`), in every pane; a
+  // window left without tabs shows Home.
+  | { type: "closeAll"; windowId?: string }
   | { type: "activate"; tabId: string }
   | { type: "move"; tabId: string; groupId: string; index?: number }
   // Open a page in a new group beside `groupId`.
@@ -369,6 +372,23 @@ function apply(layout: Layout, action: LayoutAction, newId: () => string): Layou
       return updateGroup(layout, found.group.id, (g) => {
         const tabs = g.tabs.filter((t) => t.id === action.tabId || t.pinned);
         return tabs.length === g.tabs.length ? g : { ...g, tabs, activeTabId: action.tabId };
+      });
+    }
+    case "closeAll": {
+      const window = layout.windows.find(
+        (w) => w.id === (action.windowId ?? layout.activeWindowId),
+      );
+      if (!window) return layout;
+      // Only Home is left: closing it changes nothing, as with "close".
+      const first = groupsOf(window.root).next().value;
+      if (tabCount(window) === 1 && first?.tabs[0]?.path === HOME_PATH) return layout;
+      return updateWindow(layout, window.id, (w) => {
+        const root = mapNode(w.root, (n) =>
+          n.type === "group" && n.tabs.some((t) => !t.pinned)
+            ? { ...n, tabs: n.tabs.filter((t) => t.pinned) }
+            : n,
+        );
+        return root === w.root ? w : { ...w, root };
       });
     }
     case "activate": {

@@ -257,9 +257,18 @@ export function createHost(options: HostOptions): Host {
       const found = findTab(layout.getState(), action.tabId);
       if (found) {
         closed.push({ path: found.tab.path, state: found.tab.state, groupId: found.group.id });
-        if (closed.length > 50) closed.shift();
+      }
+    } else if (action.type === "closeAll") {
+      // Reopened one at a time, the last tab first.
+      const state = layout.getState();
+      const w = state.windows.find((x) => x.id === (action.windowId ?? state.activeWindowId));
+      for (const group of w ? groupsOf(w.root) : []) {
+        for (const tab of group.tabs) {
+          if (!tab.pinned) closed.push({ path: tab.path, state: tab.state, groupId: group.id });
+        }
       }
     }
+    if (closed.length > 50) closed.splice(0, closed.length - 50);
     layout.dispatch(action);
   };
 
@@ -656,6 +665,17 @@ export function createHost(options: HostOptions): Host {
         const tab = activeTab();
         if (tab) dispatch({ type: "closeOthers", tabId: tab.id });
       },
+    },
+    {
+      id: "core.closeAllTabs",
+      title: "Close all tabs",
+      group: "Tabs",
+      // Something to close: an unpinned tab other than a lone Home.
+      when: () => {
+        const tabs = [...groupsOf(windowOf().root)].flatMap((g) => g.tabs);
+        return tabs.some((t) => !t.pinned) && !(tabs.length === 1 && tabs[0]!.path === HOME_PATH);
+      },
+      run: () => dispatch({ type: "closeAll", windowId: windowOf().id }),
     },
     {
       id: "core.reopenTab",

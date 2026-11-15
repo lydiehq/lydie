@@ -129,7 +129,9 @@ createMemoryPorts(): { db, search, blob (+ size), events (published[], subscribe
 reduceLayout(layout, action, newId): Layout     // structural sharing; no-ops return the same object
 emptyLayout(newId), checkLayout(layout): string[], findTab, findGroup, activeGroup, groupsOf,
 HISTORY_LIMIT (50 per tab), MIN_SIZE (0.05)
-type LayoutAction = open (replace | tab | background) | close | closeOthers | activate | move | split |
+type LayoutAction = open (replace | tab | background) | close | closeOthers |
+  closeAll { windowId? } (every unpinned tab of the window, in every pane; a lone Home: no-op) |
+  activate | move | split |
   moveToSplit | resize | navigate | back | forward | leaveDocs | pin | setTabState | openWindow |
   closeWindow | focusWindow | focusGroup
 // leaveDocs { ids, fallback?: { [id]: path }, windowId? }: trashed documents leave every tab's

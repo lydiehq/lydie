@@ -67,6 +67,31 @@ describe("tabs", () => {
     expect(titles(layout)).toEqual([["001", "002*"]]);
   });
 
+  it("closes all tabs of the window but pinned ones, in every pane, then shows Home", () => {
+    const newId = ids();
+    let layout = reduceLayout(emptyLayout(newId), { type: "open", path: doc(1) }, newId);
+    layout = reduceLayout(layout, { type: "open", path: doc(2), mode: "tab" }, newId);
+    const first = activeGroup(layout).tabs[0]!;
+    layout = reduceLayout(layout, { type: "pin", tabId: first.id, pinned: true }, newId);
+    const group = activeGroup(layout).id;
+    layout = reduceLayout(
+      layout,
+      { type: "split", groupId: group, side: "right", path: doc(3) },
+      newId,
+    );
+    layout = reduceLayout(layout, { type: "closeAll" }, newId);
+    // The split's pane had no pinned tab, so it goes; the pinned tab stays.
+    expect(titles(layout)).toEqual([["001*"]]);
+    expect(checkLayout(layout)).toEqual([]);
+
+    layout = reduceLayout(layout, { type: "pin", tabId: first.id, pinned: false }, newId);
+    layout = reduceLayout(layout, { type: "closeAll" }, newId);
+    expect(activeGroup(layout).tabs).toMatchObject([{ path: HOME_PATH, back: [] }]);
+    expect(checkLayout(layout)).toEqual([]);
+    // Only Home left: nothing to close.
+    expect(reduceLayout(layout, { type: "closeAll" }, newId)).toBe(layout);
+  });
+
   it("starts with Home", () => {
     expect(window0(emptyLayout(ids())).root).toMatchObject({
       type: "group",
@@ -400,6 +425,7 @@ describe("invariants under random action sequences", () => {
         { type: "open", path: doc(1), groupId: group, mode: "tab" },
         { type: "close", tabId: tab },
         { type: "closeOthers", tabId: tab },
+        { type: "closeAll", windowId: pick(layout.windows).id },
         { type: "activate", tabId: tab },
         { type: "move", tabId: tab, groupId: group, index: Math.floor(random() * 4) },
         { type: "split", groupId: group, side: pick(sides), path: doc(9) },

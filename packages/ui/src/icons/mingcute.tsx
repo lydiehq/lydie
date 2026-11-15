@@ -254,6 +254,18 @@ export const CloseRegular = createIcon("CloseRegular", [
     },
   ],
 ]);
+export const CloseSquareRegular = createIcon("CloseSquareRegular", [
+  [
+    "path",
+    {
+      fill: "none",
+      stroke: "currentColor",
+      strokeLinecap: "round",
+      strokeWidth: "2",
+      d: "M9.171 14.828 12 12m0 0 2.828-2.828M12 12l2.828 2.828M12 12 9.17 9.172M5 20h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1Z",
+    },
+  ],
+]);
 export const CodeRegular = createIcon("CodeRegular", [
   [
     "path",
