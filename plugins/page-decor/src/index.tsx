@@ -281,6 +281,36 @@ function barToneOfImage(img: HTMLImageElement, position: number) {
   );
 }
 
+// How far the cover sits from the view's sides and top: the gap the side panel and the sidebar's
+// peek keep inside the content card.
+const COVER_INSET = 4;
+
+// Corners concentric with the rounded box the cover sits in (the tab's card, the side panel): its
+// radius less its border and the inset, per top corner; the bottom corners take the larger.
+// Written to the element: they are only measured once it is in place.
+function useConcentricCorners(box: RefObject<HTMLElement | null>) {
+  useLayoutEffect(() => {
+    const cover = box.current;
+    let el = cover?.parentElement?.parentElement ?? null;
+    while (el && Number.parseFloat(getComputedStyle(el).borderTopRightRadius) === 0) {
+      el = el.parentElement;
+    }
+    if (!cover || !el) return;
+    const style = getComputedStyle(el);
+    const border = Number.parseFloat(style.borderTopWidth) || 0;
+    const inner = (radius: string) => Math.max(0, Number.parseFloat(radius) - border - COVER_INSET);
+    const left = inner(style.borderTopLeftRadius);
+    const right = inner(style.borderTopRightRadius);
+    const bottom = `${Math.max(left, right)}px`;
+    Object.assign(cover.style, {
+      borderTopLeftRadius: `${left}px`,
+      borderTopRightRadius: `${right}px`,
+      borderBottomLeftRadius: bottom,
+      borderBottomRightRadius: bottom,
+    });
+  }, [box]);
+}
+
 function Cover({
   docId,
   cover,
@@ -322,13 +352,19 @@ function Cover({
           }),
     );
   }, [cover, url, loaded, shown]);
-  // Inset from the view's edges, with rounded corners. `data-page-cover` is on the outer box, from
-  // the very top, which is what the doc view looks for to lay its bar over the cover.
+  useConcentricCorners(box);
+  // Inset from the view's edges, with corners following the container's. `data-page-cover` is on
+  // the outer box, from the very top, which is what the doc view looks for to lay its bar over it.
   return (
-    <div className="shrink-0 px-2 pt-2" data-page-cover="" data-cover-tone={tone ?? undefined}>
+    <div
+      className="shrink-0"
+      style={{ padding: `${COVER_INSET}px ${COVER_INSET}px 0` }}
+      data-page-cover=""
+      data-cover-tone={tone ?? undefined}
+    >
       <div
         ref={box}
-        className={`group relative isolate h-48 w-full overflow-hidden rounded-lg ${fill ? fill.className : "bg-gray-100"}`}
+        className={`group relative isolate h-48 w-full overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
         style={fill?.style}
         data-testid="page-cover"
         data-cover-color={fill ? cover.toLowerCase() : undefined}
