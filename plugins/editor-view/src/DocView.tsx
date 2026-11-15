@@ -140,14 +140,6 @@ export function DocView({ tab }: ViewProps) {
             : ""
         }`}
       >
-        {overlay && (
-          <div
-            aria-hidden
-            className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-20 bg-linear-to-b to-transparent transition-opacity duration-150 ${
-              overlay.tone === "light" ? "from-white/40" : "from-black/35"
-            } ${overlay.over ? "opacity-100" : "opacity-0"}`}
-          />
-        )}
         <div aria-hidden className="flex-1 basis-0" />
         <Breadcrumbs doc={ref} />
         <div className="flex flex-1 basis-0 items-center justify-end gap-1">

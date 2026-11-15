@@ -322,99 +322,108 @@ function Cover({
           }),
     );
   }, [cover, url, loaded, shown]);
+  // Inset from the view's edges, with rounded corners. `data-page-cover` is on the outer box, from
+  // the very top, which is what the doc view looks for to lay its bar over the cover.
   return (
-    <div
-      ref={box}
-      className={`group relative h-48 w-full shrink-0 overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
-      style={fill?.style}
-      data-testid="page-cover"
-      data-page-cover=""
-      data-cover-tone={tone ?? undefined}
-      data-cover-color={fill ? cover.toLowerCase() : undefined}
-    >
-      {fill ? null : url ? (
-        <img
-          ref={img}
-          src={url}
-          alt=""
-          onLoad={() => setLoaded(url)}
-          draggable={false}
-          className={`size-full object-cover ${dragging !== null ? "cursor-grabbing" : ""}`}
-          style={{ objectPosition: `50% ${shown}%` }}
-          onPointerDown={(e) => {
-            if (!(e.currentTarget.dataset.reposition === "true")) return;
-            start.current = { y: e.clientY, pos: shown };
-            e.currentTarget.setPointerCapture(e.pointerId);
-          }}
-          onPointerMove={(e) => {
-            if (!start.current) return;
-            const delta = ((start.current.y - e.clientY) / e.currentTarget.clientHeight) * 100;
-            setDragging(Math.max(0, Math.min(100, Math.round(start.current.pos + delta))));
-          }}
-          onPointerUp={() => {
-            start.current = null;
-          }}
-          data-reposition={dragging !== null ? "true" : "false"}
-        />
-      ) : (
-        <div className="flex size-full items-center justify-center text-xs text-gray-400">
-          {isUrl(cover) ? "Loading cover…" : `Cover not found: ${cover}`}
-        </div>
-      )}
+    <div className="shrink-0 px-2 pt-2" data-page-cover="" data-cover-tone={tone ?? undefined}>
       <div
-        ref={actions}
-        className="absolute right-3 bottom-2 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+        ref={box}
+        className={`group relative isolate h-48 w-full overflow-hidden rounded-lg ${fill ? fill.className : "bg-gray-100"}`}
+        style={fill?.style}
+        data-testid="page-cover"
+        data-cover-color={fill ? cover.toLowerCase() : undefined}
       >
-        {dragging === null ? (
-          <>
-            {!fill && (
-              <Button size="xs" variant="secondary" onPress={() => setDragging(position)}>
-                Reposition
+        {/* A fade from the top where the page's bar lies, so its ink reads on any cover. */}
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-20 bg-linear-to-b to-transparent ${
+            tone === "light" ? "from-white/40" : "from-black/35"
+          }`}
+        />
+        {fill ? null : url ? (
+          <img
+            ref={img}
+            src={url}
+            alt=""
+            onLoad={() => setLoaded(url)}
+            draggable={false}
+            className={`size-full object-cover ${dragging !== null ? "cursor-grabbing" : ""}`}
+            style={{ objectPosition: `50% ${shown}%` }}
+            onPointerDown={(e) => {
+              if (!(e.currentTarget.dataset.reposition === "true")) return;
+              start.current = { y: e.clientY, pos: shown };
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              if (!start.current) return;
+              const delta = ((start.current.y - e.clientY) / e.currentTarget.clientHeight) * 100;
+              setDragging(Math.max(0, Math.min(100, Math.round(start.current.pos + delta))));
+            }}
+            onPointerUp={() => {
+              start.current = null;
+            }}
+            data-reposition={dragging !== null ? "true" : "false"}
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center text-xs text-gray-400">
+            {isUrl(cover) ? "Loading cover…" : `Cover not found: ${cover}`}
+          </div>
+        )}
+        <div
+          ref={actions}
+          className="absolute right-3 bottom-2 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+        >
+          {dragging === null ? (
+            <>
+              {!fill && (
+                <Button size="xs" variant="secondary" onPress={() => setDragging(position)}>
+                  Reposition
+                </Button>
+              )}
+              <Button size="xs" variant="secondary" onPress={() => setColoring(!coloring)}>
+                Colour
               </Button>
-            )}
-            <Button size="xs" variant="secondary" onPress={() => setColoring(!coloring)}>
-              Colour
-            </Button>
-            <ColorPicker
-              anchor={actions}
-              isOpen={coloring}
-              current={fill ? cover.toLowerCase() : null}
-              placement="top end"
-              onClose={() => {
-                setColoring(false);
-                onPreview(null);
-              }}
-              onPreview={onPreview}
-              onPick={onColor}
-            />
+              <ColorPicker
+                anchor={actions}
+                isOpen={coloring}
+                current={fill ? cover.toLowerCase() : null}
+                placement="top end"
+                onClose={() => {
+                  setColoring(false);
+                  onPreview(null);
+                }}
+                onPreview={onPreview}
+                onPick={onColor}
+              />
+              <Button
+                size="xs"
+                variant="secondary"
+                onPress={() =>
+                  void ops.doc.setProperties(
+                    { id: docId, unset: [PAGE_COVER_KEY, PAGE_COVER_POSITION_KEY] },
+                    { label: "Remove cover" },
+                  )
+                }
+              >
+                Remove
+              </Button>
+            </>
+          ) : (
             <Button
               size="xs"
-              variant="secondary"
-              onPress={() =>
+              variant="primary"
+              onPress={() => {
                 void ops.doc.setProperties(
-                  { id: docId, unset: [PAGE_COVER_KEY, PAGE_COVER_POSITION_KEY] },
-                  { label: "Remove cover" },
-                )
-              }
+                  { id: docId, set: { [PAGE_COVER_POSITION_KEY]: dragging } },
+                  { label: "Reposition cover" },
+                );
+                setDragging(null);
+              }}
             >
-              Remove
+              Save position
             </Button>
-          </>
-        ) : (
-          <Button
-            size="xs"
-            variant="primary"
-            onPress={() => {
-              void ops.doc.setProperties(
-                { id: docId, set: { [PAGE_COVER_POSITION_KEY]: dragging } },
-                { label: "Reposition cover" },
-              );
-              setDragging(null);
-            }}
-          >
-            Save position
-          </Button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
