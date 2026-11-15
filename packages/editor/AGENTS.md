@@ -120,7 +120,10 @@ React:
   `data-block-labels` on the content so `editor-content.css` drops its own heading hover label;
   the handle is as tall as the block's first line; for a bulleted or numbered item it is measured
   from the list's left edge, so it sits left of the marker as in Notion; a table's is measured
-  from the text column, not its full-width scroller; a drag from it shows the
+  from the text column, not its full-width scroller, and a bare embed's (a collection, which the
+  host also lays out across the full width) from a block padding left of it, as a paragraph's; a
+  full-width page sets `--editor-text-width: none` (the host caps an embed's title and bar at the
+  text column with it); a drag from it shows the
   blocks as a card, `.lydie-drag-preview`, lifted from where they were (`react/drag-preview.ts`,
   replacing TipTap's bare clone), dims them in place and hides the handle until it ends, then
   forgets the block it was on, so the next hover shows it (TipTap re-targets it on the drop and only

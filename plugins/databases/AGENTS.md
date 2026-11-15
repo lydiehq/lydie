@@ -53,8 +53,11 @@ Licence: AGPL-3.0-only.
   board `BoardSkeleton`), so nothing moves when the pages arrive. Rows and cards scrolled to
   before their window loads draw the same bars.
 - `links` embed renderer `database-embed` (`*.base` targets): `InlineDatabase`, compact, with
-  "Open as page"; unboxed (`data-embed-bare`: the editor's embed border and padding are dropped, so
-  it fills the text column like the page's own content); events kept inside the embed (Cmd+Z runs the app's undo).
+  "Open as page"; unboxed (`data-embed-bare`: the editor's embed border and padding are dropped and,
+  like a table, it spans the editor's width from the text column on: the title and the bar of
+  views keep to the text column (`data-embed-column`, max width in editor-content.css), the view
+  below runs on to the right when it is wider, so a board's columns are not cut at the text's
+  edge); events kept inside the embed (Cmd+Z runs the app's undo).
 - Commands: "New collection" (`databases.new`, bound to `database.create`: top level, unique title,
   opened with its title selected for naming); "Turn into collection" (`databases.fromPage`, args: the document id or
   `{ documentId }`, default the open page; also run by the properties plugin); "Turn back into page"

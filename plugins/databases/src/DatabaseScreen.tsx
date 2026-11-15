@@ -138,8 +138,10 @@ function Screen({
   const ctx = useViewContext();
   const ui = useFilterUi();
   // On its own page the bar and the chips keep to the title's column (as wide as the text, or
-  // the full-width page's); the views below run on to the window's edge.
+  // the full-width page's); the views below run on to the window's edge. Embedded, the editor
+  // does the same through `data-embed-column` (editor-content.css).
   const inset = compact ? "" : pageColumnClass(fullWidth);
+  const column = compact ? { "data-embed-column": "" } : {};
   return (
     <div
       className={`flex min-h-0 flex-col outline-none ${compact ? "" : "grow"}`}
@@ -152,7 +154,7 @@ function Screen({
         ui.setMenuOpen(true);
       }}
     >
-      <div className={inset}>
+      <div className={inset} {...column}>
         {/* The bar's line: the open view's tab is underlined on it. */}
         <div className="flex items-center justify-between gap-x-2 border-b border-gray-950/[0.07] pt-1">
           <ViewTabs definition={ctx.definition} activeId={ctx.savedView.id} onSelect={onSelect} />
@@ -168,7 +170,7 @@ function Screen({
           />
         </div>
       </div>
-      <div className={inset}>
+      <div className={inset} {...column}>
         <ViewChips />
       </div>
       <div

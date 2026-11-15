@@ -48,8 +48,9 @@ export function InlineDatabase({ target, sourceId }: { target: string; sourceId?
 
   return (
     <div
-      // `data-embed-bare`: the editor draws no box around it, so the collection sits in the text
-      // column like the page's own content (its title and rows line up with the paragraphs).
+      // `data-embed-bare`: the editor draws no box around it and gives it the page's whole width
+      // from the text column on, like a table: the title and bar keep to the text column
+      // (`data-embed-column`), the view runs on to the right when it is wider.
       className="w-full min-w-0"
       data-embed-bare=""
       data-testid="inline-database"
@@ -76,7 +77,7 @@ export function InlineDatabase({ target, sourceId }: { target: string; sourceId?
         <ScreenSkeleton compact />
       ) : (
         <>
-          <div className="group/embed flex items-center gap-2">
+          <div className="group/embed flex items-center gap-2" data-embed-column="">
             <Button
               variant="ghost"
               size="md"

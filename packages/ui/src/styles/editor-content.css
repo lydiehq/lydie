@@ -78,6 +78,25 @@
     ) !important;
   }
 
+  /* A collection embed spans the editor's whole width as a table does: it starts at the text
+     column and its view runs on towards the right edge when it has the width for it. Its header
+     and bar of views keep to the text column (`[data-embed-column]`). */
+  &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]):has([data-embed-bare]) {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    padding-left: var(--editor-content-line-start, var(--editor-block-padding-x, 1rem));
+    padding-right: var(--editor-block-padding-x, 1rem);
+  }
+
+  /* The text column's width (a full-width page sets `--editor-text-width: none`). */
+  [data-embed-bare] [data-embed-column] {
+    max-width: var(
+      --editor-text-width,
+      calc(var(--editor-block-max-width, 680px) - 2 * var(--editor-block-padding-x, 1rem))
+    );
+  }
+
   > * + * {
     margin-top: calc(var(--spacing) * 4);
   }

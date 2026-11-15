@@ -230,13 +230,20 @@ function describeBlock(editor: Editor, node: ProseMirrorNode, pos: number): Hand
 // Notion the marker belongs to the block, so the handle goes left of it: measured from the list's
 // left edge, a top-level item's handle shares the paragraphs' column. Task items keep their
 // checkbox inside the <li> and need nothing. A table's wrapper spans the editor's whole width and
-// pads the table to the text column, so its handle is measured from the padding's inner edge.
+// pads the table to the text column, so its handle is measured from the padding's inner edge. A
+// bare embed (a collection) is laid out the same way by the host (editor-content.css), but its
+// title is text: its handle sits where a paragraph's does, a block padding (the wrapper's right
+// padding) left of the text column.
 function handleAnchor(dom: Element | null) {
-  if (dom?.querySelector(":scope > table")) {
+  const table = dom?.querySelector(":scope > table");
+  const embed = !table && dom?.querySelector("[data-embed-bare]");
+  if (dom && (table || embed)) {
     return {
       getBoundingClientRect: () => {
         const box = dom.getBoundingClientRect();
-        const left = box.left + Number.parseFloat(getComputedStyle(dom).paddingLeft);
+        const style = getComputedStyle(dom);
+        const inset = Number.parseFloat(style.paddingLeft);
+        const left = box.left + inset - (embed ? Number.parseFloat(style.paddingRight) : 0);
         return new DOMRect(left, box.top, box.right - left, box.height);
       },
     };
@@ -502,7 +509,7 @@ function EditorWithContent(props: LydieEditorProps) {
           // Full width is 100%, not `none`, so blocks can animate between the two widths.
           className={
             fullWidth
-              ? "flex grow flex-col [--editor-block-max-width:100%] [--editor-block-padding-x:5rem] [--editor-table-min-width:auto]"
+              ? "flex grow flex-col [--editor-block-max-width:100%] [--editor-block-padding-x:5rem] [--editor-table-min-width:auto] [--editor-text-width:none]"
               : "flex grow flex-col"
           }
           style={{ "--editor-content-line-start": lineStart } as CSSProperties}
