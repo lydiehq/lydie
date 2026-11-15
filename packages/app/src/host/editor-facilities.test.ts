@@ -50,6 +50,19 @@ describe("fromHtml", () => {
   });
 });
 
+describe("callout folds", () => {
+  test("the editor's open/closed in, + and - out, and an untouched fold keeps its bytes", () => {
+    const source = "> [!note]- Folded\n> body\n\n> [!tip]+ Open\n> body\n";
+    const parsed = editor.fromMarkdown(source);
+    expect(parsed.content.content!.map((n) => n.attrs?.fold)).toEqual(["closed", "open"]);
+    expect(editor.toMarkdown(parsed, parsed.content)).toBe(source);
+    parsed.content.content![1]!.attrs!.fold = "closed";
+    expect(editor.toMarkdown(parsed, parsed.content)).toBe(
+      "> [!note]- Folded\n> body\n\n> [!tip]- Open\n> body\n",
+    );
+  });
+});
+
 describe("splitFrontmatter", () => {
   test("properties and the body after them", () => {
     expect(editor.splitFrontmatter("---\ntags: [a, b]\nstatus: Done\n---\n# Hi\n")).toEqual({

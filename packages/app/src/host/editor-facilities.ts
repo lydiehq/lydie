@@ -23,12 +23,28 @@ function inlineImages(node: JSONContent): JSONContent {
   return { ...node, content };
 }
 
+// Markdown folds a callout with "+"/"-", the editor with "open"/"closed" (LYD-156; the hosted
+// codec maps them the same way). @lydie/markdown's importDoc maps them back on save.
+const EDITOR_FOLDS: Record<string, string> = { "+": "open", "-": "closed" };
+function editorFolds(node: JSONContent): JSONContent {
+  const fold = node.type === "callout" ? node.attrs?.fold : undefined;
+  const attrs =
+    typeof fold === "string" && EDITOR_FOLDS[fold]
+      ? { ...node.attrs, fold: EDITOR_FOLDS[fold] }
+      : node.attrs;
+  return {
+    ...node,
+    ...(attrs ? { attrs } : {}),
+    ...(node.content ? { content: node.content.map(editorFolds) } : {}),
+  };
+}
+
 // Markdown ⇄ editor document for plugins, through @lydie/markdown (which plugins cannot import).
 export function createEditorFacilities(contributions: ContributionRegistry): EditorFacilities {
   return {
     fromMarkdown(markdown) {
       const result = parse(markdown);
-      return { content: result.doc.toJSON() as JSONContent, source: result };
+      return { content: editorFolds(result.doc.toJSON() as JSONContent), source: result };
     },
     toMarkdown(original, content) {
       const base: ParseResult | string =
