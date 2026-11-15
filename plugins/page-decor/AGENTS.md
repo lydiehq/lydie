@@ -28,6 +28,8 @@ Licence: AGPL-3.0-only.
   (or the placeholder) by its computed background, an image by the strip it shows there at its
   `cover-position`, both averaged in a small canvas (relative luminance over 0.42 is light); left
   out when it cannot be read (a cross-origin image without CORS).
+- The cover is 210 px tall; on a cover the icon sits across its bottom edge, half on it (the edge
+  through the middle of the icon's 60 px box: `-mt-[58px]`; change the two together).
 - The icon row follows the page's width (`pageColumnClass(pageFullWidthOf(properties))`), so it
   lines up with the title on full-width pages; the cover always spans the view.
 - The icon shows wherever `DocIcon`/`PageIcon` from the plugin API are used: tabs, quick switcher, link previews and embeds (the document tree still draws its own glyph: requested change).

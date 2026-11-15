@@ -325,7 +325,7 @@ function Cover({
   return (
     <div
       ref={box}
-      className={`group relative h-48 w-full shrink-0 overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
+      className={`group relative h-[210px] w-full shrink-0 overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
       style={fill?.style}
       data-testid="page-cover"
       data-page-cover=""
@@ -512,7 +512,9 @@ function PageDecor({ docId }: DocumentSlotProps) {
           )}
         </div>
         {icon && (
-          <div ref={iconAnchor} className={`relative w-fit ${cover ? "-mt-10" : ""}`}>
+          // On a cover the icon sits across its bottom edge, half on it (the edge through the
+          // middle of its 60 px box).
+          <div ref={iconAnchor} className={`relative w-fit ${cover ? "-mt-[58px]" : ""}`}>
             <WithTooltip label="Change page icon">
               <button
                 type="button"
