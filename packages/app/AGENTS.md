@@ -234,7 +234,10 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
 - **Closing a tab**: the row keeps a closed tab where it was (`leaving`, `withLeaving` in
   `TabBar`), drawn as it last was but inert and without its tab role, while it fades (120ms)
   and collapses (200ms), so what follows slides back; it goes on `transitionend`. Not a tab
-  that moved to another row, and not under reduced motion. Not the tabs a row starts with (a restored
+  that moved to another row, and not under reduced motion. As in a browser, closing with the
+  pointer (close button, middle click) holds the row's other tabs at the width they had
+  (`frozen`, `--tab-frozen-width`), so the next close button slides in under the pointer;
+  they ease back to their own width (200ms) when the pointer leaves the row. Not the tabs a row starts with (a restored
   layout, a new split), nor a tab a drag drops there.
 - **Workspace menu**: the sidebar's workspace button opens a popover of `workspaceMenu`
   contributions (`shell/WorkspaceMenu.tsx`); without any it runs `core.openSettings`, which opens

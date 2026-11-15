@@ -23,8 +23,9 @@ import {
 } from "@lydie/ui";
 import type { ContextMenuItem } from "@lydie/ui";
 import clsx from "clsx";
-import { memo, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, DragEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { flushSync } from "react-dom";
 
 import { findView } from "../host/views.ts";
 import { jsonEqual, useHostInternal, useSelector } from "./context.ts";
@@ -553,6 +554,27 @@ function TabBar({
     setLeaving((ids) => ids.filter((other) => other !== id));
     setShown((ids) => ids.filter((other) => other !== id));
   };
+  // As in a browser: closing tabs with the pointer keeps the others as wide as they were, so the
+  // next close button slides in under the pointer and tabs can be closed one click after another.
+  // They take their room again once the pointer leaves the row (`settling` animates that).
+  const [frozen, setFrozen] = useState<number | null>(null);
+  const [settling, setSettling] = useState(false);
+  const freeze = () => {
+    if (frozen !== null) return;
+    const tab = list.current?.querySelector<HTMLElement>("[role=tab]:not([data-pinned])");
+    // Committed before the close, so the closed tab collapses from the width it had.
+    if (tab) flushSync(() => setFrozen(tab.getBoundingClientRect().width));
+  };
+  const release = () => {
+    if (frozen === null) return;
+    setFrozen(null);
+    setSettling(true);
+  };
+  useEffect(() => {
+    if (!settling) return;
+    const timer = setTimeout(() => setSettling(false), TAB_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [settling]);
   // With the sidebar collapsed, the window buttons sit in this row.
   const insetLeft = topLeft && !sidebarOpen ? inset.left : 0;
   const openNewTab = () => host.dispatch({ type: "open", path: HOME_PATH, groupId, mode: "tab" });
@@ -646,6 +668,7 @@ function TabBar({
       className="group/tab-row flex h-10 min-w-0 shrink-0 items-center gap-1"
       style={{ paddingLeft: insetLeft, ...(inset.custom ? dragStyle : {}) }}
       data-testid="tab-bar"
+      onPointerLeave={release}
       onDoubleClick={(event) => {
         if ((event.target as HTMLElement).dataset.tabBarSpace !== undefined) openNewTab();
       }}
@@ -750,7 +773,11 @@ function TabBar({
           // The dragged tab is drawn from its own row, above the other rows and the buttons.
           drag?.sourceGroupId === groupId ? "z-30" : "z-10",
         )}
-        style={noDragStyle}
+        style={
+          frozen === null
+            ? noDragStyle
+            : ({ ...noDragStyle, "--tab-frozen-width": `${frozen}px` } as CSSProperties)
+        }
         onKeyDown={onKeyDown}
       >
         {shown.map((id) => {
@@ -770,6 +797,9 @@ function TabBar({
               onOpened={() => setOpening((ids) => ids.filter((other) => other !== id))}
               leaving={leaving.includes(id)}
               onLeft={() => onLeft(id)}
+              frozen={frozen !== null}
+              settling={settling}
+              onPointerClose={freeze}
               // Tabs from the dragged one's slot on stand one tab further along.
               shift={
                 drag && !dragging && openSlot !== null && others.indexOf(id) >= openSlot
@@ -880,6 +910,9 @@ const TabButton = memo(function TabButton({
   onOpened,
   leaving,
   onLeft,
+  frozen,
+  settling,
+  onPointerClose,
   shift,
   animate,
   onContextMenu,
@@ -903,6 +936,12 @@ const TabButton = memo(function TabButton({
   // collapses, so what follows it slides back; then `onLeft`.
   leaving: boolean;
   onLeft: () => void;
+  // Held at the width the row's tabs had when one was closed with the pointer
+  // (`--tab-frozen-width`), and easing back to its own once the pointer leaves the row.
+  frozen: boolean;
+  settling: boolean;
+  // Called before the tab closes from its close button or a middle click.
+  onPointerClose: () => void;
   // How far along the row the tab stands aside for the dragged one, and whether it glides there.
   shift: number;
   animate: boolean;
@@ -973,7 +1012,9 @@ const TabButton = memo(function TabButton({
             host.dispatch({ type: "activate", tabId });
         }}
         onAuxClick={(event) => {
-          if (event.button === 1) host.dispatch({ type: "close", tabId });
+          if (event.button !== 1) return;
+          onPointerClose();
+          host.dispatch({ type: "close", tabId });
         }}
         onClick={() => host.dispatch({ type: "activate", tabId })}
         onTransitionEnd={(event) => {
@@ -1006,13 +1047,16 @@ const TabButton = memo(function TabButton({
         className={clsx(
           "group/tab relative flex h-7.5 cursor-default items-center rounded-lg text-sm font-medium select-none",
           focusRingClass,
-          pinned ? "shrink-0" : "shrink",
+          pinned || frozen ? "shrink-0" : "shrink",
           leaving
             ? clsx(
                 "-ml-1.5 min-w-0 overflow-hidden px-0 opacity-0 transition-[width,max-width,min-width,padding,margin,opacity] duration-[200ms,200ms,200ms,200ms,200ms,120ms] ease-[ease]",
                 pinned ? "max-w-0" : "w-0",
               )
-            : clsx("min-w-20 px-3", pinned ? "max-w-[190px]" : "w-[190px]"),
+            : clsx(
+                "min-w-20 px-3",
+                pinned ? "max-w-[190px]" : frozen ? "w-(--tab-frozen-width)" : "w-[190px]",
+              ),
           active
             ? clsx("z-10", groupFocused ? "text-gray-900" : "text-gray-700")
             : "text-gray-600 hover:bg-gray-950/3",
@@ -1026,6 +1070,11 @@ const TabButton = memo(function TabButton({
             !opening &&
             !leaving &&
             "transition-transform duration-200 ease-out motion-reduce:transition-none",
+          settling &&
+            !animate &&
+            !opening &&
+            !leaving &&
+            "transition-[width] duration-200 ease-[ease] motion-reduce:transition-none",
         )}
         style={
           position
@@ -1075,6 +1124,7 @@ const TabButton = memo(function TabButton({
               aria-label="Close tab"
               onClick={(event) => {
                 event.stopPropagation();
+                onPointerClose();
                 host.dispatch({ type: "close", tabId });
               }}
               className={buttonStyles({
@@ -1118,6 +1168,7 @@ function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
 // Measured from Dia's tabs: round top corners, and feet that are wider than tall, leaving the
 // side quickly and running a long way along the card's edge.
 const TAB_GAP = 6; // the tab list's gap-1.5
+const TAB_SETTLE_MS = 250; // a little over the tabs' 200ms ease back from a frozen width
 const TAB_HEIGHT = 40; // ActiveTabShape: the tab's 30px, 3 above, 7 below
 const TAB_CORNER = 10;
 const TAB_FOOT_WIDTH = 16; // also the tab list's side padding
