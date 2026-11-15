@@ -207,8 +207,8 @@ linkStyleOf(app) → { format: "wiki" | "markdown", path: "shortest" | "relative
 //   (folder windows: `vault.settings.current()`, read when a link is made), linkTargetFor(backend,
 //   fromId, toId, path) → "Projects/Plan" | "../Plan" | "Plan", markdownHref(target) → "My%20note.md"
 prefetchDoc(backend, id) → void | Promise<void>   // (src/prefetch.ts) starts the live queries the
-//   doc view and its slots read (body, row, collection, links, the pages it embeds, access, the
-//   pages above); they
+//   doc view and its slots read (body, row, collection and the page's row view, links, the pages
+//   it embeds, access, the pages above); they
 //   keep their results for the backend's linger. The doc view's `preload`.
 useDocPrefetch(id | null) → { onMouseEnter, onMouseLeave, onMouseDown }   // spread on whatever
 //   opens a document on click: fetches after a 60 ms rest and on the press (tree rows, breadcrumbs)
@@ -243,6 +243,9 @@ app.editor.outline(markdown) → { headings, blocks }, app.editor.assignBlockId(
 useDatabase(id | null) → { definition, isLoading, error }
 useDatabaseView(DatabaseViewParams | null) → ViewWindowState { rows, offset, total, groups, viewType,
   isLoading, isFetching, error }   // keeps the previous result while a new window/query loads
+pageRowViewParams(definition, { title }) → DatabaseViewParams | null   // the view a page's own row
+  // (computed values: relation titles, rollups, formulas) is read from: the properties panel's,
+  // and what prefetchDoc starts
 useMembers() → Map<userId, WorkspaceMemberRow>
 PropertyEditor({ property: PropertyLike, value, related?, initialText?, rowId?, onChange(value),
   onClose("commit" | "cancel" | "tab" | "shiftTab") })   // per-type editors, shared by every plugin

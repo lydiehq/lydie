@@ -5,6 +5,7 @@
 import { useEffect, useRef } from "react";
 
 import type { Backend, LiveHandle, LiveParams, LiveQueryName } from "./backend.ts";
+import { pageRowViewParams } from "./databases/hooks.ts";
 import { useBackend } from "./react.tsx";
 
 // How long the pointer rests on a row before its page is fetched: crossing the tree fetches nothing.
@@ -45,15 +46,28 @@ function all(parts: Waiting[]): Waiting {
   if (waiting.length > 0) return Promise.all(waiting).then(() => {});
 }
 
+// The collection a page is a row of, then the view the properties panel reads the page's computed
+// values from (relation titles, rollups, formulas).
+function collection(backend: Backend, id: string, doc: { title: string }): Waiting {
+  const definition = warm(backend, "database.get", { id });
+  const next = (): Waiting => {
+    const found = definition.getSnapshot().data[0];
+    const params = found ? pageRowViewParams(found, doc) : null;
+    if (params) return settled(warm(backend, "database.view", params));
+  };
+  const waiting = settled(definition);
+  return waiting ? waiting.then(next) : next();
+}
+
 // The page's own row, then the pages above it (the breadcrumbs), one level per result.
 function above(backend: Backend, id: string, depth: number): Waiting {
   const row = warm(backend, "doc.get", { id });
   const next = (): Waiting => {
-    const parentId = row.getSnapshot().data[0]?.document.parentId;
+    const doc = row.getSnapshot().data[0]?.document;
+    const parentId = doc?.parentId;
     if (!parentId) return;
     return all([
-      // The properties panel reads the collection a page is a row of.
-      depth === 0 ? settled(warm(backend, "database.get", { id: parentId })) : undefined,
+      depth === 0 ? collection(backend, parentId, doc) : undefined,
       depth < MAX_ANCESTORS ? above(backend, parentId, depth + 1) : undefined,
     ]);
   };
@@ -79,8 +93,10 @@ function embedded(backend: Backend, id: string): Waiting {
 }
 
 // Starts what the document view and its slots read for `id`: the body, the page's own row (icon,
-// cover, properties), its collection, its links, the pages it embeds and the pages above it. Returns nothing when all
-// of it is already here, else a promise for when it is (the doc view's `ViewDef.preload`).
+// cover, properties), its collection and its row there, its links, the pages it embeds and the
+// pages above it. Returns nothing when all of it is already here, else a promise for when it is
+// (the doc view's `ViewDef.preload`). View windows linger only 1 s, so a slow click after a hover
+// may find the row's view gone: the press starts it again and `preload` waits for it.
 export function prefetchDoc(backend: Backend, id: string): Waiting {
   return all([
     settled(warm(backend, "doc.get", { id, includeBody: true })),

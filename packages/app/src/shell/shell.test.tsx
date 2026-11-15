@@ -12,6 +12,7 @@ import {
   useQuerySelect,
 } from "@lydie/plugin-api";
 import type { PluginDef, ViewProps } from "@lydie/plugin-api";
+import { pageRowViewParams } from "@lydie/plugin-api/databases";
 import { createRuntime } from "@lydie/runtime";
 import { openNodeStore } from "@lydie/store/node";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
@@ -711,5 +712,41 @@ describe("shell", () => {
     );
     // All of it is here: nothing to wait for.
     expect(prefetchDoc(backend, child.id)).toBeUndefined();
+  });
+
+  test("prefetchDoc holds a collection page's row view: relation titles paint with the page", async () => {
+    const { backend } = await setup();
+    const projects = await backend.ops.database.create({ workspaceId: WS, title: "Projects" });
+    const project = await backend.ops.database.createRow({
+      databaseId: projects.database.id,
+      title: "Mobile onboarding",
+    });
+    const tasks = await backend.ops.database.create({ workspaceId: WS, title: "Tasks" });
+    const relation = await backend.ops.database.addProperty({
+      databaseId: tasks.database.id,
+      name: "Project",
+      type: "relation",
+      config: { relation: { databaseId: projects.database.id } },
+    });
+    const task = await backend.ops.database.createRow({
+      databaseId: tasks.database.id,
+      title: "Write copy",
+    });
+    await backend.ops.database.setValues({
+      databaseId: tasks.database.id,
+      rowIds: [task.id],
+      set: { [relation.id]: [project.id] },
+    });
+
+    await prefetchDoc(backend, task.id);
+    const definition = backend.live("database.get", { id: tasks.database.id }).getSnapshot();
+    const params = pageRowViewParams(definition.data[0]!, { title: "Write copy" })!;
+    const view = backend.live("database.view", params).getSnapshot();
+    expect(view.isLoading).toBe(false);
+    const item = view.data.find((i) => i.kind === "row" && i.row.id === task.id);
+    const row = item?.kind === "row" ? item.row : null;
+    expect(row?.computed[relation.id]).toEqual([
+      expect.objectContaining({ id: project.id, title: "Mobile onboarding" }),
+    ]);
   });
 });

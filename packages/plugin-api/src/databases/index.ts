@@ -1,7 +1,7 @@
 // `@lydie/plugin-api/databases`: what plugins need to show and edit database views and typed
 // properties: hooks over the database live queries, the shared value views and editors (one
 // implementation for the properties panel, table cells and cards), and the contract's pure helpers.
-export { rowIdsOf, useDatabase, useDatabaseView } from "./hooks.ts";
+export { pageRowViewParams, rowIdsOf, useDatabase, useDatabaseView } from "./hooks.ts";
 export type { ViewWindowState } from "./hooks.ts";
 export { EditorPopover } from "./EditorPopover.tsx";
 export { useMembers } from "./members.ts";

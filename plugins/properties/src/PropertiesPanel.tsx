@@ -12,6 +12,7 @@ import {
   isEditableType,
   isStoredType,
   PAGE_TYPES,
+  pageRowViewParams,
   PropertyEditor,
   PropertyValueView,
   relatedRows,
@@ -189,25 +190,8 @@ function RowProperties({
   const app = useApp();
   const databaseId = definition.database.id;
   const properties = definition.properties.filter((p) => p.type !== "title");
-  const title = definition.properties.find((p) => p.type === "title");
-  // Computed values (relation titles, rollups, formulas) come from the view engine: ask for rows
-  // with this title and pick this one.
-  const view = useDatabaseView(
-    title && !collapsed
-      ? {
-          databaseId,
-          view: {
-            config: {
-              filter: { type: "condition", propertyId: title.id, op: "eq", value: doc.title },
-              groupBy: null,
-              subGroupBy: null,
-              sorts: [],
-            },
-          },
-          window: { offset: 0, limit: 50 },
-        }
-      : null,
-  );
+  // Computed values (relation titles, rollups, formulas) come from the view engine.
+  const view = useDatabaseView(collapsed ? null : pageRowViewParams(definition, doc));
   const row: ViewRow = view.rows.find((r) => r.id === doc.id) ?? {
     id: doc.id,
     title: doc.title,

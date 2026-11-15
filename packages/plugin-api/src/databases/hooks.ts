@@ -110,6 +110,29 @@ export function useDatabaseView(params: DatabaseViewParams | null): ViewWindowSt
   return useSyncExternalStore(handle.subscribe, getSnapshot, getSnapshot);
 }
 
+// The view a page's own row is read from (its computed values: relation titles, rollups,
+// formulas): rows with its title, pick it by id. The properties panel reads it and `prefetchDoc`
+// starts it, so both must ask for the same query.
+export function pageRowViewParams(
+  definition: DatabaseDefinition,
+  doc: { title: string },
+): DatabaseViewParams | null {
+  const title = definition.properties.find((p) => p.type === "title");
+  if (!title) return null;
+  return {
+    databaseId: definition.database.id,
+    view: {
+      config: {
+        filter: { type: "condition", propertyId: title.id, op: "eq", value: doc.title },
+        groupBy: null,
+        subGroupBy: null,
+        sorts: [],
+      },
+    },
+    window: { offset: 0, limit: 50 },
+  };
+}
+
 // The ids a window shows, for "Select all" and bulk actions.
 export function rowIdsOf(window: ViewWindowState): string[] {
   return window.rows.map((r) => r.id);
