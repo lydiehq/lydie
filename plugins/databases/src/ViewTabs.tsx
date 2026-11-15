@@ -26,7 +26,6 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 
 import { fitTabs } from "./tabs-model.ts";
-import type { TabFit } from "./tabs-model.ts";
 import { AnchoredPopover, MenuButtonItem, PanelSection, PopoverButton } from "./ui.tsx";
 
 export const VIEW_LABELS: Record<ViewType, string> = {
@@ -85,7 +84,7 @@ export function ViewTabs({
   const ops = useOps();
   const app = useApp();
   const views = definition.views;
-  const { rootRef, measureRef, addRef, fit } = useTabFit(views, activeId);
+  const { rootRef, measureRef, addRef, hiddenIds } = useTabFit(views, activeId);
   // The open menu and the name typed in it, saved as the menu closes.
   const [menu, setMenu] = useState<{ id: string; name: string } | null>(null);
   const menuAnchor = useRef<HTMLElement | null>(null);
@@ -137,8 +136,8 @@ export function ViewTabs({
       void ops.database.renameView({ id: menuView.id, name }).catch(fail("Could not rename"));
   };
 
-  const shown = fit ? fit.shown.map((i) => views[i]!) : views;
-  const hidden = fit ? fit.hidden.map((i) => views[i]!) : [];
+  const shown = views.filter((v) => !hiddenIds.includes(v.id));
+  const hidden = views.filter((v) => hiddenIds.includes(v.id));
 
   return (
     // The padding (taken back by the margin) keeps the tabs' focus rings inside the bar.
@@ -275,10 +274,15 @@ export function ViewTabs({
             }}
             onDelete={() => {
               setMenu(null);
-              const next = views.find((v) => v.id !== menuView.id);
+              // The open view goes to its neighbour (the next one, or the one before the last)
+              // first, so the screen never shows a view that is gone.
+              if (menuView.id === activeId) {
+                const index = views.indexOf(menuView);
+                const next = views[index + 1] ?? views[index - 1];
+                if (next) onSelect(next.id);
+              }
               void ops.database
                 .deleteView({ id: menuView.id })
-                .then(() => next && onSelect(next.id))
                 .catch(fail("Could not delete the view"));
             }}
           />
@@ -388,12 +392,14 @@ function TabFace({ view, current }: { view: DatabaseView; current: boolean }) {
 }
 
 // Measures the invisible copies against the bar's width (less "add a view") whenever either
-// changes, before paint, so the bar never shows tabs that do not fit.
+// changes, before paint, so the bar never shows tabs that do not fit. What is hidden is kept by
+// view id, not position: the render after a view is added or deleted comes before the next
+// measurement, and positions from the one before would point at the wrong views (or none).
 function useTabFit(views: readonly DatabaseView[], activeId: string) {
   const rootRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const addRef = useRef<HTMLDivElement>(null);
-  const [fit, setFit] = useState<TabFit | null>(null);
+  const [hiddenIds, setHiddenIds] = useState<readonly string[]>([]);
   const [resized, setResized] = useState(0);
 
   useLayoutEffect(() => {
@@ -423,12 +429,9 @@ function useTabFit(views: readonly DatabaseView[], activeId: string) {
       gap: 0,
       active: views.findIndex((v) => v.id === activeId),
     });
-    setFit((prev) =>
-      prev && prev.shown.join() === next.shown.join() && prev.hidden.join() === next.hidden.join()
-        ? prev
-        : next,
-    );
+    const hidden = next.hidden.map((i) => views[i]!.id);
+    setHiddenIds((prev) => (prev.join() === hidden.join() ? prev : hidden));
   }, [views, activeId, resized]);
 
-  return { rootRef, measureRef, addRef, fit };
+  return { rootRef, measureRef, addRef, hiddenIds };
 }
