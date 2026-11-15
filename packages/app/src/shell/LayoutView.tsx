@@ -713,8 +713,6 @@ function TabBar({
           // As far in from the card's edge as the first tab is from it.
           className={clsx("relative z-20 ml-1 shrink-0 text-gray-500", topRowButtonClass)}
           style={noDragStyle}
-          // Collapsed, hovering it peeks at the sidebar (`useSidebarPeek`).
-          data-sidebar-peek-trigger={sidebarOpen ? undefined : ""}
           onPress={() => host.app.panels.toggle("left")}
         >
           <SidebarIcon collapsed={!sidebarOpen} />

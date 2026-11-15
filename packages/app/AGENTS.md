@@ -204,14 +204,15 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   they clip instead of reflowing. Escape cancels a drag; a double-click resets the width. The full
   sidebar stays mounted (hidden, inert) while collapsed. No animation library.
 - **Sidebar peek** (`shell/sidebar-peek.ts`, as in Linear and Notion): collapsed, resting on the
-  window's left edge (an 8 px ledge below the tab row) or the sidebar toggle for 100 ms shows the
+  window's left edge (an 8 px ledge below the tab row) for 100 ms shows the
   same mounted sidebar as a card over the content (fixed, so the collapsed panel does not clip
   it), floating 4 px inside the content card like the collections' page sheet: `shadow-popover`,
   `rounded-lg`, its left corners following the card's (8 px less hairline and gap). It slides in and out (WAAPI), and closes 300 ms after the
-  pointer leaves card and triggers, when it leaves the window, or on Escape. One document
+  pointer leaves card and ledge, when it leaves the window, or on Escape. Hovering the sidebar
+  toggle does not peek: pressing it expands the sidebar. One document
   `pointermove`/`dragover` listener decides from what is under the pointer; anything drawn
   outside the shell (menus and their underlays) holds it as it is, so a menu opened from it keeps
-  it open. After a collapse the triggers wait until the pointer has been elsewhere. Opening the
+  it open. After a collapse the ledge waits until the pointer has been elsewhere. Opening the
   sidebar for good ends the peek at once. Test: "collapsed, the left edge…" in `shell.test.tsx`.
   The first collapse on a device (`shell.peekHintSeen`) shows `PeekHint`: a pulsing mark on the
   edge and "Hover the edge to show the sidebar" beside it, for 6 s or until the peek opens; it

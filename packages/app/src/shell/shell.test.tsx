@@ -581,7 +581,7 @@ describe("shell", () => {
     expect(host.app.activeTab()?.path).toBe(docPath(a.id));
   });
 
-  test("collapsed, the left edge and the toggle peek at the sidebar until the pointer leaves", async () => {
+  test("collapsed, the left edge (not the toggle) peeks at the sidebar until the pointer leaves", async () => {
     const { host } = await setup();
     host.shell.set((s) => ({ ...s, sidebarOpen: false }));
     render(<LydieApp host={host} />);
@@ -590,7 +590,7 @@ describe("shell", () => {
     const toggle = screen.getByRole("button", { name: /^Expand sidebar/ });
     const away = screen.getByTestId("tab-bar");
     const peek = () => screen.queryByTestId("sidebar-peek")?.dataset.peek ?? "closed";
-    // The pointer has to have been elsewhere first (a toggle that just collapsed it).
+    // The pointer has to have been elsewhere first (an edge dragged to collapse it).
     fireEvent.pointerMove(ledge);
     await settle(150);
     expect(peek()).toBe("closed");
@@ -614,15 +614,17 @@ describe("shell", () => {
     await settle(300);
     expect(peek()).toBe("closed");
     expect(screen.getByTestId("sidebar").closest("[inert]")).not.toBeNull();
+    // Hovering the toggle does not peek; pressing it expands the sidebar.
     fireEvent.pointerMove(toggle);
+    await settle(150);
+    expect(peek()).toBe("closed");
+    fireEvent.pointerMove(ledge);
     await settle(150);
     expect(peek()).toBe("open");
     fireEvent.keyDown(window, { key: "Escape" });
     await settle(250);
     expect(peek()).toBe("closed");
     // Opened for good, the sidebar is in the layout again.
-    fireEvent.pointerMove(toggle);
-    await settle(150);
     await act(async () => fireEvent.click(toggle));
     await settle();
     expect(peek()).toBe("closed");

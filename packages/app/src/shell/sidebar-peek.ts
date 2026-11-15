@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import type { RefObject } from "react";
 
-// What opens the peek on hover: the ledge along the window's left edge and the sidebar toggle.
+// What opens the peek on hover: the ledge along the window's left edge. Not the sidebar toggle,
+// whose press expands the sidebar for good.
 const PEEK_TRIGGER = "data-sidebar-peek-trigger";
 
 export type PeekPhase = "closed" | "open" | "leaving";
 
 // A short rest before opening, so passing over the edge on the way elsewhere does not open it;
-// a longer one before closing, so the gap between the toggle and the card can be crossed.
+// a longer one before closing, so the pointer can stray off the card for a moment.
 const OPEN_DELAY = 100;
 const CLOSE_DELAY = 300;
 const ENTER = { duration: 200, easing: "cubic-bezier(0.23, 1, 0.32, 1)" };
@@ -20,8 +21,8 @@ function instant(element: HTMLElement | null) {
   );
 }
 
-// The collapsed sidebar shown over the content while the pointer is on the window's left edge or
-// the sidebar toggle, and on the card it opens (as in Linear and Notion). One document listener
+// The collapsed sidebar shown over the content while the pointer is on the window's left edge,
+// and on the card it opens (as in Linear and Notion). One document listener
 // decides from what is under the pointer. What is drawn outside the shell (menus, their
 // underlays, hover cards) holds the peek as it is, so a menu opened from it keeps it open.
 export function useSidebarPeek({
@@ -46,8 +47,8 @@ export function useSidebarPeek({
     let open = false;
     let pending: "open" | "close" | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    // Collapsing from the toggle leaves the pointer on it: it opens the peek only once the
-    // pointer has been elsewhere.
+    // Collapsing by dragging the sidebar's edge leaves the pointer on the ledge: it opens the
+    // peek only once the pointer has been elsewhere.
     let armed = false;
     const cancel = () => {
       clearTimeout(timer);
