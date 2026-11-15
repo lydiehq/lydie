@@ -44,6 +44,7 @@ import { placements, rangeIds, topmost, withinAny } from "./selection.ts";
 import { SyncingRows, useAwaitingFirstSync } from "./SyncingRows.tsx";
 import { createTreeModel } from "./tree-model.ts";
 import type { DocRow, TreeModel, TreeRow, ViewRow } from "./tree-model.ts";
+import { publishSelection } from "./tree-selection.ts";
 
 // The slot of one row: v1's 30 px row and the 2 px between rows.
 export const ROW_HEIGHT = 32;
@@ -395,6 +396,20 @@ export function DocumentTree(props: DocumentTreeProps) {
   const remove = async ({ all, top }: { all: ChildEntry[]; top: ChildEntry[] }) => {
     if (await moveToTrash(app, top, { total: all.length, scope: historyScope() })) clearSelection();
   };
+
+  // The palette offers to trash a selection of several (`document-tree.trashSelection`).
+  useEffect(() => {
+    const all = rows.filter((r): r is DocRow => isDoc(r) && selected.has(r.id)).map((r) => r.doc);
+    if (all.length < 2) return;
+    const top = topmost(rows, selected);
+    const scope = tabId ?? app.historyScope();
+    return publishSelection(app, {
+      count: all.length,
+      trash: async () => {
+        if (await moveToTrash(app, top, { total: all.length, scope })) setSelected(EMPTY);
+      },
+    });
+  }, [app, rows, selected, tabId]);
 
   const rename = async (doc: ChildEntry, title: string) => {
     setRenamingId(null);

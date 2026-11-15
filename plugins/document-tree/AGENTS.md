@@ -35,7 +35,10 @@ all, Escape clears. Delete and "Move to trash" ask first when a document has con
 documents inside or a database; empty pages go at once). Delete, "Move to trash" and dragging a selected row act on the whole selection (the topmost
 documents only: subtrees go along), in one `backend.transaction`, so one undo reverts it. The "moved to trash" toast names the undo
 shortcut and has an Undo button, which restores those documents (`doc.restore`, one transaction)
-instead of popping the undo stack, which may hold newer steps by then. A multi-drag carries
+instead of popping the undo stack, which may hold newer steps by then. While a tree has two or
+more selected, the palette lists `document-tree.trashSelection` (titled "Delete selected
+documents", shown as "Move N documents to trash"), which does the same: each tree publishes its
+selection to `tree-selection.ts` (per app, the latest wins) and withdraws it when it clears. A multi-drag carries
 `application/x-lydie-doc-ids`; `DRAG_TYPES.doc` stays the grabbed row, so a tab group opens that one; keyboard per the ARIA tree pattern with aria-activedescendant (Shift+F10 or the menu key for the context menu). The open document is revealed: its folders open and its row scrolls into view (`model.reveal`, only when it lives in this tree). The focus ring shows only while the tree has keyboard focus. The empty state's button and the "+" beside the "Documents" title (shown on hover, as in v1) run `core.newDocument`, so the "New documents" setting applies. The palette command `document-tree.collapseAll` ("Collapse all documents") closes all folders in every tree on screen (`collapseAllTrees` in `tree-model.ts`); it has no sidebar button.
 
 Collections (LYD-426): a collection stays in the tree where it lives (the tree matches the

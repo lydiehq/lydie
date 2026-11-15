@@ -8,6 +8,7 @@ import type { ConfirmOptions } from "@lydie/plugin-api/ui";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 import { DocumentTree } from "./DocumentTree.tsx";
+import { currentSelection } from "./tree-selection.ts";
 
 afterEach(cleanup);
 
@@ -290,6 +291,45 @@ describe("multiple selection", () => {
     expect(selectedIds().length).toBeGreaterThan(0);
     fireEvent.keyDown(tree, { key: "ArrowDown" });
     expect(selectedIds()).toEqual([]);
+  });
+
+  test("a selection of several is offered to the palette, which can trash it", async () => {
+    const { backend, host, transactions } = setup();
+    render(
+      <BackendProvider backend={backend}>
+        <HostProvider host={host}>
+          <DocumentTree label="Docs" scroll="parent" />
+        </HostProvider>
+      </BackendProvider>,
+    );
+    await act(async () => {});
+    const tree = screen.getByRole("tree", { name: "Docs" });
+
+    // One selected row is not a selection the palette acts on.
+    fireEvent.click(row("Docs", "Roadmap"));
+    fireEvent.click(row("Docs", "Roadmap"), { shiftKey: true });
+    expect(currentSelection(host.app)).toBeNull();
+    fireEvent.click(row("Docs", "Diary"), { shiftKey: true });
+    expect(currentSelection(host.app)?.count).toBe(3);
+
+    await act(async () => {
+      await currentSelection(host.app)?.trash();
+    });
+    expect(transactions.at(-1)).toEqual({
+      label: "Move 3 documents to trash",
+      ops: [
+        { id: "doc.delete", input: { id: "A1" } },
+        { id: "doc.delete", input: { id: "A2" } },
+        { id: "doc.delete", input: { id: "B1" } },
+      ],
+    });
+    // Trashed, the selection is gone, and so is the palette's command.
+    expect(currentSelection(host.app)).toBeNull();
+
+    fireEvent.keyDown(tree, { key: "a", metaKey: true });
+    expect(currentSelection(host.app)?.count).toBe(3);
+    fireEvent.keyDown(tree, { key: "Escape" });
+    expect(currentSelection(host.app)).toBeNull();
   });
 });
 

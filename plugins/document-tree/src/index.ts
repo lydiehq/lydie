@@ -1,11 +1,12 @@
 import { definePlugin, docIdOf } from "@lydie/plugin-api";
-import { AddRegular, ListCollapseRegular, StarRegular } from "@lydie/plugin-api/ui";
+import { AddRegular, Delete2Regular, ListCollapseRegular, StarRegular } from "@lydie/plugin-api/ui";
 import { createElement } from "react";
 
 import { DocumentTree, SidebarDocumentTree } from "./DocumentTree.tsx";
 import { favoritesOf } from "./favorites.ts";
 import { FavoritesSection } from "./Favorites.tsx";
 import { collapseAllTrees } from "./tree-model.ts";
+import { currentSelection } from "./tree-selection.ts";
 
 export const documentTreePlugin = definePlugin({
   id: "document-tree",
@@ -62,6 +63,18 @@ export const documentTreePlugin = definePlugin({
       group: "favorite",
       order: 5,
       run: (doc) => void favoritesOf(app).toggle(doc.id),
+    });
+    // While several rows are selected in a tree. Named "Delete" so it is found as the single
+    // document's "Delete document" is.
+    ctx.commands.register({
+      id: "document-tree.trashSelection",
+      title: "Delete selected documents",
+      paletteTitle: (app) => `Move ${currentSelection(app)?.count ?? 0} documents to trash`,
+      group: "Document",
+      bindable: false,
+      icon: createElement(Delete2Regular),
+      when: (app) => currentSelection(app) !== null,
+      run: ({ app }) => currentSelection(app)?.trash(),
     });
     ctx.commands.register({
       id: "document-tree.collapseAll",
