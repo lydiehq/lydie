@@ -1,7 +1,6 @@
 // The view toolbar: "Filter", "Display" (sort, group and sub-group, what the view type needs,
 // visible properties), search and "New". It stays this short on purpose: a new
-// setting goes inside Display. It never wraps: beside it the view tabs scroll, and an embed shows
-// Filter and Display as icons.
+// setting goes inside Display. It never wraps: beside it the view tabs scroll.
 // Changes to the view are personal until saved (`ViewContext.updateView`); the search is per tab
 // and never saved.
 import { groupable, sortable, TypeIcon } from "@lydie/plugin-api/databases";
@@ -20,7 +19,7 @@ import {
   Switch,
   UpRegular,
 } from "@lydie/plugin-api/ui";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 
 import { useDraft, useViewContext } from "./context.tsx";
@@ -42,8 +41,6 @@ export function Toolbar({
   onNew: () => void;
 }) {
   const ui = useFilterUi();
-  const { compact } = useViewContext();
-  const size = compact ? "icon-sm" : "sm";
   return (
     <div
       role="toolbar"
@@ -55,10 +52,10 @@ export function Toolbar({
         button={
           <>
             <Filter2Regular aria-hidden />
-            {!compact && "Filter"}
+            Filter
           </>
         }
-        size={size}
+        size="sm"
         isOpen={ui.menuOpen}
         onOpenChange={ui.setMenuOpen}
       >
@@ -69,10 +66,10 @@ export function Toolbar({
         button={
           <>
             <Settings6Regular aria-hidden />
-            {!compact && "Display"}
+            Display
           </>
         }
-        size={size}
+        size="sm"
         placement="bottom end"
       >
         {() => <DisplayMenu />}
@@ -83,41 +80,53 @@ export function Toolbar({
   );
 }
 
-// A magnifier until used: the field shows while it has focus or a query.
+// A magnifier until used: the field shows while it has focus or a query. The field stays mounted
+// and its box grows out of the magnifier (and shrinks back into it), the glyph staying put.
 function Search({ search, onSearch }: { search: string; onSearch: (q: string) => void }) {
   const [open, setOpen] = useState(false);
-  if (!open && !search) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Search this view"
-        className="text-gray-500"
-        onPress={() => setOpen(true)}
-      >
-        <Search2Regular aria-hidden />
-      </Button>
-    );
-  }
-  // An sm field among the toolbar's sm buttons, so the toolbar keeps its height while searching.
+  const input = useRef<HTMLInputElement>(null);
+  const expanded = open || search !== "";
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
   return (
-    <Input
-      size="sm"
-      type="search"
-      // oxlint-disable-next-line jsx-a11y/no-autofocus -- the field replaces the button just pressed
-      autoFocus={open}
-      aria-label="Search this view"
-      placeholder="Search…"
-      value={search}
-      onChange={(event) => onSearch(event.target.value)}
-      onBlur={() => setOpen(false)}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape") return;
-        onSearch("");
-        setOpen(false);
-      }}
-      className="mx-0.5 w-40 flex-none"
-    />
+    <div
+      className={`relative flex h-7.5 flex-none items-center transition-[width] duration-200 ease-out-strong motion-reduce:transition-none ${expanded ? "w-40" : "w-7.5"}`}
+    >
+      {/* An sm field among the toolbar's sm buttons, so the toolbar keeps its height while searching. */}
+      <Input
+        ref={input}
+        size="sm"
+        type="search"
+        aria-label="Search this view"
+        placeholder="Search…"
+        value={search}
+        onChange={(event) => onSearch(event.target.value)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key !== "Escape") return;
+          onSearch("");
+          setOpen(false);
+        }}
+        className={`w-full pl-7 transition-[opacity,visibility] duration-150 motion-reduce:transition-none ${expanded ? "" : "invisible opacity-0"}`}
+      />
+      {expanded ? (
+        <Search2Regular
+          aria-hidden
+          className="pointer-events-none absolute left-[7px] size-4 text-gray-500"
+        />
+      ) : (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Search this view"
+          className="absolute inset-0 text-gray-500"
+          onPress={() => setOpen(true)}
+        >
+          <Search2Regular aria-hidden />
+        </Button>
+      )}
+    </div>
   );
 }
 

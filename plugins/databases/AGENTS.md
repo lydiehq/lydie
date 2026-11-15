@@ -121,7 +121,7 @@ Licence: AGPL-3.0-only.
   bar's bottom border; tabs and toolbar share one line that never wraps (as in Notion, the tabs
   take the bar's width and the ones that do not fit go under "N more…", measured from invisible
   copies before paint, `tabs-model.ts`; the open view always shows, in its place; "add a view"
-  stays beside them; an embed shows Filter and Display as icons);
+  stays beside them; Filter and Display keep their labels in an embed too);
   chips are 24px segmented pills ("icon label | operator | value | ×") in `text-xs`; menus have a
   fixed width.
 - The board's look (its classes are in `skeleton.tsx`, so `BoardSkeleton` has the same sizes):
@@ -158,7 +158,8 @@ Licence: AGPL-3.0-only.
   Shift+F10 / the menu key, and starts with the view's name as a field, saved as the menu closes; "New view" lists the
   types with their `xs` drawings from the UI package and a line on each), `Toolbar.tsx` (
   "Filter", "Display" = sort, group/sub-group, card or calendar settings and properties with order
-  and visibility in one popover, a search icon that opens the field, New; keep the
+  and visibility in one popover, a search icon that the field grows out of (width, 200 ms) and
+  shrinks back into, New; keep the
   toolbar to these, new settings go inside Display; row height and board column colours have no
   UI), `ViewChips.tsx`, `FilterBuilder.tsx` (advanced) over
   `filter-model.ts` (pure, tested), `PropertyMenu.tsx` (column settings; `TypePicker`: every type in a grouped
