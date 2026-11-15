@@ -177,7 +177,7 @@ export function LydieApp({ host, sidebarFooter, banner }: Props) {
                     data-testid={peeking ? "sidebar-peek" : undefined}
                     className={clsx(
                       peeking
-                        ? "fixed top-10 bottom-1.5 left-1.5 z-40 overflow-hidden rounded-xl bg-canvas shadow-dialog"
+                        ? "fixed top-10 bottom-1.5 left-1.5 z-40 overflow-hidden rounded-xl bg-elevated shadow-dialog"
                         : "h-full",
                       peek === "leaving" && "pointer-events-none",
                     )}
