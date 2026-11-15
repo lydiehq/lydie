@@ -22,7 +22,7 @@
 
     var dark = document.documentElement.classList.contains("dark");
     var background = dark ? "#161616" : "#faf9f6";
-    var card = dark ? "#0e0e0e" : "#fffefc";
+    var card = dark ? "#0f0f0f" : "#fffefc";
     var border = dark ? "rgb(255 255 255 / 0.07)" : "rgb(0 0 0 / 0.05)";
 
     var el = document.createElement("div");
