@@ -179,12 +179,12 @@ export type AccountApi = {
   signUp(input: { email: string; password: string; name?: string }): Promise<AccountUser>;
   // Signs in with an identity provider in the browser. The web app leaves the page and comes back
   // signed in (see `takeProviderReturn`); the desktop app opens the system browser and resolves
-  // once signed in. Signs in existing accounts only while sign-up is closed.
+  // once signed in. A new email gets an account.
   signInWith(provider: AuthProvider, options?: { then?: SignInFollowUp }): Promise<AccountUser>;
   // Stops waiting for a provider sign-in started from this window (desktop; a no-op elsewhere).
   cancelSignInWith(): void;
   // After coming back from a provider sign-in: its follow-up and error (a code, e.g.
-  // "signup_disabled"), once. Null otherwise.
+  // "access_denied"), once. Null otherwise.
   takeProviderReturn(): { then: SignInFollowUp; error: string | null } | null;
   // In a hosted window this reopens the window in local scope.
   signOut(): Promise<void>;

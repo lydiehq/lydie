@@ -1,10 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { authMessage, providerMessage } from "./format.ts";
+import { providerMessage } from "./format.ts";
 import { localEntry } from "./sign-up.ts";
-
-const apiError = (fields: { code?: string; kind?: string; status?: number }) =>
-  Object.assign(new Error("failed"), fields);
 
 describe("the local window's account entry", () => {
   test("signed out: sign in to Lydie Cloud", () => {
@@ -34,10 +31,7 @@ describe("the local window's account entry", () => {
 });
 
 describe("messages", () => {
-  test("a refused sign-up says so in plain words", () => {
-    expect(authMessage(apiError({ code: "sign_up_closed", status: 403 }), "sign-up")).toBe(
-      "An account cannot be created for this email right now. Try again later.",
-    );
-    expect(providerMessage("signup_disabled")).toContain("could not be created");
+  test("a Google account that could not get an account says so in plain words", () => {
+    expect(providerMessage("unable_to_create_user")).toContain("could not create an account");
   });
 });

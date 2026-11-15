@@ -151,8 +151,8 @@ describe("sign in with Google from the desktop app", () => {
 
     const denied = codeOf(m.signInWith("google"));
     await Bun.sleep(0);
-    m.takeSignInLink(`${RETURN}?login_error=signup_disabled`);
-    expect(await denied).toBe("signup_disabled");
+    m.takeSignInLink(`${RETURN}?login_error=access_denied`);
+    expect(await denied).toBe("access_denied");
 
     const cancelled = codeOf(m.signInWith("google"));
     await Bun.sleep(0);

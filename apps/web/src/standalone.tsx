@@ -33,7 +33,6 @@ const providerReturn: Promise<string | null> = (async () => {
 })();
 
 const GOOGLE_ERRORS: Record<string, string> = {
-  signup_disabled: "There is no Lydie account for this Google account yet, and sign-up is closed.",
   access_denied: "Google sign-in was cancelled.",
   unavailable: "Signing in with Google is not available right now.",
 };

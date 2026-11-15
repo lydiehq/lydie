@@ -86,8 +86,7 @@ is. The browser copy is forgotten only when the plan left nothing behind, which 
 target already had (LYD-423).
 
 Anyone can create a Lydie Cloud account: signed out, every entry point offers sign in, and the
-sign-in dialog switches to "Create an account". A refused sign-up (`sign_up_closed`, Google's
-`signup_disabled`) only shows a short message (`format.ts`); it does not happen while sign-up is open.
+sign-in dialog switches to "Create an account".
 
 The window's scope never changes while it is open: switching workspaces, signing out of a hosted
 window or finishing a hand-off reopens it (`account.openScope`, `openLocalWorkspace`). On desktop a

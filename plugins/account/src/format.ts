@@ -17,9 +17,6 @@ export function authMessage(error: unknown, mode: "sign-in" | "sign-up"): string
     return "There is already an account with this email. Sign in instead.";
   }
   if (code === "PASSWORD_TOO_SHORT") return "Use at least 8 characters for the password.";
-  if (code === "SIGN_UP_CLOSED" || code === "SIGNUP_DISABLED") {
-    return "An account cannot be created for this email right now. Try again later.";
-  }
   if (mode === "sign-in" && e?.status === 401) return "That email and password do not match.";
   return errorMessage(error);
 }
@@ -52,8 +49,8 @@ export function providerMessage(errorOrCode: unknown): string | null {
       : ((errorOrCode as HostedApiError | null)?.code ?? "")
   ).toLowerCase();
   if (code === "cancelled" || code === "superseded") return null;
-  if (code.includes("signup_disabled") || code === "unable_to_create_user") {
-    return "There is no Lydie account for this Google account yet, and one could not be created right now. Try again later.";
+  if (code === "unable_to_create_user") {
+    return "Lydie could not create an account for this Google account. Try again later.";
   }
   if (code === "access_denied") return "Google sign-in was cancelled.";
   if (code.includes("account_not_linked")) {
