@@ -180,10 +180,10 @@ function CustomColor({
         background: hex ?? "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)",
       }}
     >
-      <WithTooltip label="Any colour">
+      <WithTooltip label="Any color">
         <input
           type="color"
-          aria-label="Any cover colour"
+          aria-label="Any cover color"
           defaultValue={hex ?? "#3b82f6"}
           onInput={(event) => onPreview(event.currentTarget.value)}
           className="absolute inset-0 size-full cursor-pointer opacity-0"
@@ -215,7 +215,7 @@ function ColorPicker({
       anchor={anchor}
       isOpen={isOpen}
       onClose={onClose}
-      label="Choose a cover colour"
+      label="Choose a cover color"
       placement={placement}
       className="flex gap-1.5"
     >
@@ -224,7 +224,7 @@ function ColorPicker({
           <button
             key={color}
             type="button"
-            aria-label={`Cover colour ${color}`}
+            aria-label={`Cover color ${color}`}
             aria-pressed={current === color}
             onClick={() => onPick(color)}
             className={`${SWATCH} ${swatchRing(current === color)} ${COVER_COLORS[color]} ${focusRingClass}`}
@@ -363,7 +363,9 @@ function Cover({
       )}
       <div
         ref={actions}
-        className="absolute right-3 bottom-2 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+        className={`absolute right-3 bottom-2 flex gap-1 ${
+          coloring ? "" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+        }`}
       >
         {dragging === null ? (
           <>
@@ -373,7 +375,7 @@ function Cover({
               </Button>
             )}
             <Button size="xs" variant="secondary" onPress={() => setColoring(!coloring)}>
-              Colour
+              Color
             </Button>
             <ColorPicker
               anchor={actions}

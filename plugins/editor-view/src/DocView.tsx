@@ -145,7 +145,7 @@ export function DocView({ tab }: ViewProps) {
           <div
             aria-hidden
             className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-20 bg-linear-to-b to-transparent transition-opacity duration-150 ${
-              overlay.tone === "light" ? "from-white/40" : "from-black/35"
+              overlay.tone === "light" ? "from-white/25" : "from-black/20"
             } ${overlay.over ? "opacity-100" : "opacity-0"}`}
           />
         )}
