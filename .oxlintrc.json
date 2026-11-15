@@ -1,9 +1,10 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["build/**", "node_modules/**", "public/**", "*.d.ts"],
-  "plugins": ["oxc", "react", "typescript", "import", "jsx-a11y", "eslint"],
+  "extends": ["./oxlint-base.json"],
+  "ignorePatterns": ["**/dist/**", "**/out/**", "**/node_modules/**", "**/public/**", "**/*.d.ts"],
+  "plugins": [],
+  "jsPlugins": ["./scripts/oxlint-plugin.ts"],
   "rules": {
-    "react/no-children-prop": "off",
-    "jsx-a11y/no-autofocus": "off"
+    "lydie/icon-button-tooltip": "error"
   }
 }

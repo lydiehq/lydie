@@ -1,0 +1,18 @@
+/* The design system brings Tailwind, the theme, Inter and the document typography. */
+@import "@lydie/ui/styles.css";
+@import "@lydie/editor/styles.css";
+/* The host, the plugin API's shared components and the built-in plugins live outside this app's
+   folder. */
+@source "../../../packages/app/src";
+@source "../../../packages/plugin-api/src";
+@source "../../../plugins";
+
+/* The loading label over the boot shell fades in late, so a quick start shows only the frame. */
+@keyframes boot-label {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

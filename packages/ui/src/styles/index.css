@@ -1,0 +1,262 @@
+/*
+ * @lydie/ui/styles.css: the single stylesheet an app imports.
+ *
+ * It brings in Tailwind 4, the Lydie theme (tokens ported from v1's tailwind.css), the self-hosted
+ * Inter variable font, the react-aria and scrollbar plugins and the document typography
+ * (editor-content.css). The @source below makes Tailwind scan this package's components, so an app
+ * needs nothing else to get their classes. See the package AGENTS.md.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "./editor-content.css";
+@import "./dark.css";
+@import "./scroll-fade.css";
+
+@source "../";
+@source not "../**/*.test.{ts,tsx}";
+
+@plugin "tailwind-scrollbar";
+@plugin "tailwindcss-react-aria-components";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Neutral grays replace Tailwind's default (blue-tinted) gray. */
+  --color-gray-50: oklch(98.5% 0 0);
+  --color-gray-100: oklch(97% 0 0);
+  --color-gray-200: oklch(92.2% 0 0);
+  --color-gray-300: oklch(87% 0 0);
+  --color-gray-400: oklch(70.8% 0 0);
+  --color-gray-500: oklch(55.6% 0 0);
+  --color-gray-600: oklch(43.9% 0 0);
+  --color-gray-700: oklch(37.1% 0 0);
+  --color-gray-800: oklch(26.9% 0 0);
+  --color-gray-900: oklch(20.5% 0 0);
+  --color-gray-950: oklch(14.5% 0 0);
+  /* The page and card background, and the background of popovers, menus and dialogs. White with a
+     trace of the canvas's warmth in light mode; dark.css turns them (and the gray ramp) dark. Use
+     these instead of `bg-white`. */
+  --color-surface: #fffefc;
+  --color-elevated: #fffefc;
+  /* The window behind the content cards (the sidebar, the tab strip, standalone pages): the beige
+     paper of the scribble avatars, so the app and its icons share one surface. */
+  --color-canvas: #faf9f6;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* v1 referenced --font-heading without defining it, so headings fell back to Inter. */
+  --font-heading: var(--font-sans);
+  --text-sm: 0.8125rem;
+
+  /* Shadows are black in both themes; the hairline is --surface-ring (lighter in dark mode). */
+  --shadow-surface:
+    rgb(0 0 0 / 0.07) 0px 2px 4px 0px, rgb(0 0 0 / 0.1) 0px 1px 1px 0px,
+    var(--surface-ring) 0px 0px 0px 1px;
+  --shadow-container: 0px 0px 8px -4px rgba(0, 0, 0, 0.25), 0 0 1px 0 rgba(0, 0, 0, 0.2);
+  /* Everything that floats, as in Numina: its `shadow-md ring-1 ring-border` for popovers, menus
+     and cards, `shadow-lg` with the same ring for dialogs. The hairline is part of the shadow, so
+     no `ring` or border beside these. */
+  --shadow-popover:
+    0 0 0 1px color-mix(in oklab, var(--color-gray-950) 8%, transparent),
+    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-dialog:
+    0 0 0 1px color-mix(in oklab, var(--color-gray-950) 8%, transparent),
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* A value lifted out of its place to be edited (a table cell, a property): drop shadow only, no
+     hairline, so it reads as the same thing raised rather than a new box. */
+  --shadow-lift:
+    0 0 1px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.08), 0 8px 20px -4px rgb(0 0 0 / 0.16);
+  /* Numina's depth (its `surface-depth`): a soft layered drop under a hairline border. Values in
+     the --depth-* variables below, dark ones in dark.css. */
+  --shadow-depth:
+    0px 1px 0px -1px var(--depth-near), 0px 1px 1px -1px var(--depth-near),
+    0px 1px 2px -1px var(--depth-middle), 0px 2px 4px -2px var(--depth-far),
+    0px 3px 6px -3px var(--depth-far), inset 0px 0px 0px 1px var(--depth-highlight),
+    inset 0px 1px 0px var(--depth-highlight);
+  /* The document and collection icons' paper: white, and lighter than the sidebar in dark mode
+     too (dark.css), where `surface` would be darker than it. */
+  --color-paper: #fffefc;
+  --shadow-document-icon:
+    0px 0px 8px -4px rgba(0, 0, 0, 0.2), 0 1px 1.5px 0 rgba(0, 0, 0, 0.1),
+    0 0 1px 0 rgba(0, 0, 0, 0.45);
+
+  --animate-float-up-down: float-up-down 2s ease-in-out infinite;
+  /* Skeleton: hidden for the first 150 ms, so a load that finishes at once shows no placeholder,
+     then fades in and pulses. */
+  --animate-skeleton:
+    skeleton-in 200ms ease-out 150ms backwards, skeleton-pulse 2s ease-in-out 350ms infinite;
+  /* LoadingState: the same hidden 150 ms, then a fade in (a spinner shown for a few ms flashes). */
+  --animate-appear: skeleton-in 200ms ease-out 150ms backwards;
+  /* Quick start, long settle: dialogs and other pop-ins (as in Numina). */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes float-up-down {
+  0% {
+    transform: translateY(0px);
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The focus ring for focusable things that set none of their own (`focusRingClass` in
+     components/utils.ts draws the same). No specificity: any outline class wins. Fields are left
+     out: their focus shows on their border. */
+  :where(
+    a[href],
+    button,
+    summary,
+    [role="button"],
+    [role="tab"],
+    [role="switch"],
+    [role="checkbox"],
+    [tabindex="0"]
+  ):focus-visible {
+    outline: 2px solid var(--color-blue-600);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+.react-aria-DropIndicator {
+  &[data-drop-target] {
+    outline: 1px solid var(--color-blue-500);
+  }
+
+  @supports not selector(:has(.foo)) {
+    /* Undo gap in browsers that don't support :has */
+    margin-bottom: -2px;
+  }
+}
+
+/* Animated checkbox checkmark */
+.checkbox-checkmark {
+  width: calc(100% - 0.35rem);
+  height: calc(100% - 0.35rem);
+  fill: none;
+  stroke: var(--color-surface);
+  stroke-width: 3.5px;
+  stroke-dasharray: 22px;
+  stroke-dashoffset: 66px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    stroke-dashoffset 200ms,
+    stroke 200ms,
+    fill 200ms;
+}
+
+.checkbox-checkmark-selected {
+  stroke-dashoffset: 44px;
+}
+
+.checkbox-checkmark-indeterminate {
+  stroke: none;
+  fill: var(--color-surface);
+  stroke-dashoffset: 0;
+}
+
+.checkbox-checkmark-disabled {
+  stroke: var(--color-gray-400);
+}
+
+@layer base {
+  /* No specificity, so dark.css's `.dark` (imported above) wins on <html> too. */
+  :where(:root) {
+    /* scroll-fade.css's depth, smaller than shadcn's min(12%, 40px). Not a registered property, so
+       the percentage is of the scroller it lands on; a `scroll-fade-<n>` class still overrides it. */
+    --scroll-fade-size: min(8%, calc(var(--spacing) * 6));
+    --depth-border: color-mix(in oklch, black 5%, transparent);
+    --depth-near: color-mix(in oklch, black 7.2%, transparent);
+    --depth-middle: color-mix(in oklch, black 4%, transparent);
+    --depth-far: color-mix(in oklch, black 1.5%, transparent);
+    --depth-highlight: transparent;
+  }
+}
+
+/* Raised things on a page: secondary buttons and the shell's cards. Hover may set a stronger
+   border (`hover:border-gray-950/12`). */
+@utility surface-depth {
+  border-width: 1px;
+  border-color: var(--depth-border);
+  background-clip: padding-box;
+  box-shadow: var(--shadow-depth);
+}
+
+/* The primary button, after Paper's app icon (paper.design), in the icon's own hue, a good
+   deal darker: the cornflower fill running a touch deeper towards the bottom, the glyph's off-white
+   for the label, a line of light along the top edge and a deeper blue one along the bottom. The
+   gradient is half the icon's and the edge lines are faint: at full strength a button this small
+   looks bulbous. The edges are crisp, unblurred lines in the fill's own blue (a hairline outline,
+   a 1px drop): grey or blurred shadows muddy them. Literal colours on purpose: like a picture, it
+   is the same in both themes. Hover and press deepen the blue through --button-primary-overlay.
+   The edge lines are drawn by ::after over the border box, because an inset shadow on the button
+   itself would start inside its transparent border. */
+@utility button-primary {
+  --button-primary-top: #5d8bdb;
+  --button-primary-bottom: #4f80d3;
+  --button-primary-overlay: transparent;
+  color: #f5f5f3;
+  text-shadow: 0 0.5px 0.5px rgb(32 66 138 / 0.35);
+  background-origin: border-box;
+  background-image:
+    linear-gradient(var(--button-primary-overlay), var(--button-primary-overlay)),
+    linear-gradient(180deg, var(--button-primary-top), var(--button-primary-bottom));
+  box-shadow:
+    0 0 0 0.5px rgb(46 88 168 / 0.65),
+    0 1px 1px rgb(32 66 138 / 0.22);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.28),
+      inset 0 -1px 0 rgb(46 88 168 / 0.4);
+  }
+}
+
+@utility icon-muted {
+  color: color-mix(in oklab, var(--color-gray-950) 50%, transparent);
+  &:where(.group:hover *) {
+    color: color-mix(in oklab, var(--color-gray-950) 58%, transparent);
+  }
+}

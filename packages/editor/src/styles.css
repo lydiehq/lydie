@@ -1,0 +1,6 @@
+/*
+ * @lydie/editor/styles.css: import after @lydie/ui/styles.css. It only tells Tailwind to scan the
+ * editor's components; the document typography lives in @lydie/ui (editor-content.css).
+ */
+@source "./";
+@source not "./**/*.test.{ts,tsx}";

@@ -1,0 +1,38 @@
+{
+  "name": "@lydie/plugin-api",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./backend": "./src/backend.ts",
+    "./ui": "./src/ui.ts",
+    "./editor": "./src/editor.ts",
+    "./databases": "./src/databases/index.ts",
+    "./grid": "./src/grid/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bun check"
+  },
+  "dependencies": {
+    "@lydie/contract": "workspace:*",
+    "@lydie/editor": "workspace:*",
+    "@lydie/platform": "workspace:*",
+    "@lydie/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "21.0.4",
+    "@testing-library/react": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}

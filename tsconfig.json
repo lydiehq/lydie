@@ -1,6 +1,7 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "skipLibCheck": true
+    "types": ["bun"]
   },
-  "exclude": ["packages/", ".sst/"]
+  "include": ["scripts"]
 }

@@ -1,0 +1,42 @@
+{
+  "name": "@lydie/app",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./backend": "./src/backend/index.ts",
+    "./url": "./src/host/url.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bun check"
+  },
+  "dependencies": {
+    "@lydie/contract": "workspace:*",
+    "@lydie/editor": "workspace:*",
+    "@lydie/markdown": "workspace:*",
+    "@lydie/platform": "workspace:*",
+    "@lydie/plugin-api": "workspace:*",
+    "@lydie/runtime": "workspace:*",
+    "@lydie/store": "workspace:*",
+    "@lydie/ui": "workspace:*",
+    "clsx": "^2.1.1",
+    "react-aria-components": "catalog:"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "21.0.4",
+    "@testing-library/react": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "motion": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}

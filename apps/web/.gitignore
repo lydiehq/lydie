@@ -1,0 +1,2 @@
+# End-to-end and perf builds (see package.json test:e2e* scripts).
+.e2e

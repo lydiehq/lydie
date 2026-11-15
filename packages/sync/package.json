@@ -1,0 +1,30 @@
+{
+  "name": "@lydie/sync",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "scripts": {
+    "test": "bun test ./src",
+    "test:live": "bun test --timeout 120000 ./test/*.live.ts",
+    "typecheck": "bun check"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "4.8.0",
+    "@lydie/contract": "workspace:*",
+    "@lydie/store": "workspace:*",
+    "@powersync/common": "2.5.0",
+    "y-protocols": "1.0.7",
+    "yjs": "catalog:"
+  },
+  "devDependencies": {
+    "@hocuspocus/server": "4.8.0",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:"
+  }
+}

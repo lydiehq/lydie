@@ -1,195 +1,102 @@
-# AGENTS.md - Agentic Coding Guidelines for Lydie
+# AGENTS.md - Lydie client (public repo)
 
-This document provides guidelines for AI coding agents working in the Lydie repository.
+The open-source Lydie client: a writing app that works on a folder of Markdown files (local mode) or
+against a hosted workspace. Web and Electron from one React app. Licence: AGPL-3.0; the packages marked
+MIT below are MIT.
 
-## Build/Lint/Test Commands
+## Packages
+
+| Package                          | Purpose                                                                                                    | May depend on                                                              |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `@lydie/contract` (MIT)          | Operation and query definitions (Zod 4), event schemas. Generates OpenAPI, MCP tool schemas, CLI help.     | nothing internal                                                           |
+| `@lydie/runtime`                 | Runs operations in-process over ports (`Db`, `Blob`, `Search`, `Events`, `Clock`, `Actor`).                | contract                                                                   |
+| `@lydie/store`                   | Local SQLite schema and domain queries through the PowerSync client SDK. The only package that writes SQL. | contract, runtime                                                          |
+| `@lydie/markdown` (MIT)          | Lydie Markdown ⇄ ProseMirror, splice-preserving save, three-way merge. Runs headless.                      | nothing internal                                                           |
+| `@lydie/editor` (MIT)            | TipTap 3 extensions matching the `@lydie/markdown` schema.                                                 | markdown                                                                   |
+| `@lydie/ui` (MIT)                | Design system: react-aria-components + Tailwind 4.                                                         | nothing internal                                                           |
+| `@lydie/platform`                | Interface for fs, watch, dialogs, windows, menus, updater, secure storage. Types, small helpers.           | nothing internal                                                           |
+| `@lydie/plugin-api` (MIT)        | The public plugin surface.                                                                                 | contract, platform, ui, editor                                             |
+| `@lydie/app`                     | Plugin host: layout, routing, loader, command palette. No features of its own.                             | everything above                                                           |
+| `@lydie/bridge-fs`               | File bridge: folder ⇄ database. Node only.                                                                 | store, markdown, contract, runtime                                         |
+| `@lydie/sync`                    | Cloud sync peer.                                                                                           | contract, runtime, store, sdk                                              |
+| `@lydie/sdk` (MIT)               | Generated TypeScript client for the hosted API.                                                            | contract                                                                   |
+| `@lydie/mcp-local`, `@lydie/cli` | Local MCP server and CLI over the runtime.                                                                 | contract, runtime, store, bridge-fs (cli also mcp-local)                   |
+| `plugins/*`                      | Built-in features.                                                                                         | `@lydie/plugin-api` only                                                   |
+| `apps/web`, `apps/desktop`       | Thin shells implementing `@lydie/platform`.                                                                | every package above except cli (mcp-local: desktop only), plus `plugins/*` |
+
+The "May depend on" column is enforced by `scripts/check-boundaries.ts` (`bun run check:boundaries`),
+which is authoritative: change the table there first, then here.
+
+## Rules
+
+- Nothing here may import from outside this repository.
+- Plugins import only `@lydie/plugin-api`. If a plugin needs something the API lacks, extend the API.
+- UI code (`ui`, `app`, `plugins/*`) never writes SQL or touches the filesystem.
+- Every user-visible action is an operation in `@lydie/contract`.
+- Generated files are committed. Regenerate, do not hand-edit.
+
+## Commands
 
 ```bash
-# Development
-bun dev                              # Start SST dev environment
-
-# Linting & Formatting
-bun run lint                         # Run oxlint (type-aware checks)
-bun run lint:fix                     # Run oxlint with auto-fix
-bun run fmt                          # Run oxfmt formatter
-bun run fmt:check                    # Check formatting without writing
-
-# Type checking policy
-# Use oxlint's type-aware checks via `bun run lint` for typecheck validation.
-# Do not use `bun run typecheck` / `tsc --noEmit` as a default validation step.
-
-# Unit Tests (Vitest)
-bun test                             # Run all tests
-bun --filter=@lydie/web test         # Run web package tests
-bun test -- --reporter=verbose       # Verbose output
-bun test -- --testNamePattern="..."  # Run single test by name
-bun test:watch                       # Watch mode
-bun test:ui                          # UI mode
-
-# E2E Tests (Playwright)
-bun run docker:e2e                   # Run e2e tests in Dockerized prod-like stack
-bun run docker:e2e tests/e2e/auth.spec.ts         # Run specific e2e file
-bun run docker:e2e -- --grep "should"            # Run tests matching pattern
-
-# E2E policy
-# Always run e2e via dockerized stack (`bun run docker:e2e`).
-# Do not use non-docker Playwright scripts as the default validation path.
-
-# Database
-bun run db:push                      # Push schema changes
-bun run db:studio                    # Open Drizzle Studio
-bun run db:sync                      # Sync Zero publication
-
-# Deployment
-bun run deploy:prod                  # Deploy to production
+bun install
+bun run check          # lint, format:check, typecheck, test, check:boundaries
+bun run format         # bun fmt; config is [fmt] in bunfig.toml (format:check to verify)
+bun run typecheck      # bun check in every package (use `bun check --no-script` at this root)
+bun run test           # bun test ./scripts, then every package's `test` script
+bun --filter=@lydie/platform run test   # one package (or `cd` into it and run `bun test`)
+bun run dev:web        # web app on http://localhost:3000
+bun run dev:desktop    # Electron app
+bun run bench          # seeds 10k notes, a 5k-row database and a 2k-block document; runs the store
+                       # budgets and prints one line per measurement (median, p95, budget, ok/OVER)
+bun run bench:markdown # @lydie/markdown parse/save timings (seed document, help vault if downloaded)
+bun run seed --out <file.sqlite>   # the same seeded database, for manual testing
+bun run seed:demo --out <folder>   # a realistic workspace (someone's notes, journal, projects,
+                                   # three databases) as a folder to open in the app; the
+                                   # content is scripts/seed/demo.ts, written through operations
 ```
 
-## Code Style Guidelines
+## CI
 
-### TypeScript & Types
+`.github/workflows/ci.yml` runs on pushes to `main`/`v2` and on pull requests, with Bun pinned to the
+version used locally (`BUN_VERSION`; bump it with Bun). No secrets.
 
-- **Target:** ES2022, strict mode enabled
-- **Import style:** `import type { X }` for type-only imports
-- **Indexed access:** Enable `noUncheckedIndexedAccess` where possible
-- **No emit:** All packages use `noEmit: true` with bundler module resolution
+- `checks`: `bun install --frozen-lockfile`, then lint, format:check, typecheck, test,
+  check:boundaries and check:generated (`generate --check` in `@lydie/contract` and `@lydie/sdk`).
+- `web-e2e`: `apps/web` `test:e2e` and `test:e2e:links` in Chromium. The databases suites (performance
+  budgets) and `test:e2e:settings` (needs a hosted core) are not run.
+- `desktop-e2e`: `apps/desktop` `test:e2e` against the built Electron app on macOS.
 
-### Import Ordering
+## Tests
 
-Imports are grouped with newlines between (configured in `.oxfmtrc.json`):
+- Bun's test runner: import from `bun:test` (`mock`, `spyOn` instead of `vi.*`). Unit tests are
+  co-located as `*.test.ts(x)`. Packages without tests use `"test": "bun test --pass-with-no-tests"`.
+- DOM tests: the package's `bunfig.toml` sets `[test] preload = ["./test/setup.ts"]`, which calls
+  `GlobalRegistrator.register()` from `@happy-dom/global-registrator`. Rendering to a string
+  (`react-dom/server`) needs no DOM.
+- End-to-end tests are `e2e/*.e2e.ts`: the default `bun test` run skips them (no `.test` in the
+  name), and the package's `test:e2e` script runs them explicitly, e.g.
+  `bun test --timeout 60000 ./e2e/*.e2e.ts`. They use `bun:test` with the Playwright library;
+  Bun's `expect` has no `expect.poll`, so wait with locators (`locator.waitFor()`,
+  `filter({ hasText })`) or a small poll helper (`apps/desktop/e2e/poll.ts`).
+  - Desktop: `playwright-core`'s `_electron.launch()` against the built app (`out/`); `test:e2e`
+    builds first.
+  - Web (convention, not set up yet): `playwright`'s `chromium.launch()`; the suite starts
+    `vite preview` on a free port in `beforeAll` and stops it in `afterAll`. Browsers come from
+    `bunx playwright install chromium`.
 
-1. External dependencies (React, etc.)
-2. Workspace packages (`@lydie/*`)
-3. Internal aliases (`@/*`)
-4. Relative imports
-5. Type imports
+## Code style
 
-Example:
+TypeScript strict with `noUncheckedIndexedAccess`; `import type` for types; `type` over `interface`.
+Packages export TypeScript source directly. React 19 with React Compiler and function-declaration
+components. Zod 4. Colours: light-mode Tailwind classes with `bg-surface`/`bg-elevated` and
+`gray-950/N` overlays instead of white/black; dark mode follows from the theme (see
+`packages/ui/AGENTS.md`, "Colours and dark mode"). No uppercase text anywhere in the UI (no `uppercase` class, no all-caps labels): section titles are sentence case, `text-xs font-medium`. Components `PascalCase.tsx`, other files `kebab-case.ts`. oxlint lints;
+`bun fmt` decides formatting and import order. Our own lint rules are in `scripts/oxlint-plugin.ts`:
+`lydie/icon-button-tooltip` (a button that shows only an icon needs a tooltip; see `packages/ui/AGENTS.md`).
+Shared rules are in `oxlint-base.json`, which other configs extend; keep `jsPlugins` in `.oxlintrc.json`,
+because oxlint fails when two configs in one run load the same plugin.
 
-```typescript
-import type { ReactNode } from "react";
+## Contributing
 
-import { createId } from "@lydie/core/id";
-import { db } from "@lydie/database";
-
-import { ErrorPage } from "@/components/layout/ErrorPage";
-import { reportWebVitals } from "./reportWebVitals";
-```
-
-### Naming Conventions
-
-- **Components:** PascalCase (e.g., `LinkPopover.tsx`)
-- **Utilities:** camelCase (e.g., `slugify.ts`, `formatDate.ts`)
-- **Test files:** Co-located `.test.tsx` for unit, `tests/e2e/*.spec.ts` for e2e
-- **Fixtures:** `*.fixture.ts` (e.g., `auth.fixture.ts`)
-- **Types/Interfaces:** PascalCase, prefer `type` over `interface`
-
-### React Components
-
-- Use React 19 with React Compiler (`babel-plugin-react-compiler`)
-- Use `react-jsx` transform (no `React` import needed)
-- Prefer function declarations for components
-- Use `type` for props: `type Props = { ... }`
-
-### Error Handling
-
-- Use standard try/catch with typed errors
-- Always cleanup in tests (use `afterEach`)
-- Playwright fixtures handle auth state automatically
-
-### Testing Patterns
-
-**Unit Tests (Vitest):**
-
-```typescript
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { createTestEditor, destroyEditor } from "@/test-utils";
-
-describe("Component", () => {
-  afterEach(() => {
-    // Cleanup
-  });
-
-  it("should do something", () => {
-    // Test
-  });
-});
-```
-
-**E2E Tests (Playwright):**
-
-```typescript
-import { test, testUnauthenticated } from "./fixtures/auth.fixture";
-
-test("authenticated test", async ({ page, user, organization }) => {
-  // Test with auth fixtures
-});
-
-testUnauthenticated("public page", async ({ page }) => {
-  // Test without auth
-});
-```
-
-### File Organization
-
-```
-packages/web/src/
-  components/           # React components
-    Component.tsx
-    Component.test.tsx  # Co-located test
-  test-utils/           # Test utilities
-  utils/                # Helper functions
-  lib/                  # Library code
-  styles/               # CSS/Tailwind
-
-tests/e2e/              # Playwright tests
-  *.spec.ts
-  fixtures/             # Test fixtures
-  utils/                # E2E utilities
-```
-
-### Path Aliases
-
-- `@/*` → `packages/web/src/*` (web app)
-- `@lydie/*` → Other workspace packages
-- `@lydie/ui/*` → UI components
-
-### Workspace Structure
-
-- `@lydie/core` - Shared logic, AI utilities
-- `@lydie/database` - Drizzle ORM schema
-- `@lydie/backend` - Hono API
-- `@lydie/web` - Vite React app
-- `@lydie/ui` - Shared UI components
-- `@lydie/editor` - TipTap editor extensions
-- `@lydie/zero` - Zero sync configuration
-- `@lydie/sdk` - Client SDK
-- `@lydie/marketing` - Astro marketing site
-
-### Secrets & Environment
-
-- Use SST Secrets (access via `Resource.SecretName.value`)
-- Never commit secrets or `.env` files
-- Use `sst-env.d.ts` for type-safe resource access
-
-### Database
-
-- Use Drizzle ORM with explicit schema
-- Prefer pooled connection for serverless
-- Run `db:push` after schema changes
-- E2E tests create/destroy test data via factories
-
-### Editor Extensions
-
-TipTap extensions live in `packages/editor/extensions/`:
-
-- Each extension in its own file
-- Export from `packages/editor/extensions/index.ts`
-
-## AI SDK Usage
-
-- Use Vercel AI SDK with Google/OpenAI providers
-- Streaming responses with `streamText()`
-- AI features in `packages/core/src/ai/`
+Open an issue describing the change before a large pull request. Plugins, connectors and importers are
+the preferred contribution surface. Disclose AI assistance in the pull request description.

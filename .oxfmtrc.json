@@ -1,7 +1,0 @@
-{
-  "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "experimentalSortImports": {
-    "newlinesBetween": true
-  },
-  "ignorePatterns": ["sst-env.d.ts"]
-}

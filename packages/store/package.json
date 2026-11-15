@@ -1,0 +1,42 @@
+{
+  "name": "@lydie/store",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./web": "./src/web.ts",
+    "./react": "./src/react.tsx",
+    "./vite": "./src/vite.ts"
+  },
+  "scripts": {
+    "test": "bun test ./src",
+    "typecheck": "bun check",
+    "bench": "bun test ../../scripts/bench/store.bench.ts --timeout 600000"
+  },
+  "dependencies": {
+    "@journeyapps/wa-sqlite": "2.0.10",
+    "@lydie/contract": "workspace:*",
+    "@lydie/runtime": "workspace:*",
+    "@powersync/common": "2.5.0",
+    "@powersync/node": "1.3.1",
+    "@powersync/react": "2.2.1",
+    "@powersync/web": "2.7.0",
+    "better-sqlite3": "13.1.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "21.0.4",
+    "@testing-library/react": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

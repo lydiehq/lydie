@@ -1,2 +1,8 @@
-# Disable loading .env files
-env = false
+[install]
+# Hoisted keeps a single node_modules at the install root instead of one per workspace package.
+linker = "hoisted"
+
+[fmt]
+printWidth = 100
+sortImports = { newlinesBetween = true }
+ignorePatterns = ["bun.lock", "packages/contract/generated/**"]

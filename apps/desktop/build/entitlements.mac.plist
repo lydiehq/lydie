@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Hardened runtime entitlements for Developer ID builds (app and helpers), see
+  electron-builder.config.ts. V8 needs JIT. Library validation stays on: every native binary we
+  load (better-sqlite3, @parcel/watcher, the PowerSync SQLite extension, the trackpad addon) is
+  inside the bundle and electron-builder signs it with the same Developer ID.
+-->
+<plist version="1.0">
+  <dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+  </dict>
+</plist>

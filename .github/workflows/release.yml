@@ -1,0 +1,167 @@
+# Builds the macOS app and publishes it as a draft GitHub release (RELEASING.md).
+#
+# - A `v*` tag: build, check, then a draft release for the tag (a prerelease when the version has
+#   a prerelease part). Nothing reaches users until the draft is published by hand.
+# - Run manually (workflow_dispatch): a dry run. Same build and checks; the files are uploaded as
+#   a workflow artifact and no release is created.
+#
+# With the signing secrets the app is signed with the Developer ID certificate and notarised.
+# Without them it is ad-hoc signed, every file name ends in "-unsigned" and the release says so.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build macOS (arm64, x64)
+    runs-on: macos-15
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      signed: ${{ steps.signing.outputs.signed }}
+    env:
+      # app-update.yml points at this repository's releases.
+      LYDIE_UPDATE_REPO: ${{ github.repository }}
+      # The packaged app talks to the hosted API from the main process; the bundled web app gets
+      # the same origin.
+      VITE_LYDIE_API_URL: https://api.lydie.co
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+
+      - name: Check the version
+        id: version
+        run: |
+          version=$(jq -r .version apps/desktop/package.json)
+          web=$(jq -r .version apps/web/package.json)
+          if [ "$version" != "$web" ]; then
+            echo "::error::apps/desktop is $version but apps/web is $web: they share one version"
+            exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the app version $version (expected v$version)"
+            exit 1
+          fi
+          case "$version" in *-*) prerelease=true ;; *) prerelease=false ;; esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+
+      # Both Mac architectures' optional native packages (@parcel/watcher-darwin-x64 on this arm64
+      # runner): the x64 app is packaged here too.
+      - run: bun install --frozen-lockfile --os=darwin --cpu='*'
+
+      - name: Signing
+        id: signing
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          if [ -z "$CSC_LINK" ]; then
+            echo "::warning::No signing secrets: building an unsigned (ad-hoc) app"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$APPLE_API_KEY" ]; then
+            echo "::error::CSC_LINK is set but APPLE_API_KEY is not: the app could not be notarised"
+            exit 1
+          fi
+          # electron-builder wants the App Store Connect key as a file.
+          key="$RUNNER_TEMP/apple-api-key.p8"
+          printf '%s' "$APPLE_API_KEY" > "$key"
+          chmod 600 "$key"
+          echo "APPLE_API_KEY_PATH=$key" >> "$GITHUB_ENV"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        working-directory: apps/desktop
+        run: bun run build
+
+      - name: Package
+        working-directory: apps/desktop
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          SIGNED: ${{ steps.signing.outputs.signed }}
+        run: |
+          if [ "$SIGNED" = true ]; then export APPLE_API_KEY="$APPLE_API_KEY_PATH"; fi
+          bunx electron-builder --config electron-builder.config.ts --mac --arm64 --x64 --publish never
+
+      - name: Check the release files
+        working-directory: apps/desktop
+        env:
+          SIGNED: ${{ steps.signing.outputs.signed }}
+        run: |
+          signed=()
+          if [ "$SIGNED" = true ]; then signed=(--signed); fi
+          bun scripts/check-release.ts --arch arm64,x64 "${signed[@]}"
+
+      - name: Remove the API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/apple-api-key.p8"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lydie-${{ steps.version.outputs.version }}-mac
+          path: apps/desktop/dist/release/
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Draft the GitHub release
+    needs: build
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: lydie-${{ needs.build.outputs.version }}-mac
+          path: release
+
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          SIGNED: ${{ needs.build.outputs.signed }}
+        run: |
+          title="Lydie $VERSION"
+          notes="$RUNNER_TEMP/notes.md"
+          : > "$notes"
+          if [ "$SIGNED" != true ]; then
+            title="$title (unsigned)"
+            {
+              echo "> [!WARNING]"
+              echo "> Unsigned build: not signed with a Developer ID and not notarised. macOS will"
+              echo "> refuse to open it unless the quarantine flag is removed, and the in-app"
+              echo "> updater cannot install it. For testing the release pipeline only."
+              echo
+            } >> "$notes"
+          fi
+          echo "Download the \`.dmg\` for your Mac: \`arm64\` for Apple silicon, \`x64\` for Intel." >> "$notes"
+          flags=(--draft --verify-tag --title "$title" --notes-file "$notes" --generate-notes)
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" "${flags[@]}" release/*

@@ -1,0 +1,19 @@
+{
+  "name": "@lydie/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "bun scripts/generate.ts",
+    "generate:check": "bun scripts/generate.ts --check",
+    "test": "bun test ./src && bun scripts/generate.ts --check",
+    "typecheck": "bun check"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}

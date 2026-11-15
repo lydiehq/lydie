@@ -5,49 +5,13 @@
   --editor-content-link-color: var(--color-gray-950);
   --editor-content-code-color: var(--color-gray-950);
   --editor-content-marker-color: color-mix(in oklab, var(--color-gray-700) 25%, transparent);
-  --editor-content-th-borders: var(--color-gray-300);
-  --editor-content-td-borders: var(--color-gray-200);
+  --editor-content-td-borders: color-mix(in oklab, var(--color-gray-950) 10%, transparent);
+  --editor-content-th-bg: color-mix(in oklab, var(--color-gray-950) 3%, transparent);
   --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
   --editor-content-blockquote-border-color: var(--color-gray-300);
 
-  &:where(.dark, .dark *) {
-    --editor-content-color: var(--color-gray-300);
-    --editor-content-heading-color: var(--color-white);
-    --editor-content-strong-color: var(--color-white);
-    --editor-content-link-color: var(--color-white);
-    --editor-content-code-color: var(--color-white);
-    --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
-    --editor-content-th-borders: var(--color-gray-600);
-    --editor-content-td-borders: var(--color-gray-700);
-    --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
-    --editor-content-blockquote-border-color: var(--color-gray-600);
-  }
-
-  &:where(.dark, .dark *) :is(h1, h2, h3, h4)::before {
-    color: var(--color-gray-500);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &:where(.system, .system *) {
-      --editor-content-color: var(--color-gray-300);
-      --editor-content-heading-color: var(--color-white);
-      --editor-content-strong-color: var(--color-white);
-      --editor-content-link-color: var(--color-white);
-      --editor-content-code-color: var(--color-white);
-      --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
-      --editor-content-th-borders: var(--color-gray-600);
-      --editor-content-td-borders: var(--color-gray-700);
-      --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
-      --editor-content-blockquote-border-color: var(--color-gray-600);
-    }
-
-    &:where(.system, .system *) :is(h1, h2, h3, h4)::before {
-      color: var(--color-gray-500);
-    }
-  }
-
   color: var(--editor-content-color);
-  font-size: 15px;
+  font-size: var(--editor-font-size, 15px);
   line-height: 1.6;
 
   &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]) {
@@ -57,10 +21,18 @@
     padding-inline: var(--editor-block-padding-x, 1rem);
   }
 
+  /* A page toggling full width glides (the host marks an ancestor while it does, see
+     PAGE_WIDTH_TRANSITION in plugin-api). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-width-transition] &[data-doc-content] > * {
+      transition:
+        max-width 300ms ease-in-out,
+        padding 300ms ease-in-out;
+    }
+  }
+
   &[data-doc-content] > :is(ul:not([data-type="taskList"]), ol) {
-    padding-inline-start: calc(
-      var(--editor-block-padding-x, 1rem) + var(--spacing) * 6
-    );
+    padding-inline-start: calc(var(--editor-block-padding-x, 1rem) + var(--spacing) * 6);
   }
 
   &[data-doc-content] > :is(.doc-block-wide, [data-doc-block-wide]) {
@@ -76,13 +48,17 @@
     padding-inline: 0;
   }
 
-  &[data-doc-content] > :has(> table:not([data-editor-widget-table])) {
+  /* A table spans the editor's whole width like a collection's views: it starts at the text column,
+     scrolls sideways across the full width and bleeds left into the margin when scrolled. The
+     `:not()`s outrank the text-column rule above. */
+  &[data-doc-content]
+    > :not(.doc-block-wide):not([data-doc-block-wide]):has(
+      > table:not([data-editor-widget-table])
+    ) {
     width: 100%;
     max-width: none;
     margin-inline: 0;
-    padding-inline: 0;
     overflow-x: auto;
-    margin-left: calc(-1 * var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)));
     padding-left: var(--editor-content-line-start, var(--editor-block-padding-x, 1rem));
     padding-right: var(--editor-block-padding-x, 1rem);
   }
@@ -91,7 +67,15 @@
     > :has(> table:not([data-editor-widget-table]))
     > table:not([data-editor-widget-table]) {
     width: max-content;
-    min-width: min(100%, var(--editor-block-max-width, 680px));
+    /* At least the text column (full width: no minimum). Important: TipTap writes an inline
+       `min-width` from its columns. */
+    min-width: var(
+      --editor-table-min-width,
+      min(
+        100%,
+        calc(var(--editor-block-max-width, 680px) - 2 * var(--editor-block-padding-x, 1rem))
+      )
+    ) !important;
   }
 
   > * + * {
@@ -107,10 +91,12 @@
   blockquote p,
   ul li p,
   ol li p,
-  table:not([data-editor-widget-table]) td p,
-  table:not([data-editor-widget-table]) th p,
   ul[data-type="taskList"] li > div p {
     line-height: 1.6;
+  }
+
+  table:not([data-editor-widget-table]) :is(td, th) p {
+    line-height: inherit;
   }
 
   h1 {
@@ -119,7 +105,7 @@
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
-    color: #0d0d0d;
+    color: var(--editor-content-heading-color);
   }
 
   h2 {
@@ -128,13 +114,13 @@
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
-    color: #0d0d0d;
+    color: var(--editor-content-heading-color);
   }
 
   h3 {
     font-size: var(--text-lg);
     line-height: var(--text-lg--line-height);
-    color: #0d0d0d;
+    color: var(--editor-content-heading-color);
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
@@ -143,7 +129,7 @@
   h4 {
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
-    color: #0d0d0d;
+    color: var(--editor-content-heading-color);
     font-weight: var(--font-weight-medium);
     margin-top: calc(var(--spacing) * 4);
     font-family: var(--font-heading);
@@ -168,7 +154,8 @@
     transition: opacity 0.1s ease-in;
   }
 
-  :is(h1, h2, h3, h4):hover::before {
+  /* While editing, LydieEditor's drag handle shows the level instead (`data-block-labels`). */
+  &:not([data-block-labels][contenteditable="true"]) :is(h1, h2, h3, h4):hover::before {
     opacity: 1;
   }
 
@@ -202,6 +189,25 @@
     color: var(--editor-content-marker-color);
   }
 
+  /* v1 never styled ordered lists, so Tailwind's preflight hid their numbers. Mirrors ul. */
+  ol {
+    padding-left: calc(var(--spacing) * 6);
+    list-style-type: decimal;
+  }
+
+  ol li {
+    padding-left: calc(var(--spacing) * 2);
+  }
+
+  ol li + li {
+    margin-top: calc(var(--spacing) * 2);
+  }
+
+  ol li::marker {
+    color: var(--editor-content-marker-color);
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Task list styles */
   ul[data-type="taskList"] {
     list-style: none;
@@ -219,85 +225,55 @@
     display: none;
   }
 
-  ul[data-type="taskList"] li label {
+  /* The editor's label around its checkbox, or a read-only preview's mark (MiniDoc). */
+  ul[data-type="taskList"] li > :is(label, [data-task-check]) {
+    position: relative;
     flex-shrink: 0;
     height: 1lh;
     display: flex;
-    -webkit-box-align: center;
     align-items: center;
   }
 
-  ul[data-type="taskList"] li label input[type="checkbox"] {
-    /* Base styles */
-    appearance: none;
-    -webkit-appearance: none;
-    box-sizing: border-box;
-    user-select: none;
-    cursor: pointer;
+  /* The same box as @lydie/ui's CheckboxMark; the editor's input lies on it, invisible, so it
+     still takes the click, the keyboard and the screen reader. */
+  ul[data-type="taskList"] li > label > input[type="checkbox"] {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: calc(var(--spacing) * 3.5);
+    height: calc(var(--spacing) * 3.5);
     margin: 0;
+    translate: 0 -50%;
+    opacity: 0;
+    cursor: pointer;
+  }
 
-    /* Size and shape */
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
+  [data-checkbox-mark] {
+    display: flex;
     flex-shrink: 0;
-
-    /* Unchecked state */
-    background-color: transparent;
-    border: 1px solid var(--color-gray-400);
-    opacity: 0.9;
-
-    /* Transitions */
-    transition:
-      background-color 80ms ease-out,
-      border-color 80ms ease-out;
-
-    /* Checkmark SVG */
-    background-image: url("data:image/svg+xml;utf8,%3Csvg%20width=%2210%22%20height=%229%22%20viewBox=%220%200%2010%208%22%20xmlns=%22http://www.w3.org/2000/svg%22%20fill=%22white%22%3E%3Cpath%20d=%22M3.46975%205.70757L1.88358%204.1225C1.65832%203.8974%201.29423%203.8974%201.06897%204.1225C0.843675%204.34765%200.843675%204.7116%201.06897%204.93674L3.0648%206.93117C3.29006%207.15628%203.65414%207.15628%203.8794%206.93117L8.93103%201.88306C9.15633%201.65792%209.15633%201.29397%208.93103%201.06883C8.70578%200.843736%208.34172%200.843724%208.11646%201.06879C8.11645%201.0688%208.11643%201.06882%208.11642%201.06883L3.46975%205.70757Z%22%20stroke-width=%220.2%22%20/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: 1px 2px;
-    background-size: 10px 9px;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: calc(var(--spacing) * 3.5);
+    height: calc(var(--spacing) * 3.5);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-surface);
+    outline: 0 solid var(--color-blue-600);
+    outline-offset: 2px;
+    transition: all 200ms;
   }
 
-  ul[data-type="taskList"] li label input[type="checkbox"]:checked {
-    background-color: var(--color-gray-950);
-    border-color: var(--color-gray-950);
+  input[type="checkbox"]:checked + [data-checkbox-mark] {
+    background-color: var(--color-gray-700);
   }
 
-  ul[data-type="taskList"] li label input[type="checkbox"]:hover:not(:checked) {
-    border-color: var(--color-gray-500);
+  input[type="checkbox"]:checked + [data-checkbox-mark] .checkbox-checkmark {
+    stroke-dashoffset: 44px;
   }
 
-  &:where(.dark, .dark *) {
-    ul[data-type="taskList"] li label input[type="checkbox"] {
-      border-color: var(--color-gray-600);
-    }
-
-    ul[data-type="taskList"] li label input[type="checkbox"]:checked {
-      background-color: var(--color-gray-300);
-      border-color: var(--color-gray-300);
-    }
-
-    ul[data-type="taskList"] li label input[type="checkbox"]:hover:not(:checked) {
-      border-color: var(--color-gray-500);
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &:where(.system, .system *) {
-      ul[data-type="taskList"] li label input[type="checkbox"] {
-        border-color: var(--color-gray-600);
-      }
-
-      ul[data-type="taskList"] li label input[type="checkbox"]:checked {
-        background-color: var(--color-gray-300);
-        border-color: var(--color-gray-300);
-      }
-
-      ul[data-type="taskList"] li label input[type="checkbox"]:hover:not(:checked) {
-        border-color: var(--color-gray-500);
-      }
-    }
+  input[type="checkbox"]:focus-visible + [data-checkbox-mark] {
+    outline-width: 2px;
   }
 
   ul[data-type="taskList"] li > div {
@@ -393,75 +369,71 @@
     line-height: 2;
   }
 
+  /*
+   * Tables: a rounded card with hairline rules and a tinted header row (Notion, Tiptap's Table
+   * Node). `separate` borders, since collapsed ones ignore border-radius: the table draws the outer
+   * edge and each cell only its right and bottom rule, so no line is doubled.
+   */
   table:not([data-editor-widget-table]) {
+    --table-radius: 10px;
     width: 100%;
     table-layout: auto;
-    margin-top: 2em;
-    margin-bottom: 2em;
+    margin-block: 1.5em;
     font-size: 0.875rem;
-    line-height: 1.4;
-    border-collapse: collapse;
-  }
-
-  table:not([data-editor-widget-table]) thead {
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-color: var(--editor-content-th-borders);
-  }
-
-  table:not([data-editor-widget-table]) thead th {
-    color: #0d0d0d;
-    font-weight: 600;
-    vertical-align: bottom;
-    padding-inline-end: 0.6em;
-    padding-bottom: 0.8em;
-    padding-inline-start: 0.6em;
-  }
-
-  table:not([data-editor-widget-table]) thead th:first-child {
-    padding-inline-start: 0;
-  }
-
-  table:not([data-editor-widget-table]) thead th:last-child {
-    padding-inline-end: 0;
-  }
-
-  table:not([data-editor-widget-table]) tbody tr {
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-bottom-color: var(--editor-content-td-borders);
-  }
-
-  table:not([data-editor-widget-table]) tbody tr:last-child {
-    border-bottom-width: 0;
-  }
-
-  table:not([data-editor-widget-table]) tbody td,
-  table:not([data-editor-widget-table]) tfoot td {
-    padding-top: 0.8em;
-    padding-inline-end: 0.6em;
-    padding-bottom: 0.8em;
-    padding-inline-start: 0.6em;
-  }
-
-  table:not([data-editor-widget-table]) tbody td:first-child,
-  table:not([data-editor-widget-table]) tfoot td:first-child {
-    padding-inline-start: 0;
-  }
-
-  table:not([data-editor-widget-table]) tbody td:last-child,
-  table:not([data-editor-widget-table]) tfoot td:last-child {
-    padding-inline-end: 0;
-  }
-
-  table:not([data-editor-widget-table]) th,
-  table:not([data-editor-widget-table]) td {
-    text-align: start;
+    line-height: 1.5;
+    border-collapse: separate;
+    border-spacing: 0;
     border: 1px solid var(--editor-content-td-borders);
+    border-radius: var(--table-radius);
   }
 
-  table:not([data-editor-widget-table]) thead th {
-    border-color: var(--editor-content-th-borders);
+  table:not([data-editor-widget-table]) :is(th, td) {
+    min-width: 6rem;
+    padding: 0.5rem 0.75rem;
+    text-align: start;
+    vertical-align: top;
+    border-inline-end: 1px solid var(--editor-content-td-borders);
+    border-bottom: 1px solid var(--editor-content-td-borders);
+  }
+
+  table:not([data-editor-widget-table]) :is(th, td):last-child {
+    border-inline-end: 0;
+  }
+
+  table:not([data-editor-widget-table]) tr:last-child > :is(th, td) {
+    border-bottom: 0;
+  }
+
+  table:not([data-editor-widget-table]) th {
+    color: var(--editor-content-heading-color);
+    font-weight: var(--font-weight-medium);
+    background-color: var(--editor-content-th-bg);
+  }
+
+  /* The header row's background follows the rounded top; the corners are a pixel tighter than the
+     table's so they sit inside its border. */
+  table:not([data-editor-widget-table]) tr:first-child > :first-child {
+    border-start-start-radius: calc(var(--table-radius) - 1px);
+  }
+
+  table:not([data-editor-widget-table]) tr:first-child > :last-child {
+    border-start-end-radius: calc(var(--table-radius) - 1px);
+  }
+
+  table:not([data-editor-widget-table]) tr:last-child > :first-child {
+    border-end-start-radius: calc(var(--table-radius) - 1px);
+  }
+
+  table:not([data-editor-widget-table]) tr:last-child > :last-child {
+    border-end-end-radius: calc(var(--table-radius) - 1px);
+  }
+
+  table:not([data-editor-widget-table]) :is(th, td) > * + * {
+    margin-top: calc(var(--spacing) * 2);
+  }
+
+  table:not([data-editor-widget-table]) :is(th, td) p {
+    font-size: inherit;
   }
 
   table:not([data-editor-widget-table]) td code {
@@ -512,8 +484,7 @@
 }
 
 /* Collaboration caret styles - applies to all editor content */
-.editor-content .collaboration-carets__caret,
-.editor-content-sm .collaboration-carets__caret {
+.editor-content .collaboration-carets__caret {
   border-left: 1px solid currentColor;
   border-right: 1px solid currentColor;
   margin-left: -1px;
@@ -524,8 +495,7 @@
 }
 
 /* Render the username above the caret */
-.editor-content .collaboration-carets__label,
-.editor-content-sm .collaboration-carets__label {
+.editor-content .collaboration-carets__label {
   border-radius: 3px 3px 3px 0;
   color: #0d0d0d;
   font-size: 12px;
@@ -538,27 +508,12 @@
   top: -1.4em;
   user-select: none;
   white-space: nowrap;
-}
-
-/* Dark mode support for collaboration caret labels */
-.editor-content:where(.dark, .dark *) .collaboration-carets__label,
-.editor-content-sm:where(.dark, .dark *) .collaboration-carets__label {
-  color: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .editor-content:where(.system, .system *) .collaboration-carets__label,
-  .editor-content-sm:where(.system, .system *) .collaboration-carets__label {
-    color: #ffffff;
-  }
 }
 
 /* Reset class to negate all editor-content styles - similar to Tailwind's no-prose */
 .editor-content-reset,
 .editor-content .editor-content-reset,
-.editor-content-sm .editor-content-reset,
-.editor-content [data-doc-widget],
-.editor-content-sm [data-doc-widget] {
+.editor-content [data-doc-widget] {
   /* Reset base styles */
   color: inherit;
   font-size: inherit;
@@ -663,725 +618,6 @@
     margin-right: 0;
   }
 
-  strong {
-    color: inherit;
-    font-weight: inherit;
-  }
-
-  /* Reset code styles */
-  code {
-    font-variant-ligatures: inherit;
-    font-family: inherit;
-    font-weight: inherit;
-    color: inherit;
-  }
-
-  :where(h2, h3, h4) code {
-    font-weight: inherit;
-  }
-
-  code::before,
-  code::after {
-    display: none;
-    content: none;
-  }
-
-  /* Reset pre styles */
-  pre {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  pre code * + * {
-    margin-top: 0;
-  }
-
-  pre code::before,
-  pre code::after {
-    content: none;
-  }
-
-  pre code {
-    font-variant-ligatures: inherit;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: inherit;
-  }
-
-  /* Reset table styles */
-  table {
-    width: auto;
-    table-layout: auto;
-    margin-top: 0;
-    margin-bottom: 0;
-    font-size: inherit;
-    line-height: inherit;
-  }
-
-  thead {
-    border-bottom-width: 0;
-    border-bottom-color: transparent;
-  }
-
-  thead th {
-    color: inherit;
-    font-weight: inherit;
-    vertical-align: baseline;
-    padding: 0;
-  }
-
-  tbody tr {
-    border-bottom-width: 0;
-    border-bottom-color: transparent;
-  }
-
-  tbody td,
-  tfoot td {
-    padding: 0;
-  }
-
-  th,
-  td {
-    text-align: inherit;
-  }
-
-  td code {
-    font-size: inherit;
-  }
-
-  /* Reset hr styles */
-  hr {
-    border-color: transparent;
-    margin-block: 0;
-  }
-
-  hr + h2 {
-    margin-top: 0;
-  }
-
-  /* Reset blockquote styles */
-  blockquote {
-    font-style: normal;
-    border-inline-start-width: 0;
-    border-inline-start-color: transparent;
-    padding-inline-start: 0;
-    margin: 0;
-  }
-
-  blockquote p:first-of-type::before {
-    content: none;
-  }
-
-  blockquote p:last-of-type::after {
-    content: none;
-  }
-
-  /* Reset figure styles */
-  figure {
-    margin: 0;
-  }
-
-  figure figcaption {
-    margin-top: 0;
-    text-align: inherit;
-    font-size: inherit;
-    line-height: inherit;
-    font-style: normal;
-    color: inherit;
-  }
-
-  /* Reset first/last child margins */
-  :first-child {
-    margin-top: 0;
-  }
-
-  :last-child {
-    margin-bottom: 0;
-  }
-}
-
-.editor-content-sm {
-  --editor-content-color: var(--color-gray-700);
-  --editor-content-heading-color: var(--color-gray-950);
-  --editor-content-strong-color: var(--color-gray-950);
-  --editor-content-link-color: var(--color-gray-950);
-  --editor-content-code-color: var(--color-gray-950);
-  --editor-content-marker-color: color-mix(in oklab, var(--color-gray-700) 25%, transparent);
-  --editor-content-th-borders: var(--color-gray-300);
-  --editor-content-td-borders: var(--color-gray-200);
-  --editor-content-hr-color: color-mix(in oklab, var(--color-gray-950) 5%, transparent);
-  --editor-content-blockquote-border-color: var(--color-gray-300);
-
-  & table:not([data-editor-widget-table]) {
-    border-collapse: collapse;
-  }
-
-  & table:not([data-editor-widget-table]) thead {
-    border-bottom-style: solid;
-  }
-
-  & table:not([data-editor-widget-table]) tbody tr {
-    border-bottom-style: solid;
-  }
-
-  &:where(.dark, .dark *) {
-    --editor-content-color: var(--color-gray-300);
-    --editor-content-heading-color: var(--color-white);
-    --editor-content-strong-color: var(--color-white);
-    --editor-content-link-color: var(--color-white);
-    --editor-content-code-color: var(--color-white);
-    --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
-    --editor-content-th-borders: var(--color-gray-600);
-    --editor-content-td-borders: var(--color-gray-700);
-    --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
-    --editor-content-blockquote-border-color: var(--color-gray-600);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &:where(.system, .system *) {
-      --editor-content-color: var(--color-gray-300);
-      --editor-content-heading-color: var(--color-white);
-      --editor-content-strong-color: var(--color-white);
-      --editor-content-link-color: var(--color-white);
-      --editor-content-code-color: var(--color-white);
-      --editor-content-marker-color: color-mix(in oklab, var(--color-gray-300) 35%, transparent);
-      --editor-content-th-borders: var(--color-gray-600);
-      --editor-content-td-borders: var(--color-gray-700);
-      --editor-content-hr-color: color-mix(in oklab, var(--color-white) 10%, transparent);
-      --editor-content-blockquote-border-color: var(--color-gray-600);
-    }
-  }
-
-  color: var(--editor-content-color);
-  font-size: 0.8125rem;
-  line-height: 1.6;
-
-  &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]) {
-    width: 100%;
-    max-width: var(--editor-block-max-width, 680px);
-    margin-inline: auto;
-    padding-inline: var(--editor-block-padding-x, 1rem);
-  }
-
-  &[data-doc-content] > :is(ul:not([data-type="taskList"]), ol) {
-    padding-inline-start: calc(
-      var(--editor-block-padding-x, 1rem) + var(--spacing) * 5
-    );
-  }
-
-  &[data-doc-content] > :is(.doc-block-wide, [data-doc-block-wide]) {
-    max-width: none;
-    margin-inline: 0;
-    padding-inline: 0;
-  }
-
-  &[data-doc-content] > .react-renderer:has(> [data-doc-block-wide]) {
-    width: 100%;
-    max-width: none;
-    margin-inline: 0;
-    padding-inline: 0;
-  }
-
-  &[data-doc-content] > :has(> table:not([data-editor-widget-table])) {
-    width: 100%;
-    max-width: none;
-    margin-inline: 0;
-    padding-inline: 0;
-    overflow-x: auto;
-    margin-left: calc(-1 * var(--editor-content-line-start, var(--editor-block-padding-x, 1rem)));
-    padding-left: var(--editor-content-line-start, var(--editor-block-padding-x, 1rem));
-    padding-right: var(--editor-block-padding-x, 1rem);
-  }
-
-  &[data-doc-content]
-    > :has(> table:not([data-editor-widget-table]))
-    > table:not([data-editor-widget-table]) {
-    width: max-content;
-    min-width: min(100%, var(--editor-block-max-width, 680px));
-  }
-
-  > * + * {
-    margin-top: calc(var(--spacing) * 3);
-  }
-
-  h1 {
-    font-size: var(--text-lg);
-    line-height: 1;
-    font-weight: var(--font-weight-medium);
-    margin-top: calc(var(--spacing) * 3);
-    font-family: var(--font-heading);
-    color: #0d0d0d;
-  }
-
-  h2 {
-    font-size: var(--text-base);
-    line-height: 1;
-    font-weight: var(--font-weight-medium);
-    margin-top: calc(var(--spacing) * 3);
-    font-family: var(--font-heading);
-    color: #0d0d0d;
-  }
-
-  h3 {
-    font-size: var(--text-sm);
-    line-height: 1;
-    color: #0d0d0d;
-    font-weight: var(--font-weight-medium);
-    margin-top: calc(var(--spacing) * 3);
-    font-family: var(--font-heading);
-  }
-
-  h4 {
-    font-size: var(--text-xs);
-    line-height: 1;
-    color: #0d0d0d;
-    font-weight: var(--font-weight-medium);
-    margin-top: calc(var(--spacing) * 3);
-    font-family: var(--font-heading);
-  }
-
-  :is(h1, h2, h3, h4) {
-    scroll-margin-top: calc(var(--spacing) * 24);
-  }
-
-  ul {
-    padding-left: calc(var(--spacing) * 5);
-    list-style-type: disc;
-  }
-
-  ul li {
-    padding-left: calc(var(--spacing) * 2);
-  }
-
-  ul li + li {
-    margin-top: calc(var(--spacing) * 1.5);
-  }
-
-  ul li::marker {
-    color: var(--editor-content-marker-color);
-  }
-
-  /* Task list styles */
-  ul[data-type="taskList"] {
-    list-style: none;
-    padding-left: 0;
-  }
-
-  ul[data-type="taskList"] li {
-    display: flex;
-    align-items: flex-start;
-    padding-left: 0;
-    margin-top: calc(var(--spacing) * 1.5);
-  }
-
-  ul[data-type="taskList"] li::marker {
-    display: none;
-  }
-
-  ul[data-type="taskList"] li label {
-    cursor: default;
-    flex-shrink: 0;
-  }
-
-  ul[data-type="taskList"] li label input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    box-sizing: border-box;
-    user-select: none;
-    cursor: default;
-    margin: 0;
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    background-color: transparent;
-    border: 1px solid var(--color-gray-200);
-    opacity: 0.9;
-    transition:
-      background-color 80ms ease-out,
-      border-color 80ms ease-out;
-    background-image: url("data:image/svg+xml;utf8,%3Csvg%20width=%2210%22%20height=%229%22%20viewBox=%220%200%2010%208%22%20xmlns=%22http://www.w3.org/2000/svg%22%20fill=%22white%22%3E%3Cpath%20d=%22M3.46975%205.70757L1.88358%204.1225C1.65832%203.8974%201.29423%203.8974%201.06897%204.1225C0.843675%204.34765%200.843675%204.7116%201.06897%204.93674L3.0648%206.93117C3.29006%207.15628%203.65414%207.15628%203.8794%206.93117L8.93103%201.88306C9.15633%201.65792%209.15633%201.29397%208.93103%201.06883C8.70578%200.843736%208.34172%200.843724%208.11646%201.06879C8.11645%201.0688%208.11643%201.06882%208.11642%201.06883L3.46975%205.70757Z%22%20stroke-width=%220.2%22%20/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: 1px 2px;
-    background-size: 10px 9px;
-  }
-
-  ul[data-type="taskList"] li label input[type="checkbox"]:checked {
-    background-color: var(--color-gray-950);
-    border-color: var(--color-gray-950);
-  }
-
-  ul[data-type="taskList"] li label input[type="checkbox"]:hover:not(:checked) {
-    border-color: var(--color-gray-500);
-  }
-
-  &:where(.dark, .dark *) {
-    ul[data-type="taskList"] li label input[type="checkbox"] {
-      border-color: var(--color-gray-600);
-    }
-
-    ul[data-type="taskList"] li label input[type="checkbox"]:checked {
-      background-color: var(--color-gray-300);
-      border-color: var(--color-gray-300);
-    }
-
-    ul[data-type="taskList"] li label input[type="checkbox"]:hover:not(:checked) {
-      border-color: var(--color-gray-500);
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    &:where(.system, .system *) {
-      ul[data-type="taskList"] li label input[type="checkbox"] {
-        border-color: var(--color-gray-600);
-      }
-
-      ul[data-type="taskList"] li label input[type="checkbox"]:checked {
-        background-color: var(--color-gray-300);
-        border-color: var(--color-gray-300);
-      }
-
-      ul[data-type="taskList"] li label input[type="checkbox"]:hover:not(:checked) {
-        border-color: var(--color-gray-500);
-      }
-    }
-  }
-
-  ul[data-type="taskList"] li > div {
-    flex: 1;
-    min-width: 0;
-  }
-
-  ul[data-type="taskList"] li > div p {
-    margin-top: 0;
-  }
-
-  a:not(:where(:is(h2, h3, h4) *)) {
-    color: var(--editor-content-link-color);
-    text-underline-offset: 0.2em;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    & code {
-      font-weight: var(--font-weight-medium);
-    }
-  }
-
-  a:hover {
-    text-decoration-thickness: 2px;
-  }
-
-  strong {
-    color: var(--editor-content-strong-color);
-    font-weight: var(--font-weight-medium);
-  }
-
-  code {
-    font-variant-ligatures: none;
-    font-family: var(--font-mono);
-    font-weight: var(--font-weight-medium);
-    color: var(--editor-content-code-color);
-  }
-
-  /* Inline code styling - exclude code blocks */
-  :not(pre) > code {
-    background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
-    padding: 0.15em 0.4em;
-    border-radius: 4px;
-    font-size: 0.875em;
-  }
-
-  :where(h2, h3, h4) code {
-    font-weight: var(--font-weight-medium);
-  }
-
-  :not(pre) > code::before,
-  :not(pre) > code::after {
-    display: none;
-    content: none;
-  }
-
-  pre {
-    margin-top: calc(var(--spacing) * 3);
-    margin-bottom: calc(var(--spacing) * 6);
-  }
-
-  pre code * + * {
-    margin-top: 0;
-  }
-
-  pre code::before,
-  pre code::after {
-    content: none;
-  }
-
-  table:not([data-editor-widget-table]) {
-    width: 100%;
-    table-layout: auto;
-    margin-top: 1.5em;
-    margin-bottom: 1.5em;
-    font-size: var(--text-xs);
-    line-height: 1.4;
-  }
-
-  table:not([data-editor-widget-table]) thead {
-    border-bottom-width: 1px;
-    border-bottom-color: var(--editor-content-th-borders);
-  }
-
-  table:not([data-editor-widget-table]) thead th {
-    color: #0d0d0d;
-    font-weight: 600;
-    vertical-align: bottom;
-    padding-inline-end: 0.5em;
-    padding-bottom: 0.6em;
-    padding-inline-start: 0.5em;
-  }
-
-  table:not([data-editor-widget-table]) thead th:first-child {
-    padding-inline-start: 0;
-  }
-
-  table:not([data-editor-widget-table]) thead th:last-child {
-    padding-inline-end: 0;
-  }
-
-  table:not([data-editor-widget-table]) tbody tr {
-    border-bottom-width: 1px;
-    border-bottom-color: var(--editor-content-td-borders);
-  }
-
-  table:not([data-editor-widget-table]) tbody tr:last-child {
-    border-bottom-width: 0;
-  }
-
-  table:not([data-editor-widget-table]) tbody td,
-  table:not([data-editor-widget-table]) tfoot td {
-    padding-top: 0.6em;
-    padding-inline-end: 0.5em;
-    padding-bottom: 0.6em;
-    padding-inline-start: 0.5em;
-  }
-
-  table:not([data-editor-widget-table]) tbody td:first-child,
-  table:not([data-editor-widget-table]) tfoot td:first-child {
-    padding-inline-start: 0;
-  }
-
-  table:not([data-editor-widget-table]) tbody td:last-child,
-  table:not([data-editor-widget-table]) tfoot td:last-child {
-    padding-inline-end: 0;
-  }
-
-  table:not([data-editor-widget-table]) th,
-  table:not([data-editor-widget-table]) td {
-    text-align: start;
-    border: 1px solid var(--editor-content-td-borders);
-  }
-
-  table:not([data-editor-widget-table]) thead th {
-    border-color: var(--editor-content-th-borders);
-  }
-
-  table:not([data-editor-widget-table]) td code {
-    font-size: 0.75rem;
-  }
-
-  hr {
-    border-color: var(--editor-content-hr-color);
-    margin-block: calc(var(--spacing) * 4);
-    & + h2 {
-      margin-top: calc(var(--spacing) * 4);
-    }
-  }
-
-  blockquote {
-    font-style: italic;
-    border-inline-start-width: 0.25rem;
-    border-inline-start-color: var(--editor-content-blockquote-border-color);
-    padding-inline-start: calc(var(--spacing) * 3);
-  }
-
-  blockquote p:first-of-type::before {
-    content: open-quote;
-  }
-
-  blockquote p:last-of-type::after {
-    content: close-quote;
-  }
-
-  figure {
-    figcaption {
-      margin-top: calc(var(--spacing) * 2);
-      text-align: center;
-      font-size: var(--text-xs);
-      line-height: var(--text-xs--line-height);
-      font-style: italic;
-      color: color-mix(in oklab, var(--editor-content-color) 75%, transparent);
-    }
-  }
-
-  :first-child {
-    margin-top: 0;
-  }
-
-  :last-child {
-    margin-bottom: 0;
-  }
-}
-
-/* Collaboration caret styles - applies to all editor content */
-.editor-content .collaboration-carets__caret,
-.editor-content-sm .collaboration-carets__caret {
-  border-left: 1px solid currentColor;
-  border-right: 1px solid currentColor;
-  margin-left: -1px;
-  margin-right: -1px;
-  pointer-events: none;
-  position: relative;
-  word-break: normal;
-}
-
-/* Render the username above the caret */
-.editor-content .collaboration-carets__label,
-.editor-content-sm .collaboration-carets__label {
-  border-radius: 3px 3px 3px 0;
-  color: #0d0d0d;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  left: -1px;
-  line-height: normal;
-  padding: 0.1rem 0.3rem;
-  position: absolute;
-  top: -1.4em;
-  user-select: none;
-  white-space: nowrap;
-}
-
-/* Dark mode support for collaboration caret labels */
-.editor-content:where(.dark, .dark *) .collaboration-carets__label,
-.editor-content-sm:where(.dark, .dark *) .collaboration-carets__label {
-  color: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .editor-content:where(.system, .system *) .collaboration-carets__label,
-  .editor-content-sm:where(.system, .system *) .collaboration-carets__label {
-    color: #ffffff;
-  }
-}
-
-.editor-content-reset,
-.editor-content .editor-content-reset,
-.editor-content-sm .editor-content-reset,
-.editor-content [data-doc-widget],
-.editor-content-sm [data-doc-widget] {
-  /* Reset base styles */
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
-
-  /* Reset the * + * margin-top rule */
-  * + * {
-    margin-top: 0;
-  }
-
-  /* Reset paragraph styles */
-  p {
-    font-size: inherit;
-    line-height: inherit;
-    margin: 0;
-  }
-
-  /* Reset heading styles */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-size: inherit;
-    line-height: inherit;
-    font-weight: inherit;
-    margin: 0;
-    font-family: inherit;
-    color: inherit;
-    scroll-margin-top: 0;
-  }
-
-  /* Reset list styles */
-  ul,
-  ol {
-    padding-left: 0;
-    list-style-type: none;
-    margin: 0;
-  }
-
-  ul li,
-  ol li {
-    padding-left: 0;
-    margin-top: 0;
-  }
-
-  ul li::marker,
-  ol li::marker {
-    color: inherit;
-  }
-
-  ul[data-type="taskList"] {
-    list-style: none;
-    padding-left: 0;
-  }
-
-  ul[data-type="taskList"] li {
-    position: static;
-    margin-top: 0;
-    padding-left: 0;
-  }
-
-  ul[data-type="taskList"] li::marker {
-    display: none;
-  }
-
-  ul[data-type="taskList"] li label {
-    position: static;
-    left: auto;
-    height: auto;
-    display: block;
-    align-items: normal;
-  }
-
-  ul[data-type="taskList"] li > div {
-    flex: none;
-    min-width: auto;
-    margin-top: 0;
-  }
-
-  ul[data-type="taskList"] li > div p {
-    margin-top: 0;
-  }
-
-  /* Reset link styles */
-  a {
-    color: inherit;
-    text-underline-offset: 0;
-    text-decoration: none;
-    text-decoration-thickness: 0;
-  }
-
-  a:hover {
-    text-decoration-thickness: 0;
-  }
-
-  a::before {
-    content: none;
-    display: none;
-    width: 0;
-    height: 0;
-    margin-right: 0;
-  }
-
-  /* Reset strong styles */
   strong {
     color: inherit;
     font-weight: inherit;
@@ -1531,69 +767,543 @@ active. */
   box-decoration-break: clone;
 }
 
-/* Placeholder styles for template fields */
-.editor-content .placeholder,
-.editor-content-sm .placeholder {
-  display: inline;
-  border-radius: 3px;
-  padding: 0.1em 0.2em;
-}
-
-/* The placeholder label shown when empty */
-.editor-content .placeholder .placeholder-label,
-.editor-content-sm .placeholder .placeholder-label {
+/*
+ * Empty-node placeholder from TipTap's Placeholder extension (v1 kept this in tailwind.css). On a
+ * heading it takes over the ::before that otherwise holds the hover level label, so it undoes that
+ * label's positioning, font and opacity.
+ */
+.ProseMirror :is(p, h1, h2, h3, h4, h5, h6).is-empty[data-placeholder]::before {
+  position: static;
+  transform: none;
+  font: inherit;
+  opacity: 1;
   color: var(--color-gray-400);
-  background-color: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
-  font-style: italic;
-  border-radius: 3px;
-  padding: 0.1em 0.3em;
-  border: 1px dashed var(--color-gray-300);
-  user-select: none;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
-.editor-content .placeholder:hover .placeholder-label,
-.editor-content-sm .placeholder:hover .placeholder-label {
-  background-color: color-mix(in oklab, var(--color-gray-300) 50%, transparent);
-  border-color: var(--color-gray-400);
-  cursor: text;
-}
+/*
+ * v2 node types. These have no v1 counterpart; they reuse the v1 tokens so they sit in the same
+ * visual language. Each node renders a `data-type` attribute (see @lydie/editor).
+ */
+.editor-content {
+  --editor-content-muted-color: var(--color-gray-500);
+  --editor-content-subtle-bg: color-mix(in oklab, var(--color-gray-200) 50%, transparent);
+  --editor-content-box-border: color-mix(in oklab, var(--color-gray-950) 8%, transparent);
 
-/* Filled state - when user has typed content */
-.editor-content .placeholder--filled,
-.editor-content-sm .placeholder--filled {
-  display: inline;
-  color: inherit;
-  background-color: transparent;
-  font-style: normal;
-  border: none;
-  padding: 0;
-}
-
-/* Dark mode support for placeholders */
-.editor-content:where(.dark, .dark *) .placeholder .placeholder-label,
-.editor-content-sm:where(.dark, .dark *) .placeholder .placeholder-label {
-  color: var(--color-gray-500);
-  background-color: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
-  border-color: var(--color-gray-600);
-}
-
-.editor-content:where(.dark, .dark *) .placeholder:hover .placeholder-label,
-.editor-content-sm:where(.dark, .dark *) .placeholder:hover .placeholder-label {
-  background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
-  border-color: var(--color-gray-500);
-}
-
-@media (prefers-color-scheme: dark) {
-  .editor-content:where(.system, .system *) .placeholder .placeholder-label,
-  .editor-content-sm:where(.system, .system *) .placeholder .placeholder-label {
-    color: var(--color-gray-500);
-    background-color: color-mix(in oklab, var(--color-gray-700) 50%, transparent);
-    border-color: var(--color-gray-600);
+  mark {
+    background-color: color-mix(in oklab, var(--color-yellow-300) 55%, transparent);
+    color: inherit;
+    border-radius: 2px;
+    padding-inline: 0.1em;
   }
 
-  .editor-content:where(.system, .system *) .placeholder:hover .placeholder-label,
-  .editor-content-sm:where(.system, .system *) .placeholder:hover .placeholder-label {
-    background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
-    border-color: var(--color-gray-500);
+  /* Syntax colours for lowlight tokens (v1 shipped lowlight but no theme). */
+  pre code {
+    .hljs-comment,
+    .hljs-quote {
+      color: var(--color-gray-500);
+      font-style: italic;
+    }
+    .hljs-keyword,
+    .hljs-selector-tag,
+    .hljs-built_in,
+    .hljs-doctag {
+      color: oklch(50% 0.17 300);
+    }
+    .hljs-string,
+    .hljs-regexp,
+    .hljs-addition,
+    .hljs-attribute {
+      color: oklch(50% 0.12 150);
+    }
+    .hljs-number,
+    .hljs-literal,
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-symbol {
+      color: oklch(55% 0.15 50);
+    }
+    .hljs-title,
+    .hljs-section,
+    .hljs-name,
+    .hljs-type {
+      color: oklch(48% 0.15 255);
+    }
+    .hljs-deletion {
+      color: oklch(55% 0.2 25);
+    }
+  }
+
+  [data-type="callout"] {
+    --callout-color: var(--color-blue-500);
+    border-radius: 10px;
+    border: 1px solid color-mix(in oklab, var(--callout-color) 25%, transparent);
+    background-color: color-mix(in oklab, var(--callout-color) 6%, transparent);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+
+    &:is([data-kind="tip"], [data-kind="success"], [data-kind="check"], [data-kind="done"]) {
+      --callout-color: var(--color-green-600);
+    }
+    &:is([data-kind="warning"], [data-kind="caution"], [data-kind="attention"]) {
+      --callout-color: var(--color-amber-500);
+    }
+    &:is([data-kind="danger"], [data-kind="error"], [data-kind="bug"], [data-kind="failure"]) {
+      --callout-color: var(--color-red-500);
+    }
+    &:is([data-kind="quote"], [data-kind="cite"], [data-kind="example"]) {
+      --callout-color: var(--color-gray-500);
+    }
+
+    [data-callout-title] {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--spacing) * 2);
+      font-size: 0.875rem;
+      font-weight: var(--font-weight-medium);
+      color: var(--editor-content-heading-color);
+    }
+
+    [data-callout-title] svg {
+      color: var(--callout-color);
+    }
+
+    [data-callout-content] {
+      margin-top: calc(var(--spacing) * 1);
+    }
+
+    &[data-folded="true"] [data-callout-content] {
+      display: none;
+    }
+  }
+
+  a[data-type="wiki-link"] {
+    color: var(--editor-content-link-color);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+
+    &[data-unresolved="true"] {
+      color: var(--editor-content-muted-color);
+    }
+
+    &:hover {
+      text-decoration-style: solid;
+    }
+  }
+
+  [data-type="embed"] {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    border-radius: 10px;
+    border: 1px solid var(--editor-content-box-border);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+    font-size: 0.875rem;
+    color: var(--editor-content-heading-color);
+  }
+
+  /* An embed that brings its own layout (a collection): no box, the full text column. */
+  [data-type="embed"]:has([data-embed-bare]) {
+    display: block;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  [data-type="math-inline"] {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background-color: var(--editor-content-subtle-bg);
+    border-radius: 4px;
+    padding: 0.1em 0.3em;
+  }
+
+  [data-type="math-block"] {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    text-align: center;
+    background-color: var(--editor-content-subtle-bg);
+    border-radius: 8px;
+    padding: calc(var(--spacing) * 3);
+    white-space: pre-wrap;
+  }
+
+  /* The editor's math view (@lydie/editor's math-view.ts): KaTeX's typeset form, with the LaTeX
+     source shown only while the caret is in it (`data-editing`). */
+  [data-math-view]:not([data-editing]) > [data-math-source] {
+    display: none;
+  }
+
+  [data-math-view] > [data-math-preview] {
+    font-family: var(--font-sans);
+    white-space: normal;
+    cursor: pointer;
+  }
+
+  [data-math-view] > [data-math-preview][data-empty] {
+    color: var(--editor-content-muted-color);
+  }
+
+  [data-type="math-inline"][data-math-view]:not([data-editing]) {
+    background-color: transparent;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  [data-type="math-inline"][data-math-view][data-editing] > [data-math-preview] {
+    display: none;
+  }
+
+  [data-type="math-block"][data-math-view]:not([data-editing]) {
+    background-color: transparent;
+  }
+
+  [data-type="math-block"][data-math-view]:not([data-editing]):hover {
+    background-color: var(--editor-content-subtle-bg);
+  }
+
+  [data-type="math-block"][data-math-view] > [data-math-preview] {
+    font-size: var(--editor-font-size, 15px);
+  }
+
+  [data-type="math-block"][data-math-view] > [data-math-preview] .katex-display {
+    margin: 0;
+  }
+
+  /* Editing a block: the source, and the typeset form under it as a live preview. */
+  [data-type="math-block"][data-math-view][data-editing] > [data-math-preview] {
+    margin-top: calc(var(--spacing) * 3);
+    padding-top: calc(var(--spacing) * 3);
+    border-top: 1px solid var(--editor-content-box-border);
+  }
+
+  [data-type="math-block"][data-math-view][data-editing] > [data-math-preview][data-empty] {
+    display: none;
+  }
+
+  sup[data-type="footnote-reference"] {
+    font-size: 0.7em;
+    color: var(--editor-content-muted-color);
+    font-variant-numeric: tabular-nums;
+    &::before {
+      content: "[" attr(data-label) "]";
+    }
+  }
+
+  [data-type="footnote-definition"] {
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+    font-size: 0.8125rem;
+    color: var(--editor-content-muted-color);
+    &::before {
+      content: attr(data-label) ".";
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  [data-type="directive"] {
+    border-radius: 10px;
+    border: 1px dashed var(--editor-content-box-border);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+
+    [data-directive-label] {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--editor-content-muted-color);
+      margin-bottom: calc(var(--spacing) * 1);
+    }
+  }
+
+  /* Columns (@lydie/editor's columnList / column): flex-grow is each column's share, set by the
+     editor. */
+  [data-type="column-list"] {
+    display: flex;
+    gap: calc(var(--spacing) * 10);
+  }
+
+  [data-type="column"] {
+    flex: 1 1 0;
+    min-width: 0;
+
+    > * + * {
+      margin-top: calc(var(--spacing) * 4);
+    }
+  }
+
+  /* A row stacks when narrow: read-only pages (share pages, embeds) on a narrow screen, the editor
+     when it is narrow itself, a phone or a narrow pane (`data-columns="stacked"`, set by
+     @lydie/editor, which then offers no resize bar and no drop beside a block). */
+  @media (width < 40rem) {
+    &:not(.ProseMirror) [data-type="column-list"] {
+      flex-direction: column;
+      gap: calc(var(--spacing) * 4);
+    }
+
+    &:not(.ProseMirror) [data-type="column"] {
+      flex: none;
+    }
+  }
+
+  &[data-columns="stacked"] {
+    [data-type="column-list"] {
+      flex-direction: column;
+      gap: calc(var(--spacing) * 4);
+    }
+
+    [data-type="column"] {
+      flex: none;
+    }
+  }
+
+  :is([data-type="raw-block"], [data-type="raw-inline"]) {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--editor-content-muted-color);
+    background-color: var(--editor-content-subtle-bg);
+    border: 1px dashed var(--editor-content-box-border);
+  }
+
+  [data-type="raw-block"] {
+    display: block;
+    border-radius: 8px;
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    white-space: pre-wrap;
+
+    textarea {
+      display: block;
+      width: 100%;
+      resize: none;
+      field-sizing: content;
+      background: transparent;
+      outline: none;
+      font: inherit;
+      color: inherit;
+    }
+  }
+
+  [data-type="raw-inline"] {
+    border-radius: 4px;
+    padding: 0 0.3em;
+    /* A long source scrolls (input) or wraps (textarea) inside the text column. */
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: bottom;
+
+    input {
+      max-width: 100%;
+    }
+
+    textarea {
+      display: block;
+      max-width: 100%;
+      resize: none;
+      field-sizing: content;
+      background: transparent;
+      outline: none;
+      font: inherit;
+      color: inherit;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  [data-type="raw-inline"][data-multiline] {
+    padding: calc(var(--spacing) * 1) calc(var(--spacing) * 2);
+    vertical-align: top;
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .ProseMirror-selectednode:is(
+    [data-type="embed"],
+    [data-type="raw-block"],
+    [data-type="raw-inline"],
+    [data-type="wiki-link"],
+    [data-type="footnote-reference"],
+    img,
+    hr
+  ),
+  .ProseMirror-selectednode > :is([data-type="embed"], [data-type="raw-block"]) {
+    outline: 2px solid color-mix(in oklab, var(--color-blue-500) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  /* A collection is selected as a node after it is inserted or dropped; it draws no ring. */
+  .ProseMirror-selectednode[data-type="embed"]:has([data-embed-bare]),
+  .ProseMirror-selectednode > [data-type="embed"]:has([data-embed-bare]) {
+    outline: none;
+  }
+
+  table :is(td, th).selectedCell {
+    background-color: color-mix(in oklab, var(--color-blue-500) 10%, transparent);
+  }
+
+  /* The cell tint shows the selection; no text highlight on top (nor the unfocused one). */
+  table :is(td, th).selectedCell ::selection {
+    background-color: transparent;
+  }
+
+  table :is(td, th).selectedCell .selection {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/*
+ * Table controls (@lydie/editor's TableControls): the "+" bars along a hovered table's right and
+ * bottom edges, and the fallback grip when the host draws none.
+ */
+.lydie-table-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--color-gray-400);
+  background-color: color-mix(in oklab, var(--color-gray-950) 3%, transparent);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease-out;
+  animation: lydie-table-add-in 120ms ease-out 80ms forwards;
+
+  &:hover {
+    color: var(--color-gray-700);
+    background-color: color-mix(in oklab, var(--color-gray-950) 7%, transparent);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+}
+
+@keyframes lydie-table-add-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.lydie-table-grip {
+  border-radius: 5px;
+  background-color: var(--color-elevated);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-gray-950) 12%, transparent);
+  cursor: pointer;
+}
+
+/*
+ * Dragging blocks (@lydie/editor's DragFeedback and drag preview). The drop line and the preview
+ * live outside `.editor-content` (the line in the editor's offset parent, the preview on <body>).
+ */
+.lydie-drop-indicator {
+  position: absolute;
+  z-index: 50;
+  pointer-events: none;
+  border-radius: 9999px;
+  background-color: color-mix(in oklab, var(--color-blue-500) 75%, transparent);
+  transition:
+    top 120ms var(--ease-out-strong),
+    left 120ms var(--ease-out-strong),
+    width 120ms var(--ease-out-strong),
+    opacity 120ms ease-out;
+
+  @starting-style {
+    opacity: 0;
+  }
+
+  /* Inside text it is a caret, which should not trail behind the pointer. */
+  &[data-kind="inline"] {
+    transition: opacity 120ms ease-out;
+  }
+}
+
+/* Beside a block (a column would form there), the line stands upright. */
+.lydie-drop-indicator[data-kind="column"] {
+  transition: opacity 120ms ease-out;
+}
+
+/* The gap between two columns, while the pointer is over it: drag to resize. Focused from the
+   keyboard, the line turns blue, as the app's other splitters do (`ElasticHandle`). */
+.lydie-column-resize {
+  position: absolute;
+  z-index: 5;
+  width: 12px;
+  margin-left: -6px;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 5px;
+    width: 2px;
+    border-radius: 9999px;
+    background-color: var(--color-gray-200);
+    transition: background-color 120ms ease-out;
+  }
+
+  &:hover::after,
+  &[data-active]::after {
+    background-color: color-mix(in oklab, var(--color-blue-500) 75%, transparent);
+  }
+
+  &:focus-visible::after {
+    background-color: var(--color-blue-400);
+  }
+}
+
+.ProseMirror .lydie-drag-source {
+  opacity: 0.35;
+  transition: opacity 150ms ease-out;
+}
+
+/* TipTap's handle (it sets `data-dragging`): the preview stands for the blocks while they move. */
+.drag-handle[data-dragging="true"] {
+  opacity: 0;
+}
+
+.lydie-drag-preview {
+  position: relative;
+  max-height: 240px;
+  overflow: hidden;
+  padding-block: calc(var(--spacing) * 2);
+  border-radius: 10px;
+  background-color: var(--color-elevated);
+  box-shadow: var(--shadow-popover);
+
+  > * {
+    margin-block: 0;
+    padding-inline: var(--editor-block-padding-x, 1rem);
+  }
+
+  > * + * {
+    margin-top: calc(var(--spacing) * 2);
+  }
+
+  /* A long selection fades out instead of ending mid-line. */
+  &[data-overflow]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 3rem;
+    background: linear-gradient(transparent, var(--color-elevated));
   }
 }

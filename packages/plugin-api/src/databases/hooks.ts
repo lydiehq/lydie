@@ -1,0 +1,116 @@
+import type { DatabaseDefinition, ViewGroup, ViewRow, ViewType } from "@lydie/contract";
+import { useState, useSyncExternalStore } from "react";
+
+import type { DatabaseViewItem, DatabaseViewParams, LiveHandle, LiveState } from "../backend.ts";
+import { useBackend, useQuery } from "../react.tsx";
+
+// A database's settings, properties and views; null while loading or when `id` is not a
+// (live) database.
+export function useDatabase(id: string | null): {
+  definition: DatabaseDefinition | null;
+  isLoading: boolean;
+  error: Error | undefined;
+} {
+  const state = useQuery("database.get", id ? { id } : null);
+  return { definition: state.data[0] ?? null, isLoading: state.isLoading, error: state.error };
+}
+
+export type ViewWindowState = {
+  // The window's rows, in order; `rows[i]` is row `offset + i` of the whole result.
+  rows: readonly ViewRow[];
+  offset: number;
+  // Rows matching the view (all groups).
+  total: number;
+  // Every group (and sub-group) with its count and the position of its first row.
+  groups: readonly ViewGroup[];
+  viewType: ViewType | null;
+  // Nothing to show yet (first load).
+  isLoading: boolean;
+  // A new window or query is loading; the previous result is still shown.
+  isFetching: boolean;
+  error: Error | undefined;
+};
+
+const EMPTY: ViewWindowState = Object.freeze({
+  rows: Object.freeze([]) as readonly ViewRow[],
+  offset: 0,
+  total: 0,
+  groups: Object.freeze([]) as readonly ViewGroup[],
+  viewType: null,
+  isLoading: true,
+  isFetching: false,
+  error: undefined,
+});
+
+const IDLE_STATE: LiveState<DatabaseViewItem> = Object.freeze({
+  data: Object.freeze([]) as readonly DatabaseViewItem[],
+  isLoading: false,
+  error: undefined,
+});
+
+const IDLE_HANDLE: LiveHandle<DatabaseViewItem> = {
+  key: "idle",
+  getSnapshot: () => IDLE_STATE,
+  subscribe: () => () => {},
+};
+
+function toWindow(state: LiveState<DatabaseViewItem>): ViewWindowState {
+  const rows: ViewRow[] = [];
+  const groups: ViewGroup[] = [];
+  let total = 0;
+  let offset = 0;
+  let viewType: ViewType | null = null;
+  for (const item of state.data) {
+    if (item.kind === "row") rows.push(item.row);
+    else if (item.kind === "group") groups.push(item.group);
+    else {
+      total = item.total;
+      offset = item.offset;
+      viewType = item.viewType;
+    }
+  }
+  return {
+    rows,
+    offset,
+    total,
+    groups,
+    viewType,
+    isLoading: state.isLoading,
+    isFetching: false,
+    error: state.error,
+  };
+}
+
+// A live window of a database view. When the params change (scrolling to another window, a new
+// filter) the previous result stays until the new one arrives, so nothing flashes empty.
+// Unchanged rows keep their identity across emissions.
+export function useDatabaseView(params: DatabaseViewParams | null): ViewWindowState {
+  const backend = useBackend();
+  const handle = params ? backend.live("database.view", params) : IDLE_HANDLE;
+  const [cache] = useState(() => ({
+    key: "",
+    state: null as LiveState<DatabaseViewItem> | null,
+    result: EMPTY,
+    // The last result that had data, shown while a new query loads.
+    ready: null as ViewWindowState | null,
+  }));
+  const getSnapshot = () => {
+    const state = handle.getSnapshot();
+    if (cache.key === handle.key && cache.state === state) return cache.result;
+    cache.key = handle.key;
+    cache.state = state;
+    if (state.isLoading && cache.ready) {
+      cache.result = { ...cache.ready, isFetching: true };
+    } else {
+      cache.result = toWindow(state);
+      if (!state.isLoading && !state.error) cache.ready = cache.result;
+    }
+    return cache.result;
+  };
+  return useSyncExternalStore(handle.subscribe, getSnapshot, getSnapshot);
+}
+
+// The ids a window shows, for "Select all" and bulk actions.
+export function rowIdsOf(window: ViewWindowState): string[] {
+  return window.rows.map((r) => r.id);
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@lydie/plugin-team",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "test": "bun test --pass-with-no-tests",
+    "typecheck": "bun check"
+  },
+  "dependencies": {
+    "@lydie/plugin-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
+  }
+}

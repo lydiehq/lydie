@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  push:
+    branches: [main, v2]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Keep in step with the Bun used locally (`bun --version`).
+  BUN_VERSION: "1.4.4"
+
+jobs:
+  checks:
+    name: Lint, types, tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - id: install
+        run: bun install --frozen-lockfile
+
+      # Each check runs even when an earlier one failed, so one run reports every problem.
+      - name: Lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run lint
+      - name: Format
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run format:check
+      - name: Type check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run typecheck
+      - name: Unit tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run test
+      - name: Package boundaries
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run check:boundaries
+      - name: Generated files are up to date
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: bun run check:generated
+
+  web-e2e:
+    name: Web end-to-end (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - run: bun install --frozen-lockfile
+
+      # The browser build is tied to the Playwright version, which the lockfile pins.
+      - id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: bunx playwright install --with-deps chromium
+      - name: Install Chromium system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
+
+      # The databases suites include performance budgets and the settings suite needs a hosted
+      # core, so they are not run here.
+      - name: Main flows
+        id: flows
+        working-directory: apps/web
+        run: bun run test:e2e
+      - name: Links and editor features
+        if: ${{ !cancelled() && steps.flows.conclusion != 'skipped' }}
+        working-directory: apps/web
+        run: bun run test:e2e:links
+
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-e2e-screenshots
+          path: /tmp/lydie-web-*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+  desktop-e2e:
+    name: Desktop end-to-end (Electron, macOS)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - run: bun install --frozen-lockfile
+
+      # Builds the web bundle, the native trackpad addon and the Electron app, then runs the suite.
+      - working-directory: apps/desktop
+        run: bun run test:e2e

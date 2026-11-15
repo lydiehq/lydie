@@ -1,0 +1,25 @@
+{
+  "name": "@lydie/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./memory": "./src/memory/index.ts",
+    "./layout": "./src/layout/index.ts"
+  },
+  "scripts": {
+    "test": "bun test ./src",
+    "typecheck": "bun check"
+  },
+  "dependencies": {
+    "@lydie/contract": "workspace:*",
+    "fflate": "0.8.3",
+    "fractional-indexing": "4.0.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:"
+  }
+}

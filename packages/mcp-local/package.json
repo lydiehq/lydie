@@ -1,0 +1,25 @@
+{
+  "name": "@lydie/mcp-local",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test --timeout 60000 ./src",
+    "typecheck": "bun check"
+  },
+  "dependencies": {
+    "@lydie/bridge-fs": "workspace:*",
+    "@lydie/contract": "workspace:*",
+    "@lydie/runtime": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:"
+  }
+}

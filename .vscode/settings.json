@@ -1,9 +1,0 @@
-{
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "oxc.fmt.configPath": ".oxfmtrc.json",
-  "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSave": true,
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
-}

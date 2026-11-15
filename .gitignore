@@ -1,8 +1,13 @@
-# sst
-.sst
-
-.env
-.env.production
-.DS_Store
-
 node_modules
+.env*
+!.env.example
+.DS_Store
+dist
+out
+coverage
+*.tsbuildinfo
+.turbo
+test-results
+playwright-report
+blob-report
+playwright/.cache

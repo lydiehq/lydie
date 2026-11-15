@@ -1,0 +1,28 @@
+{
+  "name": "@lydie/cli",
+  "version": "0.0.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "bin": {
+    "lydie": "./src/main.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test --timeout 60000 ./src",
+    "typecheck": "bun check",
+    "lydie": "bun src/main.ts"
+  },
+  "dependencies": {
+    "@lydie/bridge-fs": "workspace:*",
+    "@lydie/contract": "workspace:*",
+    "@lydie/mcp-local": "workspace:*"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:"
+  }
+}

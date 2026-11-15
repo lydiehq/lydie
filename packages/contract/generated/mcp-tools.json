@@ -1,0 +1,4027 @@
+{
+  "tools": [
+    {
+      "name": "whoami",
+      "title": "Who am I",
+      "description": "Who this connection acts as (you, and the user you act for), the workspace tools default to (id, name), the other workspaces and the teamspaces you can reach, and your history session (list_session_changes, undo_session).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/generic": "whoami"
+      }
+    },
+    {
+      "name": "create_doc",
+      "title": "Create document",
+      "description": "Create a document. Creates a document in a workspace, optionally under a parent and with an initial Markdown body. Without afterId/beforeId it is appended as the last child.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "id": {
+            "description": "Client-minted id. Generated when omitted.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "parentId": {
+            "default": null,
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "default": "Untitled",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "properties": {
+            "default": {},
+            "$ref": "#/$defs/Properties"
+          },
+          "markdown": {
+            "description": "Initial body as Lydie Markdown.",
+            "type": "string"
+          },
+          "teamspaceId": {
+            "description": "Hosted: the teamspace a top-level page goes into (null or absent: the creator's private section). Ignored for child pages, which share their parent's space, and in local mode.",
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "afterId": {
+            "description": "Place directly after this sibling.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "beforeId": {
+            "description": "Place directly before this sibling.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "sortKey": {
+            "description": "Explicit fractional key. Overrides afterId/beforeId; recorded by clients so replays converge.",
+            "$ref": "#/$defs/SortKey"
+          }
+        },
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "Properties": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "additionalProperties": {
+              "$ref": "#/$defs/PropertyValue"
+            },
+            "description": "Typed frontmatter properties."
+          },
+          "PropertyValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "SortKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[0-9A-Za-z]+$",
+            "description": "Fractional index key; siblings sort by (sortKey, id)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.create",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "rename_doc",
+      "title": "Rename document",
+      "description": "Rename a document.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.rename",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "move_doc",
+      "title": "Move document",
+      "description": "Move a document. Moves a document (and its subtree) under a new parent, or to the top level with parentId null. Without afterId/beforeId it becomes the last child.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "parentId": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "afterId": {
+            "description": "Place directly after this sibling.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "beforeId": {
+            "description": "Place directly before this sibling.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "sortKey": {
+            "description": "Explicit fractional key. Overrides afterId/beforeId; recorded by clients so replays converge.",
+            "$ref": "#/$defs/SortKey"
+          }
+        },
+        "required": [
+          "id",
+          "parentId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "SortKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[0-9A-Za-z]+$",
+            "description": "Fractional index key; siblings sort by (sortKey, id)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.move",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "delete_doc",
+      "title": "Delete document",
+      "description": "Delete a document. Soft-deletes a document and its subtree. Restore it with doc.restore. Deleting a deleted document is a no-op.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "deletedAt": {
+            "$ref": "#/$defs/Timestamp"
+          },
+          "deletedIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Uuid"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "deletedAt",
+          "deletedIds"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "Timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "ISO 8601 UTC timestamp."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.delete",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "restore_doc",
+      "title": "Restore document",
+      "description": "Restore a deleted document. Restores a soft-deleted document and the part of its subtree deleted with it. If its parent is gone it is restored to the top level.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.restore",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "purge_doc",
+      "title": "Permanently delete document",
+      "description": "Permanently delete a document. Permanently deletes a document in the trash, its trashed subtree, bodies and outgoing links. Links to it become unresolved. Cannot be undone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "purgedIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Uuid"
+            }
+          }
+        },
+        "required": [
+          "purgedIds"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.purge",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "set_doc_properties",
+      "title": "Set document properties",
+      "description": "Set document properties. Merges `set` into the document's properties and removes the keys in `unset`.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "set": {
+            "default": {},
+            "$ref": "#/$defs/Properties"
+          },
+          "unset": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "Properties": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "additionalProperties": {
+              "$ref": "#/$defs/PropertyValue"
+            },
+            "description": "Typed frontmatter properties."
+          },
+          "PropertyValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.setProperties",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "update_doc",
+      "title": "Update document body",
+      "description": "Update a document body. Replaces the body with markdown, or applies edits in order, all or nothing: replace swaps oldStr for newStr, insertBefore/insertAfter put newStr next to oldStr, prepend/append add newStr as a block at the start/end (also of an empty body). oldStr is matched against the Markdown from fetch_doc and must occur exactly once unless replaceAll; otherwise nothing is written and the error names the edit. expectedVersion makes a stale write a conflict.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "markdown": {
+            "type": "string"
+          },
+          "edits": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/BodyEditInput"
+            }
+          },
+          "expectedVersion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "BodyEditInput": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "default": "replace",
+                "type": "string",
+                "enum": [
+                  "replace",
+                  "insertBefore",
+                  "insertAfter",
+                  "prepend",
+                  "append"
+                ]
+              },
+              "oldStr": {
+                "description": "The exact text to replace or insert at. Not for prepend/append.",
+                "type": "string",
+                "minLength": 1
+              },
+              "newStr": {
+                "type": "string"
+              },
+              "replaceAll": {
+                "default": false,
+                "description": "Every match of oldStr, not exactly one.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "newStr"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.updateBody",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "fetch_doc",
+      "title": "Fetch document",
+      "description": "Get a document. Returns a document's metadata and, unless includeBody is false, its Markdown body, with `threads`: the open notes and comments left beside it, when there are any.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "includeBody": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.get",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_docs",
+      "title": "List documents",
+      "description": "List the document tree. Lists documents depth-first in tree order. With rootId, lists that document's descendants only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "rootId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "includeDeleted": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.listTree",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_children",
+      "title": "List child documents",
+      "description": "List a document's children. Lists the direct children of a document (or the top level when parentId is omitted) in order, each with its number of live children. Use it to load a tree level by level.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "parentId": {
+            "description": "Omit for the top level.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "includeDeleted": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.listChildren",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "search",
+      "title": "Search documents",
+      "description": "Search documents. Full-text search over titles and bodies. Words are matched as prefixes; all words must match. A title equal to the query comes first. When nothing matches, titles similar to the query (sharing most of its letter trigrams, so typos still find them) are returned instead, without <mark> highlights.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "limit": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/SearchHit"
+            }
+          }
+        },
+        "required": [
+          "hits"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "SearchHit": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Uuid"
+              },
+              "title": {
+                "type": "string"
+              },
+              "snippet": {
+                "type": "string",
+                "description": "Matching excerpt; matches are wrapped in <mark></mark>."
+              },
+              "score": {
+                "type": "number",
+                "description": "Lower is better (bm25)."
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "snippet",
+              "score"
+            ],
+            "additionalProperties": false
+          },
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.search",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_backlinks",
+      "title": "List backlinks",
+      "description": "List backlinks. Lists live documents that link to this document.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.backlinks",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_block_backlinks",
+      "title": "List block backlinks",
+      "description": "List backlinks to a block. Lists live documents that link to one block (`[[Note#^blockId]]`) of this document.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "blockId": {
+            "$ref": "#/$defs/BlockId"
+          }
+        },
+        "required": [
+          "id",
+          "blockId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "BlockId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9-]{1,64}$"
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.blockBacklinks",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_outgoing_links",
+      "title": "List outgoing links",
+      "description": "List outgoing links. Lists the links in this document (body first, then properties, in document order), each with the live document it resolves to or null.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.outgoingLinks",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_unlinked_mentions",
+      "title": "List unlinked mentions",
+      "description": "List unlinked mentions. Lists live documents whose text mentions this document's title without linking to it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "limit": {
+            "default": 50,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.unlinkedMentions",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_unresolved_links",
+      "title": "List unresolved links",
+      "description": "List unresolved links. Lists links in live documents whose target does not exist (yet).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.unresolvedLinks",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_doc_versions",
+      "title": "List document versions",
+      "description": "List a document's versions. Lists saved versions of a document's body, newest first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "limit": {
+            "default": 50,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.listVersions",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "get_doc_version",
+      "title": "Get document version",
+      "description": "Get a document version. Returns one saved version of a document's body as Markdown.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "versionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "id",
+          "versionId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.getVersion",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "restore_doc_version",
+      "title": "Restore document version",
+      "description": "Restore a document version. Makes the body read as a saved version again, as a new edit. The body before the restore is kept as a version (`previousVersionId`): restore it to undo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "versionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "id",
+          "versionId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "doc.restoreVersion",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "list_trash",
+      "title": "List trash",
+      "description": "List the trash. Lists what is in a workspace's trash, newest first. A document deleted with its subtree is one item; restoring it restores the subtree.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "limit": {
+            "default": 100,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "trash.list",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "empty_trash",
+      "title": "Empty trash",
+      "description": "Empty the trash. Permanently deletes everything in a workspace's trash. Cannot be undone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "purgedIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Uuid"
+            }
+          }
+        },
+        "required": [
+          "purgedIds"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "trash.empty",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "create_attachment",
+      "title": "Add attachment",
+      "description": "Add an attachment. Records an attachment whose bytes are already stored under their SHA-256 (the Blob port locally, an upload URL when hosted). Several attachments may share the same bytes.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "id": {
+            "description": "Client-minted id. Generated when omitted.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "documentId": {
+            "default": null,
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "contentType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "filename",
+          "contentType",
+          "size",
+          "sha256"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "attachment.create",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "delete_attachment",
+      "title": "Delete attachment",
+      "description": "Delete an attachment. Moves an attachment to the trash. Restore it with attachment.restore.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "attachment.delete",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "restore_attachment",
+      "title": "Restore attachment",
+      "description": "Restore an attachment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "attachment.restore",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "purge_attachment",
+      "title": "Permanently delete attachment",
+      "description": "Permanently delete an attachment. Permanently deletes an attachment in the trash. Its bytes are removed when no other attachment uses them. Cannot be undone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "purgedIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Uuid"
+            }
+          }
+        },
+        "required": [
+          "purgedIds"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "attachment.purge",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "get_attachment",
+      "title": "Get attachment",
+      "description": "Get an attachment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "attachment.get",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_attachments",
+      "title": "List attachments",
+      "description": "List attachments. Lists a workspace's attachments, or one document's, newest first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "documentId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "includeDeleted": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "attachment.list",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "create_thread",
+      "title": "Leave a note or comment",
+      "description": "Leave a note or a comment. Starts a thread beside a document; the body is not changed and threads are never published. A note is what the next reader should know about the text (why it says this, what it was checked against); a comment needs an answer. `quote` attaches it to a passage of the document; add `prefix` or `suffix` (the text just before or after) when the passage occurs more than once. Without `quote` it is about the whole page.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "kind": {
+            "default": "note",
+            "$ref": "#/$defs/ThreadKind"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "description": "Markdown."
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "prefix": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "suffix": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "exact": {
+            "description": "For editors: quote is the document's text already, store it as given.",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Client-minted id. Generated when omitted.",
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "documentId",
+          "body"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "ThreadKind": {
+            "type": "string",
+            "enum": [
+              "note",
+              "comment"
+            ],
+            "description": "note: context for the next reader, kept quietly beside the text. comment: expects an answer."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "thread.create",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "reply_to_thread",
+      "title": "Reply to a thread",
+      "description": "Reply to a thread.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "threadId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20000,
+            "description": "Markdown."
+          },
+          "id": {
+            "description": "Client-minted id of the reply. Generated when omitted.",
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "threadId",
+          "body"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "thread.reply",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "resolve_thread",
+      "title": "Resolve a thread",
+      "description": "Resolve or reopen a thread. Marks a thread as dealt with: an answered comment, a note that no longer applies. It is kept, and resolved: false reopens it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "resolved": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "thread.resolve",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "list_sessions",
+      "title": "List agent sessions",
+      "description": "List agent sessions. Lists sessions that changed a workspace, most recent first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "$ref": "#/$defs/WorkspaceId"
+          },
+          "limit": {
+            "default": 50,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        },
+        "$defs": {
+          "WorkspaceId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "Workspace id."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "history.listSessions",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_session_changes",
+      "title": "List session changes",
+      "description": "List a session's changes. Lists every operation a session applied, oldest first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Default: your own session."
+          },
+          "limit": {
+            "default": 200,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "history.listBySession",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "undo_session",
+      "title": "Undo session",
+      "description": "Undo a session. Reverts every change a session made, newest first, as one undoable step. Changes that later edits by others touched are skipped and reported, as are changes that cannot be undone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Default: your own session."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "undoneIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Uuid"
+            },
+            "description": "History entries that were reverted."
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/Uuid"
+                },
+                "operation": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "not_undoable",
+                    "conflict",
+                    "failed"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "operation",
+                "reason",
+                "message"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "undoneIds",
+          "skipped"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "history.undoSession",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "create_database",
+      "title": "Create database",
+      "description": "Create a database. Creates a database: a document whose children are its rows. With documentId, turns an existing document into a database (its children become rows). Starts with a title property and one view.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "id": {
+            "description": "Client-minted id of the new database document.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "documentId": {
+            "description": "Turn this existing document into a database.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "parentId": {
+            "default": null,
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "default": "Untitled database",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "teamspaceId": {
+            "description": "Hosted: the teamspace a new top-level database goes into (null or absent: the creator's private section). Ignored with parentId or documentId, and in local mode.",
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "afterId": {
+            "description": "Place directly after this sibling.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "beforeId": {
+            "description": "Place directly before this sibling.",
+            "$ref": "#/$defs/Uuid"
+          },
+          "sortKey": {
+            "description": "Explicit fractional key (recorded so replays converge).",
+            "$ref": "#/$defs/SortKey"
+          },
+          "viewType": {
+            "default": "table",
+            "$ref": "#/$defs/ViewType"
+          },
+          "titlePropertyId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "viewId": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "SortKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[0-9A-Za-z]+$",
+            "description": "Fractional index key; siblings sort by (sortKey, id)."
+          },
+          "ViewType": {
+            "type": "string",
+            "enum": [
+              "table",
+              "board",
+              "list",
+              "calendar",
+              "gallery"
+            ]
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.create",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "get_database",
+      "title": "Get database",
+      "description": "Get a database. Returns a database's settings, live properties and views, in order.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/Uuid"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.get",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "list_databases",
+      "title": "List databases",
+      "description": "List databases. Lists the live databases of a workspace (database documents not in the trash).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.list",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "query_database",
+      "title": "Query database",
+      "description": "Query a database. Returns one window of a view's rows (filtered, sorted, grouped), with the total and group counts. Pass viewId for a saved view, or view for an ad-hoc one (both: view overrides). Properties in filters, sorts and groups are named by id, key or name. Page with window (offset, limit; hasMore says whether rows remain). uniqueId values are numbers (shown as prefix-number, e.g. LYD-12); filters take 12 or \"LYD-12\".",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "viewId": {
+            "description": "A saved view's id or name.",
+            "type": "string",
+            "minLength": 1
+          },
+          "view": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "default": "table",
+                "$ref": "#/$defs/ViewType"
+              },
+              "config": {
+                "default": {},
+                "$ref": "#/$defs/ViewConfigPatchInput"
+              }
+            }
+          },
+          "window": {
+            "default": {
+              "offset": 0,
+              "limit": 100
+            },
+            "type": "object",
+            "properties": {
+              "offset": {
+                "default": 0,
+                "type": "integer",
+                "minimum": 0
+              },
+              "limit": {
+                "default": 100,
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1000
+              },
+              "group": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "subGroup": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "range": {
+                "type": "object",
+                "properties": {
+                  "propertyId": {
+                    "description": "Default: the view's calendar property.",
+                    "$ref": "#/$defs/PropertyRef"
+                  },
+                  "start": {
+                    "type": "string",
+                    "description": "Inclusive, YYYY-MM-DD"
+                  },
+                  "end": {
+                    "type": "string",
+                    "description": "Exclusive, YYYY-MM-DD"
+                  }
+                },
+                "required": [
+                  "start",
+                  "end"
+                ]
+              }
+            }
+          },
+          "today": {
+            "description": "The caller's local date for relative date filters. Default: the server's.",
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        },
+        "required": [
+          "databaseId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "ViewType": {
+            "type": "string",
+            "enum": [
+              "table",
+              "board",
+              "list",
+              "calendar",
+              "gallery"
+            ]
+          },
+          "ViewConfigPatchInput": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FilterNode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sorts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "propertyId": {
+                      "$ref": "#/$defs/PropertyRef"
+                    },
+                    "direction": {
+                      "default": "asc",
+                      "type": "string",
+                      "enum": [
+                        "asc",
+                        "desc"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "propertyId"
+                  ]
+                }
+              },
+              "groupBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GroupByInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "subGroupBy": {
+                "description": "Board swimlanes.",
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GroupByInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ViewColumnInput"
+                }
+              },
+              "limit": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "summaries": {
+                "description": "propertyId → summary name",
+                "type": "object",
+                "propertyNames": {
+                  "$ref": "#/$defs/PropertyRef"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "layout": {
+                "$ref": "#/$defs/ViewLayoutInput"
+              },
+              "extra": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            }
+          },
+          "FilterNode": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/FilterCondition"
+              },
+              {
+                "$ref": "#/$defs/FilterExpression"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "group"
+                  },
+                  "combinator": {
+                    "type": "string",
+                    "enum": [
+                      "and",
+                      "or",
+                      "not"
+                    ]
+                  },
+                  "children": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/$defs/FilterCondition"
+                        },
+                        {
+                          "$ref": "#/$defs/FilterExpression"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "group"
+                            },
+                            "combinator": {
+                              "type": "string",
+                              "enum": [
+                                "and",
+                                "or",
+                                "not"
+                              ]
+                            },
+                            "children": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "$ref": "#/$defs/FilterCondition"
+                                  },
+                                  {
+                                    "$ref": "#/$defs/FilterExpression"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "const": "group"
+                                      },
+                                      "combinator": {
+                                        "type": "string",
+                                        "enum": [
+                                          "and",
+                                          "or",
+                                          "not"
+                                        ]
+                                      },
+                                      "children": {
+                                        "type": "array",
+                                        "items": {
+                                          "oneOf": [
+                                            {
+                                              "$ref": "#/$defs/FilterCondition"
+                                            },
+                                            {
+                                              "$ref": "#/$defs/FilterExpression"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "combinator",
+                                      "children"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "combinator",
+                            "children"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "combinator",
+                  "children"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "FilterCondition": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "condition"
+              },
+              "propertyId": {
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "op": {
+                "$ref": "#/$defs/FilterOp"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/$defs/RelativeDate"
+                      },
+                      {
+                        "$ref": "#/$defs/MeValue"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "$ref": "#/$defs/RelativeDate"
+                        },
+                        {
+                          "$ref": "#/$defs/MeValue"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "propertyId",
+              "op"
+            ],
+            "additionalProperties": false
+          },
+          "PropertyRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "A property's id, frontmatter key or name (case-insensitive)."
+          },
+          "FilterOp": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "neq",
+              "contains",
+              "notContains",
+              "startsWith",
+              "endsWith",
+              "lt",
+              "lte",
+              "gt",
+              "gte",
+              "between",
+              "in",
+              "notIn",
+              "isEmpty",
+              "isNotEmpty"
+            ]
+          },
+          "RelativeDate": {
+            "type": "object",
+            "properties": {
+              "relative": {
+                "type": "string",
+                "enum": [
+                  "today",
+                  "now"
+                ]
+              },
+              "amount": {
+                "type": "integer"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "minute",
+                  "hour",
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ]
+              }
+            },
+            "required": [
+              "relative"
+            ],
+            "additionalProperties": false
+          },
+          "MeValue": {
+            "type": "object",
+            "properties": {
+              "me": {
+                "type": "boolean",
+                "const": true
+              }
+            },
+            "required": [
+              "me"
+            ],
+            "additionalProperties": false
+          },
+          "FilterExpression": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "expression"
+              },
+              "expression": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "type",
+              "expression"
+            ],
+            "additionalProperties": false
+          },
+          "GroupByInput": {
+            "type": "object",
+            "properties": {
+              "propertyId": {
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "direction": {
+                "default": "asc",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "order": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "hideEmpty": {
+                "description": "Hide groups with no rows (board columns).",
+                "type": "boolean"
+              },
+              "dateBucket": {
+                "description": "Date grouping; default month.",
+                "type": "string",
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ]
+              },
+              "collapsed": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "propertyId"
+            ]
+          },
+          "ViewColumnInput": {
+            "type": "object",
+            "properties": {
+              "propertyId": {
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "visible": {
+                "default": true,
+                "type": "boolean"
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 20,
+                "maximum": 2000
+              }
+            },
+            "required": [
+              "propertyId"
+            ]
+          },
+          "ViewLayoutInput": {
+            "type": "object",
+            "properties": {
+              "rowHeight": {
+                "description": "table",
+                "type": "string",
+                "enum": [
+                  "short",
+                  "medium",
+                  "tall",
+                  "extra"
+                ]
+              },
+              "wrapCells": {
+                "description": "table",
+                "type": "boolean"
+              },
+              "cardSize": {
+                "description": "board, gallery: px",
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 1000
+              },
+              "cover": {
+                "description": "board, gallery: the card image",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "property"
+                          },
+                          "propertyId": {
+                            "$ref": "#/$defs/PropertyRef"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "propertyId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "pageContent"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "coverFit": {
+                "type": "string",
+                "enum": [
+                  "cover",
+                  "contain"
+                ]
+              },
+              "coverAspectRatio": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 10
+              },
+              "markers": {
+                "description": "list",
+                "type": "string",
+                "enum": [
+                  "bullet",
+                  "number",
+                  "none"
+                ]
+              },
+              "calendarPropertyId": {
+                "description": "calendar: the date property placing rows",
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "calendarMode": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "week"
+                ]
+              },
+              "showWeekends": {
+                "type": "boolean"
+              },
+              "colorColumns": {
+                "description": "board",
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.query",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "write_database_rows",
+      "title": "Write database rows",
+      "description": "Write database rows. Creates, updates and deletes rows in one step. A row without id is created; with id it is updated (title renames it); delete: true moves it to the trash. values are keyed by property id, frontmatter key or name; relation values are row ids; select values are option names (new names become options); uniqueId values are numbers (pass 12 or \"LYD-12\"; new rows get the next number). unset clears properties. markdown sets the row's page content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "rows": {
+            "minItems": 1,
+            "maxItems": 1000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "An existing row to update or delete.",
+                  "$ref": "#/$defs/RowRef"
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "values": {
+                  "default": {},
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "$ref": "#/$defs/PropertyValue"
+                  }
+                },
+                "unset": {
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PropertyRef"
+                  }
+                },
+                "markdown": {
+                  "description": "The row's body; replaces the current one.",
+                  "type": "string"
+                },
+                "delete": {
+                  "default": false,
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "databaseId",
+          "rows"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "RowRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "A row's id or unique id (\"LYD-12\")."
+          },
+          "PropertyValue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "PropertyRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "A property's id, frontmatter key or name (case-insensitive)."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "#/$defs/Uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "uniqueId": {
+                  "description": "e.g. \"LYD-12\"; null without a uniqueId property.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "created",
+                    "updated",
+                    "deleted"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "uniqueId",
+                "action"
+              ],
+              "additionalProperties": false
+            },
+            "description": "One per input row, in order."
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.writeRows",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "change_database_schema",
+      "title": "Change database properties",
+      "description": "Change a database's properties. Adds, changes and removes properties in one step. update can rename (name), change the type (values are converted), the frontmatter key or the config (options, relation, number format, formula expression). Removed properties keep their values in the rows.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "add": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "type": {
+                  "$ref": "#/$defs/PropertyType"
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "config": {
+                  "$ref": "#/$defs/PropertyConfigSpecInput"
+                }
+              },
+              "required": [
+                "name",
+                "type"
+              ]
+            }
+          },
+          "update": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "$ref": "#/$defs/PropertyRef"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "type": {
+                  "$ref": "#/$defs/PropertyType"
+                },
+                "key": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "config": {
+                  "$ref": "#/$defs/PropertyConfigSpecInput"
+                }
+              },
+              "required": [
+                "property"
+              ]
+            }
+          },
+          "remove": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/PropertyRef"
+            }
+          }
+        },
+        "required": [
+          "databaseId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "PropertyType": {
+            "type": "string",
+            "enum": [
+              "title",
+              "text",
+              "number",
+              "select",
+              "multiSelect",
+              "status",
+              "date",
+              "checkbox",
+              "url",
+              "email",
+              "phone",
+              "person",
+              "files",
+              "relation",
+              "rollup",
+              "formula",
+              "uniqueId",
+              "createdTime",
+              "updatedTime",
+              "createdBy",
+              "updatedBy"
+            ]
+          },
+          "PropertyConfigSpecInput": {
+            "type": "object",
+            "properties": {
+              "options": {
+                "description": "select, multiSelect, status",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "$ref": "#/$defs/Uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200
+                    },
+                    "color": {
+                      "default": "default",
+                      "$ref": "#/$defs/Color"
+                    },
+                    "group": {
+                      "$ref": "#/$defs/StatusGroup"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                }
+              },
+              "numberFormat": {
+                "type": "string",
+                "enum": [
+                  "number",
+                  "integer",
+                  "commas",
+                  "percent",
+                  "currency"
+                ]
+              },
+              "decimals": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10
+              },
+              "currency": {
+                "description": "ISO 4217 code, with numberFormat currency",
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 3
+              },
+              "includeTime": {
+                "description": "date: values carry a time",
+                "type": "boolean"
+              },
+              "range": {
+                "description": "date: values may carry an end (start/end)",
+                "type": "boolean"
+              },
+              "relation": {
+                "$ref": "#/$defs/RelationConfigInput"
+              },
+              "rollup": {
+                "$ref": "#/$defs/RollupConfigInput"
+              },
+              "expression": {
+                "description": "formula: an Obsidian Bases expression",
+                "type": "string"
+              },
+              "prefix": {
+                "description": "uniqueId: shown before the number (\"LYD\" → LYD-12)",
+                "type": "string",
+                "maxLength": 16,
+                "pattern": "^(?:[A-Za-z][A-Za-z0-9]*)?$"
+              },
+              "extra": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            }
+          },
+          "Color": {
+            "type": "string",
+            "enum": [
+              "default",
+              "gray",
+              "brown",
+              "orange",
+              "yellow",
+              "green",
+              "blue",
+              "purple",
+              "pink",
+              "red"
+            ]
+          },
+          "StatusGroup": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "inProgress",
+              "complete"
+            ]
+          },
+          "RelationConfigInput": {
+            "type": "object",
+            "properties": {
+              "databaseId": {
+                "description": "The database whose rows this relation points at.",
+                "$ref": "#/$defs/Uuid"
+              },
+              "twoWay": {
+                "default": false,
+                "type": "boolean"
+              },
+              "reversePropertyId": {
+                "default": null,
+                "description": "The synced property on the other database (two-way relations).",
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "limit": {
+                "default": "many",
+                "type": "string",
+                "enum": [
+                  "one",
+                  "many"
+                ]
+              }
+            },
+            "required": [
+              "databaseId"
+            ]
+          },
+          "RollupConfigInput": {
+            "type": "object",
+            "properties": {
+              "relationPropertyId": {
+                "$ref": "#/$defs/Uuid"
+              },
+              "targetPropertyId": {
+                "description": "A property of the related database.",
+                "$ref": "#/$defs/Uuid"
+              },
+              "function": {
+                "$ref": "#/$defs/RollupFunction"
+              }
+            },
+            "required": [
+              "relationPropertyId",
+              "targetPropertyId",
+              "function"
+            ]
+          },
+          "RollupFunction": {
+            "type": "string",
+            "enum": [
+              "showOriginal",
+              "showUnique",
+              "count",
+              "countValues",
+              "countUnique",
+              "countEmpty",
+              "countNotEmpty",
+              "percentEmpty",
+              "percentNotEmpty",
+              "sum",
+              "average",
+              "median",
+              "min",
+              "max",
+              "range",
+              "earliest",
+              "latest",
+              "checked",
+              "unchecked",
+              "percentChecked",
+              "percentUnchecked"
+            ]
+          },
+          "PropertyRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "A property's id, frontmatter key or name (case-insensitive)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.changeSchema",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "change_database_views",
+      "title": "Change database views",
+      "description": "Change a database's views. Adds, changes and removes views in one step. config is merged into the view's config (filter, sorts, groupBy, columns, …; properties by id, key or name); see get_database for the current values.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "add": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "type": {
+                  "$ref": "#/$defs/ViewType"
+                },
+                "config": {
+                  "$ref": "#/$defs/ViewConfigPatchInput"
+                }
+              },
+              "required": [
+                "name",
+                "type"
+              ]
+            }
+          },
+          "update": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "view": {
+                  "$ref": "#/$defs/ViewRef"
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "type": {
+                  "$ref": "#/$defs/ViewType"
+                },
+                "config": {
+                  "$ref": "#/$defs/ViewConfigPatchInput"
+                }
+              },
+              "required": [
+                "view"
+              ]
+            }
+          },
+          "remove": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ViewRef"
+            }
+          }
+        },
+        "required": [
+          "databaseId"
+        ],
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          },
+          "ViewType": {
+            "type": "string",
+            "enum": [
+              "table",
+              "board",
+              "list",
+              "calendar",
+              "gallery"
+            ]
+          },
+          "ViewConfigPatchInput": {
+            "type": "object",
+            "properties": {
+              "filter": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/FilterNode"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "sorts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "propertyId": {
+                      "$ref": "#/$defs/PropertyRef"
+                    },
+                    "direction": {
+                      "default": "asc",
+                      "type": "string",
+                      "enum": [
+                        "asc",
+                        "desc"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "propertyId"
+                  ]
+                }
+              },
+              "groupBy": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GroupByInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "subGroupBy": {
+                "description": "Board swimlanes.",
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GroupByInput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "columns": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ViewColumnInput"
+                }
+              },
+              "limit": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "summaries": {
+                "description": "propertyId → summary name",
+                "type": "object",
+                "propertyNames": {
+                  "$ref": "#/$defs/PropertyRef"
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "layout": {
+                "$ref": "#/$defs/ViewLayoutInput"
+              },
+              "extra": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              }
+            }
+          },
+          "FilterNode": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/FilterCondition"
+              },
+              {
+                "$ref": "#/$defs/FilterExpression"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "group"
+                  },
+                  "combinator": {
+                    "type": "string",
+                    "enum": [
+                      "and",
+                      "or",
+                      "not"
+                    ]
+                  },
+                  "children": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/$defs/FilterCondition"
+                        },
+                        {
+                          "$ref": "#/$defs/FilterExpression"
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "type": {
+                              "type": "string",
+                              "const": "group"
+                            },
+                            "combinator": {
+                              "type": "string",
+                              "enum": [
+                                "and",
+                                "or",
+                                "not"
+                              ]
+                            },
+                            "children": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "$ref": "#/$defs/FilterCondition"
+                                  },
+                                  {
+                                    "$ref": "#/$defs/FilterExpression"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "type": {
+                                        "type": "string",
+                                        "const": "group"
+                                      },
+                                      "combinator": {
+                                        "type": "string",
+                                        "enum": [
+                                          "and",
+                                          "or",
+                                          "not"
+                                        ]
+                                      },
+                                      "children": {
+                                        "type": "array",
+                                        "items": {
+                                          "oneOf": [
+                                            {
+                                              "$ref": "#/$defs/FilterCondition"
+                                            },
+                                            {
+                                              "$ref": "#/$defs/FilterExpression"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "type",
+                                      "combinator",
+                                      "children"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "type",
+                            "combinator",
+                            "children"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "combinator",
+                  "children"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "FilterCondition": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "condition"
+              },
+              "propertyId": {
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "op": {
+                "$ref": "#/$defs/FilterOp"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/$defs/RelativeDate"
+                      },
+                      {
+                        "$ref": "#/$defs/MeValue"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "$ref": "#/$defs/RelativeDate"
+                        },
+                        {
+                          "$ref": "#/$defs/MeValue"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "propertyId",
+              "op"
+            ],
+            "additionalProperties": false
+          },
+          "PropertyRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "A property's id, frontmatter key or name (case-insensitive)."
+          },
+          "FilterOp": {
+            "type": "string",
+            "enum": [
+              "eq",
+              "neq",
+              "contains",
+              "notContains",
+              "startsWith",
+              "endsWith",
+              "lt",
+              "lte",
+              "gt",
+              "gte",
+              "between",
+              "in",
+              "notIn",
+              "isEmpty",
+              "isNotEmpty"
+            ]
+          },
+          "RelativeDate": {
+            "type": "object",
+            "properties": {
+              "relative": {
+                "type": "string",
+                "enum": [
+                  "today",
+                  "now"
+                ]
+              },
+              "amount": {
+                "type": "integer"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "minute",
+                  "hour",
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ]
+              }
+            },
+            "required": [
+              "relative"
+            ],
+            "additionalProperties": false
+          },
+          "MeValue": {
+            "type": "object",
+            "properties": {
+              "me": {
+                "type": "boolean",
+                "const": true
+              }
+            },
+            "required": [
+              "me"
+            ],
+            "additionalProperties": false
+          },
+          "FilterExpression": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "expression"
+              },
+              "expression": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "type",
+              "expression"
+            ],
+            "additionalProperties": false
+          },
+          "GroupByInput": {
+            "type": "object",
+            "properties": {
+              "propertyId": {
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "direction": {
+                "default": "asc",
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "order": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "hideEmpty": {
+                "description": "Hide groups with no rows (board columns).",
+                "type": "boolean"
+              },
+              "dateBucket": {
+                "description": "Date grouping; default month.",
+                "type": "string",
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "year"
+                ]
+              },
+              "collapsed": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "propertyId"
+            ]
+          },
+          "ViewColumnInput": {
+            "type": "object",
+            "properties": {
+              "propertyId": {
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "visible": {
+                "default": true,
+                "type": "boolean"
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 20,
+                "maximum": 2000
+              }
+            },
+            "required": [
+              "propertyId"
+            ]
+          },
+          "ViewLayoutInput": {
+            "type": "object",
+            "properties": {
+              "rowHeight": {
+                "description": "table",
+                "type": "string",
+                "enum": [
+                  "short",
+                  "medium",
+                  "tall",
+                  "extra"
+                ]
+              },
+              "wrapCells": {
+                "description": "table",
+                "type": "boolean"
+              },
+              "cardSize": {
+                "description": "board, gallery: px",
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 1000
+              },
+              "cover": {
+                "description": "board, gallery: the card image",
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "property"
+                          },
+                          "propertyId": {
+                            "$ref": "#/$defs/PropertyRef"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "propertyId"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "const": "pageContent"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "coverFit": {
+                "type": "string",
+                "enum": [
+                  "cover",
+                  "contain"
+                ]
+              },
+              "coverAspectRatio": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 10
+              },
+              "markers": {
+                "description": "list",
+                "type": "string",
+                "enum": [
+                  "bullet",
+                  "number",
+                  "none"
+                ]
+              },
+              "calendarPropertyId": {
+                "description": "calendar: the date property placing rows",
+                "$ref": "#/$defs/PropertyRef"
+              },
+              "calendarMode": {
+                "type": "string",
+                "enum": [
+                  "month",
+                  "week"
+                ]
+              },
+              "showWeekends": {
+                "type": "boolean"
+              },
+              "colorColumns": {
+                "description": "board",
+                "type": "boolean"
+              }
+            }
+          },
+          "ViewRef": {
+            "type": "string",
+            "minLength": 1,
+            "description": "A view's id or name (case-insensitive)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "database.changeViews",
+        "lydie/scopes": [
+          "docs:write"
+        ]
+      }
+    },
+    {
+      "name": "export_workspace",
+      "title": "Export workspace",
+      "description": "Export the workspace. Exports every page, database and attachment you can read as a zip of the folder format: Markdown files with frontmatter, a `.base` file per database, attachments and `.lydie/`. Unzipped, it opens as a vault in Lydie's local mode and in Obsidian. The trash is left out. Returns a link to download the zip.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "description": "Where to download the zip: a short-lived signed link on the hosted API, a local file or blob URL in the apps, the file it was saved to on the desktop. null when the person cancelled saving.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "filename": {
+            "type": "string",
+            "description": "Suggested file name, e.g. \"Notes 2026-11-15.zip\"."
+          },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When `url` stops working; null if it does not."
+          }
+        },
+        "required": [
+          "url",
+          "filename",
+          "expiresAt"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "ISO 8601 UTC timestamp."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "workspace.export",
+        "lydie/scopes": [
+          "docs:read"
+        ]
+      }
+    },
+    {
+      "name": "add_to_inbox",
+      "title": "Add to inbox",
+      "description": "Add to the inbox. Adds to the workspace's inbox, a top-level page named Inbox that is created when missing. Without a title the text is appended to the inbox as a list item (prefixed with `time`, e.g. 09:41, when given). With a title it becomes a page inside the inbox, with the text as its body and `url` as its `source` property. Needs only the inbox:write scope, so a capture-only token (a web clipper, an automation) cannot read or change anything else. Returns ids only, never content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "description": "Default: this connection's workspace (whoami)."
+          },
+          "markdown": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200000
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 4096,
+            "format": "uri"
+          },
+          "time": {
+            "description": "Local time of the capture (HH:mm), shown before an appended item.",
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$"
+          },
+          "inbox": {
+            "default": "Inbox",
+            "description": "The inbox page's title.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "markdown"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "inboxId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "documentId": {
+            "$ref": "#/$defs/Uuid"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "A titled capture made a page of its own."
+          }
+        },
+        "required": [
+          "inboxId",
+          "documentId",
+          "created"
+        ],
+        "additionalProperties": false,
+        "$defs": {
+          "Uuid": {
+            "type": "string",
+            "pattern": "^[0-9a-f-]{36}$",
+            "description": "UUID (lowercase, with hyphens)."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/operation": "inbox.capture",
+        "lydie/scopes": [
+          "inbox:write"
+        ]
+      }
+    },
+    {
+      "name": "run_operation",
+      "title": "Run an operation",
+      "description": "Runs any Lydie operation by id with its input, including these not listed as tools: thread.edit: Edit a thread or a reply; thread.setAnchor: Move a thread; thread.delete: Delete a thread or a reply; thread.restore: Restore a thread or a reply; thread.list: List a document's threads; activity.list: List workspace activity; database.update: Update database settings; database.delete: Turn a database back into a page; database.restore: Restore a database; database.setDefinition: Replace a database's schema and views; database.listTemplates: List row templates; database.addProperty: Add a database property; database.renameProperty: Rename a database property; database.updateProperty: Update a database property; database.changePropertyType: Change a property's type; database.moveProperty: Reorder a database property; database.deleteProperty: Delete a database property; database.restoreProperty: Restore a database property; database.addOption: Add a select option; database.updateOption: Rename or recolour a select option; database.moveOption: Reorder a select option; database.deleteOption: Delete a select option; database.createView: Create a database view; database.renameView: Rename a database view; database.duplicateView: Duplicate a database view; database.moveView: Reorder a database view; database.updateView: Update a database view; database.deleteView: Delete a database view; database.restoreView: Restore a database view; database.createRow: Create a database row; database.setValues: Set row values; database.moveRow: Move a database row; database.duplicateRows: Duplicate database rows; database.deleteRows: Delete database rows; database.restoreRows: Restore database rows. Get an operation's input schema with describe_operation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "doc.create",
+              "doc.rename",
+              "doc.move",
+              "doc.delete",
+              "doc.restore",
+              "doc.purge",
+              "doc.setProperties",
+              "doc.updateBody",
+              "doc.get",
+              "doc.listTree",
+              "doc.listChildren",
+              "doc.search",
+              "doc.backlinks",
+              "doc.blockBacklinks",
+              "doc.outgoingLinks",
+              "doc.unlinkedMentions",
+              "doc.unresolvedLinks",
+              "doc.listVersions",
+              "doc.getVersion",
+              "doc.restoreVersion",
+              "trash.list",
+              "trash.empty",
+              "attachment.create",
+              "attachment.delete",
+              "attachment.restore",
+              "attachment.purge",
+              "attachment.get",
+              "attachment.list",
+              "thread.create",
+              "thread.reply",
+              "thread.edit",
+              "thread.setAnchor",
+              "thread.resolve",
+              "thread.delete",
+              "thread.restore",
+              "thread.list",
+              "history.listSessions",
+              "history.listBySession",
+              "history.undoSession",
+              "activity.list",
+              "database.create",
+              "database.update",
+              "database.delete",
+              "database.restore",
+              "database.setDefinition",
+              "database.get",
+              "database.listTemplates",
+              "database.list",
+              "database.query",
+              "database.addProperty",
+              "database.renameProperty",
+              "database.updateProperty",
+              "database.changePropertyType",
+              "database.moveProperty",
+              "database.deleteProperty",
+              "database.restoreProperty",
+              "database.addOption",
+              "database.updateOption",
+              "database.moveOption",
+              "database.deleteOption",
+              "database.createView",
+              "database.renameView",
+              "database.duplicateView",
+              "database.moveView",
+              "database.updateView",
+              "database.deleteView",
+              "database.restoreView",
+              "database.createRow",
+              "database.setValues",
+              "database.moveRow",
+              "database.duplicateRows",
+              "database.deleteRows",
+              "database.restoreRows",
+              "database.writeRows",
+              "database.changeSchema",
+              "database.changeViews",
+              "workspace.export",
+              "inbox.capture"
+            ],
+            "description": "Operation id, e.g. doc.move."
+          },
+          "input": {
+            "type": "object",
+            "description": "The operation's input."
+          }
+        },
+        "required": [
+          "operation",
+          "input"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/generic": "run"
+      }
+    },
+    {
+      "name": "describe_operation",
+      "title": "Describe an operation",
+      "description": "Returns an operation's description and input and output JSON Schemas, for run_operation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "description": "An operation id of run_operation."
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "_meta": {
+        "lydie/generic": "describe"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // DOM only for TextEncoder/TextDecoder in the test platform; nothing here touches the document.
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react-jsx",
+    "types": ["bun"]
+  },
+  "include": ["src"]
+}

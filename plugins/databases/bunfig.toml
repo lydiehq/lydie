@@ -1,0 +1,3 @@
+[test]
+# The DOM preload of @lydie/ui (plugins may not import happy-dom themselves).
+preload = ["../../packages/ui/test/setup.ts"]
