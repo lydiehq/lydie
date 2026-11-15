@@ -23,6 +23,11 @@ Licence: AGPL-3.0-only.
 - The same pickers open from the palette: "Set page icon" and "Set page cover" (`openPicker`); the page opens first when it is not on screen. Nothing is written until something is picked. They are not in the document menu (the sidebar's row menu, the page's •••) on purpose.
 - The app only sets colour covers for now: no upload, no URL. A swatch from `COVER_COLORS` is stored as its name (`cover: blue`); the last swatch (a rainbow, or the colour itself when the cover is one) opens the system's colour picker and stores a hex (`cover: "#3b82f6"`), written once the picker closes. Swatches are squircles (`corner-shape: squircle`, rounded corners where it is not supported), like the place icons. An image cover written by hand in the frontmatter still shows.
 - A cover is a colour when `coverFillOf(cover)` says so: a palette name (theme-following class) or a hand-written hex (`cover: "#e8d5c4"`). Anything else is an image.
+- The cover carries `data-page-cover` and `data-cover-tone` ("light" | "dark"): how light it is
+  under the doc view's top bar (its top 36 px), which then lies over it with ink to match. A colour
+  (or the placeholder) by its computed background, an image by the strip it shows there at its
+  `cover-position`, both averaged in a small canvas (relative luminance over 0.42 is light); left
+  out when it cannot be read (a cross-origin image without CORS).
 - The icon row follows the page's width (`pageColumnClass(pageFullWidthOf(properties))`), so it
   lines up with the title on full-width pages; the cover always spans the view.
 - The icon shows wherever `DocIcon`/`PageIcon` from the plugin API are used: tabs, quick switcher, link previews and embeds (the document tree still draws its own glyph: requested change).
