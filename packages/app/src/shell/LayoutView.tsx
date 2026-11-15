@@ -616,7 +616,7 @@ function TabBar({
     // its empty part opens a new tab.
     // oxlint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
-      className="flex h-10 min-w-0 shrink-0 items-center gap-1"
+      className="group/tab-row flex h-10 min-w-0 shrink-0 items-center gap-1"
       style={{ paddingLeft: insetLeft, ...(inset.custom ? dragStyle : {}) }}
       data-testid="tab-bar"
       onDoubleClick={(event) => {
@@ -696,12 +696,13 @@ function TabBar({
       {topLeft && <NavigationButtons />}
       {/* Sets the buttons off from an inactive first tab; an active one is set off by its shape.
           It takes no room (no width, its gap taken back): the line is drawn in the middle of the
-          gap before the tabs, so the first tab sits as far from the buttons either way. */}
+          gap before the tabs, so the first tab sits as far from the buttons either way. A hovered
+          first tab is set off by its pill. */}
       {topLeft && (
         <span
           aria-hidden
           className={clsx(
-            "relative z-20 -ml-1 h-4 w-0 shrink-0 before:absolute before:inset-y-0 before:left-0.5 before:w-px before:bg-gray-950/10",
+            "relative z-20 -ml-1 h-4 w-0 shrink-0 group-has-[[role=tab]:first-child:hover]/tab-row:invisible before:absolute before:inset-y-0 before:left-0.5 before:w-px before:bg-gray-950/7",
             tabIds[0] === activeTabId && "invisible",
           )}
         />
