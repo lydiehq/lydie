@@ -177,7 +177,7 @@ export function Sidebar({ footer }: Props) {
         {sections.filter((section) => section !== lead).map(renderSection)}
       </div>
       <BetaNotice />
-      <div className="flex shrink-0 flex-col gap-1 border-t border-gray-950/5 px-3 py-2">
+      <div className="flex shrink-0 flex-col gap-1 px-3 py-2">
         {footer}
         {/* Wraps rather than squeezing: on a narrow sidebar the right-hand status items take a
             line of their own, still on the right. */}
