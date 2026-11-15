@@ -14,7 +14,7 @@ import { parseSettingsPath, settingsPath } from "./navigation.ts";
 import { AboutPage } from "./pages/About.tsx";
 import { ActivityPage } from "./pages/Activity.tsx";
 import { AgentsPage } from "./pages/Agents.tsx";
-import { ExportPage } from "./pages/Export.tsx";
+import { ExportPage } from "./pages/ImportExport.tsx";
 import { FilesAndLinksPage } from "./pages/FilesAndLinks.tsx";
 import { GeneralPage } from "./pages/General.tsx";
 import { PluginsPage } from "./pages/Plugins.tsx";
