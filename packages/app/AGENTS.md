@@ -183,8 +183,8 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   card's corner instead. Split gutters are `ResizeHandle`s between cards. Cards (and
   the status banner under them) are `surface-depth` from `@lydie/ui`. The sidebar's toggle
   starts the top-left tab row, open or collapsed (as in Dia), with a divider after the row's
-  buttons while its first tab is not the active one (its room is kept otherwise, so the tabs stay
-  put). As in Linear, the sidebar's
+  buttons while its first tab is not the active one (drawn in the gap, taking no room, so the
+  tabs stay put). As in Linear, the sidebar's
   top differs by frame: with a drawn title bar (`inset.custom`, macOS desktop) a row of its own
   holds the window buttons above the workspace row; otherwise (web, native frame) the workspace
   row is level with the tab row. Search (the command palette) and New document are rows in the

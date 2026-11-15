@@ -695,12 +695,13 @@ function TabBar({
       )}
       {topLeft && <NavigationButtons />}
       {/* Sets the buttons off from an inactive first tab; an active one is set off by its shape.
-          Always in the row, so the tabs do not move when the first one is selected. */}
+          It takes no room (no width, its gap taken back): the line is drawn in the middle of the
+          gap before the tabs, so the first tab sits as far from the buttons either way. */}
       {topLeft && (
         <span
           aria-hidden
           className={clsx(
-            "relative z-20 mx-0.5 h-4 w-px shrink-0 bg-gray-950/10",
+            "relative z-20 -ml-1 h-4 w-0 shrink-0 before:absolute before:inset-y-0 before:left-0.5 before:w-px before:bg-gray-950/10",
             tabIds[0] === activeTabId && "invisible",
           )}
         />
