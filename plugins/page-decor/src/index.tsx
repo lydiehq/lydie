@@ -334,10 +334,16 @@ function Cover({
           }),
     );
   }, [cover, url, loaded, shown]);
+  // A colour runs on above the cover (`before:`, the same background), so the scroller's
+  // rubber band at the top shows more cover instead of the window behind it.
   return (
     <div
       ref={box}
-      className={`group relative h-[210px] w-full shrink-0 overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
+      className={`group relative h-[210px] w-full shrink-0 ${
+        fill
+          ? `${fill.className} before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-inherit`
+          : "overflow-hidden bg-gray-100"
+      }`}
       style={fill?.style}
       data-testid="page-cover"
       data-page-cover=""
