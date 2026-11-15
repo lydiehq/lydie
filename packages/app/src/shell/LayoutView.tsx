@@ -1093,7 +1093,17 @@ const TabButton = memo(function TabButton({
         }
       >
         {active && !floating && <ActiveTabShape atEdge={atEdge && !dragging} />}
-        <span className={clsx("flex min-w-0 flex-1 items-center gap-1.5", !pinned && "pr-6")}>
+        {/* The title runs to the tab's padding and fades out instead of an ellipsis (also a
+            plugin's `tabTitle`); where the close button shows, it fades out before it, so the
+            button lies over the end of the title instead of taking its room. A mask, so it
+            works over any background (the card, a hover pill). */}
+        <span
+          className={clsx(
+            "flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden [&_*]:text-clip",
+            "[mask-image:linear-gradient(to_right,black_calc(100%_-_var(--tab-fade-end,0px)_-_16px),transparent_calc(100%_-_var(--tab-fade-end,0px)))]",
+            !pinned && (active ? "[--tab-fade-end:12px]" : "group-hover/tab:[--tab-fade-end:12px]"),
+          )}
+        >
           {Title ? (
             <Title path={path} />
           ) : (

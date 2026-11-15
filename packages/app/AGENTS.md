@@ -229,6 +229,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   it slides along the row and the other tabs glide aside (transforms; a spacer keeps its room).
   Away from the rows it floats under the pointer as a small card. Pressing a tab selects it. A
   document dragged in from the sidebar still opens a ghost pill in the row (`TabDropGap`).
+- **Tab titles** run to the tab's padding and fade out at the end (a mask on the title, also over
+  a plugin's `tabTitle`; no ellipsis). The close button takes no room: where it shows (active,
+  hovered) the fade ends under its left edge (`--tab-fade-end`), so it lies over the title.
 - **Opening a tab**: a tab that joins a row grows in from no width and fades in (CSS
   `@starting-style`), pushing what follows along. The growth is 160ms on `ease`, which starts
   gently, so the new tab button glides over rather than jumps (an ease-out did); the fade waits
