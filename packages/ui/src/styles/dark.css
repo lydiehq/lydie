@@ -21,16 +21,16 @@
   .dark {
     color-scheme: dark;
 
-    --color-surface: #191919;
-    --color-elevated: #252525;
-    --color-paper: #2e2e2e;
-    --color-canvas: #212121;
+    --color-surface: #111111;
+    --color-elevated: #1c1c1c;
+    --color-paper: #262626;
+    --color-canvas: #181818;
 
-    --color-gray-50: #1d1d1d;
-    --color-gray-100: #212121;
-    --color-gray-200: #2e2e2e;
-    --color-gray-300: #3c3c3c;
-    --color-gray-400: #686868;
+    --color-gray-50: #151515;
+    --color-gray-100: #191919;
+    --color-gray-200: #252525;
+    --color-gray-300: #333333;
+    --color-gray-400: #616161;
     --color-gray-500: #8c8c8c;
     --color-gray-600: #a5a5a5;
     --color-gray-700: #bfbfbf;
