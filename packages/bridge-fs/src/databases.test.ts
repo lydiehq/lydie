@@ -183,7 +183,8 @@ describe(".base files from disk", () => {
     const def = await definitionOf(vault, id);
     expect(def.views.map((v) => [v.name, v.type])).toEqual([
       ["All books", "table"],
-      ["Gallery", "gallery"],
+      // Lydie has no gallery: a Bases cards view opens as a table.
+      ["Gallery", "table"],
     ]);
     expect(def.properties.map((p) => p.name)).toEqual(expect.arrayContaining(["Author"]));
     const result = await vault.runtime.ops.database.query({ databaseId: id });

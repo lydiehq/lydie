@@ -1,4 +1,4 @@
-import { DatabaseConfig, PropertyConfig, ViewConfig } from "@lydie/contract";
+import { DatabaseConfig, PropertyConfig, ViewConfig, viewTypeOf } from "@lydie/contract";
 import type {
   Activity,
   ActivityData,
@@ -368,7 +368,7 @@ export function toView(row: Row): DatabaseView {
     workspaceId: String(row.workspace_id),
     databaseId: String(row.database_id),
     name: String(row.name),
-    type: row.type as DatabaseView["type"],
+    type: viewTypeOf(row.type),
     config: parseOr(ViewConfig, jsonOf(row.config, {})),
     sortKey: String(row.sort_key),
     ...authored(row),

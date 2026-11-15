@@ -13,7 +13,6 @@ import { CalendarView } from "./calendar/CalendarView.tsx";
 import { useViewContext, useViewOverlay, ViewProvider } from "./context.tsx";
 import { withSearch } from "./filter-model.ts";
 import { FilterUiProvider, isFilterKey, useFilterUi } from "./filter-ui.tsx";
-import { GalleryView } from "./GalleryView.tsx";
 import { ListView } from "./ListView.tsx";
 import { PageSheetHost } from "./PageSheet.tsx";
 import { pageInset } from "./skeleton.tsx";
@@ -189,8 +188,6 @@ function ActiveView({ compact }: { compact: boolean }) {
       return <BoardView maxHeight={maxHeight} />;
     case "list":
       return <ListView maxHeight={maxHeight} />;
-    case "gallery":
-      return <GalleryView maxHeight={maxHeight} />;
     case "calendar":
       return <CalendarView />;
     default:

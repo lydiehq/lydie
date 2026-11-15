@@ -98,36 +98,3 @@ export function CalendarViewIllustration(props: IllustrationProps) {
     </Drawing>
   );
 }
-
-// A picture: hills and the sun, in a w × h frame.
-function Picture({ w, h }: { w: number; h: number }) {
-  const line = useLine();
-  return (
-    <>
-      <path
-        d={`M4 ${h - 5} L${w * 0.38} ${h * 0.45} L${w * 0.58} ${h * 0.65} L${w * 0.72} ${h * 0.52} L${w - 4} ${h - 5}`}
-        strokeWidth={line(1)}
-        {...ink}
-      />
-      <circle cx={w - 8} cy={8} r={2.5} fill={tone(3)} strokeWidth={line(1)} {...ink} />
-    </>
-  );
-}
-
-/** Gallery: two pictures standing, one behind the other. */
-export function GalleryViewIllustration(props: IllustrationProps) {
-  const back: P3 = [0, 34, 38];
-  const front: P3 = [16, 42, 32];
-  return (
-    <Drawing {...props} top={[...reach("x", back, 30, 24, 2), ...reach("x", front, 30, 24, 2)]}>
-      <Enter delay={0.1} from={[-10, -6]}>
-        <Solid plane="x" at={back} depth={2} shape={rect(30, 24, 3)} face={tone(2)} />
-      </Enter>
-      <Enter delay={0}>
-        <Solid plane="x" at={front} depth={2} shape={rect(30, 24, 3)}>
-          <Picture w={30} h={24} />
-        </Solid>
-      </Enter>
-    </Drawing>
-  );
-}

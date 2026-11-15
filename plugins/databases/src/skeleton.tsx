@@ -64,7 +64,7 @@ export function ScreenSkeleton({
   );
 }
 
-// A card of a board column or the gallery before its page is there.
+// A card of a board column before its page is there.
 export function CardSkeleton({ index, coverHeight = 0 }: { index: number; coverHeight?: number }) {
   return (
     <div aria-hidden className="flex flex-col">

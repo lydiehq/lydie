@@ -132,6 +132,8 @@ Licence: AGPL-3.0-only.
   The panel's left edge resizes it with the sidebar's elastic handle (`useElasticPanel` /
   `ElasticHandle` from the UI package): width per device in `databases.peekWidth`, half the tab
   by default; dragged shut it closes.
+- View types: table, board, list, calendar. There is no gallery (removed Nov 2026): a stored
+  view of a type Lydie no longer has opens as a table (`viewTypeOf` in the contract).
 - `ViewTabs.tsx` (add/rename/duplicate/change type/delete/drag to reorder; a view's menu has no
   button, so nothing appears on the open tab: it opens on right-click, a click on the open tab, or
   Shift+F10 / the menu key, and starts with the view's name as a field, saved as the menu closes; "New view" lists the
@@ -171,8 +173,8 @@ Licence: AGPL-3.0-only.
   Cmd/Ctrl+R fill down / right (the range's top row or leftmost column, or the cell above / to the
   left of a single cell; through `fill`, so one undo step, values converted per column type and
   computed columns skipped).
-- `board/BoardView.tsx` (a window per column, swimlanes, drag cards with optimistic placement),
-  `ListView.tsx`, `GalleryView.tsx` (+ `Card.tsx` covers), `calendar/` (month/week, drag to move,
+- `board/BoardView.tsx` (a window per column, swimlanes, drag cards with optimistic placement;
+  `Card.tsx` with covers), `ListView.tsx`, `calendar/` (month/week, drag to move,
   drag edges for ranges, click a day to create; `calendar-model.ts` pure, tested).
 
 ## Controls

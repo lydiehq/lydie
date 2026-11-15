@@ -256,7 +256,7 @@ test("database tools work end to end and land in the folder", async () => {
   expect((described.inputSchema as { required: string[] }).required).toContain("databaseId");
   await call("run_operation", {
     operation: "database.createView",
-    input: { databaseId: db.database.id, name: "Shelf", type: "gallery" },
+    input: { databaseId: db.database.id, name: "Shelf", type: "list" },
   });
   expect(readFileSync(join(folder, "Reading/Reading.base"), "utf8")).toContain("name: Shelf");
   const unknown = await client.callTool({

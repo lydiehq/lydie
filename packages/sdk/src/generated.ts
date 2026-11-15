@@ -1018,7 +1018,7 @@ export type ViewRow = {
   computed: Record<string, unknown>;
 };
 
-export type ViewType = "table" | "board" | "list" | "calendar" | "gallery";
+export type ViewType = "table" | "board" | "list" | "calendar";
 
 export type Warning = { code: "no_match" | "ambiguous_match"; message: string; editIndex?: number };
 

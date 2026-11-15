@@ -470,7 +470,7 @@ function MoveButtons({ columns, id }: { columns: ReturnType<typeof allColumns>; 
 function ViewSettings() {
   const { view } = useViewContext();
   if (view.type === "calendar") return <CalendarSettings />;
-  if (view.type === "board" || view.type === "gallery") return <CardSettings />;
+  if (view.type === "board") return <CardSettings />;
   return null;
 }
 

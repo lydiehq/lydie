@@ -367,7 +367,7 @@ describe(`store with ${NOTES} notes, ${ROWS} database rows, ${PROJECTS} related 
     );
     record(
       "view: grouped by tag (list values), window 100",
-      await measure(() => view(views.gallery!)),
+      await measure(() => view(views.byTag!)),
       FRAME_MS,
     );
     record(

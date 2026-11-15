@@ -1,4 +1,4 @@
-// Windowing arithmetic for the virtualised views (board, list, gallery; the table uses the grid
+// Windowing arithmetic for the virtualised views (board, list; the table uses the grid
 // engine directly). It lives in `@lydie/plugin-api/grid`.
 export {
   MAX_WINDOW,

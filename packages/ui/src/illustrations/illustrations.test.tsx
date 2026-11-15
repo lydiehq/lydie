@@ -12,7 +12,7 @@ describe("illustrations", () => {
   const drawings = [...Object.entries(illustrations), ...Object.entries(views)];
 
   it("exports every drawing", () => {
-    expect(drawings.length).toBe(19);
+    expect(drawings.length).toBe(18);
   });
 
   for (const [name, Drawing] of drawings) {

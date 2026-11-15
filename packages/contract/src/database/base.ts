@@ -82,7 +82,6 @@ const NATIVE_TYPE: Record<ViewType, string> = {
   table: "table",
   board: "kanban",
   list: "list",
-  gallery: "cards",
   // Bases has no calendar: written as a table, so Obsidian still shows the rows.
   calendar: "table",
 };
@@ -90,7 +89,6 @@ const FROM_NATIVE: Record<string, ViewType> = {
   table: "table",
   kanban: "board",
   list: "list",
-  cards: "gallery",
 };
 
 const VIEW_KEYS = new Set([

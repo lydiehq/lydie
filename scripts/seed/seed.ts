@@ -282,11 +282,11 @@ export async function seedWorkspace(store: Store, options: SeedOptions = {}): Pr
       views.calendar = (
         await ops.database.createView({ databaseId, name: "Calendar", type: "calendar" })
       ).id;
-      views.gallery = (
+      views.byTag = (
         await ops.database.createView({
           databaseId,
           name: "By tag",
-          type: "gallery",
+          type: "list",
           config: { groupBy: { propertyId: properties.tags!, direction: "asc" } },
         })
       ).id;

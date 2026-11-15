@@ -1847,8 +1847,7 @@
               "table",
               "board",
               "list",
-              "calendar",
-              "gallery"
+              "calendar"
             ]
           }
         }
@@ -2029,8 +2028,7 @@
               "table",
               "board",
               "list",
-              "calendar",
-              "gallery"
+              "calendar"
             ]
           },
           "ViewConfigPatchInput": {
@@ -2491,13 +2489,13 @@
                 "type": "boolean"
               },
               "cardSize": {
-                "description": "board, gallery: px",
+                "description": "board: px",
                 "type": "integer",
                 "minimum": 50,
                 "maximum": 1000
               },
               "cover": {
-                "description": "board, gallery: the card image",
+                "description": "board: the card image",
                 "anyOf": [
                   {
                     "anyOf": [
@@ -3165,8 +3163,7 @@
               "table",
               "board",
               "list",
-              "calendar",
-              "gallery"
+              "calendar"
             ]
           },
           "ViewConfigPatchInput": {
@@ -3627,13 +3624,13 @@
                 "type": "boolean"
               },
               "cardSize": {
-                "description": "board, gallery: px",
+                "description": "board: px",
                 "type": "integer",
                 "minimum": 50,
                 "maximum": 1000
               },
               "cover": {
-                "description": "board, gallery: the card image",
+                "description": "board: the card image",
                 "anyOf": [
                   {
                     "anyOf": [

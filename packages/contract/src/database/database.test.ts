@@ -10,7 +10,7 @@ import {
 } from "../operations/database.ts";
 import { fromBase, toBase, toBaseObject } from "./base.ts";
 import type { BaseDefinition } from "./base.ts";
-import { DatabaseConfig, ViewConfig, ViewConfigPatch } from "./entities.ts";
+import { DatabaseConfig, ViewConfig, ViewConfigPatch, viewTypeOf } from "./entities.ts";
 import type { FilterNode, PropertyInput, ViewInput } from "./entities.ts";
 import { parseExpression, printExpression, refsIn } from "./expression.ts";
 import { conditionExpr, exprCondition, fromBaseFilter, toBaseFilterRoot } from "./filters.ts";
@@ -253,7 +253,7 @@ function definition(): BaseDefinition {
       type: "calendar",
       config: ViewConfig.parse({ layout: { calendarPropertyId: P.due.id, calendarMode: "month" } }),
     },
-    { id: id(33), name: "Gallery", type: "gallery", config: ViewConfig.parse({ limit: 50 }) },
+    { id: id(33), name: "First 50", type: "table", config: ViewConfig.parse({ limit: 50 }) },
     {
       id: id(34),
       name: "List",
@@ -294,7 +294,7 @@ describe(".base files", () => {
     expect((base.properties as Record<string, unknown>)["file.ext"]).toEqual({
       displayName: "Extension",
     });
-    const [table, board, calendar, gallery, list] = base.views as Record<string, unknown>[];
+    const [table, board, calendar, first, list] = base.views as Record<string, unknown>[];
     expect(table).toMatchObject({
       type: "table",
       name: "All tasks",
@@ -327,7 +327,7 @@ describe(".base files", () => {
       cardSize: 240,
     });
     expect(calendar).toMatchObject({ type: "table", lydie: { type: "calendar" } });
-    expect(gallery).toMatchObject({ type: "cards", limit: 50 });
+    expect(first).toMatchObject({ type: "table", limit: 50 });
     expect(list).toMatchObject({ type: "list", markers: "number" });
     expect(base.summaries).toEqual({ customAverage: "values.mean().round(3)" });
   });
@@ -531,6 +531,19 @@ describe("values", () => {
       "[[Gone]]",
     ]);
     expect(fromFileValue({ type: "multiSelect" }, "solo")).toEqual(["solo"]);
+  });
+});
+
+describe("view types", () => {
+  it("opens a stored type Lydie no longer has as a table", () => {
+    expect(viewTypeOf("board")).toBe("board");
+    expect(viewTypeOf("gallery")).toBe("table");
+    expect(viewTypeOf(null)).toBe("table");
+  });
+
+  it("reads a Bases cards view as a table", () => {
+    const read = fromBase("views:\n  - type: cards\n    name: Shelf\n", { newId });
+    expect(read.definition.views[0]).toMatchObject({ name: "Shelf", type: "table" });
   });
 });
 

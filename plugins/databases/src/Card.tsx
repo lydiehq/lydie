@@ -1,4 +1,4 @@
-// A row as a card (board, gallery): optional cover, title and the view's visible properties.
+// A row as a card on the board: optional cover, title and the view's visible properties.
 import { useBackend, useQuery } from "@lydie/plugin-api";
 import {
   isEmptyValue,

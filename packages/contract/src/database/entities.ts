@@ -311,9 +311,18 @@ export const FilterNode: z.ZodType<FilterNode> = filterLevel(3).meta({ id: "Filt
 
 // ---- Views
 
-export const VIEW_TYPES = ["table", "board", "list", "calendar", "gallery"] as const;
+export const VIEW_TYPES = ["table", "board", "list", "calendar"] as const;
 export const ViewType = z.enum(VIEW_TYPES).meta({ id: "ViewType" });
 export type ViewType = z.infer<typeof ViewType>;
+
+/**
+ * A stored view's type. One Lydie no longer has (gallery, removed in Nov 2026) opens as a table;
+ * the view keeps its name, filters and sorts.
+ */
+export function viewTypeOf(value: unknown): ViewType {
+  const parsed = ViewType.safeParse(value);
+  return parsed.success ? parsed.data : "table";
+}
 
 export const Sort = z.object({
   propertyId: PropertyReference,
@@ -372,7 +381,7 @@ export const ViewLayout = z
   .object({
     rowHeight: z.enum(["short", "medium", "tall", "extra"]).optional().describe("table"),
     wrapCells: z.boolean().optional().describe("table"),
-    cardSize: z.number().int().min(50).max(1000).optional().describe("board, gallery: px"),
+    cardSize: z.number().int().min(50).max(1000).optional().describe("board: px"),
     cover: z
       .union([
         z.object({ type: z.literal("property"), propertyId: PropertyReference }),
@@ -380,7 +389,7 @@ export const ViewLayout = z
       ])
       .nullable()
       .optional()
-      .describe("board, gallery: the card image"),
+      .describe("board: the card image"),
     coverFit: z.enum(["cover", "contain"]).optional(),
     coverAspectRatio: z.number().min(0.1).max(10).optional(),
     markers: z.enum(["bullet", "number", "none"]).optional().describe("list"),

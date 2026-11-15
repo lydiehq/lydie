@@ -13,9 +13,7 @@ import {
   CalendarRegular,
   CalendarViewIllustration,
   Columns2Regular,
-  GalleryViewIllustration,
   ListViewIllustration,
-  PicRegular,
   Rows3Regular,
   TableRegular,
   TableViewIllustration,
@@ -33,7 +31,6 @@ export const VIEW_LABELS: Record<ViewType, string> = {
   board: "Board",
   list: "List",
   calendar: "Calendar",
-  gallery: "Gallery",
 };
 
 export const VIEW_ICONS: Record<ViewType, Icon> = {
@@ -41,7 +38,6 @@ export const VIEW_ICONS: Record<ViewType, Icon> = {
   board: Columns2Regular,
   list: Rows3Regular,
   calendar: CalendarRegular,
-  gallery: PicRegular,
 };
 
 // The "New view" menu draws each type rather than showing its icon.
@@ -50,7 +46,6 @@ const VIEW_DRAWINGS: Record<ViewType, (props: IllustrationProps) => ReactNode> =
   board: BoardViewIllustration,
   list: ListViewIllustration,
   calendar: CalendarViewIllustration,
-  gallery: GalleryViewIllustration,
 };
 
 const VIEW_HINTS: Record<ViewType, string> = {
@@ -58,7 +53,6 @@ const VIEW_HINTS: Record<ViewType, string> = {
   board: "Cards in columns",
   list: "One page per line",
   calendar: "Pages on their dates",
-  gallery: "Cards with covers",
 };
 
 const VIEW_MIME = "application/x-lydie-db-view";

@@ -28,7 +28,7 @@ export const lydieV2: ChangelogEntry = {
     {
       heading: "Collections",
       paragraphs: [
-        "Turn any page with sub-pages into a collection: the sub-pages share properties, and you see them as a table, board, list, calendar or gallery. Collections are saved as `.base` files, so they stay readable outside Lydie too.",
+        "Turn any page with sub-pages into a collection: the sub-pages share properties, and you see them as a table, board, list or calendar. Collections are saved as `.base` files, so they stay readable outside Lydie too.",
       ],
     },
     {

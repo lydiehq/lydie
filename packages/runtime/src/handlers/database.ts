@@ -547,7 +547,6 @@ const VIEW_NAMES: Record<ViewType, string> = {
   board: "Board",
   list: "List",
   calendar: "Calendar",
-  gallery: "Gallery",
 };
 
 // A board groups by the first status (else select) property, a calendar places rows by the first

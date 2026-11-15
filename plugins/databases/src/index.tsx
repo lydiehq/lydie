@@ -116,7 +116,7 @@ export const databasesPlugin = definePlugin({
   id: "databases",
   name: "Collections",
   description:
-    "Collections: pages whose sub-pages share properties and views (table, board, list, gallery, " +
+    "Collections: pages whose sub-pages share properties and views (table, board, list, " +
     "calendar), on their own page or shown inside other pages.",
   activate(ctx) {
     ctx.documents.register({ id: "database", slot: "body", component: CollectionBody });

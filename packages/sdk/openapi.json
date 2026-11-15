@@ -14973,13 +14973,13 @@
             "type": "boolean"
           },
           "cardSize": {
-            "description": "board, gallery: px",
+            "description": "board: px",
             "type": "integer",
             "minimum": 50,
             "maximum": 1000
           },
           "cover": {
-            "description": "board, gallery: the card image",
+            "description": "board: the card image",
             "anyOf": [
               {
                 "anyOf": [
@@ -15060,13 +15060,13 @@
             "type": "boolean"
           },
           "cardSize": {
-            "description": "board, gallery: px",
+            "description": "board: px",
             "type": "integer",
             "minimum": 50,
             "maximum": 1000
           },
           "cover": {
-            "description": "board, gallery: the card image",
+            "description": "board: the card image",
             "anyOf": [
               {
                 "anyOf": [
@@ -15246,7 +15246,7 @@
       },
       "ViewType": {
         "type": "string",
-        "enum": ["table", "board", "list", "calendar", "gallery"]
+        "enum": ["table", "board", "list", "calendar"]
       },
       "Warning": {
         "type": "object",

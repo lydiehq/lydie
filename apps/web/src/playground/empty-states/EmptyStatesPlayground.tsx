@@ -7,7 +7,6 @@ import {
   CalendarViewIllustration,
   EmptyState,
   FirstDocumentIllustration,
-  GalleryViewIllustration,
   ListViewIllustration,
   MarkIllustration,
   NoAccessIllustration,
@@ -191,15 +190,6 @@ const ILLUSTRATIONS: Illustration[] = [
     description: "Pages on their dates",
     menu: true,
     component: CalendarViewIllustration,
-  },
-  {
-    id: "view-gallery",
-    name: "Gallery view",
-    where: "databases · new view",
-    title: "Gallery",
-    description: "Cards with covers",
-    menu: true,
-    component: GalleryViewIllustration,
   },
 ];
 
