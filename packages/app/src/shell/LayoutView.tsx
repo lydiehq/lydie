@@ -464,7 +464,9 @@ const TabSlot = memo(function TabSlot({
       data-focused={focused || undefined}
       inert={!active}
       // isolate: a view's own z-indexes (sticky table headers, popovers) stay below the drop preview.
-      className="isolate absolute inset-0 flex flex-col overflow-hidden"
+      // clip, not hidden: hidden can still be scrolled, so focus in something sliding in from the
+      // edge (a collection's page panel and its title) would shift the whole view sideways.
+      className="isolate absolute inset-0 flex flex-col overflow-clip"
       style={active ? undefined : { visibility: "hidden", contentVisibility: "hidden" }}
     >
       <TabProvider tab={tab}>
