@@ -7,6 +7,7 @@ import type {
 } from "@lydie/plugin-api";
 import {
   Button,
+  Checkbox,
   Dialog,
   Heading,
   LoadingState,
@@ -20,10 +21,18 @@ import {
 } from "@lydie/plugin-api/ui";
 import { useEffect, useRef, useState } from "react";
 
+import { NEVER_ASK_KEY } from "./after-sign-in.ts";
 import { bytes, errorMessage, plural } from "./format.ts";
 import { readCloud, readCopied, rememberCopied } from "./local-notice.ts";
 
+export type HandoffProps = {
+  // After signing in with pages changed here meanwhile: ask about moving those to the person's
+  // cloud workspace, instead of the steps that choose one.
+  ask?: { workspaceId: string; workspaceName: string; count: number };
+};
+
 type Step =
+  | { kind: "ask" }
   | { kind: "choose" }
   | { kind: "planning" }
   | { kind: "review"; plan: HandoffPlanHandle }
@@ -42,10 +51,12 @@ const PHASES: Record<HandoffProgress["phase"], string> = {
 // then reopens the window on it. This browser's workspace is a move: once all of it is in the
 // cloud it is forgotten here (`handoff.discard`), so there is one place for the notes. A folder
 // is a copy: the files stay.
-export function HandoffDialog({ close }: { close: () => void; props: unknown }) {
+export function HandoffDialog({ close, props }: { close: () => void; props: unknown }) {
   const app = useApp();
   const { api, state } = useAccount();
-  const [step, setStep] = useState<Step>({ kind: "choose" });
+  const ask = ((props ?? {}) as HandoffProps).ask ?? null;
+  const [step, setStep] = useState<Step>({ kind: ask ? "ask" : "choose" });
+  const [neverAsk, setNeverAsk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<HostedWorkspaceSummary[] | null>(null);
   const [target, setTarget] = useState<"new" | "existing">("new");
@@ -93,11 +104,15 @@ export function HandoffDialog({ close }: { close: () => void; props: unknown }) 
     : inFolder
       ? "The folder and its files stay as they are."
       : "They also stay in this browser.";
-  // Everything is in the cloud workspace: nothing was refused, left out or missing its file.
-  const complete = (planned: HandoffPlanHandle, outcome: HandoffOutcome) =>
-    outcome.ok &&
+  // Nothing the plan would leave behind: no page another workspace has, no file missing, and no
+  // page the target already has (a change made to one here is not copied, LYD-423).
+  const clean = (planned: HandoffPlanHandle) =>
     planned.summary.conflicts.length === 0 &&
-    planned.summary.missingBytes.length === 0;
+    planned.summary.missingBytes.length === 0 &&
+    planned.summary.existingInTarget.length === 0;
+  // Everything is in the cloud workspace, so the copy here can go.
+  const complete = (planned: HandoffPlanHandle, outcome: HandoffOutcome) =>
+    outcome.ok && clean(planned);
   const openTarget = async (planned: HandoffPlanHandle, outcome: HandoffOutcome) => {
     // Forgotten only now, as the window leaves: until then this is still where the notes are.
     if (discard && complete(planned, outcome)) await discard().catch(() => {});
@@ -135,7 +150,9 @@ export function HandoffDialog({ close }: { close: () => void; props: unknown }) 
         onProgress: (progress) => setStep({ kind: "running", plan: planned, progress }),
       });
       if (outcome.ok) rememberCopied(app, app.workspace.workspaceId, planned.target);
-      setStep({ kind: "done", plan: planned, outcome });
+      // Asked and answered: with everything moved there is nothing left to read here.
+      if (ask && complete(planned, outcome)) await openTarget(planned, outcome);
+      else setStep({ kind: "done", plan: planned, outcome });
     } catch (e) {
       setError(
         abort.current.signal.aborted
@@ -146,7 +163,64 @@ export function HandoffDialog({ close }: { close: () => void; props: unknown }) 
     }
   };
 
+  // "Move" on the question: straight to it, unless the plan has something to read first.
+  const moveAsked = async () => {
+    if (!ask) return;
+    if (neverAsk) app.storage.set(NEVER_ASK_KEY, true);
+    setError(null);
+    setStep({ kind: "planning" });
+    try {
+      const planned = await handoff.plan({
+        workspaceId: ask.workspaceId,
+        workspaceName: ask.workspaceName,
+      });
+      if (clean(planned) && planned.summary.warnings.length === 0) await run(planned);
+      else setStep({ kind: "review", plan: planned });
+    } catch (e) {
+      setError(errorMessage(e));
+      setStep({ kind: "ask" });
+    }
+  };
+  const notNow = async () => {
+    if (!ask) return;
+    if (neverAsk) app.storage.set(NEVER_ASK_KEY, true);
+    await api.openScope({ kind: "hosted", workspaceId: ask.workspaceId });
+    close();
+  };
+
   const busy = step.kind === "planning" || step.kind === "running";
+  if (step.kind === "ask" && ask) {
+    return (
+      <Modal isOpen isDismissable onOpenChange={(open) => !open && close()} size="sm">
+        <Dialog aria-label="Move your notes to the cloud" className="flex flex-col gap-3 p-5">
+          <Heading slot="title" className="text-base font-medium text-gray-900">
+            Move your notes to “{ask.workspaceName}”?
+          </Heading>
+          <p className="text-sm text-gray-600">
+            You edited {plural(ask.count, "document")} in this browser while signed out. If you do
+            not move {ask.count === 1 ? "it" : "them"}, {ask.count === 1 ? "it stays" : "they stay"}{" "}
+            here, under “{app.workspace.workspaceName}” in the workspace menu.
+          </p>
+          <Checkbox isSelected={neverAsk} onChange={setNeverAsk}>
+            Don’t ask again
+          </Checkbox>
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
+          <div className="mt-1 flex justify-end gap-2">
+            <Button variant="secondary" size="sm" onPress={() => void notNow()}>
+              Not now
+            </Button>
+            <Button size="sm" onPress={() => void moveAsked()}>
+              Move
+            </Button>
+          </div>
+        </Dialog>
+      </Modal>
+    );
+  }
   return (
     <Modal
       isOpen
@@ -228,7 +302,7 @@ export function HandoffDialog({ close }: { close: () => void; props: unknown }) 
                 syncs.{" "}
                 {moves && complete(step.plan, step.outcome)
                   ? "Your notes are removed from this browser when you open it."
-                  : `Your notes also stay ${inFolder ? "in the folder, unchanged" : "in this browser, because not everything could be copied"}, and what you change there later is not added to the cloud workspace on its own.`}
+                  : `Your notes also stay ${inFolder ? "in the folder, unchanged" : "in this browser, because some pages were already there or could not be copied"}, and what you change there later is not added to the cloud workspace on its own.`}
               </p>
             ) : (
               <>

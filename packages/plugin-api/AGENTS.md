@@ -140,7 +140,7 @@ AccountApi { apiUrl, scope, wanted, state: Observable<AccountState>, signIn /* r
   call(hostedOperationId, input) /* typed by hosted-operations.ts */,
   callContract?(operationId, input) /* a contract operation on the server, not the replica
   (workspace.export) */, handoff: { plan, run /* outcome.renamed: local → hosted ids that
-  changed */, hasNews?(since) /* something here the cloud may lack */, discard?() /* a move:
+  changed */, changedSince?(since) /* pages here the cloud may lack */, discard?() /* a move:
   forgets the local workspace after a complete run; browser workspaces only */ } | null,
   sync: { details: Observable<SyncDetails>, retry() } | null, webUrl(path) }
 CollabApi { open(docId) → CollabSession { ydoc, awareness, user, state, loaded, release() } }

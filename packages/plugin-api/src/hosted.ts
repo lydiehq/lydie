@@ -106,10 +106,9 @@ export type HandoffApi = {
     plan: HandoffPlanHandle,
     options?: { onProgress?: (progress: HandoffProgress) => void; signal?: AbortSignal },
   ): Promise<HandoffOutcome>;
-  // Whether the local workspace holds something a cloud workspace may lack: a change after `since`
-  // (ISO time), or with null any page besides the Getting started page. Absent where it is not
-  // known (a folder).
-  hasNews?(since: string | null): Promise<boolean>;
+  // How many pages of the local workspace a cloud workspace may lack: those changed after `since`
+  // (ISO time), or with null since the workspace was made. Absent where it is not known (a folder).
+  changedSince?(since: string | null): Promise<number>;
   // Present where a copy is a move (this browser's workspace; never a folder): forgets the local
   // workspace, for after `run` copied all of it. The window must reopen elsewhere right after;
   // the next local window starts a new, empty workspace.

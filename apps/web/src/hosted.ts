@@ -389,12 +389,12 @@ export function createHandoff(options: {
     put(key: string, data: Uint8Array): Promise<void>;
     delete(key: string): Promise<void>;
   };
-  hasNews: NonNullable<HandoffApi["hasNews"]>;
+  changedSince: NonNullable<HandoffApi["changedSince"]>;
   discard: NonNullable<HandoffApi["discard"]>;
 }): HandoffApi {
   const plans = new WeakMap<HandoffPlanHandle, HandoffPlan>();
   return {
-    hasNews: options.hasNews,
+    changedSince: options.changedSince,
     discard: options.discard,
     async plan(target) {
       const user = options.session.user();

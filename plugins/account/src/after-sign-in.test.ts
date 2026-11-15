@@ -10,11 +10,12 @@ const base = {
   canHandoff: true,
   workspaces: [ws("lydie")],
   remembered: null,
-  hasNews: false,
+  changed: 0,
+  neverAsk: false,
 } as const;
 
 describe("after signing in from a local window", () => {
-  test("nothing new here: straight to the cloud workspace, not a dialog", () => {
+  test("nothing changed here: straight to the cloud workspace, not a dialog", () => {
     expect(afterSignIn(base)).toEqual({ kind: "open", workspaceId: "lydie" });
     // Also when the caller wanted this workspace in the cloud: there is nothing to put there.
     expect(afterSignIn({ ...base, then: "handoff" })).toEqual({
@@ -35,15 +36,33 @@ describe("after signing in from a local window", () => {
     });
   });
 
-  test("notes written here meanwhile keep the window, with the way to the cloud named", () => {
-    const next = afterSignIn({ ...base, hasNews: true });
-    expect(next).toEqual({ kind: "stay", cloud: base.workspaces[0] });
-    // Unknown (a folder) reads as something to keep.
-    expect(afterSignIn({ ...base, hasNews: null }).kind).toBe("stay");
+  test("pages changed here meanwhile: asks whether to move them, saying how many", () => {
+    expect(afterSignIn({ ...base, changed: 2 })).toEqual({
+      kind: "ask",
+      cloud: base.workspaces[0],
+      count: 2,
+    });
+    // The same question whatever asked for the sign-in, not the dialog that chooses a workspace.
+    expect(afterSignIn({ ...base, changed: 2, then: "handoff" }).kind).toBe("ask");
   });
 
-  test("asked to put this workspace in the cloud, with notes here: offers it", () => {
-    expect(afterSignIn({ ...base, then: "handoff", hasNews: true })).toEqual({ kind: "handoff" });
+  test("told not to ask again: straight to the cloud workspace", () => {
+    expect(afterSignIn({ ...base, changed: 2, neverAsk: true })).toEqual({
+      kind: "open",
+      workspaceId: "lydie",
+    });
+  });
+
+  test("a guest cannot move pages into the workspace, so is not asked", () => {
+    expect(afterSignIn({ ...base, changed: 2, workspaces: [ws("theirs", "guest")] })).toEqual({
+      kind: "open",
+      workspaceId: "theirs",
+    });
+  });
+
+  test("a folder stays, unless the caller asked to put it in the cloud", () => {
+    expect(afterSignIn({ ...base, changed: null })).toEqual({ kind: "stay" });
+    expect(afterSignIn({ ...base, changed: null, then: "handoff" })).toEqual({ kind: "handoff" });
   });
 
   test("a new account has nothing in the cloud yet: offers what is here", () => {
@@ -51,11 +70,11 @@ describe("after signing in from a local window", () => {
   });
 
   test("a window that cannot hand off stays as it is", () => {
-    expect(afterSignIn({ ...base, canHandoff: false })).toEqual({ kind: "stay", cloud: null });
+    expect(afterSignIn({ ...base, canHandoff: false })).toEqual({ kind: "stay" });
   });
 
   test("the account's workspaces could not be listed: only what was asked for", () => {
-    expect(afterSignIn({ ...base, workspaces: null })).toEqual({ kind: "stay", cloud: null });
+    expect(afterSignIn({ ...base, workspaces: null })).toEqual({ kind: "stay" });
     expect(afterSignIn({ ...base, workspaces: null, then: "handoff" })).toEqual({
       kind: "handoff",
     });

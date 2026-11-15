@@ -395,20 +395,20 @@ export async function compose(options: ComposeOptions = {}): Promise<Composition
       store,
       workspaceId: workspace.id,
       blob,
-      async hasNews(since) {
-        if (since !== null) {
-          // Live pages by last change (a body save counts), newest first.
-          const [newest] = await backend.query("doc.recent", {
-            workspaceId: workspace.id,
-            limit: 1,
-          });
-          return newest !== undefined && newest.updatedAt > since;
+      async changedSince(since) {
+        let from = since ?? "";
+        if (since === null) {
+          // With no time to count from: since the Getting started page and its pages were
+          // written (a few operations, so a few seconds are allowed), when the workspace was made.
+          const [welcome] = await backend
+            .query("doc.get", { id: gettingStartedId(workspace.id) })
+            .catch(() => []);
+          const made = welcome ? Date.parse(welcome.document.createdAt) : Number.NaN;
+          if (!Number.isNaN(made)) from = new Date(made + 5000).toISOString();
         }
-        const top = await backend.query("doc.children", {
-          workspaceId: workspace.id,
-          parentId: null,
-        });
-        return top.some((doc) => doc.id !== gettingStartedId(workspace.id));
+        // Live pages by last change (a body save counts), newest first.
+        const recent = await backend.query("doc.recent", { workspaceId: workspace.id, limit: 500 });
+        return recent.filter((doc) => doc.updatedAt > from).length;
       },
       // Not in a database that lives in memory: there is nothing to forget, and it is not the
       // person's lasting copy.

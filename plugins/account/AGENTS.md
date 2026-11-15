@@ -72,12 +72,16 @@ A move (LYD-422): when a run copied everything (ok, no conflicts, no missing fil
 for the notes. Anything short of that leaves it, with the local notice.
 
 After signing in (`after-sign-in.ts`, `afterSignIn` unit-tested; also after a provider sign-in
-comes back): a local window with nothing new (`handoff.hasNews(since)`, since a cloud workspace
-was last open on this device) reopens on the cloud workspace used last, else one of the person's
-own. With something new it stays, says "Signed in" and shows the local notice. The hand-off dialog
-opens by itself only for an account with no cloud workspace yet, or when the caller asked for it
-(`then: "handoff"`, the team pages) and there is something to bring. The sidebar entry no longer
-asks for it.
+comes back): a local window with no page changed (`handoff.changedSince(since)`, since a cloud
+workspace was last open on this device) reopens on the cloud workspace used last, else one of the
+person's own. With pages changed the hand-off dialog opens on a question (`HandoffProps.ask`):
+"You edited 2 documents in this browser while signed out. Move…?", with Move (plans and runs
+straight away, then opens the workspace; a plan with something to read shows the review step
+first), Not now (opens the workspace; the pages stay in this browser) and "Don't ask again"
+(`account.bring.never`: later sign-ins just open the workspace). The steps that choose a workspace
+open by themselves only for an account with no cloud workspace yet. A folder window stays as it
+is. The browser copy is forgotten only when the plan left nothing behind, which excludes pages the
+target already had (LYD-423).
 
 Cloud waitlist: `account.waitlist` (`WaitlistDialog`: email → `waitlist.join` with source "app",
 also a command and a workspace-menu row), `useSignUpMode()` / `localEntry()` in `sign-up.ts` (unknown
