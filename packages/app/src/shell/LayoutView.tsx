@@ -1020,7 +1020,7 @@ const TabButton = memo(function TabButton({
           opening &&
             !dragging &&
             !leaving &&
-            "transition-[width,min-width,padding,margin,opacity] duration-[350ms,350ms,350ms,350ms,250ms] ease-[ease] [transition-delay:0ms,0ms,0ms,0ms,50ms] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
+            "transition-[width,min-width,padding,margin,opacity] duration-[220ms,220ms,220ms,220ms,160ms] ease-[ease] [transition-delay:0ms,0ms,0ms,0ms,40ms] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
           animate &&
             !dragging &&
             !opening &&

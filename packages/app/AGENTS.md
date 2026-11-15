@@ -228,9 +228,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   Away from the rows it floats under the pointer as a small card. Pressing a tab selects it. A
   document dragged in from the sidebar still opens a ghost pill in the row (`TabDropGap`).
 - **Opening a tab**: a tab that joins a row grows in from no width and fades in (CSS
-  `@starting-style`), pushing what follows along. The growth is 350ms on `ease`, which starts
+  `@starting-style`), pushing what follows along. The growth is 220ms on `ease`, which starts
   gently, so the new tab button glides over rather than jumps (an ease-out did); the fade waits
-  50ms and takes 250ms, so the label does not show squeezed.
+  40ms and takes 160ms, so the label does not show squeezed.
 - **Closing a tab**: the row keeps a closed tab where it was (`leaving`, `withLeaving` in
   `TabBar`), drawn as it last was but inert and without its tab role, while it fades (120ms)
   and collapses (200ms), so what follows slides back; it goes on `transitionend`. Not a tab
