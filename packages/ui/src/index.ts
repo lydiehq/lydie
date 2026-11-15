@@ -35,6 +35,7 @@ export * from "./components/Toolbar";
 export * from "./components/Tooltip";
 export * from "./components/Triggers";
 export * from "./components/utils";
+export * from "./emoji/emoji";
 export * from "./layout/CollaborationCaret";
 export * from "./layout/ElasticHandle";
 export * from "./layout/use-elastic-panel";

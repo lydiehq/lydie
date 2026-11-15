@@ -10,8 +10,15 @@ import {
   useContributions,
   useQuery,
 } from "@lydie/plugin-api";
-import type { CommandInfo, DocumentMenuItemDef, DocumentRef, SearchHit } from "@lydie/plugin-api";
-import { ConfirmDialog, PickerDialog, RightRegular } from "@lydie/ui";
+import type {
+  CommandChoice,
+  CommandChoices,
+  CommandInfo,
+  DocumentMenuItemDef,
+  DocumentRef,
+  SearchHit,
+} from "@lydie/plugin-api";
+import { CheckRegular, ConfirmDialog, PickerDialog, RightRegular } from "@lydie/ui";
 import type { PickerItem } from "@lydie/ui";
 import { useDeferredValue, useEffect, useState, useSyncExternalStore } from "react";
 
@@ -83,6 +90,51 @@ function useDocumentHits(text: string) {
   }, [host, text]);
   return { hits: text ? state.hits : [], isLoading: Boolean(text) && state.text !== text };
 }
+
+// A command's choices for the query, while its page is open. The previous ones stay up while the
+// next ones load.
+function useChoices(choices: CommandChoices | null, text: string) {
+  const host = useHostInternal();
+  const [state, setState] = useState<{
+    of: CommandChoices | null;
+    text: string;
+    list: readonly CommandChoice[];
+  }>({ of: null, text: "", list: [] });
+  useEffect(() => {
+    if (!choices) return;
+    let live = true;
+    Promise.resolve(choices.list(text, host.app)).then(
+      (list) => {
+        if (live) setState({ of: choices, text, list });
+      },
+      () => {
+        if (live) setState({ of: choices, text, list: [] });
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [host, choices, text]);
+  const mine = choices !== null && state.of === choices;
+  return { list: mine ? state.list : [], isLoading: !mine || state.text !== text };
+}
+
+const choiceItem = (choice: CommandChoice): PickerItem => ({
+  id: choice.id,
+  title: choice.title,
+  icon: choice.icon ?? <RightRegular />,
+  ...(choice.group ? { group: choice.group } : {}),
+  ...(choice.current
+    ? {
+        hint: (
+          <>
+            <CheckRegular className="size-4" />
+            <span className="sr-only">(current)</span>
+          </>
+        ),
+      }
+    : {}),
+});
 
 // Groups while nothing is typed, in this order; any others follow alphabetically.
 const GROUP_ORDER = ["Document", "Navigation", "Tabs", "View", "Edit", "Database", "General"];
@@ -219,9 +271,39 @@ function CommandPalette({ close }: { close: () => void }) {
   const host = useHostInternal();
   const [query, setQuery] = useState("");
   const text = useDeferredValue(query.trim());
-  const docs = useDocumentHits(text);
-  const { context, properties, remove } = usePaletteContext();
+  // The command whose choices are open as a page of their own ("Set page icon").
+  const [nestedId, setNestedId] = useState<string | null>(null);
   const commands = host.app.commands().filter((c) => c.enabled);
+  const nested = commands.find((c) => c.id === nestedId && c.choices) ?? null;
+  const docs = useDocumentHits(nested ? "" : text);
+  const choices = useChoices(nested?.choices ?? null, text);
+  const { context, properties, remove } = usePaletteContext();
+  const back = () => {
+    setNestedId(null);
+    setQuery("");
+  };
+  if (nested) {
+    return (
+      <PickerDialog
+        label="Command palette"
+        placeholder={nested.choices?.placeholder ?? "Search"}
+        query={query}
+        onQueryChange={setQuery}
+        items={choices.list.map(choiceItem)}
+        isLoading={choices.isLoading}
+        height="fixed"
+        emptyText="No matches"
+        // Backspace in the empty search, the pill's button or Escape go back to the commands.
+        context={{ label: nested.title, icon: nested.icon, onRemove: back }}
+        onBack={back}
+        onClose={close}
+        onSelect={(item) => {
+          close();
+          void host.app.runCommand(nested.id, item.id);
+        }}
+      />
+    );
+  }
   const items = paletteItems(commands, query, docs.hits, host.mac, context);
   return (
     <PickerDialog
@@ -249,6 +331,11 @@ function CommandPalette({ close }: { close: () => void }) {
       }
       onClose={close}
       onSelect={(item, event) => {
+        if (commands.find((c) => c.id === item.id)?.choices) {
+          setNestedId(item.id);
+          setQuery("");
+          return;
+        }
         close();
         if (item.id.startsWith(DOC_PREFIX)) {
           const mode = host.app.modeFor({ ...event, button: 0 });

@@ -427,6 +427,7 @@ export function createHost(options: HostOptions): Host {
     source: command.pluginId === "core" && command.id.startsWith("op.") ? "operation" : "plugin",
     scope: command.scope ?? null,
     enabled: command.when ? command.when(app) : true,
+    ...(command.choices ? { choices: command.choices } : {}),
   });
 
   const runCommand = async (

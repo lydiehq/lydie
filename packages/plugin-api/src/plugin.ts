@@ -58,6 +58,25 @@ export type CommandSource = "palette" | "keybinding" | "menu" | "api";
 
 export type CommandContext = { app: AppApi; source: CommandSource; args?: unknown };
 
+// One of the things a command with `choices` can be run with (an icon, a colour).
+export type CommandChoice = {
+  id: string;
+  title: string;
+  icon?: ReactNode;
+  // Choices with the same group run together under its heading.
+  group?: string;
+  // What the document has now: marked with a check.
+  current?: boolean;
+};
+
+export type CommandChoices = {
+  // In the palette's search box while the choices show, e.g. "Search icons".
+  placeholder?: string;
+  // The choices for what is typed, already filtered and in order. Called again as the query
+  // changes; a promise keeps the previous ones up until it resolves.
+  list(query: string, app: AppApi): readonly CommandChoice[] | Promise<readonly CommandChoice[]>;
+};
+
 export type CommandDef = {
   // Namespaced: "<plugin>.<name>", e.g. "quick-switcher.open".
   id: string;
@@ -82,6 +101,10 @@ export type CommandDef = {
   scope?: "document";
   // Disabled (not listed, keybinding ignored) when false.
   when?: (app: AppApi) => boolean;
+  // The palette shows these as a page of their own, and `run` gets the chosen one's id as
+  // `args`. Run any other way (a keybinding), `args` is undefined and the command asks its own
+  // way, such as a picker on the page.
+  choices?: CommandChoices;
   run(context: CommandContext): void | Promise<void>;
 };
 
@@ -95,6 +118,7 @@ export type CommandInfo = {
   source: "plugin" | "operation";
   scope: "document" | null;
   enabled: boolean;
+  choices?: CommandChoices;
 };
 
 // ---- Views and contributions

@@ -424,6 +424,70 @@ describe("shell", () => {
     );
   });
 
+  test("palette: a command with choices opens them as a page; the chosen one is its args", async () => {
+    const runs: unknown[] = [];
+    const queries: string[] = [];
+    const picker = definePlugin({
+      id: "test-choices",
+      name: "Test choices",
+      activate(ctx) {
+        ctx.commands.register({
+          id: "test.pickFruit",
+          title: "Pick fruit",
+          choices: {
+            placeholder: "Search fruit",
+            list: async (query) => {
+              queries.push(query);
+              return [
+                { id: "apple", title: "Apple" },
+                { id: "pear", title: "Pear", current: true },
+              ].filter((c) => c.title.toLowerCase().includes(query.toLowerCase()));
+            },
+          },
+          run: ({ args }) => void runs.push(args),
+        });
+      },
+    });
+    const { host } = await setup({ plugins: [picker] });
+    render(<LydieApp host={host} />);
+    const titles = () => screen.getAllByRole("option").map((o) => o.textContent ?? "");
+    const open = async () => {
+      if (!screen.queryByRole("combobox", { name: "Command palette" })) {
+        await act(async () => host.app.runCommand("core.palette"));
+      }
+      const box = await screen.findByRole("combobox", { name: "Command palette" });
+      await act(async () => fireEvent.change(box, { target: { value: "pick fruit" } }));
+      await act(async () => fireEvent.keyDown(box, { key: "Enter" }));
+      await waitFor(() => screen.queryByRole("option", { name: /Apple/ }) !== null);
+      return box;
+    };
+
+    const box = await open();
+    // Entering the page leaves the palette open, with the command as its pill and an empty search.
+    expect(runs).toEqual([]);
+    expect(screen.getByTestId("picker-context").textContent).toContain("Pick fruit");
+    expect((box as HTMLInputElement).value).toBe("");
+    expect(box.getAttribute("placeholder")).toBe("Search fruit");
+    expect(titles()).toEqual(["Apple", "Pear(current)"]);
+    await act(async () => fireEvent.change(box, { target: { value: "pe" } }));
+    await waitFor(() => titles().length === 1);
+    expect(queries.at(-1)).toBe("pe");
+    await act(async () => fireEvent.keyDown(box, { key: "Enter" }));
+    await settle();
+    expect(runs).toEqual(["pear"]);
+    expect(screen.queryByRole("combobox", { name: "Command palette" })).toBeNull();
+
+    // Escape and Backspace in the empty search go back to the commands, without closing.
+    const again = await open();
+    await act(async () => fireEvent.keyDown(again, { key: "Escape" }));
+    expect(screen.queryByRole("combobox", { name: "Command palette" })).not.toBeNull();
+    expect(screen.queryByRole("option", { name: /Apple/ })).toBeNull();
+    const third = await open();
+    await act(async () => fireEvent.keyDown(third, { key: "Backspace" }));
+    expect(screen.queryByRole("option", { name: /Apple/ })).toBeNull();
+    expect(runs).toEqual(["pear"]);
+  });
+
   test("Cmd+Z outside the editor undoes the active tab's operations", async () => {
     const { host, backend } = await setup();
     const doc = await backend.ops.doc.create({ workspaceId: WS, title: "Before" });

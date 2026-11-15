@@ -85,7 +85,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   `@starting-style` does not work inside react-aria's overlay), NumberField, PickerDialog (modal search over a
   list: the command palette and quick switcher; ARIA combobox; items may carry an `icon` and
   `breadcrumbs`; `height="fixed"` keeps the list one height while typing; `onHighlight(item)` when the item
-  Enter would choose changes, which the palette and quick switcher use to fetch a page ahead), Popover
+  Enter would choose changes, which the palette and quick switcher use to fetch a page ahead;
+  `onBack`: Escape runs it instead of closing, for a nested page such as a command's choices), Popover
   (Select, ComboBox and Menu open in it; motion as in Numina's popups, also on HoverCard: fades and
   scales from 97 % at the trigger, 150 ms both ways on `ease-out-strong`),
   FloatingCard (non-modal card anchored to a rect: hover previews, inline editors; placement

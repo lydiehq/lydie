@@ -50,6 +50,8 @@ type Props = {
   context?: PickerContext | null;
   // The item Enter would choose changed (arrows, pointer, new results): e.g. to fetch it ahead.
   onHighlight?: (item: PickerItem) => void;
+  // On a nested page (a command's choices): Escape runs this instead of closing.
+  onBack?: (() => void) | undefined;
 };
 
 export type PickerContext = { label: string; icon?: ReactNode; onRemove?: () => void };
@@ -71,6 +73,7 @@ export function PickerDialog({
   height = "fit",
   context,
   onHighlight,
+  onBack,
 }: Props) {
   // The highlight resets when the query or the context changes.
   const resetKey = `${context?.label ?? ""}\0${query}`;
@@ -112,6 +115,11 @@ export function PickerDialog({
     } else if (event.key === "Backspace" && query === "" && context?.onRemove) {
       event.preventDefault();
       context.onRemove();
+    } else if (event.key === "Escape" && onBack) {
+      // Before the modal's own handler, which would close it.
+      event.preventDefault();
+      event.stopPropagation();
+      onBack();
     }
   };
 

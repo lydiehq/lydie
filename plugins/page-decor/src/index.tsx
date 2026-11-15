@@ -7,6 +7,7 @@ import {
   COVER_COLORS,
   coverFillOf,
   definePlugin,
+  DocIcon,
   docIdOf,
   PAGE_COVER_KEY,
   PAGE_COVER_POSITION_KEY,
@@ -20,15 +21,26 @@ import {
   useOps,
   useQuerySelect,
 } from "@lydie/plugin-api";
-import type { AppApi, CoverColor, DocumentSlotProps } from "@lydie/plugin-api";
+import type {
+  AppApi,
+  CommandChoice,
+  CommandChoices,
+  CoverColor,
+  DocumentSlotProps,
+} from "@lydie/plugin-api";
 import {
   AriaDialog,
   Button,
+  doodleIcon,
+  DOODLES,
   EmojiRegular,
   focusRingClass,
   IconPicker,
+  loadEmoji,
+  parseDoodleIcon,
   PicRegular,
   Popover,
+  searchEmoji,
   WithTooltip,
 } from "@lydie/plugin-api/ui";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -44,8 +56,8 @@ function isUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
 
-// "Set page icon" and "Set page cover" live in the palette, while the pickers open on the page:
-// the request waits here until that page's decor takes it.
+// "Set page icon" and "Set page cover" run without a choice (a keybinding, "Any color…") open the
+// pickers on the page: the request waits here until that page's decor takes it.
 type Picker = "icon" | "cover";
 let requested: { docId: string; picker: Picker } | null = null;
 const takers = new Set<() => void>();
@@ -556,15 +568,134 @@ function PageDecor({ docId }: DocumentSlotProps) {
   );
 }
 
+// ---- The same choices in the palette, as a page of their own ("Set page icon" › a doodle)
+
+const bare = (text: string) => text.replaceAll("️", "");
+const sentence = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+// Emoji shown for a search; the page's picker has every one.
+const EMOJI_MATCHES = 50;
+// The cover choice that opens the page's picker, for the system's colour picker.
+const ANY_COLOR = "any";
+
+async function activeProperties(app: AppApi) {
+  const id = docIdOf(app.activeTab()?.path);
+  if (!id) return null;
+  const rows = await app.backend.query("doc.get", { id });
+  return rows[0]?.document.properties ?? null;
+}
+
+function searchDoodles(query: string) {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  return DOODLES.filter((doodle) => {
+    const text = ` ${doodle.name} ${doodle.id} ${doodle.keywords}`.toLowerCase();
+    return words.every((word) => text.includes(` ${word}`));
+  });
+}
+
+let emojiNames: Map<string, string> | null = null;
+
+const iconChoices: CommandChoices = {
+  placeholder: "Search doodles and emoji",
+  async list(query, app) {
+    const [groups, properties] = await Promise.all([loadEmoji(), activeProperties(app)]);
+    emojiNames ??= new Map(groups.flatMap((g) => g.emojis.map((e) => [bare(e.emoji), e.name])));
+    const now = pageIconOf(properties);
+    const doodle = parseDoodleIcon(now);
+    // In the colour of the page's doodle, so picking another keeps it.
+    const color = doodle?.color ?? "gray";
+    const q = query.trim();
+    const choice = (icon: string, title: string, group: string, current: boolean) => ({
+      id: icon,
+      title,
+      group,
+      icon: <DocIcon properties={{ [PAGE_ICON_KEY]: icon }} />,
+      ...(current ? { current } : {}),
+    });
+    const doodles = (q ? searchDoodles(q) : DOODLES).map((d) =>
+      choice(doodleIcon(d.id, color), d.name, "Doodles", d.id === doodle?.doodle.id),
+    );
+    const emoji = (
+      q
+        ? searchEmoji(groups, q, EMOJI_MATCHES)
+        : SUGGESTED.map((e) => ({ emoji: e, name: emojiNames?.get(bare(e)) ?? e }))
+    ).map((e) =>
+      choice(
+        e.emoji,
+        sentence(e.name),
+        q ? "Emoji" : "Suggested emoji",
+        now !== null && !doodle && bare(e.emoji) === bare(now),
+      ),
+    );
+    // The kind the page has now first, as the picker opens on its tab.
+    return now && !doodle ? [...emoji, ...doodles] : [...doodles, ...emoji];
+  },
+};
+
+function Swatch({ className = "", background }: { className?: string; background?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`size-3.5 rounded-full ring-1 ring-gray-950/10 ring-inset ${className}`}
+      style={background ? { background } : undefined}
+    />
+  );
+}
+
+const coverChoices: CommandChoices = {
+  placeholder: "Search colors",
+  async list(query, app) {
+    const now = pageCoverOf(await activeProperties(app))?.cover.toLowerCase() ?? null;
+    const hex = now?.startsWith("#") && coverFillOf(now) ? now : null;
+    const all: CommandChoice[] = [
+      ...COLOR_NAMES.map((color) => ({
+        id: color,
+        title: sentence(color),
+        icon: <Swatch className={COVER_COLORS[color]} />,
+        ...(now === color ? { current: true } : {}),
+      })),
+      {
+        id: ANY_COLOR,
+        title: "Any color…",
+        icon: (
+          <Swatch
+            background={hex ?? "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)"}
+          />
+        ),
+        ...(hex ? { current: true } : {}),
+      },
+    ];
+    const q = query.trim().toLowerCase();
+    return q ? all.filter((c) => c.title.toLowerCase().includes(q)) : all;
+  },
+};
+
+// A choice from the palette (`args`), or, run any other way, the page's picker.
+function setFromPalette(app: AppApi, picker: Picker, args: unknown) {
+  const docId = docIdOf(app.activeTab()?.path);
+  if (!docId) return;
+  const options = { scope: app.historyScope(), label: `Set page ${picker}` };
+  if (picker === "icon" && typeof args === "string" && args.trim()) {
+    void app.backend.ops.doc.setProperties(
+      { id: docId, set: { [PAGE_ICON_KEY]: args.trim() } },
+      options,
+    );
+  } else if (picker === "cover" && typeof args === "string" && coverFillOf(args)) {
+    void app.backend.ops.doc.setProperties(
+      { id: docId, set: { [PAGE_COVER_KEY]: args }, unset: [PAGE_COVER_POSITION_KEY] },
+      options,
+    );
+  } else openPicker(app, docId, picker);
+}
+
 export const pageDecorPlugin = definePlugin({
   id: "page-decor",
   name: "Page icons and covers",
   description: "An emoji icon and a cover image per page, kept as frontmatter properties.",
   activate(ctx) {
     ctx.documents.register({ id: "page-decor", slot: "top", order: 0, component: PageDecor });
-    for (const [picker, title, icon] of [
-      ["icon", "Set page icon", <EmojiRegular key="icon" />],
-      ["cover", "Set page cover", <PicRegular key="cover" />],
+    for (const [picker, title, icon, choices] of [
+      ["icon", "Set page icon", <EmojiRegular key="icon" />, iconChoices],
+      ["cover", "Set page cover", <PicRegular key="cover" />, coverChoices],
     ] as const) {
       ctx.commands.register({
         id: `page-decor.set${picker === "icon" ? "Icon" : "Cover"}`,
@@ -573,10 +704,8 @@ export const pageDecorPlugin = definePlugin({
         group: "Document",
         scope: "document",
         when: (app) => docIdOf(app.activeTab()?.path) !== null,
-        run: ({ app }) => {
-          const docId = docIdOf(app.activeTab()?.path);
-          if (docId) openPicker(app, docId, picker);
-        },
+        choices,
+        run: ({ app, args }) => setFromPalette(app, picker, args),
       });
     }
     ctx.commands.register({

@@ -104,7 +104,10 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   `host/command-icons.tsx`). Empty: grouped (`GROUP_ORDER`), registration order within a group.
   Typing: up to 4 commands whose title contains the query lead without a heading (group as a
   breadcrumb), then full-text document hits (`doc.search`, 8), then the other matches by group. A
-  document opens like the quick switcher (Mod+Enter: new tab).
+  document opens like the quick switcher (Mod+Enter: new tab). A command with `choices` ("Set
+  page icon", "Set page cover") opens a page of them in the same dialog, the command as its pill
+  in place of the document's; Escape, Backspace in the empty search or the pill's button go back,
+  and the chosen id runs the command as `args` (`useChoices`, `nestedId` in `CommandPalette`).
 - **Toasts** (`shell/Toasts.tsx`, after Sonner): `app.notify` only appends to `host.toasts` (at
   most 10); the toaster times them out, so hovering, keyboard focus, a swipe or a hidden page
   pauses every timer. The newest three stack at the bottom right, older ones peeking 14 px above

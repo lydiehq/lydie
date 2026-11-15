@@ -70,7 +70,11 @@ ctx: { plugin, app, commands, views, sidebar, panels, statusBar, settings, overl
   documentMenu, links, editor, documents }    // each .register(def) → disposer
 CommandDef { id, title, group?, icon? (ReactNode, shown in the palette), keybinding? ("Mod+O"), inText?, hidden?,
   bindable? (false: not in Settings → Keyboard shortcuts; sign out, export, What's new),
-  operation?, when?, run({ app, source, args }) }
+  operation?, when?, choices?, run({ app, source, args }) }
+//   choices: CommandChoices { placeholder?, list(query, app) → CommandChoice[] | Promise }: the
+//   palette opens them as a page of its own (the command as its pill; Escape or Backspace goes
+//   back) and runs the command with the chosen id as `args`; run any other way, `args` is
+//   undefined. CommandChoice { id, title, icon?, group?, current? (a check) }
 ViewDef { path ("/trash", "/d/:id", "/reports/*": the pages it shows, and their URL on the web),
   component({ tab }), title? | tabTitle?({ path }), icon? (before `title` in the tab; a `tabTitle`
   draws its own), order?,
