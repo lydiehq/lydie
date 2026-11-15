@@ -28,7 +28,7 @@ empty here." box, except while a hosted window's first sync is on its way
 (`BackendStatus.awaitingFirstSync`): then an empty tree shows a few skeleton rows (`SyncingRows`,
 "Syncing documents"), also in place of another plugin's `emptyState`. Tests: `SyncingRows.test.tsx`.
 
-A virtualised tree (`tree-model.ts`): one live `doc.children` query per expanded folder, never the full tree; expanded folders are remembered per device. Open (click, Cmd/middle-click for a new tab), create, rename inline (F2 or the menu), move by drag and drop (before/after/inside; a drag resting on a closed folder opens it; drop markers are neutral grey, the line indented to the level it lands on), move to trash;
+A virtualised tree (`tree-model.ts`): one live `doc.children` query per expanded folder, never the full tree; expanded folders are remembered per device, and until anything is remembered the Getting started page (`gettingStartedId`) starts open, so a new workspace shows its pages. Open (click, Cmd/middle-click for a new tab), create, rename inline (F2 or the menu), move by drag and drop (before/after/inside; a drag resting on a closed folder opens it; drop markers are neutral grey, the line indented to the level it lands on), move to trash;
 multiple selection (`selection.ts`): Mod+click toggles (seeded with the open row, as in Finder; Mod+Shift+click
 and middle-click still open a tab), Shift+click and Shift+arrows select a range, Space toggles, Mod+A selects
 all, Escape clears. Delete and "Move to trash" ask first when a document has content (`confirmMoveToTrash`: a body,

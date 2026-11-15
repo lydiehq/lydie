@@ -4,6 +4,7 @@ import {
   docIdOf,
   documentMenuItems,
   DRAG_TYPES,
+  gettingStartedId,
   moveToTrash,
   runDocumentMenuAction,
   useActiveTab,
@@ -61,7 +62,9 @@ function useTreeModel(props: DocumentTreeProps): TreeModel {
     createTreeModel(
       backend,
       workspaceId,
-      app.storage.get<string[]>(key) ?? [],
+      // Nothing remembered yet (a new workspace, or a new device): Getting started starts open, so
+      // its pages show. Before sync brings it, the id just watches an empty level.
+      app.storage.get<string[]>(key) ?? [gettingStartedId(workspaceId)],
       (ids) => app.storage.set(key, ids),
       { ...(props.space ? { space: props.space } : {}), rootFilter: props.filterRoot ?? null },
     ),

@@ -2,7 +2,7 @@
 // another tree through `onForeignDrop`, drops within the tree as `doc.move`.
 import { afterEach, describe, expect, mock, test } from "bun:test";
 
-import { BackendProvider, HostProvider } from "@lydie/plugin-api";
+import { BackendProvider, gettingStartedId, HostProvider } from "@lydie/plugin-api";
 import type { Backend, ChildEntry, HostBridge, LiveState, ToastOptions } from "@lydie/plugin-api";
 import type { ConfirmOptions } from "@lydie/plugin-api/ui";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
@@ -38,9 +38,12 @@ function setup(
   {
     activeDocId,
     collections = {},
+    expanded = null,
   }: {
     activeDocId?: string;
     collections?: Record<string, { id: string; name: string; type: "table" | "board" }[]>;
+    // What `app.storage` remembers as expanded; null: nothing yet.
+    expanded?: string[] | null;
   } = {},
 ) {
   const activeTab = activeDocId ? { id: "tab", path: `/d/${activeDocId}` } : null;
@@ -103,7 +106,7 @@ function setup(
   const host = {
     app: {
       backend,
-      storage: { get: () => null, set() {} },
+      storage: { get: () => expanded, set() {} },
       notify: (toast: ToastOptions) => void toasts.push(toast),
       confirm: async (options: ConfirmOptions) => {
         confirms.push(options);
@@ -603,6 +606,33 @@ describe("rows (as in v1)", () => {
     expect(row("Docs", "Plain").dataset.dragging).toBe("true");
     fireEvent.dragEnd(row("Docs", "Plain"), { dataTransfer: transfer });
     expect(row("Docs", "Plain").dataset.dragging).toBeUndefined();
+  });
+
+  test("Getting started starts open until the tree remembers what is open", async () => {
+    const welcome = { ...doc(gettingStartedId("ws"), "Getting started", null), childCount: 3 };
+    const fresh = setup([welcome]);
+    render(
+      <BackendProvider backend={fresh.backend}>
+        <HostProvider host={fresh.host}>
+          <DocumentTree label="Docs" scroll="parent" />
+        </HostProvider>
+      </BackendProvider>,
+    );
+    await act(async () => {});
+    expect(row("Docs", "Getting started").getAttribute("aria-expanded")).toBe("true");
+    expect(fresh.queried).toContainEqual({ workspaceId: "ws", parentId: welcome.id });
+    cleanup();
+
+    const closed = setup([welcome], { expanded: [] });
+    render(
+      <BackendProvider backend={closed.backend}>
+        <HostProvider host={closed.host}>
+          <DocumentTree label="Docs" scroll="parent" />
+        </HostProvider>
+      </BackendProvider>,
+    );
+    await act(async () => {});
+    expect(row("Docs", "Getting started").getAttribute("aria-expanded")).toBe("false");
   });
 });
 
