@@ -38,6 +38,7 @@ export * from "./layout/use-elastic-panel";
 export * from "./layout/Separator";
 export * from "./layout/Settings";
 export * from "./layout/sidebar-styles";
+export * from "./layout/SidebarNotice";
 export * from "./layout/States";
 export * from "./layout/Timeline";
 export * from "./illustrations/illustrations";

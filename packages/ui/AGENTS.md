@@ -161,6 +161,9 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   under reduced motion. Tests that render one set `MotionGlobalConfig.skipAnimations` in
   their setup: happy-dom leaves a cancelled animation's rejection unhandled. Every drawing is in
   the dev playground's "Empty states" (`apps/web`).
+- **SidebarNotice** (`src/layout/SidebarNotice.tsx`): a small card at the bottom of the sidebar
+  (title, a line or two, at most two actions, dismiss), for what should not take room in the
+  content: the beta notice, the account plugin's local notice.
 - **UI states** (`src/layout/States.tsx`): EmptyState (`illustration` above the title, or a
   small `icon`), LoadingState (hidden for its first 150 ms too, `animate-appear`; its indicator is
   `identity/RollingMark.tsx`, "Roll" from the logo brainstorm: the mark as a ball cut by a slab,

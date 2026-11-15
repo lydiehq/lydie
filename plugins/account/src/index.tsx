@@ -5,6 +5,7 @@ import {
   Button,
   CloudRegular,
   ExitRegular,
+  SidebarNotice,
   StatusBanner,
   User3Regular,
 } from "@lydie/plugin-api/ui";
@@ -67,15 +68,15 @@ function useLostAccess(): HostedWorkspaceSummary[] | null {
   return others;
 }
 
-// In this browser's own workspace, on a device that has opened a cloud workspace: says that these
-// notes are not that workspace, and offers the way there (`local-notice.ts`).
+// In the sidebar of this browser's own workspace, on a device that has opened a cloud workspace:
+// says that these notes are not that workspace, and offers the way there (`local-notice.ts`).
 function LocalNotice() {
   const app = useApp();
   const { api, state } = useAccount();
   const [dismissed, setDismissed] = useState(() => app.storage.get<string>(DISMISSED_KEY));
   const local = api?.localWorkspaces().find((w) => w.current);
   // A folder is the person's own files, and plainly not the cloud.
-  if (!api || local?.kind !== "browser") return null;
+  if (!api || api.scope.kind !== "local" || local?.kind !== "browser") return null;
   const notice = localNotice({
     status: state.status,
     copied: readCopied(app, local.id),
@@ -83,44 +84,32 @@ function LocalNotice() {
     dismissed,
   });
   if (!notice) return null;
-  const dismiss = (
-    <Button
-      size="xs"
-      variant="ghost"
-      onPress={() => {
-        app.storage.set(DISMISSED_KEY, notice.kind);
-        setDismissed(notice.kind);
-      }}
-    >
-      Dismiss
-    </Button>
-  );
+  const dismiss = () => {
+    app.storage.set(DISMISSED_KEY, notice.kind);
+    setDismissed(notice.kind);
+  };
   if (notice.kind === "signed-out") {
     return (
-      <StatusBanner
-        kind="warning"
-        action={
-          <>
-            <Button
-              size="xs"
-              variant="secondary"
-              onPress={() => app.overlays.open("account.signIn")}
-            >
-              Sign in
-            </Button>
-            {dismiss}
-          </>
+      <SidebarNotice
+        title="Signed out"
+        onDismiss={dismiss}
+        testId="local-notice"
+        actions={
+          <Button size="xs" variant="secondary" onPress={() => app.overlays.open("account.signIn")}>
+            Sign in
+          </Button>
         }
       >
-        You are signed out of Lydie Cloud. This is “{local.name}”, kept in this browser only: what
-        you write here is not added to “{notice.cloud.name}”.
-      </StatusBanner>
+        What you write here stays in this browser. Sign in to get back to “{notice.cloud.name}”.
+      </SidebarNotice>
     );
   }
   return (
-    <StatusBanner
-      kind="info"
-      action={
+    <SidebarNotice
+      title="In this browser only"
+      onDismiss={dismiss}
+      testId="local-notice"
+      actions={
         <>
           <Button
             size="xs"
@@ -136,27 +125,24 @@ function LocalNotice() {
               {toCloud(api)}…
             </Button>
           )}
-          {dismiss}
         </>
       }
     >
       {notice.kind === "copied"
-        ? `This is “${local.name}” in this browser. It was copied to “${notice.cloud.name}” in Lydie Cloud, and what you change here is not added there.`
-        : `This is “${local.name}”, kept in this browser only. “${notice.cloud.name}” is in Lydie Cloud.`}
-    </StatusBanner>
+        ? `“${local.name}” was copied to “${notice.cloud.name}”. What you change here is not added there.`
+        : `“${local.name}” is not in Lydie Cloud. “${notice.cloud.name}” is.`}
+    </SidebarNotice>
   );
 }
 
 // Under the content of a hosted window, only for what needs the person: signed out, a refused
 // session, or no longer a member of the workspace. Being offline is not here: nothing is at risk,
-// and the sync item says so (in the tab row while the sidebar is collapsed). A local window gets
-// `LocalNotice`.
+// and the sync item says so (in the tab row while the sidebar is collapsed).
 export function HostedBanner() {
   const app = useApp();
   const { api } = useAccount();
   const details = useObservable(api?.sync?.details);
   const lost = useLostAccess();
-  if (api?.scope.kind === "local") return <LocalNotice />;
   if (!details) return null;
   if (lost && api) {
     const next = lost[0];
@@ -233,6 +219,8 @@ export const accountPlugin = definePlugin({
         })
         .catch(() => {});
     }
+    // Last in the sidebar, above the footer; takes no room without a notice.
+    ctx.sidebar.register({ id: "account.notice", order: 2000, component: LocalNotice });
     ctx.statusBar.register({
       id: "account",
       align: "left",

@@ -2,10 +2,10 @@ import { useContributions, useDeviceSetting, useShortcut, useStatus } from "@lyd
 import {
   AddRegular,
   Button,
-  CloseRegular,
   KeyCaps,
   Search2Regular,
   sidebarItemStyles,
+  SidebarNotice,
   sidebarSectionTitleClass,
   StatusBanner,
   SyncIndicator,
@@ -54,25 +54,14 @@ function BetaNotice() {
   const [dismissed, setDismissed] = useDeviceSetting("shell.betaNoticeDismissed", false);
   if (dismissed) return null;
   return (
-    <div
-      className="surface-depth mx-2 mb-2 flex shrink-0 items-start gap-1 rounded-lg bg-surface py-2 pr-1.5 pl-2.5 text-xs"
-      data-testid="beta-notice"
-    >
-      <div className="min-w-0 grow">
-        <p className="font-medium text-gray-900">Lydie is in beta</p>
-        <p className="mt-0.5 text-gray-500">
-          It is under active development, so expect rough edges and frequent changes.
-        </p>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon-2xs"
-        aria-label="Dismiss"
-        className="-mt-0.5 text-gray-500 hover:text-gray-700"
-        onPress={() => setDismissed(true)}
+    <div className="mb-2 flex shrink-0 flex-col">
+      <SidebarNotice
+        title="Lydie is in beta"
+        onDismiss={() => setDismissed(true)}
+        testId="beta-notice"
       >
-        <CloseRegular />
-      </Button>
+        It is under active development, so expect rough edges and frequent changes.
+      </SidebarNotice>
     </div>
   );
 }

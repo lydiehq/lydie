@@ -57,13 +57,13 @@ for a folder (`toCloud(api)` in `sign-up.ts`: a move where `handoff.discard` exi
 (Syncing, Synced, Offline). "Lydie Cloud is free for now. Fair use applies." is said in the new
 workspace dialog and under Plan on the Account page.
 
-Local notice (`local-notice.ts`, `LocalNotice` in `index.tsx`, rendered by `HostedBanner` in a local
-window): so nobody writes in this browser's workspace believing it is their cloud one. The device
+Local notice (`local-notice.ts`, `LocalNotice` in `index.tsx`, a `SidebarNotice` card registered as
+the last sidebar section, not a banner over the content): so nobody writes in this browser's workspace believing it is their cloud one. The device
 remembers the cloud workspace opened last and when (`account.cloud`, set when a hosted window opens) and
 where each local workspace was copied to (`account.copied`, set when a hand-off succeeds). With
-either, this browser's workspace (not a folder) shows a banner: signed out, "You are signed out of
-Lydie Cloud… what you write here is not added to X" with Sign in; signed in, that this is the copy
-in this browser, with "Open X" and "Copy to cloud…". Dismiss hides that kind (`localNotice`,
+either, this browser's workspace (not a folder) shows the card: signed out, "Signed out… What you
+write here stays in this browser" with Sign in; signed in, "In this browser only" with "Open X" and
+"Move to cloud…". Dismiss hides that kind (`localNotice`,
 unit-tested). The hand-off dialog preselects the workspace copied to before, and its summary says
 that pages already there stay as they are (a second copy brings new pages, not edits to old ones).
 
