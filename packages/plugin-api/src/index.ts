@@ -17,6 +17,7 @@ export * from "./paths.ts";
 export * from "./routes.ts";
 export * from "./placement.ts";
 export * from "./trash.ts";
+export * from "./document-menu.ts";
 export type * from "./hosted.ts";
 export type * from "./hosted-operations.ts";
 export * from "./hosted-react.tsx";

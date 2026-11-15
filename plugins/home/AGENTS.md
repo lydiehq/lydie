@@ -33,6 +33,9 @@ home page; click opens here, Mod-click in a new tab). It answers "where was I" a
 - **Jump back in**: up to 8 documents, opened on this device first (newest first), then the
   workspace's recently changed ones (`doc.recent`, watched only while fewer than 8 were opened here).
   Each row shows its parent and when it last changed. Trashed documents drop out of the list.
+  Right-click, the menu key (or Shift+F10) and a "…" button (in place of the time while the row is
+  hovered or focused) open the sidebar tree's menu (`documentMenuItems` from the plugin API, with
+  `documentMenu` contributions such as favorites); rename is inline in the row.
 
 Opens are recorded per device and workspace (`home:recent:<workspaceId>`, at most 50) whenever a
 document becomes the focused tab. The quick switcher keeps its own frecency stats.

@@ -235,7 +235,9 @@ export type DocumentRef = { id: string; title: string; parentId: string | null }
 
 export type DocumentMenuItemDef = {
   id: string;
-  label: string;
+  // A function when it follows the document ("Add to favorites" / "Remove from favorites"); read
+  // when the menu opens (`documentMenuLabel`).
+  label: string | ((doc: DocumentRef) => string);
   // Shown before the label in the page's ••• menu.
   icon?: ReactNode;
   order?: number;
@@ -245,6 +247,9 @@ export type DocumentMenuItemDef = {
   when?: (doc: DocumentRef) => boolean;
   run(doc: DocumentRef, app: AppApi): void | Promise<void>;
 };
+
+export const documentMenuLabel = (def: Pick<DocumentMenuItemDef, "label">, doc: DocumentRef) =>
+  typeof def.label === "function" ? def.label(doc) : def.label;
 
 // Renders a wiki-link or embed target the default renderer does not handle (e.g. a URL embed).
 // "preview": the hover card for a link (`HoverPreview`); targets are written as in a wiki link

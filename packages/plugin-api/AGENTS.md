@@ -83,7 +83,8 @@ SidebarSectionDef { id, order?, title?, fill?, replaces?, actions? [{ label, ico
    PanelDef { id, title, order?, component({ activeTab }) }
 StatusItemDef, SettingsPageDef, OverlayDef { id, component({ close, props }), url?: { path(props), parse(path) } /* its place in
 the web app's address bar, below the base: opening adds a history entry, Back closes it */ },
-DocumentMenuItemDef { id, label, run(doc, app), icon?, group?, order?, when?, danger? }
+DocumentMenuItemDef { id, label /* or (doc) => label, read when a menu opens: documentMenuLabel(def, doc) */,
+  run(doc, app), icon?, group?, order?, when?, danger? }
 //   (the page's ••• menu shows the icon and puts each group between separators),
 LinkRendererDef { id, kind: "link" | "embed" | "preview", match(target), component({ target, sourceId? }) },
 EditorContributions { extensions?, slashItems? (array or getter), overlay?({ editor, docId, tabId }) }
@@ -179,6 +180,14 @@ formatDate(date, "YYYY-MM-DD"), parseDate(text, format), startOfDay, addDays   /
 confirmMoveToTrash(app, ids, total?) → Promise<boolean>   // asks (app.confirm) only when one has
 //   content: hasContent(backend, id) = a non-blank body, documents inside, or a database. The
 //   palette's "Delete document" and the sidebar tree both use it
+moveToTrash(app, topmost docs, { total?, scope }) → Promise<boolean>   // a document menu's "Move
+//   to trash": asks as above, one step (one undo), then a toast whose Undo restores them
+documentMenuItems(doc, contributions) → ContextMenuItem[], runDocumentMenuAction(action, doc,
+  contributions, app) → "open-tab" | "open-split" | "new-child" | "rename" | "delete" | null
+//   (src/document-menu.ts) the context menu on a document in a list, the same wherever it opens
+//   (the sidebar tree, Home): open in a new tab / to the right, new document inside, rename, the
+//   `documentMenu` contributions (by `order`), move to trash. The list carries out the built-in
+//   actions (rename is inline); a contribution runs and the call returns null
 findByPath(app, "Meta/Templates") → id | null; resolvePath(app, path) → { id, missing };
 //   createMissing(ops, workspaceId, match) in a transaction   // documents by title path
 atTop(backend, workspaceId, parentId) → { beforeId? }   // spread into doc.create: new pages made

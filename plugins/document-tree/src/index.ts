@@ -12,6 +12,7 @@ export const documentTreePlugin = definePlugin({
   name: "Document tree",
   description: "The sidebar tree of documents: open, create, rename, move and delete.",
   activate(ctx) {
+    const { app } = ctx;
     ctx.sidebar.register({
       id: "documents",
       title: "Documents",
@@ -42,6 +43,16 @@ export const documentTreePlugin = definePlugin({
         const on = favoritesOf(app).toggle(docId);
         app.notify({ title: on ? "Added to favorites" : "Removed from favorites" });
       },
+    });
+    // In every document menu (rows here, Home, the page's •••). The palette lists it once, as the
+    // command above (same id).
+    ctx.documentMenu.register({
+      id: "document-tree.toggleFavorite",
+      label: (doc) => (favoritesOf(app).has(doc.id) ? "Remove from favorites" : "Add to favorites"),
+      icon: createElement(StarRegular),
+      group: "favorite",
+      order: 5,
+      run: (doc) => void favoritesOf(app).toggle(doc.id),
     });
     ctx.commands.register({
       id: "document-tree.collapseAll",

@@ -1,9 +1,11 @@
 import {
   atTop,
-  confirmMoveToTrash,
   DocIcon,
   docIdOf,
+  documentMenuItems,
   DRAG_TYPES,
+  moveToTrash,
+  runDocumentMenuAction,
   useActiveTab,
   useApp,
   useBackend,
@@ -33,7 +35,6 @@ import { memo, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStor
 import type { DragEvent, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 
 import { DocHoverCard } from "./DocHoverCard.tsx";
-import { favoritesOf } from "./favorites.ts";
 import { placements, rangeIds, topmost, withinAny } from "./selection.ts";
 import { SyncingRows, useAwaitingFirstSync } from "./SyncingRows.tsx";
 import { createTreeModel } from "./tree-model.ts";
@@ -105,6 +106,12 @@ function setDragBadge(transfer: DataTransfer, text: string) {
 }
 
 const EMPTY: ReadonlySet<string> = new Set();
+
+const refOf = (doc: ChildEntry): DocumentRef => ({
+  id: doc.id,
+  title: doc.title,
+  parentId: doc.parentId,
+});
 
 const DROP_LINE = "pointer-events-none absolute right-1 h-0.5 rounded-full bg-gray-950/40";
 
@@ -355,54 +362,8 @@ export function DocumentTree(props: DocumentTreeProps) {
   // Several documents go in one transaction, so one undo brings them all back. Asks first when one
   // of them has content.
   const remove = async ({ all, top }: { all: ChildEntry[]; top: ChildEntry[] }) => {
-    const [only] = top;
-    if (!only) return;
-    try {
-      if (
-        !(await confirmMoveToTrash(
-          app,
-          top.map((d) => d.id),
-          all.length,
-        ))
-      )
-        return;
-      if (top.length === 1) await ops.doc.delete({ id: only.id });
-      else {
-        await backend.transaction(
-          `Move ${all.length} documents to trash`,
-          async (tx) => {
-            for (const doc of top) await tx.doc.delete({ id: doc.id });
-          },
-          { scope: historyScope() },
-        );
-      }
-    } catch (error) {
-      failed(all.length === 1 ? "move it to the trash" : "move them to the trash")(error);
-      return;
-    }
-    clearSelection();
-    app.notify({
-      title:
-        all.length === 1
-          ? `“${only.title || "Untitled"}” moved to trash`
-          : `${all.length} documents moved to trash`,
-      description: `Undo with ${app.formatKeybinding("Mod+Z")}`,
-      // Restores these documents rather than popping the undo stack: by the time the button is
-      // pressed the stack may hold newer steps, or belong to another tab.
-      action: { label: "Undo", onPress: () => void restore(top) },
-    });
+    if (await moveToTrash(app, top, { total: all.length, scope: historyScope() })) clearSelection();
   };
-
-  const restore = (docs: ChildEntry[]) =>
-    backend
-      .transaction(
-        docs.length === 1 ? "Restore document" : `Restore ${docs.length} documents`,
-        async (tx) => {
-          for (const doc of docs) await tx.doc.restore({ id: doc.id });
-        },
-        { scope: historyScope() },
-      )
-      .catch(failed(docs.length === 1 ? "restore it" : "restore them"));
 
   const rename = async (doc: ChildEntry, title: string) => {
     setRenamingId(null);
@@ -578,43 +539,19 @@ export function DocumentTree(props: DocumentTreeProps) {
         { id: "delete", label: `Move ${all.length} documents to trash`, danger: true },
       ];
     }
-    const ref: DocumentRef = { id: doc.id, title: doc.title, parentId: doc.parentId };
-    return [
-      { id: "open-tab", label: "Open in new tab" },
-      { id: "open-split", label: "Open to the right" },
-      { type: "separator", id: "s1" },
-      { id: "new-child", label: "New document inside" },
-      { id: "rename", label: "Rename" },
-      {
-        id: "favorite",
-        label: favoritesOf(app).has(doc.id) ? "Remove from favorites" : "Add to favorites",
-      },
-      ...menuItems
-        .filter((m) => !m.when || m.when(ref))
-        .map((m) => ({
-          id: `plugin:${m.pluginId}:${m.id}`,
-          label: m.label,
-          ...(m.danger ? { danger: true } : {}),
-        })),
-      { type: "separator", id: "s2" },
-      { id: "delete", label: "Move to trash", danger: true },
-    ];
+    return documentMenuItems(refOf(doc), menuItems);
   };
 
   const onMenuAction = (doc: ChildEntry, action: string) => {
     const targets = targetsOf(doc);
-    if (action === "open-tab") {
+    const builtIn = runDocumentMenuAction(action, refOf(doc), menuItems, app);
+    if (builtIn === "open-tab") {
       // The first comes to the front, the rest open behind it.
       targets.all.forEach((d, i) => app.openDoc(d.id, { mode: i === 0 ? "tab" : "background" }));
-    } else if (action === "open-split") app.openDoc(doc.id, { mode: "split" });
-    else if (action === "new-child") void createIn(doc.id);
-    else if (action === "rename") setRenamingId(doc.id);
-    else if (action === "favorite") favoritesOf(app).toggle(doc.id);
-    else if (action === "delete") void remove(targets);
-    else if (action.startsWith("plugin:")) {
-      const item = menuItems.find((m) => `plugin:${m.pluginId}:${m.id}` === action);
-      void item?.run({ id: doc.id, title: doc.title, parentId: doc.parentId }, app);
-    }
+    } else if (builtIn === "open-split") app.openDoc(doc.id, { mode: "split" });
+    else if (builtIn === "new-child") void createIn(doc.id);
+    else if (builtIn === "rename") setRenamingId(doc.id);
+    else if (builtIn === "delete") void remove(targets);
   };
 
   const endDrop = {

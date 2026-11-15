@@ -2,17 +2,26 @@
 // The home page: the new-tab page and what an empty pane shows. One box to find or create,
 // then where you were.
 import {
+  atTop,
   DocIcon,
+  documentMenuItems,
   gettingStartedId,
+  moveToTrash,
   pageIconOf,
+  runDocumentMenuAction,
   useApp,
   useBackend,
+  useContributions,
   useDeviceSetting,
+  useOps,
   useQuery,
 } from "@lydie/plugin-api";
-import type { AppApi, OpenOptions, ViewProps } from "@lydie/plugin-api";
+import type { AppApi, DocumentRef, OpenOptions, ViewProps } from "@lydie/plugin-api";
 import {
+  Button,
+  ContextMenu,
   focusRingInsetClass,
+  More1Regular,
   Search2Regular,
   sidebarSectionTitleClass,
 } from "@lydie/plugin-api/ui";
@@ -341,6 +350,10 @@ function JumpBackIn({
     changed.data.filter((d) => d.id !== exclude),
     JUMP_LIMIT,
   );
+  const ops = useOps();
+  const menuItems = useContributions("documentMenu");
+  const [menu, setMenu] = useState<{ doc: DocumentRef; x: number; y: number } | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
   const headingId = useId();
   if (ids.length === 0) {
     if (changed.isLoading) return null;
@@ -350,6 +363,42 @@ function JumpBackIn({
       </p>
     );
   }
+
+  const failed = (what: string) => (error: unknown) =>
+    app.notify({
+      title: `Could not ${what}`,
+      description: error instanceof Error ? error.message : String(error),
+      kind: "error",
+    });
+
+  // The sidebar tree's menu (`documentMenuItems`), for one document.
+  const onMenuAction = async (doc: DocumentRef, action: string) => {
+    const builtIn = runDocumentMenuAction(action, doc, menuItems, app);
+    if (builtIn === "open-tab") app.openDoc(doc.id, { mode: "tab" });
+    else if (builtIn === "open-split") app.openDoc(doc.id, { mode: "split" });
+    else if (builtIn === "rename") setRenamingId(doc.id);
+    else if (builtIn === "delete") await moveToTrash(app, [doc], { scope: app.historyScope() });
+    else if (builtIn === "new-child") {
+      const workspaceId = app.workspace.workspaceId;
+      const created = await ops.doc
+        .create({
+          workspaceId,
+          parentId: doc.id,
+          title: "Untitled",
+          ...(await atTop(app.backend, workspaceId, doc.id)),
+        })
+        .catch(failed("create the page"));
+      if (created) app.openDoc(created.id, { state: { focusTitle: true } });
+    }
+  };
+
+  const rename = (doc: DocumentRef, title: string) => {
+    setRenamingId(null);
+    const next = title.trim();
+    if (next && next !== doc.title)
+      void ops.doc.rename({ id: doc.id, title: next }).catch(failed("rename it"));
+  };
+
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-1">
       <h2 id={headingId} className={`px-3 ${sidebarSectionTitleClass}`}>
@@ -357,9 +406,26 @@ function JumpBackIn({
       </h2>
       <ul className="flex flex-col">
         {ids.map((id) => (
-          <RecentRow key={id} id={id} now={now} onTrashed={onTrashed} />
+          <RecentRow
+            key={id}
+            id={id}
+            now={now}
+            onTrashed={onTrashed}
+            menuOpen={menu?.doc.id === id}
+            onMenu={(doc, x, y) => setMenu({ doc, x, y })}
+            renaming={renamingId === id}
+            onRename={rename}
+            onCancelRename={() => setRenamingId(null)}
+          />
         ))}
       </ul>
+      <ContextMenu
+        label="Document actions"
+        position={menu ? { x: menu.x, y: menu.y } : null}
+        items={menu ? documentMenuItems(menu.doc, menuItems) : []}
+        onAction={(action) => menu && void onMenuAction(menu.doc, action)}
+        onClose={() => setMenu(null)}
+      />
     </section>
   );
 }
@@ -368,10 +434,20 @@ function RecentRow({
   id,
   now,
   onTrashed,
+  menuOpen,
+  onMenu,
+  renaming,
+  onRename,
+  onCancelRename,
 }: {
   id: string;
   now: number;
   onTrashed: (id: string) => void;
+  menuOpen: boolean;
+  onMenu: (doc: DocumentRef, x: number, y: number) => void;
+  renaming: boolean;
+  onRename: (doc: DocumentRef, title: string) => void;
+  onCancelRename: () => void;
 }) {
   const app = useApp();
   const doc = useQuery("doc.get", { id }).data[0]?.document;
@@ -382,22 +458,112 @@ function RecentRow({
   }, [trashed, id, onTrashed]);
   // Missing (another workspace, not synced yet) or in the trash: not listed.
   if (!doc || trashed) return null;
+  const ref: DocumentRef = { id, title: doc.title, parentId: doc.parentId };
+  const title = doc.title || "Untitled";
+  const icon = (
+    <span className="flex shrink-0 text-gray-500">
+      <DocIcon id={id} properties={doc.properties} />
+    </span>
+  );
+  // Under the element, as the "…" button opens it.
+  const menuBelow = (el: Element) => {
+    const rect = el.getBoundingClientRect();
+    onMenu(ref, rect.left, rect.bottom);
+  };
   return (
-    <li>
-      <button
-        type="button"
-        onClick={(e) => app.openDoc(id, { mode: app.modeFor(e) })}
-        className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-sm hover:bg-gray-950/3 ${focusRingInsetClass}`}
-      >
-        <span className="flex shrink-0 text-gray-500">
-          <DocIcon id={id} properties={doc.properties} />
-        </span>
-        <span className="truncate font-medium text-gray-900">{doc.title || "Untitled"}</span>
-        {parent && <span className="truncate text-gray-400">{parent.title || "Untitled"}</span>}
-        <span className="ml-auto shrink-0 pl-3 text-xs text-gray-400">
-          {ago(doc.updatedAt, now)}
-        </span>
-      </button>
+    <li
+      className={`group relative flex h-9 items-center rounded-lg text-sm ${menuOpen ? "bg-gray-950/3" : "hover:bg-gray-950/3"}`}
+    >
+      {renaming ? (
+        <div className="flex h-full w-full items-center gap-2.5 px-3">
+          {icon}
+          <RenameInput
+            initial={doc.title}
+            onCommit={(next) => onRename(ref, next)}
+            onCancel={onCancelRename}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => app.openDoc(id, { mode: app.modeFor(e) })}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onMenu(ref, e.clientX, e.clientY);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+              e.preventDefault();
+              menuBelow(e.currentTarget);
+            }
+          }}
+          className={`flex h-full w-full items-center gap-2.5 rounded-lg px-3 text-left ${focusRingInsetClass}`}
+        >
+          {icon}
+          <span className="truncate font-medium text-gray-900">{title}</span>
+          {parent && <span className="truncate text-gray-400">{parent.title || "Untitled"}</span>}
+          {/* Makes way for the "…" button while it shows. */}
+          <span
+            className={`ml-auto shrink-0 pl-3 text-xs text-gray-400 ${menuOpen ? "invisible" : "group-hover:invisible group-focus-within:invisible pointer-coarse:invisible"}`}
+          >
+            {ago(doc.updatedAt, now)}
+          </span>
+        </button>
+      )}
+      {!renaming && (
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={`More actions for ${title}`}
+          tooltip="Document options"
+          tooltipOptions={{ placement: "top", offset: 8 }}
+          onPress={(e) => menuBelow(e.target as Element)}
+          className={`absolute right-2 text-gray-500 hover:bg-gray-950/5 hover:text-gray-700 pressed:bg-gray-950/8 ${menuOpen ? "" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"}`}
+        >
+          <More1Regular className="size-4" />
+        </Button>
+      )}
     </li>
+  );
+}
+
+// The tree's inline rename, in a Home row.
+function RenameInput({
+  initial,
+  onCommit,
+  onCancel,
+}: {
+  initial: string;
+  onCommit: (title: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(initial);
+  const done = useRef(false);
+  return (
+    <input
+      aria-label="Document title"
+      // oxlint-disable-next-line jsx-a11y/no-autofocus -- inline rename starts typing at once
+      autoFocus
+      value={value}
+      onFocus={(event) => event.currentTarget.select()}
+      onChange={(event) => setValue(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          done.current = true;
+          onCommit(value);
+        } else if (event.key === "Escape") {
+          // The pane would take Escape too.
+          event.stopPropagation();
+          done.current = true;
+          onCancel();
+        }
+      }}
+      onBlur={() => {
+        if (!done.current) onCommit(value);
+      }}
+      // A plain input, not the shared Input: it takes the title's place in the row, with the
+      // focused field's ring, as in the tree.
+      className="h-7 min-w-0 grow rounded-md bg-surface px-1 font-medium text-gray-900 ring ring-gray-950/20 outline-none"
+    />
   );
 }

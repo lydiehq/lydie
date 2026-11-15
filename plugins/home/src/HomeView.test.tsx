@@ -38,6 +38,8 @@ let opened: { id: string; mode: unknown }[];
 let commands: { id: string; args: unknown }[];
 let created: unknown[];
 let tree: ReturnType<typeof doc>[];
+let executed: { id: string; input: unknown }[];
+let menu: unknown[];
 
 beforeEach(() => {
   rows = {};
@@ -46,6 +48,8 @@ beforeEach(() => {
   commands = [];
   created = [];
   tree = [];
+  executed = [];
+  menu = [];
 });
 
 const keyOf = (name: string, params: Record<string, string>) =>
@@ -62,6 +66,9 @@ const backend = {
       },
     },
   },
+  execute: async (id: string, input: unknown) => {
+    executed.push({ id, input });
+  },
   live: (name: string, params: Record<string, string>) => {
     const key = keyOf(name, params);
     const state: LiveState<unknown> = { data: rows[key] ?? [], isLoading: false, error: undefined };
@@ -69,6 +76,8 @@ const backend = {
   },
   query: async (name: string, params: Record<string, string>) => rows[keyOf(name, params)] ?? [],
 } as unknown as Backend;
+
+const NONE: unknown[] = [];
 
 function hostWith(commandIds: string[]) {
   const listeners = new Map<string, Set<() => void>>();
@@ -98,8 +107,12 @@ function hostWith(commandIds: string[]) {
         g.metaKey || g.ctrlKey ? "tab" : "replace",
       historyScope: () => "default",
       formatKeybinding: (k: string) => k,
+      notify: () => {},
     },
-    contributions: { list: () => [], subscribe: () => () => {} },
+    contributions: {
+      list: (kind: string) => (kind === "documentMenu" ? menu : NONE),
+      subscribe: () => () => {},
+    },
     tabs: { get: () => null, subscribe: () => () => {}, setState() {} },
   } as unknown as HostBridge;
 }
@@ -131,6 +144,7 @@ const type = async (text: string) => {
 const jumpTitles = () =>
   within(screen.getByRole("region", { name: "Jump back in" }))
     .getAllByRole("button")
+    .filter((b) => !b.getAttribute("aria-label")?.startsWith("More actions"))
     .map((b) => b.textContent);
 
 test("jump back in: opened here first, then recent changes; parents, times, trash", async () => {
@@ -155,13 +169,58 @@ test("jump back in: opened here first, then recent changes; parents, times, tras
   await waitFor(() =>
     expect((stored.get(recentKey(WS)) as { id: string }[]).map((o) => o.id)).toEqual([B, A]),
   );
-  fireEvent.click(screen.getByRole("button", { name: /Beta/ }));
-  fireEvent.click(screen.getByRole("button", { name: /Delta/ }), { metaKey: true });
+  fireEvent.click(screen.getByRole("button", { name: /^Beta/ }));
+  fireEvent.click(screen.getByRole("button", { name: /^Delta/ }), { metaKey: true });
   expect(opened).toEqual([
     { id: B, mode: "replace" },
     { id: D, mode: "tab" },
   ]);
   expect(screen.getByRole("combobox")).toBe(document.activeElement as HTMLElement);
+});
+
+test("jump back in: the tree's menu on right-click and the … button", async () => {
+  stored.set(recentKey(WS), [{ id: A, at: 1 }]);
+  rows[`doc.get:${A}`] = [{ document: doc(A, "Alpha"), body: null }];
+  const ran: string[] = [];
+  menu = [
+    {
+      pluginId: "p",
+      id: "fav",
+      label: (d: { title: string }) => `Favorite ${d.title}`,
+      run: (d: { id: string }) => void ran.push(d.id),
+    },
+  ];
+  show();
+  const items = () => screen.getAllByRole("menuitem").map((i) => i.textContent);
+
+  fireEvent.contextMenu(screen.getByRole("button", { name: /^Alpha/ }));
+  await waitFor(() =>
+    expect(items()).toEqual([
+      "Open in new tab",
+      "Open to the right",
+      "New document inside",
+      "Rename",
+      "Favorite Alpha",
+      "Move to trash",
+    ]),
+  );
+  await act(async () => fireEvent.click(screen.getByRole("menuitem", { name: "Favorite Alpha" })));
+  expect(ran).toEqual([A]);
+
+  await act(async () =>
+    fireEvent.click(screen.getByRole("button", { name: "More actions for Alpha" })),
+  );
+  await act(async () => fireEvent.click(await screen.findByRole("menuitem", { name: "Rename" })));
+  const input = await screen.findByRole("textbox", { name: "Document title" });
+  fireEvent.change(input, { target: { value: "Alpha two" } });
+  await act(async () => fireEvent.keyDown(input, { key: "Enter" }));
+  expect(executed).toEqual([{ id: "doc.rename", input: { id: A, title: "Alpha two" } }]);
+
+  fireEvent.contextMenu(screen.getByRole("button", { name: /^Alpha/ }));
+  await act(async () =>
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Move to trash" })),
+  );
+  await waitFor(() => expect(executed.at(-1)).toEqual({ id: "doc.delete", input: { id: A } }));
 });
 
 test("an empty workspace says how to start", () => {

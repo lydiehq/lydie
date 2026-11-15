@@ -1,6 +1,12 @@
 // The page's ••• menu at the top right, as in Notion: page options, then what plugins add to a
 // document's menu (the same items as the sidebar's row menu), one section per group.
-import { PAGE_FULL_WIDTH_KEY, useApp, useContributions, useOps } from "@lydie/plugin-api";
+import {
+  documentMenuLabel,
+  PAGE_FULL_WIDTH_KEY,
+  useApp,
+  useContributions,
+  useOps,
+} from "@lydie/plugin-api";
 import type { DocumentMenuItemDef, DocumentRef } from "@lydie/plugin-api";
 import {
   Button,
@@ -79,7 +85,7 @@ export function PageMenu({ doc, fullWidth }: { doc: DocumentRef; fullWidth: bool
                   danger={item.def.danger}
                   onAction={() => void item.def.run(doc, app)}
                 >
-                  {item.def.label}
+                  {documentMenuLabel(item.def, doc)}
                 </MenuItem>
               )}
             </MenuSection>

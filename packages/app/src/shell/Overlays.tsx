@@ -2,6 +2,7 @@ import {
   DocIcon,
   docIdOf,
   docPickerItem,
+  documentMenuLabel,
   formatKeybinding,
   fuzzyScore,
   prefetchDoc,
@@ -118,7 +119,11 @@ function contextItems(
     ...commands.filter((c) => c.source === "plugin").map(item),
     ...context.menu
       .filter((m) => !ids.has(m.id))
-      .map((m) => ({ id: menuItemId(m), title: m.label, icon: <RightRegular /> })),
+      .map((m) => ({
+        id: menuItemId(m),
+        title: documentMenuLabel(m, context.doc),
+        icon: <RightRegular />,
+      })),
     ...commands.filter((c) => c.source === "operation").map(item),
   ];
 }

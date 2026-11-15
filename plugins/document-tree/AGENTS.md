@@ -38,8 +38,10 @@ shortcut and has an Undo button, which restores those documents (`doc.restore`, 
 instead of popping the undo stack, which may hold newer steps by then. A multi-drag carries
 `application/x-lydie-doc-ids`; `DRAG_TYPES.doc` stays the grabbed row, so a tab group opens that one; keyboard per the ARIA tree pattern with aria-activedescendant (Shift+F10 or the menu key for the context menu). The open document is revealed: its folders open and its row scrolls into view (`model.reveal`, only when it lives in this tree). The focus ring shows only while the tree has keyboard focus. The empty state's button and the "+" beside the "Documents" title (shown on hover, as in v1) run `core.newDocument`, so the "New documents" setting applies. The palette command `document-tree.collapseAll` ("Collapse all documents") closes all folders in every tree on screen (`collapseAllTrees` in `tree-model.ts`); it has no sidebar button.
 
-Favorites (`favorites.ts`, `Favorites.tsx`): "Add to favorites" / "Remove from favorites" in a row's
-menu, and the document-scoped command `document-tree.toggleFavorite`. They are kept per device and
+Favorites (`favorites.ts`, `Favorites.tsx`): "Add to favorites" / "Remove from favorites", a
+`documentMenu` contribution (label by state), so it shows in every document menu (the rows' menu,
+Home's, the page's •••), and the document-scoped command `document-tree.toggleFavorite` (same id,
+so the palette lists it once). They are kept per device and
 workspace in `app.storage` (`document-tree:favorites:<workspaceId>`, in the order added), not
 synced, so there is no operation behind them. The "Favorites" sidebar section (order 9, above the
 documents) lists the ones that are live documents (a trashed one is left out and returns when
@@ -63,7 +65,8 @@ reach the row. A press on the row, scrolling, Escape, typing, the context menu, 
 dragging put it away; touch never opens it. The open document's row has none (it would repeat the
 page on screen), and a row that comes under a still pointer (a scroll, a folder opening, the open
 document being revealed) waits until the pointer moves. Tests: plugin-api's `doc-summary.test.ts`, the "hover card" test in
-`DocumentTree.test.tsx`. Context menu includes `documentMenu` contributions. Rows are draggable into tab groups (`DRAG_TYPES.doc`).
+`DocumentTree.test.tsx`. The context menu is plugin-api's `documentMenuItems` (shared with Home), with
+`documentMenu` contributions; "Move to trash" goes through its `moveToTrash`. Rows are draggable into tab groups (`DRAG_TYPES.doc`).
 
 The same tree is offered to other plugins as the `documentTree` contribution (`<DocumentTreeView>` in
 `@lydie/plugin-api`, props `DocumentTreeProps`): `space` (one hosted space's top level), `filterRoot`,
