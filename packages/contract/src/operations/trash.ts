@@ -35,5 +35,5 @@ export const trashEmpty = defineOperation({
   rest: { method: "DELETE", path: "/workspaces/{workspaceId}/trash" },
   mcp: { name: "empty_trash", title: "Empty trash", outputSchema: true },
   cli: { command: ["trash", "empty"], args: ["workspaceId"] },
-  ui: { commandPalette: { title: "Empty trash", group: "Document" } },
+  ui: { commandPalette: { title: "Empty trash", group: "Document", bindable: false } },
 });

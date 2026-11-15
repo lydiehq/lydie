@@ -29,7 +29,7 @@ closed once the content has unmounted (`CloseWhenGone`); the host closing it (Ba
 `workspace.setImage`, owners and admins only; workspace name, theme, editor font size/line width/spellcheck, and on desktop a Privacy section, `PrivacySetting.tsx`: the app lock
 (`AppLockSetting.tsx` over `app.appLock`: turn on, lock now, change, turn off, idle time, Touch ID)
 and "Hide from screen sharing" over `app.screenCapture`), Keyboard shortcuts (record, conflict detection with "Use it here", clear, reset,
-reset all, filter), Files & links (listed only in folder windows, `app.services.vault`: attachments folder, excluded
+reset all, filter; commands with `bindable: false` are left out unless they still have a key), Files & links (listed only in folder windows, `app.services.vault`: attachments folder, excluded
 folders, link format and path, and what keeps version history (snapshots, git or off), kept in the folder's `.lydie/workspace.json`), Plugins (on/off
 per device via `app.plugins`, applied on reload), Agents & API (local MCP server toggle under "On this computer", shown only in folder
 workspaces, hosted MCP URL with copyable client configs (`mcp-snippets.ts`: API token or OAuth),

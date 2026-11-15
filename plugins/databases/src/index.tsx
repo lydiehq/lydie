@@ -169,6 +169,7 @@ export const databasesPlugin = definePlugin({
       id: "databases.fromPage",
       title: "Turn into collection",
       group: "Collection",
+      bindable: false,
       scope: "document",
       when: (app) => {
         const id = currentDocId(app);
@@ -186,6 +187,7 @@ export const databasesPlugin = definePlugin({
       id: "databases.toPage",
       title: "Turn back into page",
       group: "Collection",
+      bindable: false,
       scope: "document",
       when: (app) => isCollection(currentDocId(app)),
       async run({ app, args }) {

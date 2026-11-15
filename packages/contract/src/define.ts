@@ -42,7 +42,8 @@ export type CliProjection = {
 };
 
 export type UiProjection = {
-  commandPalette?: { title: string; group?: string };
+  // bindable false: not offered a keyboard shortcut (CommandDef.bindable).
+  commandPalette?: { title: string; group?: string; bindable?: boolean };
 };
 
 type CommonFields<Id extends string, I extends z.ZodType, O extends z.ZodType> = {

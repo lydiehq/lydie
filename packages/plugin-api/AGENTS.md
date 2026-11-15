@@ -68,7 +68,9 @@ BackendStatus = { sync: "local-only" | "signed-out" | "auth-expired" | "offline"
 definePlugin({ id, name, description?, activate(ctx) → void | cleanup })
 ctx: { plugin, app, commands, views, sidebar, panels, statusBar, settings, overlays,
   documentMenu, links, editor, documents }    // each .register(def) → disposer
-CommandDef { id, title, group?, icon? (ReactNode, shown in the palette), keybinding? ("Mod+O"), inText?, hidden?, operation?, when?, run({ app, source, args }) }
+CommandDef { id, title, group?, icon? (ReactNode, shown in the palette), keybinding? ("Mod+O"), inText?, hidden?,
+  bindable? (false: not in Settings → Keyboard shortcuts; sign out, export, What's new),
+  operation?, when?, run({ app, source, args }) }
 ViewDef { path ("/trash", "/d/:id", "/reports/*": the pages it shows, and their URL on the web),
   component({ tab }), title? | tabTitle?({ path }), icon? (before `title` in the tab; a `tabTitle`
   draws its own), order?,

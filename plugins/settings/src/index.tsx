@@ -95,6 +95,8 @@ export const settingsPlugin = definePlugin({
         title: theme.title,
         icon: theme.icon,
         group: "View",
+        // "Toggle dark mode" is the one with a key.
+        bindable: false,
         // Only the themes you are not already using.
         when: () => (app.storage.get<Theme>(PREFS.theme) ?? DEFAULTS.theme) !== theme.value,
         run: () => app.storage.set(PREFS.theme, theme.value),
@@ -172,6 +174,7 @@ export const settingsPlugin = definePlugin({
       id: "settings.export",
       title: "Export workspace",
       group: "General",
+      bindable: false,
       run: () => exportWorkspace(app),
     });
     ctx.settings.register({

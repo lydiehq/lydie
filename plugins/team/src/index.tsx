@@ -74,6 +74,7 @@ export const teamPlugin = definePlugin({
       title: "Invite people",
       icon: <UserAddRegular />,
       group: "Team",
+      bindable: false,
       when: () => hosted(),
       run: () => app.overlays.open("settings", { page: "members" }),
     });

@@ -257,6 +257,7 @@ export const accountPlugin = definePlugin({
       title: "Sign in",
       icon: <User3Regular />,
       group: "Account",
+      bindable: false,
       when: () => api.state.get().status !== "signed-in",
       run: () => app.overlays.open("account.signIn", {} satisfies SignInProps),
     });
@@ -265,6 +266,7 @@ export const accountPlugin = definePlugin({
       title: "Join the cloud waitlist",
       icon: <User3Regular />,
       group: "Account",
+      bindable: false,
       when: () => api.state.get().status === "signed-out",
       run: () => app.overlays.open("account.waitlist"),
     });
@@ -273,6 +275,7 @@ export const accountPlugin = definePlugin({
       title: "Sign out",
       icon: <ExitRegular />,
       group: "Account",
+      bindable: false,
       when: () => api.state.get().status !== "signed-out",
       run: () => api.signOut(),
     });
@@ -283,6 +286,7 @@ export const accountPlugin = definePlugin({
         : "Copy this workspace to the cloud",
       icon: <CloudRegular />,
       group: "Account",
+      bindable: false,
       when: () => api.scope.kind === "local" && api.handoff !== null,
       run: () => app.overlays.open("account.handoff"),
     });
@@ -291,6 +295,7 @@ export const accountPlugin = definePlugin({
       title: "New cloud workspace",
       icon: <AddRegular />,
       group: "Account",
+      bindable: false,
       when: () => api.state.get().status === "signed-in",
       run: () => app.overlays.open("account.createWorkspace"),
     });

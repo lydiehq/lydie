@@ -24,6 +24,7 @@ export const changelogPlugin = definePlugin({
       title: "What's new",
       icon: <QuestionRegular />,
       group: "Navigation",
+      bindable: false,
       run: ({ app }) => app.open("/changelog", { mode: "tab" }),
     });
   },

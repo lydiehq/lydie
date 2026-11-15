@@ -71,6 +71,9 @@ export type CommandDef = {
   inText?: boolean;
   // Hidden from the command palette (still runnable by key or API).
   hidden?: boolean;
+  // false: left out of Settings → Keyboard shortcuts, for actions too rare or weighty for a key
+  // (signing out, copying the workspace to the cloud). Default: true.
+  bindable?: boolean;
   // The contract operation this command performs, so the palette shows it once.
   operation?: OperationId;
   // "document": acts on the open document. The palette lists it first, under the document's pill,
@@ -87,6 +90,7 @@ export type CommandInfo = {
   group: string | null;
   icon?: ReactNode;
   keybindings: readonly string[];
+  bindable: boolean;
   source: "plugin" | "operation";
   scope: "document" | null;
   enabled: boolean;

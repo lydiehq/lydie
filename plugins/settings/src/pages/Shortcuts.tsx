@@ -137,9 +137,11 @@ export function ShortcutsPage() {
       .map((c) => c.keybindings.join())
       .join("|"),
   );
-  const commands = [...app.commands()].sort(
-    (a, b) => (a.group ?? "").localeCompare(b.group ?? "") || a.title.localeCompare(b.title),
-  );
+  // A command that is not bindable still shows while it has a key, so an old binding can be cleared.
+  const commands = app
+    .commands()
+    .filter((c) => c.bindable || c.keybindings.length > 0)
+    .sort((a, b) => (a.group ?? "").localeCompare(b.group ?? "") || a.title.localeCompare(b.title));
   const words = filter.toLowerCase().split(/\s+/).filter(Boolean);
   const shown = commands.filter((c) => {
     const text =

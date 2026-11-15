@@ -382,6 +382,7 @@ export function createHost(options: HostOptions): Host {
         id: `op.${op.id}`,
         title: meta.title,
         ...(meta.group ? { group: meta.group } : {}),
+        ...(meta.bindable === false ? { bindable: false } : {}),
         ...(needsDoc ? { scope: "document" as const } : {}),
         operation: op.id as OperationId,
         when: () =>
@@ -418,6 +419,7 @@ export function createHost(options: HostOptions): Host {
     group: command.group ?? null,
     icon: command.icon ?? commandIcons[command.id],
     keybindings: activeBindings(keymap.bindings(command.id, command.keybinding)),
+    bindable: command.bindable ?? true,
     source: command.pluginId === "core" && command.id.startsWith("op.") ? "operation" : "plugin",
     scope: command.scope ?? null,
     enabled: command.when ? command.when(app) : true,
