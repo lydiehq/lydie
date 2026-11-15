@@ -65,7 +65,6 @@ const VIEW_HINTS: Record<ViewType, string> = {
 const VIEW_MIME = "application/x-lydie-db-view";
 
 // A tab's look, shared by the tabs and their invisible copies that are measured.
-const TAB_GAP = 4;
 const tabClass =
   "relative flex h-7 max-w-64 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm font-medium outline-solid outline-0 outline-offset-2 outline-blue-600 focus-visible:outline-2";
 const moreClass = buttonStyles({
@@ -145,12 +144,12 @@ export function ViewTabs({
     // The padding (taken back by the margin) keeps the tabs' focus rings inside the bar.
     <div
       ref={rootRef}
-      className="relative -mb-px -ml-1 flex min-w-0 flex-1 items-center gap-1 self-end pt-1 pb-2 pl-1"
+      className="relative -mb-px -ml-1 flex min-w-0 flex-1 items-center self-end pt-1 pb-2 pl-1"
     >
       <div
         role="tablist"
         aria-label="Views"
-        className="flex min-w-0 items-center gap-1"
+        className="flex min-w-0 items-center"
         onDragOver={(event) => {
           if (event.dataTransfer.types.includes(VIEW_MIME)) event.preventDefault();
         }}
@@ -240,7 +239,7 @@ export function ViewTabs({
         inert
         className="pointer-events-none invisible absolute inset-0 overflow-hidden"
       >
-        <div ref={measureRef} className="flex w-max" style={{ gap: TAB_GAP }}>
+        <div ref={measureRef} className="flex w-max">
           {views.map((view) => (
             <span key={view.id} className={tabClass}>
               <TabFace view={view} current={false} />
@@ -416,13 +415,12 @@ function useTabFit(views: readonly DatabaseView[], activeId: string) {
       root.clientWidth -
       parseFloat(style.paddingLeft) -
       parseFloat(style.paddingRight) -
-      (addRef.current?.offsetWidth ?? 0) -
-      TAB_GAP;
+      (addRef.current?.offsetWidth ?? 0);
     const next = fitTabs({
       widths: items.map((el) => el.getBoundingClientRect().width),
       available,
       moreWidth: more?.getBoundingClientRect().width ?? 0,
-      gap: TAB_GAP,
+      gap: 0,
       active: views.findIndex((v) => v.id === activeId),
     });
     setFit((prev) =>
