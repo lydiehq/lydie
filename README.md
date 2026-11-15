@@ -8,6 +8,13 @@ old app (v1) is on the `main` branch.
 
 ![An essay open in Lydie, with comments in the margin beside the text](.github/screenshot.png)
 
+## Download
+
+- **Mac** (Apple silicon and Intel): the `.dmg` on the
+  [releases page](https://github.com/lydiehq/lydie/releases). The app is not signed by Apple yet,
+  so macOS asks you to confirm the first time; the release notes say how.
+- **Browser**: [app.lydie.co](https://app.lydie.co), no account needed.
+
 ## Running
 
 Requires [Bun](https://bun.sh) 1.4 or later.
