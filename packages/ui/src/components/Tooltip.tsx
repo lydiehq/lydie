@@ -86,10 +86,23 @@ function useCloseWithTrigger(
   }, [isOpen, state, triggerRef, tooltipRef]);
 }
 
+// Pressing the trigger closes the tooltip, and a toggle relabels itself on that press ("Collapse
+// sidebar" → "Expand sidebar"): the tooltip fading out would read the new label. It keeps what it
+// said while open.
+function useHeldWhileClosing<T>(value: T, isOpen: boolean): T {
+  const [held, setHeld] = React.useState(value);
+  if (isOpen && held !== value) setHeld(value);
+  return isOpen ? value : held;
+}
+
 export function Tooltip({ children, hotkeys, offset = 14, ...props }: TooltipProps) {
   const ref = React.useRef<HTMLDivElement>(null);
   const context = useSlottedContext(TooltipContext);
   useCloseWithTrigger(props.triggerRef ?? context?.triggerRef, ref);
+  const state = React.useContext(TooltipTriggerStateContext);
+  const isOpen = state ? state.isOpen : true;
+  const label = useHeldWhileClosing(children, isOpen);
+  const keys = useHeldWhileClosing(hotkeys, isOpen);
   return (
     <AriaTooltip
       {...props}
@@ -110,8 +123,8 @@ export function Tooltip({ children, hotkeys, offset = 14, ...props }: TooltipPro
         </svg>
       </OverlayArrow>
       <div className="flex items-center gap-2">
-        <span>{children}</span>
-        {hotkeys && hotkeys.length > 0 && <KeyCaps hotkeys={hotkeys} />}
+        <span>{label}</span>
+        {keys && keys.length > 0 && <KeyCaps hotkeys={keys} />}
       </div>
     </AriaTooltip>
   );
