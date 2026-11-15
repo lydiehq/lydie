@@ -236,53 +236,8 @@ function ColorPicker({
   );
 }
 
-// The strip of the cover the page's top bar lies over (the doc view's 36 px bar).
-const BAR_HEIGHT = 36;
-// Lighter than this (relative luminance) and the bar's ink turns dark. Above WCAG's crossover
-// (0.18) on purpose: white reads better on mid colours such as orange, and the bar has a fade.
-const LIGHT_LUMINANCE = 0.42;
-
-function linear(channel: number) {
-  const c = channel / 255;
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-}
-
-// Whether what `draw` paints into a small canvas is light or dark on average. Null when it cannot
-// be read: an image from another origin without CORS taints the canvas.
-function toneOf(draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 16;
-  canvas.height = 4;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return null;
-  try {
-    draw(ctx, canvas.width, canvas.height);
-    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let sum = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      sum +=
-        0.2126 * linear(data[i]!) + 0.7152 * linear(data[i + 1]!) + 0.0722 * linear(data[i + 2]!);
-    }
-    return sum / (data.length / 4) > LIGHT_LUMINANCE ? "light" : "dark";
-  } catch {
-    return null;
-  }
-}
-
-// The part of an `object-fit: cover` image under the bar, at `position` (0–100, vertical).
-function barToneOfImage(img: HTMLImageElement, position: number) {
-  const { naturalWidth: iw, naturalHeight: ih, clientWidth: w, clientHeight: h } = img;
-  if (!iw || !ih || !w || !h) return null;
-  const scale = Math.max(w / iw, h / ih);
-  const x = (w - iw * scale) / 2;
-  const y = ((h - ih * scale) * position) / 100;
-  return toneOf((ctx, cw, ch) =>
-    ctx.drawImage(img, -x / scale, -y / scale, w / scale, BAR_HEIGHT / scale, 0, 0, cw, ch),
-  );
-}
-
-// How far the cover sits from the view's sides and top: the gap the side panel and the sidebar's
-// peek keep inside the content card.
+// How far the cover sits from the view's sides: the gap the side panel and the sidebar's peek keep
+// inside the content card.
 const COVER_INSET = 4;
 
 // Corners concentric with the rounded box the cover sits in (the tab's card, the side panel): its
@@ -329,59 +284,25 @@ function Cover({
   const fill = coverFillOf(cover);
   const [dragging, setDragging] = useState<number | null>(null);
   const [coloring, setColoring] = useState(false);
-  const [tone, setTone] = useState<"light" | "dark" | null>(null);
-  const [loaded, setLoaded] = useState<string | null>(null);
   const start = useRef<{ y: number; pos: number } | null>(null);
   const actions = useRef<HTMLDivElement>(null);
   const box = useRef<HTMLDivElement>(null);
-  const img = useRef<HTMLImageElement>(null);
   const shown = dragging ?? position;
-  // How light the cover is under the page's top bar, for the doc view to pick its ink
-  // (`data-cover-tone`). A colour (or the placeholder while an image loads) by its computed
-  // background, an image by the strip it shows there.
-  useLayoutEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const image = img.current;
-    setTone(
-      image && loaded === url
-        ? barToneOfImage(image, shown)
-        : toneOf((ctx, w, h) => {
-            ctx.fillStyle = getComputedStyle(el).backgroundColor;
-            ctx.fillRect(0, 0, w, h);
-          }),
-    );
-  }, [cover, url, loaded, shown]);
   useConcentricCorners(box);
-  // Inset from the view's edges, with corners following the container's. `data-page-cover` is on
-  // the outer box, from the very top, which is what the doc view looks for to lay its bar over it.
+  // Under the page's bar, inset from the view's sides, with corners following the container's.
   return (
-    <div
-      className="shrink-0"
-      style={{ padding: `${COVER_INSET}px ${COVER_INSET}px 0` }}
-      data-page-cover=""
-      data-cover-tone={tone ?? undefined}
-    >
+    <div className="shrink-0" style={{ paddingInline: COVER_INSET }}>
       <div
         ref={box}
-        className={`group relative isolate h-48 w-full overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
+        className={`group relative h-48 w-full overflow-hidden ${fill ? fill.className : "bg-gray-100"}`}
         style={fill?.style}
         data-testid="page-cover"
         data-cover-color={fill ? cover.toLowerCase() : undefined}
       >
-        {/* A fade from the top where the page's bar lies, so its ink reads on any cover. */}
-        <div
-          aria-hidden
-          className={`pointer-events-none absolute inset-x-0 top-0 z-[1] h-20 bg-linear-to-b to-transparent ${
-            tone === "light" ? "from-white/40" : "from-black/35"
-          }`}
-        />
         {fill ? null : url ? (
           <img
-            ref={img}
             src={url}
             alt=""
-            onLoad={() => setLoaded(url)}
             draggable={false}
             className={`size-full object-cover ${dragging !== null ? "cursor-grabbing" : ""}`}
             style={{ objectPosition: `50% ${shown}%` }}

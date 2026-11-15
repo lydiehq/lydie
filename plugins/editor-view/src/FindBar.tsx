@@ -188,7 +188,7 @@ export function FindBar({ editor, tabId }: { editor: Editor; tabId: string }) {
       <search
         aria-label="Find in page"
         data-testid="find-bar"
-        className="pointer-events-auto absolute top-[calc(var(--page-bar-overlay,0px)+0.5rem)] right-3 flex items-center gap-1 rounded-lg bg-elevated py-1 pr-1 pl-2.5 shadow-popover"
+        className="pointer-events-auto absolute top-2 right-3 flex items-center gap-1 rounded-lg bg-elevated py-1 pr-1 pl-2.5 shadow-popover"
       >
         <Search2Regular className="size-3.5 shrink-0 text-gray-400" />
         <Input
