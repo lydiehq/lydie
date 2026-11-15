@@ -239,7 +239,7 @@ function ColorPicker({
 // The strip of the cover the page's top bar lies over (the doc view's 36 px bar).
 const BAR_HEIGHT = 36;
 // Lighter than this (relative luminance) and the bar's ink turns dark. Above WCAG's crossover
-// (0.18) on purpose: white reads better on mid colours such as orange, and the bar has a fade.
+// (0.18) on purpose: white reads better on mid colours such as orange.
 const LIGHT_LUMINANCE = 0.42;
 
 function linear(channel: number) {

@@ -144,15 +144,6 @@ export function DocView({ tab }: ViewProps) {
             : ""
         }`}
       >
-        {overlay && (
-          <div
-            aria-hidden
-            className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-20 bg-linear-to-b to-transparent transition-opacity duration-150 ${
-              // Literal classes for Tailwind; FADE says the same for the tab.
-              overlay.tone === "light" ? "from-white/25" : "from-black/20"
-            } ${overlay.over ? "opacity-100" : "opacity-0"}`}
-          />
-        )}
         {!bare && (
           <>
             <div aria-hidden className="flex-1 basis-0" />
@@ -201,18 +192,10 @@ const INK = {
     "[&_*]:text-black/60! [&_button:hover]:bg-black/8! [&_button:hover]:text-black/90! [&_button:hover_*]:text-black/90!",
 } as const;
 
-// The fade from the top of the view down over a cover, behind the bar, by the cover's tone.
-const FADE = { light: { color: "white", alpha: 25 }, dark: { color: "black", alpha: 20 } } as const;
-
-// A colour cover runs on into the tab while the bar is over it: the tab takes the colour the
-// cover has at the top, under the fade (the fade's top over the cover's colour).
+// A colour cover runs on into the tab while the bar is over it.
 function coverTint(overlay: CoverOverlay | null): TabTint | null {
   if (!overlay?.over || !overlay.color) return null;
-  const fade = FADE[overlay.tone];
-  return {
-    color: `color-mix(in srgb, ${overlay.color} ${100 - fade.alpha}%, ${fade.color})`,
-    tone: overlay.tone,
-  };
+  return { color: overlay.color, tone: overlay.tone };
 }
 
 // `color`: the cover's computed background when it is a colour (`data-cover-color`), else null.
