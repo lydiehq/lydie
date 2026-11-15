@@ -371,23 +371,12 @@ async function newTeamspace(
     await details.getByRole("button", { name: "Close details" }).click();
 }
 
-// A page's tree in one sidebar section ("Workspace", "Private", a teamspace's name).
+// A page's tree in one sidebar section (a teamspace's name, "Private"), while teamspaces show.
 function inSection(page: Page, section: string, title: string) {
   return page
     .getByRole("region", { name: section, exact: true })
     .getByRole("treeitem")
     .filter({ hasText: title });
-}
-
-// "Move to Workspace or Private…" from the page's context menu, to the space the dialog offers
-// first: one the page is not in.
-async function moveToOtherSection(page: Page, title: string) {
-  await item(page, title).first().click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Move to Workspace or Private…" }).click();
-  const dialog = page.getByRole("dialog", { name: "Move to Workspace or Private" });
-  await dialog.getByRole("radio").first().waitFor();
-  await dialog.getByRole("button", { name: "Move" }).click();
-  await dialog.waitFor({ state: "detached" });
 }
 
 async function openShare(page: Page, title: string) {
@@ -400,7 +389,7 @@ async function openShare(page: Page, title: string) {
 }
 
 describe.skipIf(!up)("team and sharing", () => {
-  test("invite and accept, roles, Workspace and Private, a guest share, a public link and revoked access", async () => {
+  test("invite and accept, roles, one tree, a restricted page shared with a guest, a public link and revoked access", async () => {
     const ada = uniqueEmail("ada");
     const bob = uniqueEmail("bob");
     const gus = uniqueEmail("gus");
@@ -429,8 +418,8 @@ describe.skipIf(!up)("team and sharing", () => {
       console.warn("[hosted.e2e] invitation steps skipped: the dev outbox has no invitation");
       return;
     }
-    // Bob is in: the hand-off put Ada's pages in the default teamspace, the Workspace section.
-    await inSection(b, "Workspace", "Roadmap").waitFor({ timeout: 30_000 });
+    // Bob is in: the hand-off put Ada's pages in the default teamspace, which every member shares.
+    await item(b, "Roadmap").waitFor({ timeout: 30_000 });
 
     // The open Members page follows without a reload (LYD-420): Bob's synced membership
     // refetches the lists, so his invitation leaves and he joins the members.
@@ -455,22 +444,18 @@ describe.skipIf(!up)("team and sharing", () => {
 
     await closeSettings(a);
 
-    // The sidebar has two sections: the handed-off page in Workspace, a new one in Private.
+    // The sidebar is one tree, as a folder's: a new page goes where every member sees it.
     await createHostedDoc(a, "Guest brief", "Only for Gus.");
-    await inSection(a, "Workspace", "Roadmap").waitFor({ timeout: 20_000 });
-    await inSection(a, "Private", "Guest brief").waitFor({ timeout: 20_000 });
-    await a.screenshot({ path: "/tmp/lydie-team-spaces-tree.png" });
-    // Moved to Workspace, Bob sees it; moved back to Private, he does not.
+    await expect(a.getByTestId("spaces-tree").count()).resolves.toBe(0);
+    await a.screenshot({ path: "/tmp/lydie-team-tree.png" });
+    await item(b, "Guest brief").waitFor({ timeout: 30_000 });
+    // Restricted, it is only the listed people's: Bob loses it.
     await a.waitForTimeout(1500);
-    await moveToOtherSection(a, "Guest brief");
-    await inSection(a, "Workspace", "Guest brief").waitFor({ timeout: 20_000 });
-    await inSection(b, "Workspace", "Guest brief").waitFor({ timeout: 30_000 });
-    await moveToOtherSection(a, "Guest brief");
-    await inSection(a, "Private", "Guest brief").waitFor({ timeout: 20_000 });
+    let share = await openShare(a, "Guest brief");
+    await share.getByRole("switch", { name: /Restricted/ }).click();
     await item(b, "Guest brief").waitFor({ state: "detached", timeout: 30_000 });
 
-    // A private page shared with a guest, who sees only that page.
-    let share = await openShare(a, "Guest brief");
+    // A restricted page shared with a guest, who sees only that page.
     // Members are suggested by any word of their name or email as you type (LYD-421).
     const field = share.getByRole("combobox", { name: "Add people or emails" });
     await field.fill("bob");
@@ -589,7 +574,7 @@ describe.skipIf(!up)("teamspaces", () => {
     await invite.getByRole("button", { name: "Cancel" }).click();
     await closeSettings(a);
 
-    // Without them the workspace has one shared section again.
+    // Without them the workspace is one tree again.
     const { teamspaces } = await ada.call<{ teamspaces: { id: string; isDefault: boolean }[] }>(
       "GET",
       `/v1/workspaces/${ws.id}/teamspaces`,
@@ -597,7 +582,7 @@ describe.skipIf(!up)("teamspaces", () => {
     for (const t of teamspaces.filter((t) => !t.isDefault)) {
       await ada.call("DELETE", `/v1/teamspaces/${t.id}`);
     }
-    await a.getByRole("region", { name: "Workspace", exact: true }).waitFor({ timeout: 30_000 });
+    await a.getByTestId("spaces-tree").waitFor({ state: "detached", timeout: 30_000 });
     await item(a, "Mockups").waitFor({ state: "detached", timeout: 30_000 });
     await expect(a.getByRole("region", { name: "General", exact: true }).count()).resolves.toBe(0);
   });

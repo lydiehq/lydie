@@ -2,8 +2,9 @@ import type { TeamspaceRow } from "@lydie/contract";
 
 import { useApp, useQuerySelect } from "./react.tsx";
 
-// Teamspaces are hidden for the alpha: a hosted workspace shows one shared section, "Workspace" (its
-// default teamspace, where every member is), and each person's Private section. The data, the access
+// Teamspaces are hidden for the alpha: a hosted workspace's sidebar is one tree, as a folder's is,
+// and new top-level pages go to its default teamspace, where every member is (the core's default;
+// pages already private stay so, in the same tree). The data, the access
 // rules and the teamspace operations (REST, MCP) are unchanged; this decides only what the client
 // shows. true brings the teamspace UI back: a sidebar group per teamspace, Settings → Teamspaces,
 // "Move to teamspace…", and teamspaces in the invitation and share dialogs.

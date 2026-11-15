@@ -52,9 +52,9 @@ export const docCreate = defineOperation({
       .nullable()
       .optional()
       .describe(
-        "Hosted: the teamspace a top-level page goes into (null or absent: the creator's " +
-          "private section). Ignored for child pages, which share their parent's space, and in " +
-          "local mode.",
+        "Hosted: the teamspace a top-level page goes into (null: the creator's private " +
+          "section; absent: the workspace's default teamspace, which every member shares). " +
+          "Ignored for child pages, which share their parent's space, and in local mode.",
       ),
     ...position,
   }),

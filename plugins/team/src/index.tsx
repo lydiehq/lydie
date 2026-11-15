@@ -18,8 +18,27 @@ export const teamPlugin = definePlugin({
     const teamspaces = app.backend.live("workspace.teamspaces", {
       workspaceId: app.workspace.workspaceId,
     });
-    const unwatch = teamspaces.subscribe(() => {});
     const shown = () => teamspacesShown(teamspaces.getSnapshot().data);
+    // The hosted workspace's pages grouped by space, in place of the flat tree, only while
+    // teamspaces show: hidden, the workspace is one tree, as a folder is.
+    let unregisterSpaces: (() => void) | null = null;
+    const syncSpaces = () => {
+      const want = hosted() && shown();
+      if (want && !unregisterSpaces) {
+        unregisterSpaces = ctx.sidebar.register({
+          id: "spaces",
+          order: 10,
+          fill: true,
+          replaces: ["documents"],
+          component: SpacesTree,
+        });
+      } else if (!want && unregisterSpaces) {
+        unregisterSpaces();
+        unregisterSpaces = null;
+      }
+    };
+    const unwatch = teamspaces.subscribe(syncSpaces);
+    syncSpaces();
     ctx.settings.register({
       id: "members",
       group: "Team",
@@ -40,17 +59,6 @@ export const teamPlugin = definePlugin({
       component: TeamspacesPage,
     });
     ctx.overlays.register({ id: "team.moveToSpace", component: MoveToSpaceDialog });
-    if (hosted()) {
-      // The hosted workspace's pages grouped by space, in place of the flat tree.
-      ctx.sidebar.register({
-        id: "spaces",
-        order: 10,
-        fill: true,
-        replaces: ["documents"],
-        component: SpacesTree,
-      });
-    }
-    // One dialog; the label says where a page can go.
     ctx.documentMenu.register({
       id: "team.moveToSpace",
       label: "Move to teamspace…",
@@ -58,15 +66,6 @@ export const teamPlugin = definePlugin({
       group: "move",
       order: 50,
       when: (doc) => hosted() && doc.parentId === null && shown(),
-      run: (doc) => app.overlays.open("team.moveToSpace", doc),
-    });
-    ctx.documentMenu.register({
-      id: "team.moveToSection",
-      label: "Move to Workspace or Private…",
-      icon: <ArrowRightUpRegular />,
-      group: "move",
-      order: 50,
-      when: (doc) => hosted() && doc.parentId === null && !shown(),
       run: (doc) => app.overlays.open("team.moveToSpace", doc),
     });
     ctx.commands.register({

@@ -68,8 +68,9 @@ export const databaseCreate = defineOperation({
       .nullable()
       .optional()
       .describe(
-        "Hosted: the teamspace a new top-level database goes into (null or absent: the " +
-          "creator's private section). Ignored with parentId or documentId, and in local mode.",
+        "Hosted: the teamspace a new top-level database goes into (null: the creator's " +
+          "private section; absent: the workspace's default teamspace, which every member " +
+          "shares). Ignored with parentId or documentId, and in local mode.",
       ),
     ...placement,
     viewType: ViewType.default("table"),

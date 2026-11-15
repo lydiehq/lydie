@@ -23,8 +23,8 @@ export type CreateGettingStartedOptions = {
 };
 
 // Creates the page tree once per workspace: the ids are derived from the workspace id, so a second
-// call finds the page (live or in the trash) and returns null. Top-level pages go to the creator's
-// private section in hosted workspaces (doc.create without a teamspace).
+// call finds the page (live or in the trash) and returns null. The hosted core keeps its pages in
+// the creator's private section (it passes `teamspaceId: null`).
 export async function createGettingStarted(
   ops: GettingStartedOps,
   options: CreateGettingStartedOptions,

@@ -135,7 +135,8 @@ Wired in `apps/desktop/src/main/hosted.ts` and `apps/web/src/desktop.ts`:
 
 ## Teamspaces
 
-New top-level pages are private on the server unless `doc.create` names a teamspace: pass
-`teamspaceId` (null or absent: the creator's private section) in its input. The runtime records the
+New top-level pages go to the workspace's default teamspace, which every member shares, unless
+`doc.create` says otherwise: pass `teamspaceId` (another teamspace, or null for the creator's
+private section) in its input. The runtime records the
 input as given and the upload sends it unchanged; a child always inherits its parent's space, and
 local mode ignores the field.

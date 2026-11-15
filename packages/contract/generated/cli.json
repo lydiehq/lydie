@@ -68,7 +68,7 @@
           "type": "string",
           "required": false,
           "nullable": true,
-          "description": "Hosted: the teamspace a top-level page goes into (null or absent: the creator's private section). Ignored for child pages, which share their parent's space, and in local mode."
+          "description": "Hosted: the teamspace a top-level page goes into (null: the creator's private section; absent: the workspace's default teamspace, which every member shares). Ignored for child pages, which share their parent's space, and in local mode."
         },
         {
           "key": "afterId",
@@ -1440,7 +1440,7 @@
           "type": "string",
           "required": false,
           "nullable": true,
-          "description": "Hosted: the teamspace a new top-level database goes into (null or absent: the creator's private section). Ignored with parentId or documentId, and in local mode."
+          "description": "Hosted: the teamspace a new top-level database goes into (null: the creator's private section; absent: the workspace's default teamspace, which every member shares). Ignored with parentId or documentId, and in local mode."
         },
         {
           "key": "afterId",

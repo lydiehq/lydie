@@ -1,11 +1,4 @@
-import {
-  spaceName,
-  useAccount,
-  useApp,
-  useHostedQuery,
-  useQuery,
-  useTeamspacesShown,
-} from "@lydie/plugin-api";
+import { useAccount, useApp, useHostedQuery, useQuery } from "@lydie/plugin-api";
 import type { DocumentRef } from "@lydie/plugin-api";
 import {
   Button,
@@ -23,13 +16,11 @@ import { errorText } from "./shared.tsx";
 
 const PRIVATE = "__private";
 
-// "Move to teamspace", or "Move to Workspace or Private" while teamspaces are hidden: moves a
-// top-level page (and everything under it) to a teamspace the user is in or to their private
-// section. Needs full access to the page.
+// "Move to teamspace" (only while teamspaces show): moves a top-level page (and everything under
+// it) to a teamspace the user is in or to their private section. Needs full access to the page.
 export function MoveToSpaceDialog({ close, props }: { close: () => void; props: unknown }) {
   const app = useApp();
   const doc = props as DocumentRef;
-  const shown = useTeamspacesShown();
   const spaces = useHostedQuery("teamspace.list", { workspaceId: app.workspace.workspaceId });
   // The page's top-level entry says which space it is in.
   const current = useQuery("doc.children", {
@@ -50,10 +41,7 @@ export function MoveToSpaceDialog({ close, props }: { close: () => void; props: 
   // Somewhere else than where the page is.
   const target =
     picked ?? [...joined.map((t) => t.id), PRIVATE].find((id) => id !== here) ?? PRIVATE;
-  const nameOf = (id: string) => {
-    const space = joined.find((t) => t.id === id);
-    return space ? spaceName(space, shown) : "Private";
-  };
+  const nameOf = (id: string) => joined.find((t) => t.id === id)?.name ?? "Private";
   const move = async () => {
     setBusy(true);
     setError(null);
@@ -71,10 +59,7 @@ export function MoveToSpaceDialog({ close, props }: { close: () => void; props: 
   };
   return (
     <Modal isOpen isDismissable onOpenChange={(open) => !open && close()} size="sm">
-      <Dialog
-        aria-label={shown ? "Move to teamspace" : "Move to Workspace or Private"}
-        className="flex flex-col gap-3 p-5"
-      >
+      <Dialog aria-label="Move to teamspace" className="flex flex-col gap-3 p-5">
         <Heading slot="title" className="text-base font-medium text-gray-900">
           Move “{doc.title || "Untitled"}”
         </Heading>
@@ -82,20 +67,14 @@ export function MoveToSpaceDialog({ close, props }: { close: () => void; props: 
           The page and everything under it move. Who can see them follows the new place.
         </p>
         {spaces.isLoading && !spaces.data ? (
-          <LoadingState label={shown ? "Loading teamspaces" : "Loading"} />
+          <LoadingState label="Loading teamspaces" />
         ) : (
           <RadioGroup aria-label="Move to" value={target} onChange={setPicked}>
             {joined.map((t) => (
               <Radio key={t.id} value={t.id}>
                 <span className="flex items-center gap-1.5">
-                  {shown ? (
-                    <>
-                      <SpaceIcon seed={t.id} size={16} />
-                      {t.name}
-                    </>
-                  ) : (
-                    `${spaceName(t, shown)} (all members)`
-                  )}
+                  <SpaceIcon seed={t.id} size={16} />
+                  {t.name}
                 </span>
               </Radio>
             ))}

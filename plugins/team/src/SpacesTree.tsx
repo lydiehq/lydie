@@ -1,7 +1,6 @@
 // The hosted workspace's pages grouped by where they live: each teamspace the user is in, their
-// Private section, and pages shared with them from elsewhere. While teamspaces are hidden
-// (`teamspacesShown`), the default teamspace is the "Workspace" section and there is no other.
-// Shown in place of the flat document tree in hosted windows. Each group is the real document tree (`<DocumentTreeView>`: virtualised,
+// Private section, and pages shared with them from elsewhere. Shown in place of the flat document
+// tree in hosted windows while teamspaces show (`teamspacesShown`). Each group is the real document tree (`<DocumentTreeView>`: virtualised,
 // drag and drop, inline rename, keyboard, icons, optimistic paint) over one space's top level;
 // rows carry their space, and subpages share their parent's. Dropping a page into another group
 // moves it to that space (`doc.moveToSpace`).

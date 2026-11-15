@@ -19,8 +19,10 @@ Licence: AGPL-3.0-only.
 ## What it does
 
 Teamspaces are hidden for the alpha (`TEAMSPACES_UI` in `@lydie/plugin-api`, `src/teamspaces.ts`,
-is the one switch): a hosted workspace shows two sidebar sections, "Workspace" (the default
-teamspace, which every member joins) and the person's "Private". They come back on their own in a
+is the one switch): a hosted workspace's sidebar is the flat document tree, as a folder's is. New
+top-level pages go to the default teamspace, which every member joins (the core's default for a
+`doc.create` without `teamspaceId`); pages already private stay private, in the same tree, and a
+page is kept to a few people with the Share dialog's "Restricted". Teamspaces come back on their own in a
 workspace that already has another teamspace (`teamspacesShown`: more than one teamspace, or one that
 is not the default; made before they were hidden, or through the API), so no page loses its place.
 Every teamspace condition below reads `useTeamspacesShown()` (components) or `shown()` (the
@@ -33,10 +35,10 @@ revoke; while teamspaces show, invitations can add the person to the other teams
 Teamspaces, in the navigation only while they show (create with visibility; details at
 `/settings/teamspaces/<id>`: rename, visibility, members and their roles, add/remove, join/leave,
 delete; admins see deleted teamspaces and restore them). In the document menu for top-level pages
-(`doc.moveToSpace`): "Move to Workspace or Private…", or "Move to teamspace…" while teamspaces show;
-one dialog that starts on a space the page is not in. The sidebar's sections in hosted windows
-(`SpacesTree`, in place of the flat tree): each teamspace the user is in (the default one named
-"Workspace" while hidden), Private, and "Shared with you" when something is; "+" on a section
+(`doc.moveToSpace`): "Move to teamspace…" while teamspaces show, a dialog that starts on a space
+the page is not in. While they show, the sidebar's sections in hosted windows (`SpacesTree`,
+registered in place of the flat tree as `workspace.teamspaces` changes): each teamspace the user
+is in, Private, and "Shared with you" when something is; "+" on a section
 creates a page in it (`doc.create` with `teamspaceId`), and dropping a page on another section
 moves it there.
 
