@@ -743,15 +743,16 @@ function TabBar({
           by the margin) keeps the focus ring inside the scrolling list, and is as wide as a foot of
           the active tab, which the list would clip otherwise. It runs under the buttons either
           side (z-20), where a foot is all but flat, so the tabs sit close to them. The list runs
-          1px into the card, above it, so the active tab covers the card's top hairline and joins
-          it. The gap keeps a neighbour's hover pill clear of the active tab's foot. */}
+          2px into the card, above it, so the active tab covers the card's top hairline and the
+          inset highlight under it (dark mode), and joins it. The gap keeps a neighbour's hover
+          pill clear of the active tab's foot. */}
       {/* oxlint-disable-next-line jsx-a11y/interactive-supports-focus */}
       <div
         ref={list}
         role="tablist"
         aria-label="Open tabs"
         className={clsx(
-          "relative -mr-3 -mb-px flex min-w-0 items-center gap-1.5 self-stretch overflow-x-auto pr-4 pb-px [scrollbar-width:none]",
+          "relative -mr-3 -mb-[2px] flex min-w-0 items-center gap-1.5 self-stretch overflow-x-auto pr-4 pb-[2px] [scrollbar-width:none]",
           topLeft ? "-ml-4 pl-4" : "-ml-1 pl-1",
           // The dragged tab is drawn from its own row, above the other rows and the buttons.
           drag?.sourceGroupId === groupId ? "z-30" : "z-10",
@@ -1067,13 +1068,13 @@ const TabButton = memo(function TabButton({
 });
 
 // The active tab is part of its group's card, as in Dia: the card's colour and hairline run up
-// around it and its feet flare out into the card's top edge. It reaches 6px below the tab, to the
-// bottom of the tab list (1px into the card), and 3px above it so the label sits near its middle.
+// around it and its feet flare out into the card's top edge. It reaches 7px below the tab, to the
+// bottom of the tab list (2px into the card), and 3px above it so the label sits near its middle.
 function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
   return (
     <span
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 -top-[3px] -bottom-[6px] -z-10"
+      className="pointer-events-none absolute inset-x-0 -top-[3px] -bottom-[7px] -z-10"
     >
       <TabSide foot={!atEdge} />
       <span
@@ -1088,7 +1089,7 @@ function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
 // Measured from Dia's tabs: round top corners, and feet that are wider than tall, leaving the
 // side quickly and running a long way along the card's edge.
 const TAB_GAP = 6; // the tab list's gap-1.5
-const TAB_HEIGHT = 39; // ActiveTabShape: the tab's 30px, 3 above, 6 below
+const TAB_HEIGHT = 40; // ActiveTabShape: the tab's 30px, 3 above, 7 below
 const TAB_CORNER = 10;
 const TAB_FOOT_WIDTH = 16; // also the tab list's side padding
 const TAB_FOOT_HEIGHT = 14;
@@ -1104,7 +1105,7 @@ function TabSide({ foot, right }: { foot: boolean; right?: boolean }) {
   const width = f + TAB_CORNER;
   const h = TAB_HEIGHT;
   const x = f + 0.5; // the side
-  const base = h - 0.5; // the card's top hairline
+  const base = h - 1.5; // the card's top hairline, with the highlight row under it
   const top = base - TAB_FOOT_HEIGHT; // where the foot leaves the side
   const r = TAB_CORNER;
   const outline = [
