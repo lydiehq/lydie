@@ -2,7 +2,7 @@
 // A collection's views: tabs, toolbar, the chips of what filters the pages, and the
 // active view. Used on the collection's page and inline (an embed in another page, `compact`).
 // The view shown is the saved view with this device's personal changes on top (`overlay.ts`).
-import { PAGE_WIDTH_TRANSITION, useApp, useTabState } from "@lydie/plugin-api";
+import { PAGE_WIDTH_TRANSITION, pageColumnClass, useApp, useTabState } from "@lydie/plugin-api";
 import type { DatabaseDefinition, DatabaseViewParams } from "@lydie/plugin-api/databases";
 import { EmptyState, StatusBanner } from "@lydie/plugin-api/ui";
 import { useMemo, useState } from "react";
@@ -15,7 +15,6 @@ import { withSearch } from "./filter-model.ts";
 import { FilterUiProvider, isFilterKey, useFilterUi } from "./filter-ui.tsx";
 import { ListView } from "./ListView.tsx";
 import { PageSheetHost } from "./PageSheet.tsx";
-import { pageInset } from "./skeleton.tsx";
 import { TableView } from "./table/TableView.tsx";
 import { Toolbar } from "./Toolbar.tsx";
 import { titleProperty } from "./view-model.ts";
@@ -94,7 +93,7 @@ export function DatabaseScreen({
             onSelect={setChosen}
           >
             {app.workspace.persistent === false && !compact && (
-              <div className={`${pageInset(fullWidth)} py-2`}>
+              <div className={`${pageColumnClass(fullWidth)} py-2`}>
                 <StatusBanner kind="warning" variant="card">
                   This workspace lives in memory only: changes are lost when the tab closes.
                 </StatusBanner>
@@ -107,7 +106,7 @@ export function DatabaseScreen({
   );
 }
 
-// Views keep a small gutter of their own left of the page's edge (`pageInset`, 0.5rem); the table's
+// Views keep a small gutter of their own left of the page's edge (0.5rem); the table's
 // is wider (its selection column, 3rem), so the names in it line up with the title.
 const VIEW_INSET = "pr-2 pl-[max(0.5rem,calc(50%-332px))]";
 const VIEW_INSET_FULL = "pr-2 pl-18";
@@ -138,7 +137,9 @@ function Screen({
 }) {
   const ctx = useViewContext();
   const ui = useFilterUi();
-  const inset = compact ? "" : pageInset(fullWidth);
+  // On its own page the bar and the chips keep to the title's column (as wide as the text, or
+  // the full-width page's); the views below run on to the window's edge.
+  const inset = compact ? "" : pageColumnClass(fullWidth);
   return (
     <div
       className={`flex min-h-0 flex-col outline-none ${compact ? "" : "grow"}`}

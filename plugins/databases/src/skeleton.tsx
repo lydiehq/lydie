@@ -3,13 +3,14 @@
 // pages) until the collection and the views' code are there, and the same bars inside each view's
 // own rows and cards until its first pages arrive. Not part of the lazy chunk: it is what shows
 // while that loads.
-import { PAGE_WIDTH_TRANSITION } from "@lydie/plugin-api";
+import { PAGE_WIDTH_TRANSITION, pageColumnClass } from "@lydie/plugin-api";
 import { Skeleton } from "@lydie/plugin-api/ui";
 
-// On its own page a collection starts at the left edge of the page's text column (the title above
-// it is centred, 680px wide with 1rem padding, as the body; at full width 5rem from the edge) and
-// runs to the right edge of the window. It glides with the title when full width is toggled.
-export function pageInset(fullWidth: boolean): string {
+// On its own page a collection's views start at the left edge of the page's text column (the
+// title above it is centred, 680px wide with 1rem padding, as the body; at full width 5rem from
+// the edge) and run to the right edge of the window; the bar of views above them keeps to the
+// title's column (`pageColumnClass`). Both glide with the title when full width is toggled.
+function pageInset(fullWidth: boolean): string {
   return `${fullWidth ? "pr-4 pl-20" : "pr-4 pl-[max(1rem,calc(50%-324px))]"} ${PAGE_WIDTH_TRANSITION}`;
 }
 
@@ -35,31 +36,35 @@ export function ScreenSkeleton({
     <div
       role="status"
       aria-label="Loading collection"
-      className={`flex min-h-0 flex-col ${compact ? "" : `grow ${pageInset(fullWidth)}`}`}
+      className={`flex min-h-0 flex-col ${compact ? "" : "grow"}`}
       data-testid="database-skeleton"
     >
-      <div className="flex h-10 shrink-0 items-center gap-4 border-b border-gray-950/[0.07] pt-1">
-        <Skeleton className="h-3 w-14" />
-        <Skeleton className="h-3 w-12" />
-        <Skeleton className="ml-auto h-3 w-10" />
-        <Skeleton className="h-3 w-12" />
-        <Skeleton className="h-6 w-14 rounded-md" />
-      </div>
-      <div className="flex h-[34px] shrink-0 items-center gap-10 border-b border-gray-100 px-2">
-        <Skeleton className="h-2.5 w-16" />
-        <Skeleton className="ml-auto h-2.5 w-12" />
-        <Skeleton className="h-2.5 w-14" />
-      </div>
-      {Array.from({ length: compact ? 5 : PLACEHOLDERS }, (_, i) => (
-        <div
-          key={i}
-          className="flex h-9 shrink-0 items-center gap-10 border-b border-gray-100 px-2"
-        >
-          <Skeleton className={`h-3 ${barWidth(i)}`} />
-          <Skeleton className={`ml-auto h-3 ${i % 2 ? "w-16" : "w-10"}`} />
-          <Skeleton className={`h-3 ${i % 3 ? "w-12" : "w-20"}`} />
+      <div className={compact ? "" : pageColumnClass(fullWidth)}>
+        <div className="flex h-10 shrink-0 items-center gap-4 border-b border-gray-950/[0.07] pt-1">
+          <Skeleton className="h-3 w-14" />
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="ml-auto h-3 w-10" />
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-6 w-14 rounded-md" />
         </div>
-      ))}
+      </div>
+      <div className={`flex min-h-0 flex-col ${compact ? "" : pageInset(fullWidth)}`}>
+        <div className="flex h-[34px] shrink-0 items-center gap-10 border-b border-gray-100 px-2">
+          <Skeleton className="h-2.5 w-16" />
+          <Skeleton className="ml-auto h-2.5 w-12" />
+          <Skeleton className="h-2.5 w-14" />
+        </div>
+        {Array.from({ length: compact ? 5 : PLACEHOLDERS }, (_, i) => (
+          <div
+            key={i}
+            className="flex h-9 shrink-0 items-center gap-10 border-b border-gray-100 px-2"
+          >
+            <Skeleton className={`h-3 ${barWidth(i)}`} />
+            <Skeleton className={`ml-auto h-3 ${i % 2 ? "w-16" : "w-10"}`} />
+            <Skeleton className={`h-3 ${i % 3 ? "w-12" : "w-20"}`} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

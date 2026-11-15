@@ -39,11 +39,12 @@ Licence: AGPL-3.0-only.
   70vh and scroll inside; the page scrolls past the description. The editor is rendered in the
   same place for plain pages and collections (wrappers with `contents`), so turning a page into a
   collection or back never remounts it: keep it that way, a remount shows a stale body.
-- On its own page the toolbar, chips and views start at the left edge of the page's text column
-  and run to the right edge of the window (`pageInset(fullWidth)` in `skeleton.tsx`, and the
-  views' own insets in `DatabaseScreen.tsx`; they mirror the title column, `pageColumnClass`, for
-  normal and full-width pages (`full-width: true`, read by `CollectionPage.tsx`): change them
-  together).
+- On its own page the bar of views (tabs and toolbar) and the chips keep to the title's column
+  (`pageColumnClass(fullWidth)`: as wide as the text, or the full-width page's), so the bar never
+  stretches past the title; the views start at the column's left edge and run to the right edge
+  of the window (the views' own insets in `DatabaseScreen.tsx`, `pageInset` for the skeleton's
+  rows in `skeleton.tsx`; they mirror the title column for normal and full-width pages
+  (`full-width: true`, read by `CollectionPage.tsx`): change them together).
 - Loading shows skeletons, never a spinner (`skeleton.tsx`, outside the lazy chunk; bars are the
   shared `Skeleton`, hidden for the first 150 ms so a quick load shows none). Before the
   collection or the views' code is there: `ScreenSkeleton` (the page shows it as soon as
