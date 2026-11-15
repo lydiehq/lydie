@@ -51,7 +51,10 @@ export function Breadcrumbs({ doc }: { doc: DocumentRef }) {
       <ol className="flex min-w-0 items-center gap-0.5">
         {doc.parentId && <Ancestors id={doc.parentId} depth={0} />}
         <li className="flex min-w-0 items-center">
-          <span aria-current="page" className="flex h-5.5 min-w-0 items-center px-2 text-gray-600 select-none">
+          <span
+            aria-current="page"
+            className="flex h-5.5 min-w-0 items-center px-2 text-gray-600 select-none"
+          >
             <span className="truncate">{doc.title || "Untitled"}</span>
           </span>
         </li>
