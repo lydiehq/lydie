@@ -694,9 +694,16 @@ function TabBar({
         </Button>
       )}
       {topLeft && <NavigationButtons />}
-      {/* Sets the buttons off from an inactive first tab; an active one is set off by its shape. */}
-      {topLeft && tabIds[0] !== activeTabId && (
-        <span aria-hidden className="relative z-20 mx-0.5 h-4 w-px shrink-0 bg-gray-950/10" />
+      {/* Sets the buttons off from an inactive first tab; an active one is set off by its shape.
+          Always in the row, so the tabs do not move when the first one is selected. */}
+      {topLeft && (
+        <span
+          aria-hidden
+          className={clsx(
+            "relative z-20 mx-0.5 h-4 w-px shrink-0 bg-gray-950/10",
+            tabIds[0] === activeTabId && "invisible",
+          )}
+        />
       )}
       {/* Roving tabindex: the selected tab is the tab stop, not the list. The padding (taken back
           by the margin) keeps the focus ring inside the scrolling list, and is as wide as a foot of
