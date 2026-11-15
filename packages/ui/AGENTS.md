@@ -155,7 +155,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   TemplatesIllustration; MarkIllustration, the mark's two pieces lying flat, one dropped after
   the other, not used yet). `views.tsx`: one per collection view type (TableViewIllustration,
   BoardViewIllustration, ListViewIllustration, CalendarViewIllustration,
-  GalleryViewIllustration), each lying flat in the same footprint, for the "New view" menu.
+  GalleryViewIllustration), one or two plain objects each in the shape of the view, for the "New view" menu.
   `size` is `md` on a page, `sm` in a side panel, `xs` beside a label in a menu (36 px, its
   strokes at 60 %: they are in screen pixels, so the kit's pieces scale them through `useLine`,
   and a drawing's own `strokeWidth` should too); `className` overrides
