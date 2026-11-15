@@ -99,11 +99,13 @@ export function DocView({ tab }: ViewProps) {
   // In a host's panel (the collections' page panel) the bar is left to the host's own controls.
   const bare = useTabStateSnapshot()("bare") === true;
   const surface = useRef<HTMLDivElement>(null);
+  const underlay = useRef<HTMLDivElement>(null);
   const setTabTint = useSetTabTint();
   const overlay = useCoverBar(
     root,
     bar,
     surface,
+    underlay,
     pageCoverOf(entry?.document.properties) !== null && !entry?.document.deletedAt,
     bare ? NO_TINT : setTabTint,
   );
@@ -139,6 +141,15 @@ export function DocView({ tab }: ViewProps) {
       data-doc-id={route.id}
       data-full-width={fullWidth || undefined}
     >
+      {overlay && (
+        // Behind the scroll container: what shows when the page is pulled past the top (see
+        // useCoverBar).
+        <div
+          ref={underlay}
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10"
+        />
+      )}
       {/* The breadcrumbs sit in the middle between two equal columns; when the trail is long
           the left one gives way first, as the actions never shrink below their width. */}
       <div
@@ -202,6 +213,9 @@ const INK =
   "data-[over-cover=dark]:[&_*]:text-white/85! data-[over-cover=dark]:[&_button:hover]:bg-white/15! data-[over-cover=dark]:[&_button:hover]:text-white! data-[over-cover=dark]:[&_button:hover_*]:text-white! " +
   "data-[over-cover=light]:[&_*]:text-black/60! data-[over-cover=light]:[&_button:hover]:bg-black/8! data-[over-cover=light]:[&_button:hover]:text-black/90! data-[over-cover=light]:[&_button:hover_*]:text-black/90!";
 
+// How far short of the cover's bottom edge the underlay stops: more than a frame of fast scrolling.
+const UNDERLAY_SLACK = 60;
+
 // A host's panel has no tab of its own to tint.
 const NO_TINT = () => {};
 
@@ -225,10 +239,17 @@ type CoverGeometry = {
 // the bar is the page's colour exactly where the cover has gone; the ink turns once the edge
 // passes the bar's middle; and over the same stretch a colour cover's tab fades from the cover's
 // colour to the card's (`setTint`). The editor's own changes are skipped: they never move the cover.
+//
+// Pulled past the top (macOS rubber-banding), the scroll container's content moves down and what is
+// behind the container shows above the cover; content above the top is not drawn, so the cover
+// cannot run on upward itself. `underlay`, behind the container, is a colour cover's colour down to
+// UNDERLAY_SLACK px short of the cover's bottom edge: always behind the cover, also when this
+// follows scrolling a frame late.
 function useCoverBar(
   root: RefObject<HTMLElement | null>,
   bar: RefObject<HTMLElement | null>,
   surface: RefObject<HTMLElement | null>,
+  underlay: RefObject<HTMLElement | null>,
   enabled: boolean,
   setTint: (tint: TabTint | null) => void,
 ): boolean {
@@ -250,6 +271,15 @@ function useCoverBar(
     const paint = () => {
       paintFrame = 0;
       const b = bar.current;
+      const under = underlay.current;
+      if (under) {
+        const height =
+          geometry?.color && scroller
+            ? Math.max(0, geometry.bottom - scroller.scrollTop - UNDERLAY_SLACK)
+            : 0;
+        under.style.height = `${height}px`;
+        under.style.backgroundColor = geometry?.color ?? "";
+      }
       if (!geometry || !scroller || !b) return tint(null);
       const { bottom, barTop, barHeight, tone, color } = geometry;
       // How far down the bar the cover still reaches.
@@ -318,7 +348,7 @@ function useCoverBar(
       if (barEl) delete barEl.dataset.overCover;
       setTint(null);
     };
-  }, [root, bar, surface, enabled, setTint, onCover]);
+  }, [root, bar, surface, underlay, enabled, setTint, onCover]);
   return enabled && onCover;
 }
 

@@ -75,7 +75,10 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   edge passes the bar's middle. There is no fade over the cover. A colour cover
   (`data-cover-color`) tints the tab (`useSetTabTint`, not in a host's panel) with its computed
   background, mixed toward the card's colour as the edge crosses the bar, so tab and cover read
-  as one and part smoothly. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
+  as one and part smoothly. Pulled past the top (macOS rubber-banding), the gap above a colour
+  cover shows its colour: an underlay behind the scroll container (content above the top is not
+  drawn, so the cover cannot run on upward), as tall as the cover is on screen less
+  `UNDERLAY_SLACK`, so it stays behind the cover when it follows scrolling a frame late. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
   find bar keeps clear of. A long trail truncates. With `bare: true` in the tab state (a host's
   panel: the collections' page panel, which puts its ×, full page and to the side there) the bar
   stays but shows no breadcrumbs, actions or •••.

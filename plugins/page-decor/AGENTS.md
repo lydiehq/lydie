@@ -29,10 +29,8 @@ Licence: AGPL-3.0-only.
   `cover-position`, both averaged in a small canvas (relative luminance over 0.42 is light); left
   out when it cannot be read (a cross-origin image without CORS).
 - The cover is 210 px tall; on a cover the icon sits across its bottom edge, half on it (the edge
-  through the middle of the icon's 60 px box: `-mt-[58px]`; change the two together). A colour
-  cover runs on a screen's height above itself (a `before:` with `bg-inherit`, so it is not
-  `overflow-hidden`), so the scroll container's rubber band at the top shows cover, not the
-  window behind it; an image cover does not.
+  through the middle of the icon's 60 px box: `-mt-[58px]`; change the two together). The
+  colour behind it when the page is pulled past the top is the doc view's (`useCoverBar`).
 - The icon row follows the page's width (`pageColumnClass(pageFullWidthOf(properties))`), so it
   lines up with the title on full-width pages; the cover always spans the view.
 - The icon shows wherever `DocIcon`/`PageIcon` from the plugin API are used: tabs, quick switcher, link previews and embeds (the document tree still draws its own glyph: requested change).
