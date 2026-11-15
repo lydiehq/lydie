@@ -38,6 +38,19 @@ shortcut and has an Undo button, which restores those documents (`doc.restore`, 
 instead of popping the undo stack, which may hold newer steps by then. A multi-drag carries
 `application/x-lydie-doc-ids`; `DRAG_TYPES.doc` stays the grabbed row, so a tab group opens that one; keyboard per the ARIA tree pattern with aria-activedescendant (Shift+F10 or the menu key for the context menu). The open document is revealed: its folders open and its row scrolls into view (`model.reveal`, only when it lives in this tree). The focus ring shows only while the tree has keyboard focus. The empty state's button and the "+" beside the "Documents" title (shown on hover, as in v1) run `core.newDocument`, so the "New documents" setting applies. The palette command `document-tree.collapseAll` ("Collapse all documents") closes all folders in every tree on screen (`collapseAllTrees` in `tree-model.ts`); it has no sidebar button.
 
+Collections (LYD-426): a collection stays in the tree where it lives (the tree matches the
+folder), but it never lists its pages: a collection opens to its views (`database.get`, one live
+query per open collection), drawn with `VIEW_ICONS`, and its pages are reached through them. Which
+pages are collections comes from one live `database.list`; the tree shows no rows until it has
+answered, so a collection's pages never flash. A collection can open even with no pages. A view row
+(`kind: "view"` in `tree-model.ts`) opens the collection on that view through the collections
+plugin's `databases.openView` (Cmd/middle-click: a new tab; without the plugin, the collection's
+page); it takes no selection, menu, drag or drop. A page dropped "inside" a collection moves into
+it, but the collection does not open, and a drag resting on it does not open it. Revealing a page
+inside a collection stops at the outermost collection: its row is focused and scrolled to
+(`model.reveal` returns the row's id). Tests: `tree-model.test.ts` (views not pages, kind swapped
+when a page becomes a collection, reveal), `DocumentTree.test.tsx` ("collections in the tree").
+
 Favorites (`favorites.ts`, `Favorites.tsx`): "Add to favorites" / "Remove from favorites", a
 `documentMenu` contribution (label by state), so it shows in every document menu (the rows' menu,
 Home's, the page's •••), and the document-scoped command `document-tree.toggleFavorite` (same id,

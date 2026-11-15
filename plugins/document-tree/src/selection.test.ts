@@ -6,9 +6,13 @@ import { placements, rangeIds, topmost, withinAny } from "./selection.ts";
 import type { TreeRow } from "./tree-model.ts";
 
 const row = (id: string, depth: number): TreeRow => ({
+  kind: "doc",
+  id,
   doc: { id } as ChildEntry,
   depth,
   expanded: false,
+  expandable: false,
+  collection: false,
 });
 
 // A
@@ -24,6 +28,19 @@ describe("selection", () => {
     expect(rangeIds(rows, "B", "A1a")).toEqual(["A1a", "A2", "B"]);
     expect(rangeIds(rows, "gone", "A2")).toEqual(["A2"]);
     expect(rangeIds(rows, "A", "gone")).toEqual([]);
+  });
+
+  test("ranges leave out a collection's views", () => {
+    const view: TreeRow = {
+      kind: "view",
+      id: "view:v1",
+      view: { id: "v1", name: "Table", type: "table" },
+      collection: { id: "B" } as ChildEntry,
+      depth: 1,
+    };
+    const withViews = [...rows, view, row("C", 0)];
+    expect(rangeIds(withViews, "B", "C")).toEqual(["B", "C"]);
+    expect(rangeIds(withViews, "gone", "view:v1")).toEqual([]);
   });
 
   test("topmost leaves out documents inside another selected one", () => {

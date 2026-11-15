@@ -32,7 +32,17 @@ const pages = [doc("A1", "Roadmap", "t1"), doc("A2", "Notes", "t1"), doc("B1", "
 // Only the roadmap has a body; the others are empty pages.
 const bodies: Record<string, string> = { A1: "Ship it", A2: "  \n", B1: "" };
 
-function setup(top: ChildEntry[] = pages, { activeDocId }: { activeDocId?: string } = {}) {
+// `collections`: which pages are collections, with their views.
+function setup(
+  top: ChildEntry[] = pages,
+  {
+    activeDocId,
+    collections = {},
+  }: {
+    activeDocId?: string;
+    collections?: Record<string, { id: string; name: string; type: "table" | "board" }[]>;
+  } = {},
+) {
   const activeTab = activeDocId ? { id: "tab", path: `/d/${activeDocId}` } : null;
   const confirms: ConfirmOptions[] = [];
   let answer = true;
@@ -40,6 +50,7 @@ function setup(top: ChildEntry[] = pages, { activeDocId }: { activeDocId?: strin
   const executed: { id: string; input: unknown }[] = [];
   const transactions: { label: string; ops: { id: string; input: unknown }[] }[] = [];
   const opened: { id: string; mode: unknown }[] = [];
+  const commands: { id: string; args: unknown }[] = [];
   const toasts: ToastOptions[] = [];
   const handles = new Map<string, unknown>();
   const backend = {
@@ -78,7 +89,11 @@ function setup(top: ChildEntry[] = pages, { activeDocId }: { activeDocId?: strin
           ? top.filter(
               (p) => params.teamspaceId === undefined || p.teamspaceId === params.teamspaceId,
             )
-          : [];
+          : name === "database.list"
+            ? Object.keys(collections).map((id) => ({ id }))
+            : name === "database.get"
+              ? [{ views: collections[params.id as string] ?? [] }]
+              : [];
       const state: LiveState<unknown> = { data, isLoading: false, error: undefined };
       const handle = { key, getSnapshot: () => state, subscribe: () => () => {} };
       handles.set(key, handle);
@@ -101,13 +116,25 @@ function setup(top: ChildEntry[] = pages, { activeDocId }: { activeDocId?: strin
       modeFor: (gesture: { metaKey?: boolean; button?: number }) =>
         gesture.button === 1 || gesture.metaKey ? "tab" : "replace",
       activeTab: () => activeTab,
+      runCommand: async (id: string, args: unknown) => void commands.push({ id, args }),
       subscribeActiveTab: () => () => {},
     },
     contributions: { list: () => NONE, subscribe: () => () => {} },
     tabs: { get: () => null, subscribe: () => () => {}, setState() {} },
   } as unknown as HostBridge;
   const setAnswer = (next: boolean) => void (answer = next);
-  return { backend, host, queried, executed, transactions, opened, confirms, toasts, setAnswer };
+  return {
+    backend,
+    host,
+    queried,
+    executed,
+    transactions,
+    opened,
+    commands,
+    confirms,
+    toasts,
+    setAnswer,
+  };
 }
 
 // Bun's DOM has no DataTransfer: a minimal one that keeps types like a browser does.
@@ -576,5 +603,46 @@ describe("rows (as in v1)", () => {
     expect(row("Docs", "Plain").dataset.dragging).toBe("true");
     fireEvent.dragEnd(row("Docs", "Plain"), { dataTransfer: transfer });
     expect(row("Docs", "Plain").dataset.dragging).toBeUndefined();
+  });
+});
+
+describe("collections in the tree", () => {
+  test("a collection opens to its views, never its pages; a view opens the collection on it", async () => {
+    const tasks = { ...doc("C1", "Tasks", null), childCount: 40 };
+    const { backend, host, queried, commands } = setup([tasks, doc("B1", "Diary", null)], {
+      collections: {
+        C1: [
+          { id: "v1", name: "All tasks", type: "table" },
+          { id: "v2", name: "By status", type: "board" },
+        ],
+      },
+    });
+    render(
+      <BackendProvider backend={backend}>
+        <HostProvider host={host}>
+          <DocumentTree label="Documents" scroll="parent" />
+        </HostProvider>
+      </BackendProvider>,
+    );
+    await act(async () => {});
+    const collection = row("Documents", "Tasks");
+    expect(collection.getAttribute("aria-expanded")).toBe("false");
+
+    await act(async () => {
+      fireEvent.click(within(collection).getByRole("button", { name: "Expand" }));
+    });
+    const tree = screen.getByRole("tree", { name: "Documents" });
+    const views = within(tree).getAllByTestId("tree-view-row");
+    expect(views.map((v) => v.textContent)).toEqual(["All tasks", "By status"]);
+    expect(views[0]?.getAttribute("aria-level")).toBe("2");
+    // The pages inside were never asked for.
+    expect(queried.some((q) => q.parentId === "C1")).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(views[1]!);
+    });
+    expect(commands).toEqual([
+      { id: "databases.openView", args: { databaseId: "C1", viewId: "v2", mode: "replace" } },
+    ]);
   });
 });

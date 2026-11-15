@@ -2,15 +2,19 @@ import type { ChildEntry, DocumentTreeDropTarget } from "@lydie/plugin-api";
 
 import type { TreeRow } from "./tree-model.ts";
 
-// The ids from one row to another in row order, both included (Shift+click, Shift+arrow). Without
-// the first row (scrolled away, collapsed) only the second.
+// The documents from one row to another in row order, both included (Shift+click, Shift+arrow).
+// Without the first row (scrolled away, collapsed) only the second. Views are not documents and
+// are left out.
 export function rangeIds(rows: readonly TreeRow[], fromId: string, toId: string): string[] {
-  const from = rows.findIndex((r) => r.doc.id === fromId);
-  const to = rows.findIndex((r) => r.doc.id === toId);
+  const from = rows.findIndex((r) => r.id === fromId);
+  const to = rows.findIndex((r) => r.id === toId);
   if (to === -1) return [];
-  if (from === -1) return [toId];
+  if (from === -1) return rows[to]?.kind === "doc" ? [toId] : [];
   const [start, end] = from < to ? [from, to] : [to, from];
-  return rows.slice(start, end + 1).map((r) => r.doc.id);
+  return rows
+    .slice(start, end + 1)
+    .filter((r) => r.kind === "doc")
+    .map((r) => r.id);
 }
 
 // The selected documents without those inside another selected one, in row order: moving or
@@ -21,7 +25,7 @@ export function topmost(rows: readonly TreeRow[], ids: ReadonlySet<string>): Chi
   for (const row of rows) {
     if (coveredDepth !== null && row.depth > coveredDepth) continue;
     coveredDepth = null;
-    if (ids.has(row.doc.id)) {
+    if (row.kind === "doc" && ids.has(row.id)) {
       out.push(row.doc);
       coveredDepth = row.depth;
     }
@@ -33,12 +37,12 @@ export function topmost(rows: readonly TreeRow[], ids: ReadonlySet<string>): Chi
 // document into itself).
 export function withinAny(rows: readonly TreeRow[], id: string, ids: readonly string[]): boolean {
   const dragged = new Set(ids);
-  let index = rows.findIndex((r) => r.doc.id === id);
+  let index = rows.findIndex((r) => r.id === id);
   let depth = Infinity;
   for (; index >= 0; index--) {
     const row = rows[index];
     if (!row || row.depth >= depth) continue;
-    if (dragged.has(row.doc.id)) return true;
+    if (dragged.has(row.id)) return true;
     depth = row.depth;
   }
   return false;

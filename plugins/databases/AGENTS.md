@@ -62,6 +62,9 @@ Licence: AGPL-3.0-only.
   opened with its title selected for naming); "Turn into collection" (`databases.fromPage`, args: the document id or
   `{ documentId }`, default the open page; also run by the properties plugin); "Turn back into page"
   (`databases.toPage`, `database.delete`).
+- `databases.openView` (hidden, args `{ databaseId, viewId, mode? }`): opens the collection on a
+  view by setting its page's tab state (`COLLECTION_STATE_KEY` + `:view`, `CollectionPage.tsx`); in
+  the active tab when it already shows the collection. The sidebar tree's view rows run it.
 - Document menu: "Turn into collection" / "Turn back into page".
 - Slash items (`slash.ts`): "Collection" (a child collection of this page, embedded here) and
   "View of a collection…" (overlay `databases.pick`, then an embed). "database" still finds them.

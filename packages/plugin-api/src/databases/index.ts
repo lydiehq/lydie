@@ -9,6 +9,7 @@ export { convertPageValue, PropertyEditor } from "./PropertyEditor.tsx";
 export type { EditorCloseReason, PropertyEditorProps } from "./PropertyEditor.tsx";
 export { fileLabel, OptionPill, PropertyValueView, RelationChips } from "./PropertyValueView.tsx";
 export { TYPE_ICONS, TypeIcon } from "./TypeIcon.tsx";
+export { VIEW_ICONS, VIEW_LABELS } from "./ViewIcon.tsx";
 export * from "./values.ts";
 
 export {

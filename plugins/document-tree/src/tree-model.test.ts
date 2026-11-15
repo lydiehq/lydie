@@ -20,26 +20,40 @@ function entry(id: string, parentId: string | null, childCount = 0): ChildEntry 
 }
 
 // A backend whose `doc.children` levels are set by hand; records which levels are watched.
-function fakeBackend(levels: Record<string, ChildEntry[]>) {
+// `databases`: the collections (by id) and their views.
+function fakeBackend(
+  levels: Record<string, ChildEntry[]>,
+  databases: Record<string, { id: string; name: string; type: "table" | "board" }[]> = {},
+) {
   const watched = new Set<string>();
   const params: Record<string, unknown>[] = [];
-  const handles = new Map<string, { state: LiveState<ChildEntry>; listeners: Set<() => void> }>();
+  const handles = new Map<string, { state: LiveState<unknown>; listeners: Set<() => void> }>();
   const all = Object.values(levels).flat();
+  const list = () => Object.keys(databases).map((id) => ({ id }));
   const backend = {
     // `doc.get`: just enough of the document for walking up its parents.
-    query: async (_name: string, { id }: { id: string }) => {
+    query: async (name: string, { id }: { id: string }) => {
+      if (name === "database.list") return list();
       const doc = all.find((d) => d.id === id);
       return doc ? [{ document: doc, body: null }] : [];
     },
-    live(_name: string, query: { parentId: string | null }) {
-      params.push(query);
-      const key = query.parentId ?? "root";
+    live(name: string, query: { parentId?: string | null; id?: string }) {
+      let key: string;
+      let data: unknown[];
+      if (name === "database.list") {
+        key = "databases";
+        data = list();
+      } else if (name === "database.get") {
+        key = `views:${query.id}`;
+        data = [{ views: databases[query.id!] ?? [] }];
+      } else {
+        params.push(query);
+        key = query.parentId ?? "root";
+        data = levels[key] ?? [];
+      }
       let h = handles.get(key);
       if (!h) {
-        h = {
-          state: { data: levels[key] ?? [], isLoading: false, error: undefined },
-          listeners: new Set(),
-        };
+        h = { state: { data, isLoading: false, error: undefined }, listeners: new Set() };
         handles.set(key, h);
       }
       const handle = h;
@@ -54,15 +68,17 @@ function fakeBackend(levels: Record<string, ChildEntry[]>) {
             if (handle.listeners.size === 0) watched.delete(key);
           };
         },
-      } satisfies LiveHandle<ChildEntry>;
+      } satisfies LiveHandle<unknown>;
     },
   } as unknown as Backend;
-  const set = (key: string, data: ChildEntry[]) => {
+  const set = (key: string, data: unknown[]) => {
     const h = handles.get(key)!;
     h.state = { ...h.state, data };
     for (const listener of h.listeners) listener();
   };
-  return { backend, watched, set, params };
+  // Folders only: the collections query is always watched.
+  const folders = () => [...watched].filter((k) => k !== "databases").sort();
+  return { backend, watched, folders, set, params };
 }
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -70,7 +86,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 describe("tree model", () => {
   test("watches only the top level and expanded folders; rows keep identity", async () => {
     const a1 = entry("a1", "a");
-    const { backend, watched, set } = fakeBackend({
+    const { backend, watched, folders, set } = fakeBackend({
       root: [entry("a", null, 2), entry("b", null)],
       a: [a1, entry("a2", "a")],
     });
@@ -78,18 +94,18 @@ describe("tree model", () => {
     const model = createTreeModel(backend, "ws", [], (ids) => expanded.push([...ids]));
     const off = model.subscribe(() => {});
     await tick();
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["a", "b"]);
-    expect([...watched]).toEqual(["root"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["a", "b"]);
+    expect(folders()).toEqual(["root"]);
 
     model.setExpanded("a", true);
     await tick();
-    expect(model.rows().map((r) => [r.doc.id, r.depth])).toEqual([
+    expect(model.rows().map((r) => [r.id, r.depth])).toEqual([
       ["a", 0],
       ["a1", 1],
       ["a2", 1],
       ["b", 0],
     ]);
-    expect([...watched].sort()).toEqual(["a", "root"]);
+    expect(folders()).toEqual(["a", "root"]);
     expect(expanded.at(-1)).toEqual(["a"]);
 
     // A change in one folder keeps the other rows as the same objects.
@@ -103,13 +119,13 @@ describe("tree model", () => {
 
     model.setExpanded("a", false);
     await tick();
-    expect([...watched]).toEqual(["root"]);
+    expect(folders()).toEqual(["root"]);
     off();
     expect(watched.size).toBe(0);
   });
 
   test("collapse all closes every folder of the trees on screen", async () => {
-    const { backend, watched } = fakeBackend({
+    const { backend, folders } = fakeBackend({
       root: [entry("a", null, 1), entry("b", null)],
       a: [entry("a1", "a", 1)],
       a1: [entry("a2", "a1")],
@@ -120,12 +136,12 @@ describe("tree model", () => {
     const other = createTreeModel(backend, "ws", ["a"], () => {});
     const off = model.subscribe(() => {});
     await tick();
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["a", "a1", "a2", "b"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["a", "a1", "a2", "b"]);
 
     collapseAllTrees();
     await tick();
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["a", "b"]);
-    expect([...watched]).toEqual(["root"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["a", "b"]);
+    expect(folders()).toEqual(["root"]);
     expect(expanded.at(-1)).toEqual([]);
     expect(other.expandedIds()).toEqual(["a"]);
     off();
@@ -146,13 +162,13 @@ describe("tree model", () => {
       { workspaceId: "ws", parentId: null, teamspaceId: "t1" },
       { workspaceId: "ws", parentId: "a" },
     ]);
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["a", "a1", "c"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["a", "a1", "c"]);
     model.setRootFilter((doc) => doc.id === "b");
     await tick();
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["b"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["b"]);
     model.setRootFilter(null);
     await tick();
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["a", "a1", "b", "c"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["a", "a1", "b", "c"]);
     off();
   });
 
@@ -169,14 +185,90 @@ describe("tree model", () => {
     const off = model.subscribe(() => {});
     await tick();
 
-    expect(await model.reveal("deep")).toBe(true);
+    expect(await model.reveal("deep")).toBe("deep");
     await tick();
-    expect(model.rows().map((r) => r.doc.id)).toEqual(["a", "a1", "deep"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["a", "a1", "deep"]);
 
     // Under a top-level page this tree filters out: not here, nothing opened.
-    expect(await model.reveal("o1")).toBe(false);
-    expect(await model.reveal("missing")).toBe(false);
+    expect(await model.reveal("o1")).toBe(null);
+    expect(await model.reveal("missing")).toBe(null);
     expect(model.expandedIds()).toEqual(["a", "a1"]);
+    off();
+  });
+
+  test("an expanded collection lists its views, not its pages", async () => {
+    const { backend, folders, set } = fakeBackend(
+      {
+        root: [entry("tasks", null, 2), entry("b", null)],
+        tasks: [entry("t1", "tasks"), entry("t2", "tasks")],
+      },
+      { tasks: [{ id: "v1", name: "All", type: "table" }] },
+    );
+    const model = createTreeModel(backend, "ws", ["tasks"], () => {});
+    const off = model.subscribe(() => {});
+    await tick();
+    expect(model.rows().map((r) => [r.id, r.depth])).toEqual([
+      ["tasks", 0],
+      ["view:v1", 1],
+      ["b", 0],
+    ]);
+    // Its pages are never read.
+    expect(folders()).toEqual(["root", "views:tasks"]);
+
+    // A new view shows; the rows before it keep identity.
+    const before = model.rows();
+    set("views:tasks", [
+      {
+        views: [
+          { id: "v1", name: "All", type: "table" },
+          { id: "v2", name: "Board", type: "board" },
+        ],
+      },
+    ]);
+    await tick();
+    expect(model.rows().map((r) => r.id)).toEqual(["tasks", "view:v1", "view:v2", "b"]);
+    expect(model.rows()[1]).toBe(before[1]!);
+
+    // Turned back into a page: its pages show again.
+    set("databases", []);
+    await tick();
+    expect(model.rows().map((r) => r.id)).toEqual(["tasks", "t1", "t2", "b"]);
+    expect(folders()).toEqual(["root", "tasks"]);
+    off();
+  });
+
+  test("a collection with no pages can still open to its views", async () => {
+    const { backend } = fakeBackend(
+      { root: [entry("tasks", null, 0)] },
+      { tasks: [{ id: "v1", name: "All", type: "table" }] },
+    );
+    const model = createTreeModel(backend, "ws", [], () => {});
+    const off = model.subscribe(() => {});
+    await tick();
+    expect(model.rows()[0]).toMatchObject({ id: "tasks", expandable: true, collection: true });
+    model.setExpanded("tasks", true);
+    await tick();
+    expect(model.rows().map((r) => r.id)).toEqual(["tasks", "view:v1"]);
+    off();
+  });
+
+  test("reveal stops at the outermost collection a page is in", async () => {
+    const { backend } = fakeBackend(
+      {
+        root: [entry("p", null, 1)],
+        p: [entry("tasks", "p", 1)],
+        tasks: [entry("t1", "tasks", 1)],
+        t1: [entry("sub", "t1")],
+      },
+      { tasks: [{ id: "v1", name: "All", type: "table" }] },
+    );
+    const model = createTreeModel(backend, "ws", [], () => {});
+    const off = model.subscribe(() => {});
+    await tick();
+    expect(await model.reveal("sub")).toBe("tasks");
+    await tick();
+    expect(model.expandedIds()).toEqual(["p"]);
+    expect(model.rows().map((r) => r.id)).toEqual(["p", "tasks"]);
     off();
   });
 });

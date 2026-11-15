@@ -21,6 +21,9 @@ import { useEffect, useRef, useState } from "react";
 import { DatabaseScreen } from "./lazy.tsx";
 import { ScreenSkeleton } from "./skeleton.tsx";
 
+// Where a collection's page keeps its tab state (`<key>:view` is the open view).
+export const COLLECTION_STATE_KEY = "db";
+
 export function CollectionBody({ docId, fallback }: DocumentSlotProps) {
   const { definition, isLoading } = useDatabase(docId);
   const hasText = useQuerySelect("doc.get", { id: docId, includeBody: true }, (s) =>
@@ -105,7 +108,11 @@ export function CollectionBody({ docId, fallback }: DocumentSlotProps) {
             )}
           </div>
           <div className={`flex flex-col ${open ? "min-h-[70vh] shrink-0 grow" : "min-h-0 grow"}`}>
-            <DatabaseScreen definition={definition} stateKey="db" fullWidth={fullWidth} />
+            <DatabaseScreen
+              definition={definition}
+              stateKey={COLLECTION_STATE_KEY}
+              fullWidth={fullWidth}
+            />
           </div>
         </>
       )}

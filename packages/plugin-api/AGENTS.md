@@ -266,7 +266,8 @@ PropertyLike { id, name, type, key, config, databaseId? }; rowValue(property, ro
   valueText, parseValueText, isEmptyValue, formatNumber, formatDate, parseDateValue, joinDate, todayIso,
   TYPE_LABELS, TYPE_ICONS / <TypeIcon type /> (MingCute icon per type: use these wherever a type
   shows), TYPE_GLYPHS (plain text, only where an icon cannot go), ADDABLE_TYPES, PAGE_TYPES, OPTION_COLORS, optionsOf, optionFor,
-  isEditableType, isListType, convertPageValue
+  isEditableType, isListType, convertPageValue, VIEW_LABELS, VIEW_ICONS (per view type: the
+  collection's view tabs and the sidebar tree)
 // re-exported from the contract: operatorsFor, groupable, sortable, convertValue, checkValue,
 // parseExpression, ExpressionError, tryParseExpression, isStoredType, isUuid, normalizeId, COLORS, PROPERTY_TYPES,
 // VIEW_TYPES, ROLLUP_FUNCTIONS, SUMMARY_FUNCTIONS, LIST_TYPES, STORED_TYPES + database entity types

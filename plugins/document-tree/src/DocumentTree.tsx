@@ -19,7 +19,9 @@ import type {
   DocumentRef,
   DocumentTreeDropTarget,
   DocumentTreeProps,
+  OpenGesture,
 } from "@lydie/plugin-api";
+import { VIEW_ICONS } from "@lydie/plugin-api/databases";
 import {
   AddRegular,
   Button,
@@ -38,7 +40,7 @@ import { DocHoverCard } from "./DocHoverCard.tsx";
 import { placements, rangeIds, topmost, withinAny } from "./selection.ts";
 import { SyncingRows, useAwaitingFirstSync } from "./SyncingRows.tsx";
 import { createTreeModel } from "./tree-model.ts";
-import type { TreeModel, TreeRow } from "./tree-model.ts";
+import type { DocRow, TreeModel, TreeRow, ViewRow } from "./tree-model.ts";
 
 // The slot of one row: v1's 30 px row and the 2 px between rows.
 export const ROW_HEIGHT = 32;
@@ -106,6 +108,8 @@ function setDragBadge(transfer: DataTransfer, text: string) {
 }
 
 const EMPTY: ReadonlySet<string> = new Set();
+
+const isDoc = (row: TreeRow | undefined): row is DocRow => row?.kind === "doc";
 
 const refOf = (doc: ChildEntry): DocumentRef => ({
   id: doc.id,
@@ -229,9 +233,10 @@ export function DocumentTree(props: DocumentTreeProps) {
   const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
   const last = Math.min(rows.length, Math.ceil((scrollTop + height) / ROW_HEIGHT) + OVERSCAN);
   const visible = rows.slice(first, last);
-  const focusedIndex = focusedId ? rows.findIndex((r) => r.doc.id === focusedId) : -1;
+  const focusedIndex = focusedId ? rows.findIndex((r) => r.id === focusedId) : -1;
   // Only rows on screen count: a selected page inside a folder that was closed drops out.
-  const selectedRows = selected.size > 0 ? rows.filter((r) => selected.has(r.doc.id)) : [];
+  const selectedRows =
+    selected.size > 0 ? rows.filter((r): r is DocRow => isDoc(r) && selected.has(r.id)) : [];
   const selecting = selectedRows.length > 0;
 
   // What an action on a row applies to: the whole selection when the row is part of it.
@@ -247,7 +252,7 @@ export function DocumentTree(props: DocumentTreeProps) {
     const base = selecting
       ? selectedRows.map((r) => r.doc.id)
       : [anchor.current ?? activeDocId].filter(
-          (s): s is string => seed && s !== null && rows.some((r) => r.doc.id === s),
+          (s): s is string => seed && s !== null && rows.some((r) => isDoc(r) && r.id === s),
         );
     select(base.includes(id) ? base.filter((s) => s !== id) : [...base, id]);
     anchor.current = id;
@@ -267,11 +272,12 @@ export function DocumentTree(props: DocumentTreeProps) {
   useEffect(() => {
     if (!activeDocId || loading) return;
     let current = true;
+    // A page inside a collection is not listed: the collection's row stands for it.
     void model.reveal(activeDocId).then((found) => {
       if (!current || !found) return;
-      setFocusedId(activeDocId);
-      const index = model.rows().findIndex((r) => r.doc.id === activeDocId);
-      if (index === -1) revealing.current = activeDocId;
+      setFocusedId(found);
+      const index = model.rows().findIndex((r) => r.id === found);
+      if (index === -1) revealing.current = found;
       else scrollRowIntoView(index, scroll, scroller.current, treeRef.current);
     });
     return () => {
@@ -280,7 +286,7 @@ export function DocumentTree(props: DocumentTreeProps) {
   }, [model, activeDocId, loading, scroll]);
   useLayoutEffect(() => {
     if (!revealing.current) return;
-    const index = rows.findIndex((r) => r.doc.id === revealing.current);
+    const index = rows.findIndex((r) => r.id === revealing.current);
     if (index === -1) return;
     revealing.current = null;
     scrollRowIntoView(index, scroll, scroller.current, treeRef.current);
@@ -292,8 +298,9 @@ export function DocumentTree(props: DocumentTreeProps) {
     if (hoverExpand.current) clearTimeout(hoverExpand.current.timer);
     hoverExpand.current = null;
   };
-  const expandOnHover = (row: TreeRow, target: DropTarget) => {
-    if (target.where !== "inside" || row.expanded || row.doc.childCount === 0) {
+  // Not a collection: opened, it shows views, which take no drops.
+  const expandOnHover = (row: DocRow, target: DropTarget) => {
+    if (target.where !== "inside" || row.expanded || !row.expandable || row.collection) {
       cancelHoverExpand();
       return;
     }
@@ -313,16 +320,29 @@ export function DocumentTree(props: DocumentTreeProps) {
   // No hover cards while the tree is busy with something else.
   const busy = menu !== null || renamingId !== null || drop !== null;
 
-  const open = (
-    doc: ChildEntry,
-    event?: { metaKey?: boolean; ctrlKey?: boolean; button?: number },
-  ) => {
+  const open = (doc: ChildEntry, event?: OpenGesture) => {
     app.openDoc(doc.id, { mode: event ? app.modeFor(event) : "replace" });
+  };
+
+  // Through the collections plugin, which knows where its page keeps the open view; without it,
+  // the collection's page.
+  const openView = (row: ViewRow, event?: OpenGesture) => {
+    const mode = event ? app.modeFor(event) : "replace";
+    const databaseId = row.collection.id;
+    app
+      .runCommand("databases.openView", { databaseId, viewId: row.view.id, mode })
+      .catch(() => app.openDoc(databaseId, { mode }));
+  };
+
+  // Opening a folder after adding or dropping a page into it. A collection lists views, not the page.
+  const expandToShow = (id: string) => {
+    const row = rows.find((r) => r.id === id);
+    if (!isDoc(row) || !row.collection) model.setExpanded(id, true);
   };
 
   // Mod+click selects instead of opening a tab (Mod+Shift+click and middle-click still do), and
   // Shift+click selects a range.
-  const press = (row: TreeRow, event: MouseEvent) => {
+  const press = (row: DocRow, event: MouseEvent) => {
     setFocusedId(row.doc.id);
     const mod = app.modeFor(event) === "tab" && event.button === 0;
     if (event.shiftKey && !event.altKey && !event.metaKey && !event.ctrlKey) {
@@ -355,7 +375,7 @@ export function DocumentTree(props: DocumentTreeProps) {
       title: "Untitled",
       ...(await atTop(backend, workspaceId, parentId)),
     });
-    if (parentId) model.setExpanded(parentId, true);
+    if (parentId) expandToShow(parentId);
     app.openDoc(doc.id, { state: { focusTitle: true } });
   };
 
@@ -380,11 +400,11 @@ export function DocumentTree(props: DocumentTreeProps) {
     const move = (to: number, extend = false) => {
       const target = rows[Math.max(0, Math.min(rows.length - 1, to))];
       if (!target) return;
-      setFocusedId(target.doc.id);
+      setFocusedId(target.id);
       scrollToIndex(rows.indexOf(target));
-      if (extend) extendTo(target.doc.id);
+      if (extend) extendTo(target.id);
       else {
-        anchor.current = target.doc.id;
+        anchor.current = target.id;
         clearSelection();
       }
     };
@@ -403,24 +423,24 @@ export function DocumentTree(props: DocumentTreeProps) {
         move(rows.length - 1, event.shiftKey);
         break;
       case " ":
-        if (row) toggle(row.doc.id, false);
+        if (isDoc(row)) toggle(row.doc.id, false);
         break;
       case "a":
         if (!mod || event.shiftKey || event.altKey) return;
-        select(rows.map((r) => r.doc.id));
+        select(rows.filter(isDoc).map((r) => r.id));
         break;
       case "Escape":
         if (!selecting) return;
         clearSelection();
         break;
       case "ArrowRight":
-        if (!row) return;
-        if (row.doc.childCount > 0 && !row.expanded) model.setExpanded(row.doc.id, true);
+        if (!isDoc(row)) return;
+        if (row.expandable && !row.expanded) model.setExpanded(row.doc.id, true);
         else if (row.expanded) move(index + 1);
         break;
       case "ArrowLeft": {
         if (!row) return;
-        if (row.expanded) model.setExpanded(row.doc.id, false);
+        if (isDoc(row) && row.expanded) model.setExpanded(row.doc.id, false);
         else {
           const parent = rows.findLastIndex((r, i) => i < index && r.depth < row.depth);
           if (parent !== -1) move(parent);
@@ -428,19 +448,21 @@ export function DocumentTree(props: DocumentTreeProps) {
         break;
       }
       case "Enter":
-        if (row) open(row.doc, event);
+        if (isDoc(row)) open(row.doc, event);
+        else if (row) openView(row, event);
         break;
       case "F2":
-        if (row) setRenamingId(row.doc.id);
+        if (isDoc(row)) setRenamingId(row.doc.id);
         break;
       case "Delete":
       case "Backspace":
-        if (row && (event.key === "Delete" || event.metaKey)) void remove(targetsOf(row.doc));
+        if (isDoc(row) && (event.key === "Delete" || event.metaKey))
+          void remove(targetsOf(row.doc));
         else return;
         break;
       case "F10":
       case "ContextMenu": {
-        if (!row || (event.key === "F10" && !event.shiftKey)) return;
+        if (!isDoc(row) || (event.key === "F10" && !event.shiftKey)) return;
         const el = document.getElementById(`tree-row-${row.doc.id}`);
         const rect = el?.getBoundingClientRect();
         openMenu(row.doc, rect?.left ?? 0, rect?.bottom ?? 0);
@@ -452,7 +474,7 @@ export function DocumentTree(props: DocumentTreeProps) {
     event.preventDefault();
   };
 
-  const dropTargetFor = (event: DragEvent<HTMLElement>, row: TreeRow): DropTarget => {
+  const dropTargetFor = (event: DragEvent<HTMLElement>, row: DocRow): DropTarget => {
     const rect = event.currentTarget.getBoundingClientRect();
     const y = event.clientY - rect.top;
     if (y < rect.height * 0.25) return { id: row.doc.id, where: "before" };
@@ -463,8 +485,8 @@ export function DocumentTree(props: DocumentTreeProps) {
   // Where a drop lands, as `doc.move` placement.
   const placementOf = (target: DropTarget): DocumentTreeDropTarget | null => {
     if (target.id === null) return { parentId: null };
-    const row = rows.find((r) => r.doc.id === target.id);
-    if (!row) return null;
+    const row = rows.find((r) => r.id === target.id);
+    if (!isDoc(row)) return null;
     if (target.where === "inside") return { parentId: row.doc.id };
     return {
       parentId: row.doc.parentId,
@@ -479,7 +501,7 @@ export function DocumentTree(props: DocumentTreeProps) {
     return !from || from === dragKeyType(dragKey) || Boolean(onForeignDrop);
   };
 
-  const startDrag = (row: TreeRow, event: DragEvent<HTMLElement>) => {
+  const startDrag = (row: DocRow, event: DragEvent<HTMLElement>) => {
     const { all, top } = targetsOf(row.doc);
     const transfer = event.dataTransfer;
     transfer.setData(DRAG_TYPES.doc, row.doc.id);
@@ -518,7 +540,7 @@ export function DocumentTree(props: DocumentTreeProps) {
           { scope: historyScope() },
         );
       }
-      if (target.id !== null && target.where === "inside") model.setExpanded(target.id, true);
+      if (target.id !== null && target.where === "inside") expandToShow(target.id);
     } catch (error) {
       app.notify({ title: "Could not move", description: (error as Error).message, kind: "error" });
     }
@@ -640,59 +662,72 @@ export function DocumentTree(props: DocumentTreeProps) {
         // Also when the drag ends elsewhere (another tree, a tab group) or is cancelled.
         onDragEnd={() => setDragging(EMPTY)}
         onFocus={() => {
-          if (rows[0] && !rows.some((r) => r.doc.id === focusedId))
+          if (rows[0] && !rows.some((r) => r.id === focusedId))
             setFocusedId(
-              activeDocId && rows.some((r) => r.doc.id === activeDocId)
-                ? activeDocId
-                : rows[0].doc.id,
+              activeDocId && rows.some((r) => r.id === activeDocId) ? activeDocId : rows[0].id,
             );
         }}
         className="group/tree relative outline-none"
         style={{ height: rows.length * ROW_HEIGHT }}
         data-testid="document-tree"
       >
-        {visible.map((row, i) => (
-          <TreeItem
-            key={row.doc.id}
-            row={row}
-            top={(first + i) * ROW_HEIGHT}
-            active={row.doc.id === activeDocId}
-            selected={selecting ? selected.has(row.doc.id) : row.doc.id === activeDocId}
-            highlighted={selecting && selected.has(row.doc.id)}
-            focused={row.doc.id === focusedId}
-            renaming={row.doc.id === renamingId}
-            menuOpen={menu?.doc.id === row.doc.id}
-            dimmed={dragging.has(row.doc.id)}
-            drop={drop && drop.id === row.doc.id ? drop.where : null}
-            onToggle={() => model.setExpanded(row.doc.id, !row.expanded)}
-            onPress={(event) => press(row, event)}
-            onOpen={(event) => {
-              setFocusedId(row.doc.id);
-              open(row.doc, event);
-            }}
-            onRename={(title) => void rename(row.doc, title)}
-            onCancelRename={() => setRenamingId(null)}
-            onAddChild={() => void createIn(row.doc.id)}
-            onMenu={(x, y) => openMenu(row.doc, x, y)}
-            onDragStartRow={(event) => startDrag(row, event)}
-            busy={busy}
-            onDragOverRow={(event) => {
-              if (!accepts(event.dataTransfer.types)) return;
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "move";
-              const target = dropTargetFor(event, row);
-              expandOnHover(row, target);
-              if (!drop || drop.id !== target.id || drop.where !== target.where) setDrop(target);
-            }}
-            onDropRow={(event) => {
-              const ids = draggedIds(event.dataTransfer);
-              if (ids.length === 0) return;
-              event.preventDefault();
-              event.stopPropagation();
-              void onDrop(dropTargetFor(event, row), ids, [...event.dataTransfer.types]);
-            }}
-          />
-        ))}
+        {visible.map((row, i) =>
+          row.kind === "view" ? (
+            <ViewItem
+              key={row.id}
+              row={row}
+              top={(first + i) * ROW_HEIGHT}
+              focused={row.id === focusedId}
+              onOpen={(event) => {
+                setFocusedId(row.id);
+                anchor.current = row.id;
+                clearSelection();
+                openView(row, event);
+              }}
+            />
+          ) : (
+            <TreeItem
+              key={row.doc.id}
+              row={row}
+              top={(first + i) * ROW_HEIGHT}
+              active={row.doc.id === activeDocId}
+              selected={selecting ? selected.has(row.doc.id) : row.doc.id === activeDocId}
+              highlighted={selecting && selected.has(row.doc.id)}
+              focused={row.doc.id === focusedId}
+              renaming={row.doc.id === renamingId}
+              menuOpen={menu?.doc.id === row.doc.id}
+              dimmed={dragging.has(row.doc.id)}
+              drop={drop && drop.id === row.doc.id ? drop.where : null}
+              onToggle={() => model.setExpanded(row.doc.id, !row.expanded)}
+              onPress={(event) => press(row, event)}
+              onOpen={(event) => {
+                setFocusedId(row.doc.id);
+                open(row.doc, event);
+              }}
+              onRename={(title) => void rename(row.doc, title)}
+              onCancelRename={() => setRenamingId(null)}
+              onAddChild={() => void createIn(row.doc.id)}
+              onMenu={(x, y) => openMenu(row.doc, x, y)}
+              onDragStartRow={(event) => startDrag(row, event)}
+              busy={busy}
+              onDragOverRow={(event) => {
+                if (!accepts(event.dataTransfer.types)) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                const target = dropTargetFor(event, row);
+                expandOnHover(row, target);
+                if (!drop || drop.id !== target.id || drop.where !== target.where) setDrop(target);
+              }}
+              onDropRow={(event) => {
+                const ids = draggedIds(event.dataTransfer);
+                if (ids.length === 0) return;
+                event.preventDefault();
+                event.stopPropagation();
+                void onDrop(dropTargetFor(event, row), ids, [...event.dataTransfer.types]);
+              }}
+            />
+          ),
+        )}
         {drop?.id === null && (
           <div
             className={DROP_LINE}
@@ -712,7 +747,7 @@ export function DocumentTree(props: DocumentTreeProps) {
 }
 
 type ItemProps = {
-  row: TreeRow;
+  row: DocRow;
   top: number;
   active: boolean;
   // aria-selected: the selection while there is one, else the open document.
@@ -763,7 +798,7 @@ const TreeItem = memo(function TreeItem({
   onDropRow,
 }: ItemProps) {
   const { doc, depth, expanded } = row;
-  const hasChildren = doc.childCount > 0;
+  const hasChildren = row.expandable;
   const indent = indentOf(depth);
   // A press (click, drag, context menu) puts the card away until the pointer comes back.
   // Twice the default rest: the pointer crosses the tree all the time on its way to something else.
@@ -910,6 +945,54 @@ const TreeItem = memo(function TreeItem({
       </div>
       <DocHoverCard doc={doc} hover={hover} />
     </>
+  );
+});
+
+// One of a collection's views: opens the collection on it. Not a document, so no selection, menu,
+// drag or drop.
+const ViewItem = memo(function ViewItem({
+  row,
+  top,
+  focused,
+  onOpen,
+}: {
+  row: ViewRow;
+  top: number;
+  focused: boolean;
+  onOpen: (event: MouseEvent) => void;
+}) {
+  const ViewIcon = VIEW_ICONS[row.view.type];
+  return (
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
+    <div
+      id={`tree-row-${row.id}`}
+      role="treeitem"
+      aria-level={row.depth + 1}
+      aria-selected={false}
+      data-testid="tree-view-row"
+      data-view-id={row.view.id}
+      onClick={onOpen}
+      onAuxClick={(event) => {
+        if (event.button === 1) onOpen(event);
+      }}
+      onContextMenu={(event) => event.preventDefault()}
+      className="group isolate absolute inset-x-0 flex cursor-default items-center gap-1 pr-1 text-sm font-medium text-gray-600 select-none"
+      style={{ top, height: ROW_HEIGHT, paddingLeft: indentOf(row.depth) }}
+    >
+      <span
+        aria-hidden
+        className={[
+          "pointer-events-none absolute inset-x-0 inset-y-px -z-10 rounded-lg group-hover:bg-gray-950/3",
+          focused
+            ? "outline-solid outline-0 -outline-offset-2 outline-blue-600 group-focus-visible/tree:outline-2"
+            : "",
+        ].join(" ")}
+      />
+      <span className="-ml-1 flex size-5 shrink-0 items-center justify-center text-gray-500">
+        <ViewIcon aria-hidden className="size-4" />
+      </span>
+      <span className="min-w-0 grow truncate">{row.view.name}</span>
+    </div>
   );
 });
 

@@ -1,10 +1,10 @@
 import { definePlugin, docIdOf, useQuery, useWorkspace } from "@lydie/plugin-api";
-import type { AppApi } from "@lydie/plugin-api";
+import type { AppApi, OpenOptions } from "@lydie/plugin-api";
 import type { Editor } from "@lydie/plugin-api/editor";
 import { FileRegular, PickerDialog, Table2Regular } from "@lydie/plugin-api/ui";
 import { useState } from "react";
 
-import { CollectionBody } from "./CollectionPage.tsx";
+import { COLLECTION_STATE_KEY, CollectionBody } from "./CollectionPage.tsx";
 import { InlineDatabase, isBaseTarget } from "./InlineDatabase.tsx";
 import { preloadDatabaseViews } from "./lazy.tsx";
 import { collectionSlashItems } from "./slash.ts";
@@ -83,6 +83,19 @@ function docIdArg(args: unknown): string | null {
     return typeof id === "string" ? id : null;
   }
   return null;
+}
+
+// `databases.openView` takes `{ databaseId, viewId, mode? }`.
+function openViewArgs(
+  args: unknown,
+): { databaseId: string; viewId: string; mode?: OpenOptions["mode"] } | null {
+  if (typeof args !== "object" || args === null) return null;
+  const { databaseId, viewId, mode } = args as Record<string, unknown>;
+  if (typeof databaseId !== "string" || typeof viewId !== "string") return null;
+  const modes: unknown[] = ["replace", "tab", "background", "split"];
+  return modes.includes(mode)
+    ? { databaseId, viewId, mode: mode as OpenOptions["mode"] }
+    : { databaseId, viewId };
 }
 
 function CollectionPicker({ close, props }: { close: () => void; props: unknown }) {
@@ -194,6 +207,24 @@ export const databasesPlugin = definePlugin({
         const id = docIdArg(args) ?? currentDocId(app);
         if (!id || !isCollection(id)) return;
         await turnIntoPage(app, id).catch(fail(app, "Could not turn the collection into a page"));
+      },
+    });
+    // The sidebar tree lists a collection's views and opens one with this.
+    ctx.commands.register({
+      id: "databases.openView",
+      title: "Open a collection's view",
+      hidden: true,
+      bindable: false,
+      run({ app, args }) {
+        const target = openViewArgs(args);
+        if (!target) return;
+        const state = { [`${COLLECTION_STATE_KEY}:view`]: target.viewId };
+        const tab = app.activeTab();
+        const mode = target.mode ?? "replace";
+        // Opening what the tab already shows only focuses it, so the view is switched in place.
+        if (mode === "replace" && tab && docIdOf(tab.path) === target.databaseId) {
+          app.setTabState(tab.id, state);
+        } else app.openDoc(target.databaseId, { mode, state });
       },
     });
     ctx.documentMenu.register({

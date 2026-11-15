@@ -4,41 +4,23 @@
 // (one appearing on the open tab shifted the bar): it opens on right-click, on a click on the
 // open tab, and with Shift+F10 or the menu key.
 import { useApp, useOps } from "@lydie/plugin-api";
-import { VIEW_TYPES } from "@lydie/plugin-api/databases";
+import { VIEW_ICONS, VIEW_LABELS, VIEW_TYPES } from "@lydie/plugin-api/databases";
 import type { DatabaseDefinition, DatabaseView, ViewType } from "@lydie/plugin-api/databases";
 import {
   AddRegular,
   BoardViewIllustration,
   buttonStyles,
-  CalendarRegular,
   CalendarViewIllustration,
-  Columns2Regular,
   ListViewIllustration,
-  Rows3Regular,
-  TableRegular,
   TableViewIllustration,
   TextField,
 } from "@lydie/plugin-api/ui";
-import type { Icon, IllustrationProps } from "@lydie/plugin-api/ui";
+import type { IllustrationProps } from "@lydie/plugin-api/ui";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 
 import { fitTabs } from "./tabs-model.ts";
 import { AnchoredPopover, MenuButtonItem, PanelSection, PopoverButton } from "./ui.tsx";
-
-export const VIEW_LABELS: Record<ViewType, string> = {
-  table: "Table",
-  board: "Board",
-  list: "List",
-  calendar: "Calendar",
-};
-
-export const VIEW_ICONS: Record<ViewType, Icon> = {
-  table: TableRegular,
-  board: Columns2Regular,
-  list: Rows3Regular,
-  calendar: CalendarRegular,
-};
 
 // The "New view" menu draws each type rather than showing its icon.
 const VIEW_DRAWINGS: Record<ViewType, (props: IllustrationProps) => ReactNode> = {
