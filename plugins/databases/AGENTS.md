@@ -178,7 +178,10 @@ Licence: AGPL-3.0-only.
   and resize (saved once on release through `ctx.updateView`, painted meanwhile via `--c<i>` CSS
   variables). `TableRow.tsx` (memoised rows; a cell subscribes only to whether it is selected),
   `Overlay.tsx` (range, rounded active cell, fill handle, drop lines, the editor's anchor; frozen
-  part in a sticky layer), `Header.tsx`, `SummaryRow.tsx`, `GroupRows.tsx`, `BulkBar.tsx`,
+  part in a sticky layer; its layers are 0 by 0, so every box, drop lines included, takes its
+  size from the geometry, never `inset-*`). A row drag fades the row in place and shows a card
+  with its title under the pointer (`RowGhost`, on the body, moved by the drag's pointer events
+  without a render), with the grabbing cursor; `Header.tsx`, `SummaryRow.tsx`, `GroupRows.tsx`, `BulkBar.tsx`,
   `cell-values.ts` (copy text, type-aware paste parsing, fill lines; pure, tested).
   Rules: never position anything by measuring cells (geometry comes from the store); render rows
   only when the window moves (scroll updates it once per frame); keep the selection in the store,

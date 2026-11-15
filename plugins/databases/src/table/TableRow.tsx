@@ -73,6 +73,11 @@ export const TableRow = memo(function TableRow({
   peeked,
 }: Props) {
   const picked = useStoreSelector(store, (s) => (row ? s.rows.ids.has(row.id) : false));
+  // The row being dragged fades in place; its ghost follows the pointer (TableView's RowGhost).
+  const dragged = useStoreSelector(
+    store,
+    (s) => s.mode.kind === "rowDragging" && s.mode.row === index,
+  );
   const cells = [];
   for (let col = 0; col < frozen; col++) {
     const column = columns[col];
@@ -120,7 +125,7 @@ export const TableRow = memo(function TableRow({
       aria-selected={picked}
       data-row-id={row?.id}
       data-r={index}
-      className={`group/row absolute left-0 flex ${picked ? "bg-blue-50" : "bg-surface hover:bg-gray-50"}`}
+      className={`group/row absolute left-0 flex ${picked ? "bg-blue-50" : "bg-surface hover:bg-gray-50"} ${dragged ? "opacity-40" : ""}`}
       style={{ top, height, width: "var(--grid-w)" }}
     >
       <div aria-hidden className="shrink-0" style={{ width: "var(--inset)" }} />

@@ -148,10 +148,16 @@ export function Overlay({ store, editorAnchor, onFillStart, canFill, peekedRows 
     if (boxes.scrolling)
       scrolling.push(<div key="target" className={dashed} style={at(boxes.scrolling)} />);
   }
+  // Drop lines take their size from the geometry: the layers are 0 by 0, so `inset-*` would
+  // give them none.
   if (mode.kind === "rowDragging" && mode.over && mode.over.item >= 0) {
     const y = itemTop(g, mode.over.item) + (mode.over.edge === "after" ? g.rowHeight : 0) - 1;
     scrolling.push(
-      <div key="drop" className="absolute right-0 left-0 h-0.5 bg-blue-500" style={{ top: y }} />,
+      <div
+        key="drop"
+        className="absolute h-0.5 rounded-full bg-blue-500"
+        style={{ top: y, left: g.inset, width: g.totalWidth - g.inset - g.trailing }}
+      />,
     );
   }
   if (mode.kind === "columnDragging" && mode.over !== null && mode.over !== mode.col) {
@@ -159,7 +165,11 @@ export function Overlay({ store, editorAnchor, onFillStart, canFill, peekedRows 
       columnLeft(g, mode.over) + (mode.over > mode.col ? (g.columnWidths[mode.over] ?? 0) : 0) - 1;
     put(
       mode.over,
-      <div key="drop" className="absolute top-0 bottom-0 w-0.5 bg-blue-500" style={{ left: x }} />,
+      <div
+        key="drop"
+        className="absolute top-0 w-0.5 rounded-full bg-blue-500"
+        style={{ left: x, height: g.header + g.bodyHeight }}
+      />,
     );
   }
 

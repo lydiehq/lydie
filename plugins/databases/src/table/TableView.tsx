@@ -7,7 +7,7 @@
 // Data comes in windows of the view (`useDatabaseView`, which paints edits optimistically), kept
 // apart from the interaction store. Every multi-cell gesture (paste, fill, clear, bulk edit) is
 // one operation or one transaction: one undo step.
-import { useApp, useBackend, useOps, useTab } from "@lydie/plugin-api";
+import { Portal, useApp, useBackend, useOps, useTab } from "@lydie/plugin-api";
 import {
   isEditableType,
   isEmptyValue,
@@ -55,7 +55,7 @@ import type {
   Scroll,
   Viewport,
 } from "@lydie/plugin-api/grid";
-import { ErrorState } from "@lydie/plugin-api/ui";
+import { DotsVerticalRegular, ErrorState } from "@lydie/plugin-api/ui";
 import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
   ClipboardEvent,
@@ -114,6 +114,9 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
   const [store] = useState(createGridStore);
   const gridId = `g${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const scroller = useRef<HTMLDivElement>(null);
+  // A row drag's ghost and the pointer it follows.
+  const ghost = useRef<HTMLDivElement>(null);
+  const ghostAt = useRef({ x: 0, y: 0 });
   const content = useRef<HTMLDivElement>(null);
   const editorAnchor = useRef<HTMLDivElement>(null);
   const [viewportSize] = useState(() => ({ width: 1000, height: 600 }));
@@ -870,6 +873,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
     const hit = hitAt(event.clientX, event.clientY, box);
     if (el.closest("[data-drag-handle]") && hit.row >= 0) {
       event.preventDefault();
+      ghostAt.current = { x: event.clientX, y: event.clientY };
       startRowDrag(hit.row, box);
       return;
     }
@@ -908,12 +912,19 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
 
   function startRowDrag(row: number, box: DOMRect) {
     store.dispatch({ type: "startRowDrag", row });
+    if (store.getState().mode.kind !== "rowDragging") return;
+    const cursor = document.body.style.cursor;
+    document.body.style.cursor = "grabbing";
     track(
       (move) => {
+        ghostAt.current = { x: move.clientX, y: move.clientY };
+        // Moved here, not through React: the ghost follows every pointer event.
+        if (ghost.current) ghost.current.style.transform = ghostTransform(ghostAt.current);
         const hit = hitAt(move.clientX, move.clientY, box);
         if (hit.item >= 0) store.dispatch({ type: "rowDragOver", item: hit.item, edge: hit.edge });
       },
       () => {
+        document.body.style.cursor = cursor;
         const mode = store.getState().mode;
         store.dispatch({ type: "endDrag" });
         if (mode.kind === "rowDragging" && mode.over)
@@ -1102,6 +1113,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
         style={{ width: "var(--table-inset, 0px)" }}
       />
       <PickedBar store={store} onSelectAll={() => void pickAll(true)} />
+      <RowGhost store={store} rowAt={rowAt} at={ghostAt} ghost={ghost} />
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a grid takes focus to navigate its cells */}
       <div
         ref={scroller}
@@ -1230,6 +1242,41 @@ function sameGroups(a: ViewWindowGroups, b: ViewWindowGroups) {
 }
 
 // ---- Parts that subscribe to one slice of the store
+
+// The grip sits under the pointer, at the card's left.
+const ghostTransform = (at: { x: number; y: number }) =>
+  `translate(${at.x - 14}px, ${at.y - 16}px)`;
+
+// The page being dragged, as a card under the pointer. On the body: an embed's editor or a
+// scrolled table would clip it. Positioned by the drag itself (`ghost.style.transform`).
+function RowGhost({
+  store,
+  rowAt,
+  at,
+  ghost,
+}: {
+  store: GridStore;
+  rowAt: (row: number) => ViewRow | undefined;
+  at: RefObject<{ x: number; y: number }>;
+  ghost: RefObject<HTMLDivElement | null>;
+}) {
+  const row = useStoreSelector(store, (s) => (s.mode.kind === "rowDragging" ? s.mode.row : -1));
+  if (row < 0) return null;
+  const title = rowAt(row)?.title;
+  return (
+    <Portal container={document.body}>
+      <div
+        ref={ghost}
+        aria-hidden
+        className="pointer-events-none fixed top-0 left-0 z-[100] flex h-8 max-w-72 items-center gap-1.5 rounded-lg bg-elevated pr-3 pl-1.5 text-sm font-medium text-gray-900 opacity-95 shadow-popover"
+        style={{ transform: ghostTransform(at.current) }}
+      >
+        <DotsVerticalRegular aria-hidden className="size-3 shrink-0 rotate-90 text-gray-400" />
+        <span className="truncate">{title || <span className="text-gray-400">Untitled</span>}</span>
+      </div>
+    </Portal>
+  );
+}
 
 function PickedBar({ store, onSelectAll }: { store: GridStore; onSelectAll: () => void }) {
   const picked = useStoreSelector(store, (s) => s.rows.ids);
