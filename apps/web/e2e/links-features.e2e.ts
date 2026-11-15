@@ -576,9 +576,11 @@ describe("page icons and quick capture", () => {
     await note("Rocket", "Launch plans");
     await note("Mission", "See [[Rocket]]");
     await treeItem(page, "Rocket").click();
-    const decor = page.locator("[data-testid=tab-view][data-focused] [data-testid=page-decor]");
-    await decor.hover();
-    await decor.getByRole("button", { name: "Add icon" }).click();
+    await page
+      .locator("[data-testid=tab-view][data-focused]")
+      .getByRole("button", { name: "Page options" })
+      .click();
+    await page.getByRole("menuitem", { name: "Set icon" }).click();
     await page.getByRole("button", { name: "Icon 🚀" }).click();
     await tabs(page).filter({ hasText: "Rocket" }).locator("[data-page-icon='🚀']").waitFor();
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());

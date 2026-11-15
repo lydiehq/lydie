@@ -1,6 +1,8 @@
 // Page icons and covers, stored as frontmatter properties (see `PAGE_ICON_KEY` in the plugin API)
-// so files stay portable: `icon: 🚀`, `cover: banner.png` (an attachment), an https URL or a
-// colour (`cover: blue`), and `cover-position: 0–100` for images. Changes are `doc.setProperties` operations, so Mod+Z undoes them.
+// so files stay portable: `icon: 🚀` and `cover: blue` (a colour). A cover written by hand may
+// also be an image (an attachment's file name or an https URL, with `cover-position: 0–100`): it
+// shows and can be repositioned, but the app only sets colours for now. Changes are
+// `doc.setProperties` operations, so Mod+Z undoes them.
 import {
   COVER_COLORS,
   coverFillOf,
@@ -13,7 +15,6 @@ import {
   pageCoverOf,
   pageFullWidthOf,
   pageIconOf,
-  useApp,
   useCoverUrl,
   useOps,
   useQuerySelect,
@@ -26,6 +27,7 @@ import {
   focusRingClass,
   focusRingInsetClass,
   Input,
+  PicRegular,
   Popover,
   WithTooltip,
 } from "@lydie/plugin-api/ui";
@@ -83,36 +85,20 @@ function isUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
 
-async function pickImage(): Promise<File | null> {
-  return new Promise((resolve) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.addEventListener("change", () => resolve(input.files?.[0] ?? null));
-    input.addEventListener("cancel", () => resolve(null));
-    input.click();
-  });
+// "Set icon" and "Set cover" live in the page's menu and the palette, while the pickers open on
+// the page: the request waits here until that page's decor takes it.
+type Picker = "icon" | "cover";
+let requested: { docId: string; picker: Picker } | null = null;
+const takers = new Set<() => void>();
+
+function openPicker(app: AppApi, docId: string, picker: Picker) {
+  requested = { docId, picker };
+  for (const take of takers) take();
+  // Not on screen (the sidebar's row menu): open the page, whose decor takes the request.
+  if (requested) app.openDoc(docId);
 }
 
-export async function uploadCover(app: AppApi, docId: string, file: File) {
-  const attachment = await app.backend.attachments.add(
-    {
-      workspaceId: app.workspace.workspaceId,
-      documentId: docId,
-      filename: file.name,
-      contentType: file.type || "image/png",
-      data: new Uint8Array(await file.arrayBuffer()),
-    },
-    { scope: app.historyScope() },
-  );
-  await app.backend.ops.doc.setProperties(
-    { id: docId, set: { [PAGE_COVER_KEY]: attachment.filename, [PAGE_COVER_POSITION_KEY]: 50 } },
-    { scope: app.historyScope(), label: "Add cover" },
-  );
-}
-
-// The shared popover, anchored to the element the old inline popovers sat under (or above), so
-// they open where they did. It closes on Escape and on a press outside, and returns focus.
+// The shared popover. It closes on Escape and on a press outside, and returns focus.
 function DecorPopover({
   anchor,
   isOpen,
@@ -144,7 +130,7 @@ function DecorPopover({
   );
 }
 
-// Focus starts on the first choice, or the URL field, as the inline popovers did for the grids.
+// Focus starts on the first choice.
 function FocusFirst({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -259,7 +245,6 @@ function ColorPicker({
 }
 
 function Cover({ docId, cover, position }: { docId: string; cover: string; position: number }) {
-  const app = useApp();
   const ops = useOps();
   const url = useCoverUrl(cover);
   const fill = coverFillOf(cover);
@@ -313,13 +298,6 @@ function Cover({ docId, cover, position }: { docId: string; cover: string; posit
                 Reposition
               </Button>
             )}
-            <Button
-              size="xs"
-              variant="secondary"
-              onPress={() => void pickImage().then((file) => file && uploadCover(app, docId, file))}
-            >
-              {fill ? "Use an image" : "Change cover"}
-            </Button>
             <Button size="xs" variant="secondary" onPress={() => setColoring(!coloring)}>
               Colour
             </Button>
@@ -375,7 +353,6 @@ function Cover({ docId, cover, position }: { docId: string; cover: string; posit
 }
 
 function PageDecor({ docId }: DocumentSlotProps) {
-  const app = useApp();
   const ops = useOps();
   const properties = useQuerySelect(
     "doc.get",
@@ -383,16 +360,29 @@ function PageDecor({ docId }: DocumentSlotProps) {
     (s) => s.data[0]?.document.properties ?? null,
   );
   const [picking, setPicking] = useState(false);
-  const [urlMode, setUrlMode] = useState(false);
-  const [colorMode, setColorMode] = useState(false);
-  const iconAnchor = useRef<HTMLDivElement>(null);
-  const actions = useRef<HTMLDivElement>(null);
+  const [coloring, setColoring] = useState(false);
+  const anchor = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const take = () => {
+      if (requested?.docId !== docId) return;
+      const { picker } = requested;
+      requested = null;
+      if (picker === "icon") setPicking(true);
+      else setColoring(true);
+    };
+    take();
+    takers.add(take);
+    return () => {
+      takers.delete(take);
+    };
+  }, [docId]);
   if (!properties) return null;
   const icon = pageIconOf(properties);
   const decor = pageCoverOf(properties);
   const column = pageColumnClass(pageFullWidthOf(properties));
   const cover = decor?.cover ?? null;
   const position = decor?.position ?? 50;
+  const fill = coverFillOf(cover);
   const setIcon = (value: string | null) => {
     setPicking(false);
     void ops.doc.setProperties(
@@ -405,9 +395,10 @@ function PageDecor({ docId }: DocumentSlotProps) {
   return (
     <div className="flex flex-col" data-testid="page-decor">
       {cover && <Cover docId={docId} cover={cover} position={position} />}
-      <div className={`group flex flex-col gap-1 ${column} ${cover ? "-mb-8" : "-mb-10 pt-6"}`}>
-        {icon && (
-          <div ref={iconAnchor} className={`relative w-fit ${cover ? "-mt-10" : ""}`}>
+      <div className={`${column} ${icon ? `-mb-8 ${cover ? "" : "pt-10"}` : ""}`}>
+        {/* Empty without an icon: then only where the pickers open, above the title. */}
+        <div ref={anchor} className={`relative w-fit ${icon && cover ? "-mt-10" : ""}`}>
+          {icon && (
             <WithTooltip label="Change page icon">
               <button
                 type="button"
@@ -418,110 +409,29 @@ function PageDecor({ docId }: DocumentSlotProps) {
                 {icon}
               </button>
             </WithTooltip>
-            <IconPicker
-              anchor={iconAnchor}
-              isOpen={picking}
-              onPick={setIcon}
-              onRemove={() => setIcon(null)}
-              onClose={() => setPicking(false)}
-            />
-          </div>
-        )}
-        <div
-          ref={actions}
-          className="relative flex h-7 gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100"
-        >
-          {!icon && (
-            <Button size="xs" variant="ghost" onPress={() => setPicking(!picking)}>
-              Add icon
-            </Button>
           )}
-          {!cover && (
-            <Button
-              size="xs"
-              variant="ghost"
-              onPress={() => void pickImage().then((file) => file && uploadCover(app, docId, file))}
-            >
-              Add cover
-            </Button>
-          )}
-          {!cover && (
-            <Button
-              size="xs"
-              variant="ghost"
-              onPress={() => {
-                setColorMode(false);
-                setUrlMode(!urlMode);
-              }}
-            >
-              Cover from URL
-            </Button>
-          )}
-          {!cover && (
-            <Button
-              size="xs"
-              variant="ghost"
-              onPress={() => {
-                setUrlMode(false);
-                setColorMode(!colorMode);
-              }}
-            >
-              Cover colour
-            </Button>
-          )}
-          {!icon && (
-            <IconPicker
-              anchor={actions}
-              isOpen={picking}
-              onPick={setIcon}
-              onClose={() => setPicking(false)}
-            />
-          )}
-          {!cover && (
-            <ColorPicker
-              anchor={actions}
-              isOpen={colorMode}
-              current={null}
-              placement="bottom start"
-              onClose={() => setColorMode(false)}
-              onPick={(color) => {
-                setColorMode(false);
-                void ops.doc.setProperties(
-                  { id: docId, set: { [PAGE_COVER_KEY]: color } },
-                  { label: "Add cover" },
-                );
-              }}
-            />
-          )}
-          <DecorPopover
-            anchor={actions}
-            isOpen={urlMode}
-            onClose={() => setUrlMode(false)}
-            label="Cover from URL"
-            placement="bottom start"
-          >
-            <form
-              className="flex w-96 gap-1"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const value = (
-                  (new FormData(e.currentTarget).get("url") as string | null) ?? ""
-                ).trim();
-                if (!isUrl(value)) return;
-                setUrlMode(false);
-                void ops.doc.setProperties(
-                  { id: docId, set: { [PAGE_COVER_KEY]: value, [PAGE_COVER_POSITION_KEY]: 50 } },
-                  { label: "Add cover" },
-                );
-              }}
-            >
-              <Input size="sm" name="url" aria-label="Cover image URL" placeholder="https://…" />
-              <Button size="sm" variant="primary" type="submit">
-                Add
-              </Button>
-            </form>
-          </DecorPopover>
         </div>
+        <IconPicker
+          anchor={anchor}
+          isOpen={picking}
+          onPick={setIcon}
+          onRemove={icon ? () => setIcon(null) : undefined}
+          onClose={() => setPicking(false)}
+        />
+        <ColorPicker
+          anchor={anchor}
+          isOpen={coloring}
+          current={fill && cover ? cover.toLowerCase() : null}
+          placement="bottom start"
+          onClose={() => setColoring(false)}
+          onPick={(color) => {
+            setColoring(false);
+            void ops.doc.setProperties(
+              { id: docId, set: { [PAGE_COVER_KEY]: color }, unset: [PAGE_COVER_POSITION_KEY] },
+              { label: cover ? "Change cover" : "Add cover" },
+            );
+          }}
+        />
       </div>
     </div>
   );
@@ -533,6 +443,39 @@ export const pageDecorPlugin = definePlugin({
   description: "An emoji icon and a cover image per page, kept as frontmatter properties.",
   activate(ctx) {
     ctx.documents.register({ id: "page-decor", slot: "top", order: 0, component: PageDecor });
+    ctx.documentMenu.register({
+      id: "page-decor.setIcon",
+      label: "Set icon",
+      icon: <EmojiRegular />,
+      group: "decor",
+      order: 2,
+      run: (doc, app) => openPicker(app, doc.id, "icon"),
+    });
+    ctx.documentMenu.register({
+      id: "page-decor.setCover",
+      label: "Set cover",
+      icon: <PicRegular />,
+      group: "decor",
+      order: 2,
+      run: (doc, app) => openPicker(app, doc.id, "cover"),
+    });
+    for (const [picker, title, icon] of [
+      ["icon", "Set page icon", <EmojiRegular key="icon" />],
+      ["cover", "Set page cover", <PicRegular key="cover" />],
+    ] as const) {
+      ctx.commands.register({
+        id: `page-decor.set${picker === "icon" ? "Icon" : "Cover"}`,
+        title,
+        icon,
+        group: "Document",
+        scope: "document",
+        when: (app) => docIdOf(app.activeTab()?.path) !== null,
+        run: ({ app }) => {
+          const docId = docIdOf(app.activeTab()?.path);
+          if (docId) openPicker(app, docId, picker);
+        },
+      });
+    }
     ctx.commands.register({
       id: "page-decor.removeIcon",
       title: "Remove page icon",

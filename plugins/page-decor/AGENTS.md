@@ -18,7 +18,9 @@ Licence: AGPL-3.0-only.
 ## What it does
 
 - Stored as frontmatter properties so files stay portable (keys in the plugin API: `PAGE_ICON_KEY` "icon", `PAGE_COVER_KEY` "cover", `PAGE_COVER_POSITION_KEY` "cover-position" 0–100). Set with `doc.setProperties` (undoable).
-- A `documents` slot "top" (above the title): the icon (emoji grid or any typed emoji), "Add icon", "Add cover" (upload → attachment), "Cover from URL", "Cover colour" (a swatch from `COVER_COLORS`, stored as its name: `cover: blue`), and on the cover Reposition (images only: drag, then Save position), Change, Colour, Remove.
+- A `documents` slot "top" (above the title): the icon (click: emoji grid or any typed emoji, Remove) and the cover (on hover: Colour, Remove, and Reposition for an image: drag, then Save position). Without either it takes no room and shows nothing: there is no hover bar above the title.
+- Adding is in the page's ••• menu (`documentMenu`, also the sidebar's row menu) and the palette: "Set icon" and "Set cover" (`openPicker`). The picker opens on the page above the title, and the page opens first when it is not on screen. Nothing is written until something is picked.
+- The app only sets colour covers for now (a swatch from `COVER_COLORS`, stored as its name: `cover: blue`): no upload, no URL. An image cover written by hand in the frontmatter still shows.
 - A cover is a colour when `coverFillOf(cover)` says so: a palette name (theme-following class) or a hand-written hex (`cover: "#e8d5c4"`). Anything else is an image.
 - The icon row follows the page's width (`pageColumnClass(pageFullWidthOf(properties))`), so it
   lines up with the title on full-width pages; the cover always spans the view.
