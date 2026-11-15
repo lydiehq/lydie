@@ -50,7 +50,7 @@ export function FieldError(props: FieldErrorProps) {
   );
 }
 
-// Every field has Numina's edge (`../app`'s Input): `surface-depth`'s hairline border and soft drop,
+// Every field has the same edge: `surface-depth`'s hairline border and soft drop,
 // written as plain utilities so the shadow adds up with the invalid halo's ring and tailwind-merge
 // can take it off again (`groupedInputClass`). Focus strengthens the border; there is no focus
 // ring, since a text field shows its focus with the caret.
@@ -102,7 +102,7 @@ export const inputSizeClass: Record<FieldSize, string> = {
   md: "h-7.5 px-2.5 rounded-lg",
 };
 
-// Invalid adds Numina's soft red halo around the edge.
+// Invalid adds a soft red halo around the edge.
 const fieldLookClass = `${fieldSurfaceClass} text-sm text-gray-800 placeholder:text-gray-500 outline-hidden focus:border-gray-950/12 forced-colors:focus:border-[Highlight] disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 aria-invalid:ring-red-500/20`;
 
 // `size` is the field size, not the HTML attribute (a width in characters, unused here).

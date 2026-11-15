@@ -99,7 +99,7 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
 - **Undo**: Cmd+Z outside a text field runs `backend.history.undo(activeTabId)`; in the editor,
   ProseMirror's history handles it. `useOps()` records on the tab's scope. A step that no longer
   applies shows "Could not undo" with the runtime's cause (`details.cause`) after its message.
-- **Command palette** (Mod+K, `shell/Overlays.tsx`), styled after Numina's command menu: every
+- **Command palette** (Mod+K, `shell/Overlays.tsx`): every
   command with an icon (`CommandDef.icon`; the host's own and the operations' in
   `host/command-icons.tsx`). Empty: grouped (`GROUP_ORDER`), registration order within a group.
   Typing: up to 4 commands whose title contains the query lead without a heading (group as a
@@ -144,7 +144,7 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   binding as key caps in its tooltip (`useShortcut(commandId)` → `tooltipOptions={{ hotkeys }}`),
   as in Linear: the sidebar toggle, back/forward, new tab, right panel, close tab, and the
   sidebar's Home and Trash rows. Labels stay plain. The sidebar's Search (the palette, Mod+K) and
-  New document rows show theirs at the row's end instead (`ActionRow`), as Numina's search button.
+  New document rows show theirs at the row's end instead (`ActionRow`).
 - **Swipe navigation** (`shell/swipe.ts`, `shell/SwipeNavigation.tsx`): with `platform.trackpad`
   (scroll events with their finger phases; wheel events have none), a two-finger horizontal swipe
   runs `core.back` / `core.forward`, as in Linear's desktop app and Chrome. Its direction follows

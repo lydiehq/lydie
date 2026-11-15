@@ -1,7 +1,7 @@
 import { Modal as RACModal, ModalOverlay, type ModalOverlayProps } from "react-aria-components";
 import { tv, type VariantProps } from "tailwind-variants";
 
-// Motion as in Numina: the backdrop fades (150 ms) while the dialog pops in from 95 % (200 ms,
+// Motion: the backdrop fades (150 ms) while the dialog pops in from 95 % (200 ms,
 // ease-out-strong), and both reverse on close. CSS transitions driven by react-aria's
 // isEntering/isExiting (its first frame is the starting state), and react-aria keeps the dialog
 // mounted until the exit transition has finished. `starting:` (@starting-style) does not work

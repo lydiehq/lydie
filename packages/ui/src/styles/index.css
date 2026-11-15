@@ -53,7 +53,7 @@
     rgb(0 0 0 / 0.07) 0px 2px 4px 0px, rgb(0 0 0 / 0.1) 0px 1px 1px 0px,
     var(--surface-ring) 0px 0px 0px 1px;
   --shadow-container: 0px 0px 8px -4px rgba(0, 0, 0, 0.25), 0 0 1px 0 rgba(0, 0, 0, 0.2);
-  /* Everything that floats, as in Numina: its `shadow-md ring-1 ring-border` for popovers, menus
+  /* Everything that floats: `shadow-md ring-1 ring-border` for popovers, menus
      and cards, `shadow-lg` with the same ring for dialogs. The hairline is part of the shadow, so
      no `ring` or border beside these. */
   --shadow-popover:
@@ -66,7 +66,7 @@
      hairline, so it reads as the same thing raised rather than a new box. */
   --shadow-lift:
     0 0 1px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.08), 0 8px 20px -4px rgb(0 0 0 / 0.16);
-  /* Numina's depth (its `surface-depth`): a soft layered drop under a hairline border. Values in
+  /* Depth (`surface-depth`): a soft layered drop under a hairline border. Values in
      the --depth-* variables below, dark ones in dark.css. */
   --shadow-depth:
     0px 1px 0px -1px var(--depth-near), 0px 1px 1px -1px var(--depth-near),
@@ -87,7 +87,7 @@
     skeleton-in 200ms ease-out 150ms backwards, skeleton-pulse 2s ease-in-out 350ms infinite;
   /* LoadingState: the same hidden 150 ms, then a fade in (a spinner shown for a few ms flashes). */
   --animate-appear: skeleton-in 200ms ease-out 150ms backwards;
-  /* Quick start, long settle: dialogs and other pop-ins (as in Numina). */
+  /* Quick start, long settle: dialogs and other pop-ins. */
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
 }
 

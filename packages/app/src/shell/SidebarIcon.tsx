@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-// Numina's sidebar toggle: a window whose panel is full width while collapsed and half width while
+// The sidebar toggle: a window whose panel is full width while collapsed and half width while
 // open. Drawn on a 24px grid with a 2px stroke.
 export function SidebarIcon({ right, collapsed }: { right?: boolean; collapsed?: boolean }) {
   return (

@@ -26,7 +26,7 @@ export const switchTrack = tv({
   },
 });
 
-// Raised like Numina's thumb (`surface-depth` on the elevated fill), in both states, but round.
+// Raised (`surface-depth` on the elevated fill) and round, in both states.
 export const switchHandle = tv({
   base: "surface-depth h-3 w-3 transform rounded-full bg-elevated outline -outline-offset-1 outline-transparent transition duration-200 ease-in-out",
   variants: {

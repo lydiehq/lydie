@@ -23,7 +23,7 @@ type Props = {
 };
 
 // A row that runs a command, laid out as the plugins' own rows (Home, Trash), with the command's
-// shortcut at its end (as Numina's search button shows ⌘K).
+// shortcut at its end (Search shows ⌘K).
 function ActionRow({
   label,
   icon,
@@ -87,7 +87,7 @@ export function Sidebar({ footer }: Props) {
   const statusItems = useContributions("statusBar");
   const status = useStatus();
   // Search opens the command palette, which finds documents by title and content as well as
-  // commands (Numina's search button opens its command menu).
+  // commands.
   const searchKeys = useShortcut("core.palette");
   const newKeys = useShortcut("core.newDocument");
   // Search and New document are rows of their own. They follow a leading section that is

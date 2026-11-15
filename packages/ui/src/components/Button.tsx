@@ -30,7 +30,7 @@ export const buttonStyles = tv({
       // label; hover and press dim it a little.
       primary:
         "border border-transparent bg-gray-800 text-surface hover:bg-gray-700 pressed:bg-gray-600 dark:bg-white dark:hover:bg-gray-950 dark:pressed:bg-gray-900 disabled:opacity-40",
-      // Raised on a hairline border that strengthens on hover (Numina's secondary button).
+      // Raised on a hairline border that strengthens on hover.
       secondary:
         "surface-depth bg-elevated text-gray-900 not-data-current:hover:border-gray-950/12 disabled:bg-gray-100 disabled:text-gray-500",
       // Selected (`data-current`) is a flat grey; hover is fainter, or every hovered item of the
@@ -41,8 +41,6 @@ export const buttonStyles = tv({
       destructive:
         "border border-transparent bg-transparent text-red-600 hover:bg-red-600/10 pressed:bg-red-600/15",
     },
-    // Text sizes are 2px under Numina's (sm, default, lg); icon-2xs..icon-lg are Numina's
-    // icon-2xs, icon-xs, icon-sm, icon, icon-lg. xs and the xl pair are Lydie's own.
     size: {
       xs: "h-5.5 gap-1 px-2 text-xs [--button-radius:var(--radius-md)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
       sm: "h-7 gap-1 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-md)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-4",

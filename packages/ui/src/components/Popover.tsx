@@ -15,7 +15,7 @@ export interface PopoverProps extends Omit<AriaPopoverProps, "children"> {
 }
 
 const styles = tv({
-  // Numina's popup motion: 150 ms both ways, fading and scaling from 97 % towards the trigger.
+  // Popup motion: 150 ms both ways, fading and scaling from 97 % towards the trigger.
   base: "bg-elevated shadow-popover rounded-lg bg-clip-padding text-gray-700 origin-(--trigger-anchor-point)",
   variants: {
     isEntering: {

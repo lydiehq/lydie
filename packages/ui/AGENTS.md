@@ -44,8 +44,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   `buttonStyles`, also for plain elements that must look like a button: variant
   primary|secondary|ghost|destructive (primary is flat dark gray, `bg-gray-800 text-surface`,
   no gradient or shadow, pure white in dark mode; destructive is ghost with red text); size xs..xl, icon-2xs..icon-xl, text
-  sizes 2px under Numina's (xs 22px, sm 28px, md 30px, lg 34px, xl 42px), icon sizes Numina's
-  (icon-2xs 20 to icon-lg 36); rounded;
+  sizes xs 22px, sm 28px, md 30px, lg 34px, xl 42px, icon sizes icon-2xs 20 to icon-lg 36; rounded;
   an icon without a `size-*` class takes the size's icon size, `data-icon="inline-start|end"` on it
   tightens that side's padding; `data-current` marks the selected item of a set, such as the open
   view; Button has isPending, LinkButton navigates; a Button at an icon size shows its `aria-label`
@@ -62,15 +61,15 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   `@internationalized/date`; DateField reports a part-typed date only once it is whole, and null
   when every segment is cleared. Use these, never the browser's `type="date"` input),
   Checkbox/CheckboxGroup, ComboBox(+Item, Section), ConfirmDialog (on Modal + Dialog, laid out
-  like Numina's confirm; 16 px padding, 4 px under the title, 32 px above the buttons, the same
+  16 px padding, 4 px under the title, 32 px above the buttons, the same
   in AlertDialog; controlled `request` + `onResolve(confirmed)`, type ConfirmOptions
   { message, detail?, confirmLabel?, cancelLabel?, destructive? (red button, warning tile) };
   keeps the last request rendered while it animates out; a click outside, Escape or Cancel
   cancels; the dialog takes focus and Enter confirms, so no button shows a focus ring until Tab;
   what `app.confirm` shows), ContextMenu (a menu at a point; items take an `icon` as MenuItem does), Dialog,
   Disclosure(+Header, Panel, Group), Field parts (Label, Description, FieldError, FieldGroup,
-  Input, TextArea; every field, Select's field variant and SearchField included, has Numina's
-  input look (`../app`'s Input), `fieldSurfaceClass`: `surface-depth`'s hairline border and soft
+  Input, TextArea; every field, Select's field variant and SearchField included, has one
+  input look, `fieldSurfaceClass`: `surface-depth`'s hairline border and soft
   drop on `bg-surface`, the border stronger (`gray-950/12`) with focus and a soft red halo
   (`ring-3 ring-red-500/20`) when invalid; no focus ring on text fields (Select, a button, keeps
   it for the keyboard); disabled is `opacity-50`;
@@ -80,14 +79,14 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   (section titles in menus and dropdowns: `sectionHeaderClass`),
   Menu/MenuItem/MenuSeparator/MenuSection (MenuItem: `icon` before the label, `danger` in red,
   `indicator="switch"` shows a checkable item's state as a switch at the end instead of a check;
-  Menu `popoverClassName`), Modal (motion as in Numina: backdrop fades 150 ms, dialog
+  Menu `popoverClassName`), Modal (motion: backdrop fades 150 ms, dialog
   scales from 95 % over 200 ms on `ease-out-strong`, both ways, via react-aria's isEntering/isExiting;
   `@starting-style` does not work inside react-aria's overlay), NumberField, PickerDialog (modal search over a
   list: the command palette and quick switcher; ARIA combobox; items may carry an `icon` and
   `breadcrumbs`; `height="fixed"` keeps the list one height while typing; `onHighlight(item)` when the item
   Enter would choose changes, which the palette and quick switcher use to fetch a page ahead;
   `onBack`: Escape runs it instead of closing, for a nested page such as a command's choices), Popover
-  (Select, ComboBox and Menu open in it; motion as in Numina's popups, also on HoverCard: fades and
+  (Select, ComboBox and Menu open in it; the same motion on HoverCard: fades and
   scales from 97 % at the trigger, 150 ms both ways on `ease-out-strong`),
   FloatingCard (non-modal card anchored to a rect: hover previews, inline editors; placement
   bottom/top/right, `data-placed` once positioned for gliding between anchors), HoverCard +
@@ -101,8 +100,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   RadioGroup/Radio (after shadcn's: a 16 px circle with a hairline edge, filled with
   the primary button's flat gray when selected, its dot in the button's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
   control, or `"ghost"`, a ghost `sm` or `xs` Button with a chevron, for toolbars and rows of
-  buttons), Switch (on, the track is the primary button's flat gray; the handle is raised like Numina's
-  thumb, `surface-depth` on `bg-elevated`, but round, in both states;
+  buttons), Switch (on, the track is the primary button's flat gray; the handle is raised,
+  `surface-depth` on `bg-elevated`, but round, in both states;
   disabled is `opacity-50`, on or off),
   Tabs/TabList/Tab/TabPanels/TabPanel, TagGroup/Tag, TextField, Toolbar, Tooltip/TooltipTrigger
   (fades and slides 4 px in and out, as in React Aria's docs; closes at once when its trigger stops
@@ -186,7 +185,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   SettingsDetailsList, useSettingsSave + SettingsSaveStatus, SettingsTextInput (saves on blur or
   Enter, Escape reverts). `Modal` has a `size="screen"` for the settings window. Section titles
   sit on the page's text edge and boxes bleed into the gutter by their padding plus border
-  (`settingsBoxBleedClass`, on SettingsCard; add it to other boxes in a section), as in Numina.
+  (`settingsBoxBleedClass`, on SettingsCard; add it to other boxes in a section).
 - **Illustrations** (`src/illustrations/`): isometric line drawings for empty states, one per state
   (TrashIllustration, SearchIllustration, NoResultsIllustration, NoDocumentIllustration,
   VersionsIllustration, NoHeadingsIllustration, BacklinksIllustration, SyncIllustration,
@@ -223,7 +222,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   `Avatar` size 20 or an icon, in a 20 px column joined to the next event by a hairline), actor?,
   action (muted after the actor), timestamp (ISO; at the right in `timeFormat` "relative" | "time"
   | "date", the full date in a tooltip), details?, now? }; `formatTimelineTime`,
-  `formatTimelineDate`. After Numina's timeline; the settings plugin's Activity page uses it.
+  `formatTimelineDate`. The settings plugin's Activity page uses it.
 - **Editor chrome** (`src/editor`, props only): EditorBubbleToolbar (v1's dark selection bar),
   EditorToolbar (light top bar), BlockTypeSelect, LinkField, CommandList (the `/` and `[[` menus),
   CodeLanguagePicker, DragHandleGrip (`label` shows e.g. "H2" in place of the grip until the
@@ -242,7 +241,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   "information" and "right" paths (it cannot import this package).
 - **CSS**: `@lydie/ui/styles.css` (theme tokens: neutral oklch grays, `surface` and `elevated`,
   Inter Variable, 13 px `--text-sm`, shadows surface/container/popover/document-icon/depth, colour `paper`; checkbox
-  animation; `icon-muted` utility; `surface-depth` utility (Numina's: a hairline `--depth-border`,
+  animation; `icon-muted` utility; `surface-depth` utility (a hairline `--depth-border`,
   `bg-clip-padding` and the layered `shadow-depth`; dark values in `dark.css`; `--depth-shine` is
   a top edge catching the light, brighter than the hairline in dark mode only), used by secondary
   buttons (`bg-elevated`, `hover:border-gray-950/12`) and the shell's cards; `scroll-fade.css`,
@@ -262,8 +261,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
 
 ## Colours and dark mode
 
-Floating surfaces take their edge from one of two shadows, both Numina's (`../app`): `shadow-popover`
-(its `shadow-md ring-1 ring-border`) for popovers, menus, hover cards and suggestion lists, and
+Floating surfaces take their edge from one of two shadows: `shadow-popover`
+(`shadow-md ring-1 ring-border`) for popovers, menus, hover cards and suggestion lists, and
 `shadow-dialog` (`shadow-lg`, same ring) for modals. The 1 px hairline is part of the shadow: do not
 add `ring` or a border beside them. The one exception is `shadow-lift`, a drop shadow with no
 hairline, for a value lifted out of its place to be edited (`EditorPopover` in plugin-api: table
