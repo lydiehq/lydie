@@ -21,7 +21,7 @@
     var left = shell.sidebarOpen ? Math.min(420, Math.max(200, shell.sidebarWidth || 260)) : 6;
 
     var dark = document.documentElement.classList.contains("dark");
-    var background = dark ? "#181818" : "#faf9f6";
+    var background = dark ? "#0b0b0b" : "#faf9f6";
     var card = dark ? "#111111" : "#fffefc";
     var border = dark ? "rgb(255 255 255 / 0.07)" : "rgb(0 0 0 / 0.05)";
 
