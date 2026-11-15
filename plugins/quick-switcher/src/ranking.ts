@@ -2,7 +2,16 @@ import { fuzzyScore } from "@lydie/plugin-api";
 
 export type Usage = Record<string, { count: number; last: number }>;
 
-export type Candidate = { id: string; title: string; path: string; icon?: string | null };
+export type Candidate = {
+  id: string;
+  title: string;
+  path: string;
+  icon?: string | null;
+  updatedAt?: string;
+};
+
+// How many documents an empty query suggests.
+export const SUGGESTIONS = 8;
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -23,7 +32,31 @@ export function matchScore(query: string, c: Candidate): number | null {
   return title === null ? full - 150 : Math.max(title, full - 150);
 }
 
-// Ranks candidates by fuzzy match, boosted by frecency. An empty query lists recent ones.
+// What an empty query shows: the documents opened most (frecency), then, on a device that has
+// opened few, the most recently edited.
+export function suggest(
+  candidates: readonly Candidate[],
+  usage: Usage,
+  now: number,
+  limit = SUGGESTIONS,
+): Candidate[] {
+  const opened = candidates
+    .filter((c) => usage[c.id])
+    .sort(
+      (a, b) =>
+        frecency(usage[b.id], now) - frecency(usage[a.id], now) ||
+        usage[b.id]!.last - usage[a.id]!.last,
+    )
+    .slice(0, limit);
+  if (opened.length === limit) return opened;
+  const rest = candidates
+    .filter((c) => !usage[c.id])
+    .sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""))
+    .slice(0, limit - opened.length);
+  return [...opened, ...rest];
+}
+
+// Ranks candidates by fuzzy match, boosted by frecency. An empty query suggests a few.
 export function rank(
   candidates: readonly Candidate[],
   query: string,
@@ -32,12 +65,7 @@ export function rank(
   limit = 50,
 ): Candidate[] {
   const q = query.trim();
-  if (!q) {
-    return candidates
-      .filter((c) => usage[c.id])
-      .sort((a, b) => usage[b.id]!.last - usage[a.id]!.last)
-      .slice(0, limit);
-  }
+  if (!q) return suggest(candidates, usage, now, Math.min(limit, SUGGESTIONS));
   const scored: { c: Candidate; score: number }[] = [];
   for (const c of candidates) {
     const s = matchScore(q, c);

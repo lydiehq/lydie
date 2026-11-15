@@ -30,7 +30,13 @@ async function loadCandidates(app: AppApi): Promise<Candidate[]> {
     const path: string[] = [];
     for (let p = e.parentId; p && path.length < 4; p = parents.get(p) ?? null)
       path.unshift(titles.get(p) ?? "");
-    return { id: e.id, title: e.title, path: path.join(" / "), icon: pageIconOf(e.properties) };
+    return {
+      id: e.id,
+      title: e.title,
+      path: path.join(" / "),
+      icon: pageIconOf(e.properties),
+      updatedAt: e.updatedAt,
+    };
   });
 }
 
@@ -155,9 +161,7 @@ function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
           ? "No commands"
           : parsed.kind === "headings"
             ? "No headings"
-            : query
-              ? "No documents"
-              : "No recent documents"
+            : "No documents"
       }
       footer={`Enter to open · ${app.formatKeybinding("Mod+Enter")} new tab · ${app.formatKeybinding("Mod+Alt+Enter")} to the side`}
       onClose={close}

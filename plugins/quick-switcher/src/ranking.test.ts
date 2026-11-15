@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { frecency, parseQuery, rank, recordOpen } from "./ranking.ts";
+import { frecency, parseQuery, rank, recordOpen, SUGGESTIONS } from "./ranking.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
 const docs = [
@@ -45,10 +45,20 @@ describe("quick switcher ranking", () => {
     expect(rank(docs, "roadmap", usage, now).map((d) => d.id)[0]).toBe("b");
   });
 
-  test("an empty query lists recent documents, newest first", () => {
+  test("an empty query suggests opened documents, then recently edited ones", () => {
+    const edited = docs.map((d, i) => ({ ...d, updatedAt: `2026-11-1${i}T00:00:00.000Z` }));
+    expect(rank(edited, "", {}, 0).map((d) => d.id)).toEqual(["d", "c", "b", "a"]);
     let usage = recordOpen({}, "c", 1);
     usage = recordOpen(usage, "a", 2);
-    expect(rank(docs, "", usage, 3).map((d) => d.id)).toEqual(["a", "c"]);
+    expect(rank(edited, "", usage, 3).map((d) => d.id)).toEqual(["a", "c", "d", "b"]);
+    // Opened often beats opened last.
+    for (let i = 0; i < 4; i++) usage = recordOpen(usage, "c", 1);
+    expect(rank(edited, "", usage, 3, 2).map((d) => d.id)).toEqual(["c", "a"]);
+  });
+
+  test("an empty query suggests eight documents", () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ id: `m${i}`, title: `M${i}`, path: "" }));
+    expect(rank(many, "", {}, 0)).toHaveLength(SUGGESTIONS);
   });
 
   test("usage stats stay bounded", () => {
