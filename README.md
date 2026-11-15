@@ -35,4 +35,4 @@ See `AGENTS.md` for the package map and rules.
 
 ## Licence
 
-AGPL-3.0 (see `LICENSE`). Packages marked MIT in `AGENTS.md` are MIT.
+AGPL-3.0 (see `LICENSE`). Packages marked MIT in `AGENTS.md` are MIT, each with its own `LICENSE`.
