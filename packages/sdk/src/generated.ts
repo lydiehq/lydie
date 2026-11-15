@@ -807,8 +807,6 @@ export type SharingInfo = {
   people: { userId: UserId; name: string; email: string; level: AccessLevel }[];
 };
 
-export type SignUpStatus = { signUp: "open" | "waitlist" };
-
 // Fractional index key; siblings sort by (sortKey, id).
 export type SortKey = string;
 
@@ -1842,13 +1840,6 @@ export type ApiOperations = {
     input: { workspaceId: WorkspaceId; limit?: number };
     output: { items: TrashItem[] };
   };
-  // POST /waitlist: Join the cloud waitlist
-  "waitlist.join": {
-    input: { email: string; source?: "site" | "app"; note?: string };
-    output: { ok: true };
-  };
-  // GET /waitlist/status: Whether sign-up is open
-  "waitlist.status": { input: Record<string, never>; output: SignUpStatus };
   // POST /workspaces: Create a workspace
   "workspace.create": {
     input: {
@@ -2144,8 +2135,6 @@ export const apiRoutes = {
   "thread.setAnchor": { method: "PUT", path: "/threads/{id}/anchor", query: [] },
   "trash.empty": { method: "DELETE", path: "/workspaces/{workspaceId}/trash", query: [] },
   "trash.list": { method: "GET", path: "/workspaces/{workspaceId}/trash", query: ["limit"] },
-  "waitlist.join": { method: "POST", path: "/waitlist", query: [] },
-  "waitlist.status": { method: "GET", path: "/waitlist/status", query: [] },
   "workspace.create": { method: "POST", path: "/workspaces", query: [] },
   "workspace.export": { method: "POST", path: "/workspaces/{workspaceId}/export", query: [] },
   "workspace.list": { method: "GET", path: "/workspaces", query: [] },

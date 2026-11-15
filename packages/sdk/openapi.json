@@ -8386,118 +8386,6 @@
         "x-lydie-undoable": true
       }
     },
-    "/waitlist": {
-      "post": {
-        "operationId": "waitlist.join",
-        "summary": "Join the cloud waitlist",
-        "description": "Adds an email to the waitlist for a Lydie cloud account and sends it a confirmation link. No account needed. The answer is the same whether or not the email was already on the list or already has an account. Rate-limited per client address.",
-        "tags": ["waitlist"],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/LydieVersion"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "source": {
-                    "default": "site",
-                    "type": "string",
-                    "enum": ["site", "app"]
-                  },
-                  "note": {
-                    "type": "string",
-                    "maxLength": 500
-                  }
-                },
-                "required": ["email"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "ok": {
-                      "type": "boolean",
-                      "const": true
-                    }
-                  },
-                  "required": ["ok"],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "x-lydie-kind": "mutation",
-        "x-lydie-scopes": [],
-        "x-lydie-destructive": false,
-        "x-lydie-idempotent": true,
-        "x-lydie-undoable": false
-      }
-    },
-    "/waitlist/status": {
-      "get": {
-        "operationId": "waitlist.status",
-        "summary": "Whether sign-up is open",
-        "description": "Tells a signed-out app whether to offer creating an account or joining the waitlist. No account needed.",
-        "tags": ["waitlist"],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/LydieVersion"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SignUpStatus"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "x-lydie-kind": "query",
-        "x-lydie-scopes": [],
-        "x-lydie-destructive": false,
-        "x-lydie-idempotent": true
-      }
-    },
     "/workspaces": {
       "post": {
         "operationId": "workspace.create",
@@ -14204,18 +14092,6 @@
           "inherited",
           "people"
         ],
-        "additionalProperties": false
-      },
-      "SignUpStatus": {
-        "type": "object",
-        "properties": {
-          "signUp": {
-            "type": "string",
-            "enum": ["open", "waitlist"],
-            "description": "open: anyone can create an account. waitlist: only emails approved on it."
-          }
-        },
-        "required": ["signUp"],
         "additionalProperties": false
       },
       "SortKey": {

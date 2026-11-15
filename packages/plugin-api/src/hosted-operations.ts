@@ -265,8 +265,6 @@ export type SharingInfo = {
   people: { userId: UserId; name: string; email: string; level: AccessLevel }[];
 };
 
-export type SignUpStatus = { signUp: "open" | "waitlist" };
-
 // Fractional index key; siblings sort by (sortKey, id).
 export type SortKey = string;
 
@@ -640,13 +638,6 @@ export type HostedOperations = {
     };
     output: Teamspace;
   };
-  // POST /waitlist: Join the cloud waitlist
-  "waitlist.join": {
-    input: { email: string; source?: "site" | "app"; note?: string };
-    output: { ok: true };
-  };
-  // GET /waitlist/status: Whether sign-up is open
-  "waitlist.status": { input: Record<string, never>; output: SignUpStatus };
   // POST /workspaces: Create a workspace
   "workspace.create": {
     input: {
