@@ -158,6 +158,8 @@ export type PanelDef = {
 
 export type StatusItemDef = {
   id: string;
+  // Where in the sidebar footer's row: "left" starts the row, before the sync state; the default
+  // ("right") ends it.
   align?: "left" | "right";
   order?: number;
   // Shows the sync state itself: the host's own sync indicator is hidden while it is registered.

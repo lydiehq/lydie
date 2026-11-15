@@ -19,7 +19,7 @@ Licence: AGPL-3.0-only.
 
 ## What it does
 
-A "?" status item in the sidebar footer (order -10, so left of the account plugin's sync state):
+A "?" status item that starts the sidebar footer's row (`align: "left"`, before the sync state):
 a popover with the latest three entries on a short timeline, each opening its entry, and "See all
 changes". A blue dot shows while the newest entry is newer than the one this device saw last
 (`changelog.seen` in device storage, `seen.ts`, unit-tested); opening the popover or the page

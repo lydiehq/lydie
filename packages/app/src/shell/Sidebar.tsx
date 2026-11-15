@@ -97,6 +97,11 @@ export function Sidebar({ footer }: Props) {
       />
     </div>
   );
+  const renderStatus = (item: (typeof statusItems)[number]) => (
+    <ErrorBoundary key={`${item.pluginId}:${item.id}`} label={`Status (${item.pluginId})`} compact>
+      <item.component />
+    </ErrorBoundary>
+  );
   const renderSection = (section: (typeof sections)[number]) => (
     <section
       key={`${section.pluginId}:${section.id}`}
@@ -175,9 +180,10 @@ export function Sidebar({ footer }: Props) {
       <BetaNotice />
       <div className="flex shrink-0 flex-col gap-1 border-t border-gray-950/5 px-3 py-2">
         {footer}
-        {/* Wraps rather than squeezing: on a narrow sidebar the status items take a line of their
-            own, still on the right. */}
+        {/* Wraps rather than squeezing: on a narrow sidebar the right-hand status items take a
+            line of their own, still on the right. */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {statusItems.filter((item) => item.align === "left").map(renderStatus)}
           {!statusItems.some((item) => item.replacesSyncIndicator) && (
             <SyncIndicator
               state={status.sync}
@@ -187,15 +193,7 @@ export function Sidebar({ footer }: Props) {
             />
           )}
           <div className="ml-auto flex items-center gap-2">
-            {statusItems.map((item) => (
-              <ErrorBoundary
-                key={`${item.pluginId}:${item.id}`}
-                label={`Status (${item.pluginId})`}
-                compact
-              >
-                <item.component />
-              </ErrorBoundary>
-            ))}
+            {statusItems.filter((item) => item.align !== "left").map(renderStatus)}
           </div>
         </div>
       </div>

@@ -223,7 +223,7 @@ export const accountPlugin = definePlugin({
     ctx.sidebar.register({ id: "account.notice", order: 2000, component: LocalNotice });
     ctx.statusBar.register({
       id: "account",
-      align: "left",
+      align: "right",
       order: 0,
       // In a hosted window this item is the sync indicator (with its details).
       replacesSyncIndicator: api.scope.kind === "hosted",

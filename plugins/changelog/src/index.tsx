@@ -17,8 +17,13 @@ export const changelogPlugin = definePlugin({
         icon: <QuestionRegular />,
       });
     }
-    // Before the account plugin's item (order 0), which is the sync state in a cloud workspace.
-    ctx.statusBar.register({ id: "changelog", order: -10, component: ChangelogButton });
+    // First in the sidebar footer's row, before the sync state.
+    ctx.statusBar.register({
+      id: "changelog",
+      align: "left",
+      order: -10,
+      component: ChangelogButton,
+    });
     ctx.commands.register({
       id: "changelog.open",
       title: "What's new",
