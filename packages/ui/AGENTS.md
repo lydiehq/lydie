@@ -90,10 +90,10 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   tooltips in `hover-card-state.ts`, so neither makes the other instant or closes it; `pause`/
   `resume` for controls inside the trigger that have tooltips), ProgressBar,
   RadioGroup/Radio (after shadcn's: a 16 px circle with a hairline edge, filled with
-  `button-primary` (Paper's cornflower, the old primary button's look) when selected, its dot in
-  that utility's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
+  the primary button's flat gray when selected, its dot in the button's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
   control, or `"ghost"`, a ghost `sm` or `xs` Button with a chevron, for toolbars and rows of
-  buttons), Switch (on, the track is `button-primary` and the handle its label colour;
+  buttons), Switch (on, the track is the primary button's flat gray and the handle its label colour; no
+  shadows;
   disabled is `opacity-50`, on or off),
   Tabs/TabList/Tab/TabPanels/TabPanel, TagGroup/Tag, TextField, Toolbar, Tooltip/TooltipTrigger
   (fades and slides 4 px in and out, as in React Aria's docs; closes at once when its trigger stops
@@ -175,8 +175,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   BoardIllustration, NoAccessIllustration, NotFoundIllustration, FirstDocumentIllustration,
   TemplatesIllustration; MarkIllustration, the mark's two pieces lying flat, one dropped after
   the other, not used yet). `views.tsx`: one per collection view type (TableViewIllustration,
-  BoardViewIllustration, ListViewIllustration, CalendarViewIllustration,
-  GalleryViewIllustration), one or two plain objects each in the shape of the view, for the "New view" menu.
+  BoardViewIllustration, ListViewIllustration, CalendarViewIllustration), one or two plain objects each in the shape of the view, for the "New view" menu.
   `size` is `md` on a page, `sm` in a side panel, `xs` beside a label in a menu (36 px, its
   strokes at 60 %: they are in screen pixels, so the kit's pieces scale them through `useLine`,
   and a drawing's own `strokeWidth` should too); `className` overrides

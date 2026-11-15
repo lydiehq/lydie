@@ -35,7 +35,7 @@ export function RadioGroup(props: RadioGroupProps) {
 }
 
 // After shadcn's radio: a small circle with a hairline edge, filled when selected. The fill is
-// `button-primary` (styles/index.css), and the dot takes its label colour through `bg-current`.
+// the primary button's flat gray, and the dot takes its label colour through `bg-current`.
 const styles = tv({
   extend: focusRingFor,
   base: "relative flex size-4 shrink-0 items-center justify-center rounded-full border transition-[border-color,box-shadow] duration-150",
@@ -43,7 +43,7 @@ const styles = tv({
     isSelected: {
       false:
         "border-gray-950/20 bg-surface shadow-xs group-hover:border-gray-950/30 group-pressed:border-gray-950/40",
-      true: "button-primary border-transparent group-hover:[--button-primary-overlay:rgb(40_80_170/0.2)] group-pressed:[--button-primary-overlay:rgb(32_66_150/0.36)] forced-colors:bg-[Highlight]!",
+      true: "border-transparent bg-gray-800 text-surface group-hover:bg-gray-700 group-pressed:bg-gray-600 forced-colors:bg-[Highlight]!",
     },
     isInvalid: {
       true: "border-red-500 ring-3 ring-red-500/20 forced-colors:border-[Mark]!",

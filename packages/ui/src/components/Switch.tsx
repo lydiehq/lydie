@@ -13,14 +13,13 @@ export const switchTrack = tv({
   extend: focusRingFor,
   base: "relative flex h-4 w-7 px-px items-center shrink-0 cursor-default rounded-full transition duration-200 ease-in-out border border-transparent",
   variants: {
-    // On, the track is `button-primary` (styles/index.css); the handle takes its label colour.
+    // On, the track is the primary button's flat gray; the handle takes its label colour.
     isSelected: {
-      false: "bg-gray-400 shadow-inner group-pressed:bg-gray-500",
-      // react-aria's hover, not :hover, so a disabled switch does not darken under the pointer.
-      true: "button-primary group-hovered:[--button-primary-overlay:rgb(40_80_170/0.2)] group-pressed:[--button-primary-overlay:rgb(32_66_150/0.36)] forced-colors:bg-[Highlight]!",
+      false: "bg-gray-400 group-pressed:bg-gray-500",
+      // react-aria's hover, not :hover, so a disabled switch does not lighten under the pointer.
+      true: "bg-gray-800 text-surface group-hovered:bg-gray-700 group-pressed:bg-gray-600 forced-colors:bg-[Highlight]!",
     },
-    // Faded like a disabled button or field: a background colour would not show on an "on"
-    // track, which `button-primary` paints with a gradient.
+    // Faded like a disabled button or field, on or off.
     isDisabled: {
       true: "cursor-not-allowed opacity-50 forced-colors:group-selected:bg-[GrayText]! forced-colors:border-[GrayText]",
     },
@@ -28,7 +27,7 @@ export const switchTrack = tv({
 });
 
 export const switchHandle = tv({
-  base: "h-3 w-3 transform rounded-full outline -outline-offset-1 outline-transparent shadow-xs transition duration-200 ease-in-out",
+  base: "h-3 w-3 transform rounded-full outline -outline-offset-1 outline-transparent transition duration-200 ease-in-out",
   variants: {
     isSelected: {
       false: "translate-x-0 bg-surface",
