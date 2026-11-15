@@ -234,7 +234,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
 - **CSS**: `@lydie/ui/styles.css` (theme tokens: neutral oklch grays, `surface` and `elevated`,
   Inter Variable, 13 px `--text-sm`, shadows surface/container/popover/document-icon/depth, colour `paper`; checkbox
   animation; `icon-muted` utility; `surface-depth` utility (Numina's: a hairline `--depth-border`,
-  `bg-clip-padding` and the layered `shadow-depth`; dark values in `dark.css`), used by secondary
+  `bg-clip-padding` and the layered `shadow-depth`; dark values in `dark.css`; `--depth-shine` is
+  a top edge catching the light, brighter than the hairline in dark mode only), used by secondary
   buttons (`bg-elevated`, `hover:border-gray-950/12`) and the shell's cards; `scroll-fade.css`,
   shadcn's scroll-fade utilities, vendored (MIT): `scroll-fade` / `scroll-fade-x` on the element
   that scrolls fades an edge only while there is more that way (default depth min(8%, 24px), set in `index.css`), `scroll-fade-b` the bottom only

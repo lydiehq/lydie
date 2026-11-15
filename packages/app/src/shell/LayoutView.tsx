@@ -23,7 +23,7 @@ import {
 } from "@lydie/ui";
 import type { ContextMenuItem } from "@lydie/ui";
 import clsx from "clsx";
-import { memo, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, DragEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
 
 import { findView } from "../host/views.ts";
@@ -1038,6 +1038,7 @@ const TabButton = memo(function TabButton({
 // The active tab is part of its group's card, as in Dia: the card's colour and hairline run up
 // around it and its feet flare out into the card's top edge. It reaches 7px below the tab, to the
 // bottom of the tab list (2px into the card), and 3px above it so the label sits near its middle.
+// As in Dia, its top edge catches the light (`--depth-shine`, dark mode only), fading down the sides.
 function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
   return (
     <span
@@ -1046,7 +1047,7 @@ function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
     >
       <TabSide foot={!atEdge} />
       <span
-        className="absolute inset-y-0 border-t border-(--depth-border) bg-surface"
+        className="absolute inset-y-0 border-t border-(--depth-shine) bg-surface"
         style={{ left: TAB_CORNER, right: TAB_CORNER }}
       />
       <TabSide foot right />
@@ -1069,6 +1070,7 @@ const FOOT_BASE_HANDLE = 0.7;
 // edge, round the foot, up the side and round the top corner. Coordinates are hairline centres;
 // the right side is the left one mirrored.
 function TabSide({ foot, right }: { foot: boolean; right?: boolean }) {
+  const shine = useId();
   const f = foot ? TAB_FOOT_WIDTH : 0;
   const width = f + TAB_CORNER;
   const h = TAB_HEIGHT;
@@ -1092,8 +1094,13 @@ function TabSide({ foot, right }: { foot: boolean; right?: boolean }) {
       className={clsx("absolute top-0", right && "-scale-x-100")}
       style={right ? { right: -f } : { left: -f }}
     >
+      {/* The shine fades into the card's hairline by where the foot leaves the side. */}
+      <linearGradient id={shine} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={top}>
+        <stop offset="0" style={{ stopColor: "var(--depth-shine)" }} />
+        <stop offset="1" style={{ stopColor: "var(--depth-border)" }} />
+      </linearGradient>
       <path d={`${outline}L${width} ${h}L0.5 ${h}Z`} className="fill-surface" />
-      <path d={outline} fill="none" className="stroke-(--depth-border)" />
+      <path d={outline} fill="none" stroke={`url(#${shine})`} />
     </svg>
   );
 }

@@ -46,6 +46,7 @@
     --depth-middle: rgb(0 0 0 / 0.25);
     --depth-far: rgb(0 0 0 / 0.12);
     --depth-highlight: rgb(255 255 255 / 0.02);
+    --depth-shine: rgb(255 255 255 / 0.16);
 
     --color-red-50: color-mix(in oklab, var(--color-red-500) 10%, var(--color-surface));
     --color-red-100: color-mix(in oklab, var(--color-red-500) 16%, var(--color-surface));

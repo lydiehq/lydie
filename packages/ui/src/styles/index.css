@@ -208,6 +208,8 @@
     --depth-middle: color-mix(in oklch, black 4%, transparent);
     --depth-far: color-mix(in oklch, black 1.5%, transparent);
     --depth-highlight: transparent;
+    /* The top edge of a raised thing catching the light (the active tab's): only in dark mode. */
+    --depth-shine: var(--depth-border);
   }
 }
 

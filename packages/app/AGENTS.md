@@ -178,7 +178,8 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   with its panel tabs in the same row. As in Dia, the active tab is cut from its card
   (`ActiveTabShape`: the card's colour and hairline run up around it, and its feet curve out into
   the card's top edge; the tab list runs 2px into the card to cover its hairline and, in dark
-  mode, the inset highlight under it); a first tab on
+  mode, the inset highlight under it; its top edge catches the light, `--depth-shine`, fading
+  into the hairline down its sides, in dark mode only); a first tab on
   the card's left edge (a group other than the top-left one) has no left foot and squares the
   card's corner instead. Split gutters are `ResizeHandle`s between cards. Cards (and
   the status banner under them) are `surface-depth` from `@lydie/ui`. The sidebar's toggle
