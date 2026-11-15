@@ -26,10 +26,10 @@ export const buttonStyles = tv({
   ].join(" "),
   variants: {
     variant: {
-      // Flat dark gray: no gradient, rim or shadow. The ramp mirrors in dark mode, so it
-      // turns near-white there with a dark label.
+      // Flat dark gray: no gradient, rim or shadow. Pure white in dark mode, with a dark
+      // label; hover and press dim it a little.
       primary:
-        "border border-transparent bg-gray-800 text-surface hover:bg-gray-700 pressed:bg-gray-600 disabled:opacity-40",
+        "border border-transparent bg-gray-800 text-surface hover:bg-gray-700 pressed:bg-gray-600 dark:bg-white dark:hover:bg-gray-950 dark:pressed:bg-gray-900 disabled:opacity-40",
       // Raised on a hairline border that strengthens on hover (Numina's secondary button).
       secondary:
         "surface-depth bg-elevated text-gray-900 not-data-current:hover:border-gray-950/12 disabled:bg-gray-100 disabled:text-gray-500",
