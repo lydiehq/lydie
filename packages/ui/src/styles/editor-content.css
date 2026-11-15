@@ -285,6 +285,10 @@
 
   input[type="checkbox"]:checked + [data-checkbox-mark] {
     background-color: var(--color-gray-700);
+
+    :where(.dark) & {
+      background-color: white;
+    }
   }
 
   input[type="checkbox"]:checked + [data-checkbox-mark] .checkbox-checkmark {

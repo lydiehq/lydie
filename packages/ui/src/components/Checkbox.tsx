@@ -49,7 +49,7 @@ const boxStyles = tv({
   variants: {
     isSelected: {
       false: "bg-surface",
-      true: "bg-gray-700",
+      true: "bg-gray-700 dark:bg-white",
     },
   },
 });
