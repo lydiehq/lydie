@@ -72,7 +72,9 @@ const SKIP_FILES = new Set(["scripts/check-boundaries.test.ts"]);
 
 const IMPORT_PATTERNS = [
   /\b(?:import|export)\b[^'";]*?\bfrom\s*["']([^"']+)["']/g,
-  /\bimport\s*["']([^"']+)["']/g,
+  // A side-effect import starts a statement; the word ending a string ("import", "Notion
+  // import") is not one.
+  /(?:^|;)\s*import\s*["']([^"']+)["']/gm,
   /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
   /\brequire\s*\(\s*["']([^"']+)["']\s*\)/g,
 ];

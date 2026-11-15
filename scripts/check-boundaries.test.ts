@@ -41,6 +41,15 @@ describe("extractImports", () => {
     );
   });
 
+  it("does not read the word import at the end of a string as an import", () => {
+    const source = `
+      const keywords = ["import", "export"];
+      const name = "Markdown import";
+      import "./styles.css";
+    `;
+    expect(extractImports(source)).toEqual(["./styles.css"]);
+  });
+
   it("maps specifiers to package names", () => {
     expect(packageName("@lydie/plugin-api/views")).toBe("@lydie/plugin-api");
     expect(packageName("react/jsx-runtime")).toBe("react");
