@@ -20,9 +20,9 @@ import {
   useOps,
   useQuery,
   useQuerySelect,
+  useSetTabTint,
   useStatus,
   useTabStateSnapshot,
-  useTabTint,
 } from "@lydie/plugin-api";
 import type {
   AppApi,
@@ -94,12 +94,15 @@ export function DocView({ tab }: ViewProps) {
   const bar = useRef<HTMLDivElement>(null);
   // In a host's panel (the collections' page panel) the bar is left to the host's own controls.
   const bare = useTabStateSnapshot()("bare") === true;
-  const overlay = useCoverOverlay(
+  const surface = useRef<HTMLDivElement>(null);
+  const setTabTint = useSetTabTint();
+  const overlay = useCoverBar(
     root,
     bar,
+    surface,
     pageCoverOf(entry?.document.properties) !== null && !entry?.document.deletedAt,
+    bare ? NO_TINT : setTabTint,
   );
-  useTabTint(bare ? null : coverTint(overlay));
   if (!route) return null;
   if (error) return <ErrorState title="Could not open this document" error={error} />;
   if (!entry) {
@@ -137,13 +140,17 @@ export function DocView({ tab }: ViewProps) {
       <div
         ref={bar}
         data-testid="page-bar"
-        data-over-cover={overlay?.over ? overlay.tone : undefined}
         className={`flex h-9 shrink-0 items-center gap-2 pr-2 ${
-          overlay
-            ? `absolute inset-x-0 top-0 z-10 transition-colors duration-150 ${overlay.over ? INK[overlay.tone] : "bg-surface"}`
-            : ""
+          overlay ? `absolute inset-x-0 top-0 z-10 ${INK}` : ""
         }`}
       >
+        {overlay && (
+          // The bar's surface, under its controls: moved down out of the bar by the cover (see
+          // useCoverBar), a transform so scrolling does not lay anything out.
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div ref={surface} className="absolute inset-0 bg-surface" />
+          </div>
+        )}
         {!bare && (
           <>
             <div aria-hidden className="flex-1 basis-0" />
@@ -183,67 +190,108 @@ export function DocView({ tab }: ViewProps) {
   );
 }
 
-// The bar's ink over a cover, by how light the cover is there. On the bar rather than on each
-// control, so the controls plugins put in it (Share, comments) follow. Literal white and black:
-// the cover keeps its colours in both themes.
-const INK = {
-  dark: "[&_*]:text-white/85! [&_button:hover]:bg-white/15! [&_button:hover]:text-white! [&_button:hover_*]:text-white!",
-  light:
-    "[&_*]:text-black/60! [&_button:hover]:bg-black/8! [&_button:hover]:text-black/90! [&_button:hover_*]:text-black/90!",
-} as const;
+// The bar's ink over a cover, by how light the cover is there (`data-over-cover`, set while the
+// cover reaches past the bar's middle). On the bar rather than on each control, so the controls
+// plugins put in it (Share, comments) follow. Literal white and black: the cover keeps its
+// colours in both themes.
+const INK =
+  "data-[over-cover=dark]:[&_*]:text-white/85! data-[over-cover=dark]:[&_button:hover]:bg-white/15! data-[over-cover=dark]:[&_button:hover]:text-white! data-[over-cover=dark]:[&_button:hover_*]:text-white! " +
+  "data-[over-cover=light]:[&_*]:text-black/60! data-[over-cover=light]:[&_button:hover]:bg-black/8! data-[over-cover=light]:[&_button:hover]:text-black/90! data-[over-cover=light]:[&_button:hover_*]:text-black/90!";
 
-// A colour cover runs on into the tab while the bar is over it.
-function coverTint(overlay: CoverOverlay | null): TabTint | null {
-  if (!overlay?.over || !overlay.color) return null;
-  return { color: overlay.color, tone: overlay.tone };
-}
+// A host's panel has no tab of its own to tint.
+const NO_TINT = () => {};
 
-// `color`: the cover's computed background when it is a colour (`data-cover-color`), else null.
-type CoverOverlay = { tone: "light" | "dark"; over: boolean; color: string | null };
+// Where the cover is, read when the view's DOM changes (not per scroll): its bottom in the scroll
+// container's content, and the bar's top and height in the container's viewport.
+type CoverGeometry = {
+  bottom: number;
+  barTop: number;
+  barHeight: number;
+  tone: "light" | "dark";
+  // The cover's computed background when it is a colour (`data-cover-color`), else null.
+  color: string | null;
+};
 
 // When the page opens on a cover (page-decor's `data-page-cover` at the very top of the scroll
-// container), the bar lies over it instead of taking a row of its own: `over` while the cover is
-// under the whole bar, with its `data-cover-tone` (dark until known). Null otherwise, also when a
-// banner sits above the cover. The editor's own changes are skipped: they never move the cover.
-function useCoverOverlay(
+// container), the bar lies over it instead of taking a row of its own: true then; false
+// otherwise, also when a banner sits above the cover.
+//
+// Scrolling is followed without a render, from `scrollTop` alone: the bar's surface (`surface`, a
+// layer under its controls) moves with the cover's bottom edge as it passes through the bar, so
+// the bar is the page's colour exactly where the cover has gone; the ink turns once the edge
+// passes the bar's middle; and over the same stretch a colour cover's tab fades from the cover's
+// colour to the card's (`setTint`). The editor's own changes are skipped: they never move the cover.
+function useCoverBar(
   root: RefObject<HTMLElement | null>,
   bar: RefObject<HTMLElement | null>,
+  surface: RefObject<HTMLElement | null>,
   enabled: boolean,
-): CoverOverlay | null {
-  const [overlay, setOverlay] = useState<CoverOverlay | null>(null);
+  setTint: (tint: TabTint | null) => void,
+): boolean {
+  const [onCover, setOnCover] = useState(false);
   useLayoutEffect(() => {
     const el = root.current;
+    // Rendered with the view, so the same element until the effect runs again.
+    const barEl = bar.current;
     if (!enabled || !el) return;
+    let scroller: HTMLElement | null = null;
+    let geometry: CoverGeometry | null = null;
+    let painted = "";
+    const tint = (next: TabTint | null) => {
+      const key = next ? `${next.color} ${next.tone ?? ""}` : "";
+      if (key === painted) return;
+      painted = key;
+      setTint(next);
+    };
+    const paint = () => {
+      paintFrame = 0;
+      const b = bar.current;
+      if (!geometry || !scroller || !b) return tint(null);
+      const { bottom, barTop, barHeight, tone, color } = geometry;
+      // How far down the bar the cover still reaches.
+      const edge = Math.min(barHeight, Math.max(0, bottom - scroller.scrollTop - barTop));
+      if (surface.current) surface.current.style.transform = `translateY(${edge}px)`;
+      const over = edge > barHeight / 2;
+      if (over) b.dataset.overCover = tone;
+      else delete b.dataset.overCover;
+      if (!color || edge === 0) return tint(null);
+      const share = Math.round((edge / barHeight) * 100);
+      tint({
+        color:
+          share === 100 ? color : `color-mix(in srgb, ${color} ${share}%, var(--color-surface))`,
+        ...(over ? { tone } : {}),
+      });
+    };
     const measure = () => {
-      frame = 0;
-      const scroller = el.querySelector<HTMLElement>("[data-scroll-root]");
+      measureFrame = 0;
+      scroller = el.querySelector<HTMLElement>("[data-scroll-root]");
       const cover = scroller?.querySelector<HTMLElement>("[data-page-cover]");
-      let next: CoverOverlay | null = null;
+      geometry = null;
       if (scroller && cover && bar.current) {
+        const view = scroller.getBoundingClientRect();
         const box = cover.getBoundingClientRect();
-        const top = box.top - scroller.getBoundingClientRect().top + scroller.scrollTop;
-        if (top < 1) {
-          next = {
+        if (box.top - view.top + scroller.scrollTop < 1) {
+          const barBox = bar.current.getBoundingClientRect();
+          geometry = {
+            bottom: box.bottom - view.top + scroller.scrollTop,
+            barTop: barBox.top - view.top,
+            barHeight: barBox.height,
             tone: cover.dataset.coverTone === "light" ? "light" : "dark",
-            over: box.bottom > bar.current.getBoundingClientRect().bottom,
             color: cover.dataset.coverColor ? getComputedStyle(cover).backgroundColor : null,
           };
         }
       }
-      setOverlay((prev) =>
-        prev?.tone === next?.tone && prev?.over === next?.over && prev?.color === next?.color
-          ? prev
-          : next,
-      );
+      setOnCover(geometry !== null);
+      paint();
     };
-    let frame = 0;
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(measure);
-    };
+    let measureFrame = 0;
+    let paintFrame = 0;
     const inEditor = (node: Node) =>
       (node instanceof Element ? node : node.parentElement)?.closest("[data-doc-content]") != null;
     const observer = new MutationObserver((records) => {
-      if (records.some((r) => !inEditor(r.target))) schedule();
+      if (!measureFrame && records.some((r) => !inEditor(r.target))) {
+        measureFrame = requestAnimationFrame(measure);
+      }
     });
     observer.observe(el, {
       subtree: true,
@@ -251,16 +299,23 @@ function useCoverOverlay(
       attributes: true,
       attributeFilter: ["data-cover-tone", "data-cover-color"],
     });
-    // Scroll does not bubble: caught on the way down to the scroll container.
-    el.addEventListener("scroll", schedule, { capture: true, passive: true });
+    // Scroll does not bubble: caught on the way down, and only the page's own.
+    const onScroll = (event: Event) => {
+      if (event.target === scroller && !paintFrame) paintFrame = requestAnimationFrame(paint);
+    };
+    el.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    // Also when the bar has just taken its place over the cover (`onCover`): measured again.
     measure();
     return () => {
       observer.disconnect();
-      el.removeEventListener("scroll", schedule, { capture: true });
-      if (frame) cancelAnimationFrame(frame);
+      el.removeEventListener("scroll", onScroll, { capture: true });
+      if (measureFrame) cancelAnimationFrame(measureFrame);
+      if (paintFrame) cancelAnimationFrame(paintFrame);
+      if (barEl) delete barEl.dataset.overCover;
+      setTint(null);
     };
-  }, [root, bar, enabled]);
-  return enabled ? overlay : null;
+  }, [root, bar, surface, enabled, setTint, onCover]);
+  return enabled && onCover;
 }
 
 // Marks the view with `data-width-transition` while the page glides to or from full width

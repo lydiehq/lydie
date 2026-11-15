@@ -1072,7 +1072,7 @@ const TabButton = memo(function TabButton({
           active
             ? clsx(
                 "z-10",
-                tint ? TINT_INK[tint.tone] : groupFocused ? "text-gray-900" : "text-gray-700",
+                tint?.tone ? TINT_INK[tint.tone] : groupFocused ? "text-gray-900" : "text-gray-700",
               )
             : "text-gray-600 hover:bg-gray-950/3",
           floating && "surface-depth bg-surface opacity-90",
@@ -1171,7 +1171,7 @@ const TabButton = memo(function TabButton({
 // around it and its feet flare out into the card's top edge. It reaches 7px below the tab, to the
 // bottom of the tab list (2px into the card), and 3px above it so the label sits near its middle.
 // As in Dia, its top edge catches the light (`--depth-shine`, dark mode only), fading down the sides.
-// `tint`: the colour its view has at the top (`useTabTint`: a page's cover), in place of the card's.
+// `tint`: the colour its view has at the top (`useSetTabTint`: a page's cover), in place of the card's.
 function ActiveTabShape({ atEdge, tint }: { atEdge: boolean; tint: string | null }) {
   return (
     <span
@@ -1180,7 +1180,7 @@ function ActiveTabShape({ atEdge, tint }: { atEdge: boolean; tint: string | null
     >
       <TabSide foot={!atEdge} tint={tint} />
       <span
-        className="absolute inset-y-0 border-t border-(--depth-shine) bg-surface transition-colors duration-150"
+        className="absolute inset-y-0 border-t border-(--depth-shine) bg-surface"
         style={{ left: TAB_CORNER, right: TAB_CORNER, ...(tint ? { backgroundColor: tint } : {}) }}
       />
       <TabSide foot right tint={tint} />
@@ -1243,7 +1243,7 @@ function TabSide({ foot, right, tint }: { foot: boolean; right?: boolean; tint: 
       </linearGradient>
       <path
         d={`${outline}L${width} ${h}L0.5 ${h}Z`}
-        className="fill-surface transition-[fill] duration-150"
+        className="fill-surface"
         style={tint ? { fill: tint } : undefined}
       />
       <path d={outline} fill="none" stroke={`url(#${shine})`} />

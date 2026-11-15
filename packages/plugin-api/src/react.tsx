@@ -1,13 +1,6 @@
 // React bindings for plugins. The host provides the values; plugins only call the hooks.
 import type { TabState } from "@lydie/contract";
-import {
-  createContext,
-  use,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useSyncExternalStore,
-} from "react";
+import { createContext, use, useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -57,14 +50,15 @@ export type HostBridge = {
     get(tabId: string): { state: TabState } | null;
     subscribe(tabId: string, listener: () => void): () => void;
     setState(tabId: string, state: TabState): void;
-    // Paints the active tab with what its view has at the top (`useTabTint`); null clears it.
+    // Paints the active tab with what its view has at the top (`useSetTabTint`); null clears it.
     setTint?(tabId: string, tint: TabTint | null): void;
   };
 };
 
 // A colour for the active tab, so it runs on into what its view shows at the top (a page's
-// cover). `tone`: how light the colour is, so the tab's ink can contrast with it.
-export type TabTint = { color: string; tone: "light" | "dark" };
+// cover); any CSS colour. `tone`: how light it is, so the tab's ink contrasts with it; without
+// one the ink stays the tab's own (a colour on its way to the card's).
+export type TabTint = { color: string; tone?: "light" | "dark" };
 
 const HostContext = createContext<HostBridge | null>(null);
 
@@ -259,19 +253,24 @@ export function useTabState<T>(key: string, initial: T): [T, (value: T) => void]
   return [stored === undefined ? initial : stored, set];
 }
 
-// Paints the tab the view is in with `tint` while it is given; null, unmounting or a tab outside
-// the layout leaves the tab as it is. Not kept: the view sets it again when it mounts.
-export function useTabTint(tint: TabTint | null): void {
+// Paints the tab the view is in: the setter is meant to be called as often as the view changes
+// (per frame while scrolling, say) without rendering it. A tab outside the layout is left as it
+// is. Not kept: cleared when the view unmounts.
+export function useSetTabTint(): (tint: TabTint | null) => void {
   const host = useHost();
   const tabId = useTab()?.id ?? null;
-  const color = tint?.color ?? null;
-  const tone = tint?.tone ?? null;
-  // Before paint, so the tab changes in the frame the view does.
-  useLayoutEffect(() => {
-    if (!tabId || !color || !tone) return;
-    host.tabs.setTint?.(tabId, { color, tone });
-    return () => host.tabs.setTint?.(tabId, null);
-  }, [host, tabId, color, tone]);
+  useEffect(
+    () => () => {
+      if (tabId) host.tabs.setTint?.(tabId, null);
+    },
+    [host, tabId],
+  );
+  return useCallback(
+    (tint: TabTint | null) => {
+      if (tabId) host.tabs.setTint?.(tabId, tint);
+    },
+    [host, tabId],
+  );
 }
 
 // Reads the tab's state bag once, without subscribing (for restoring on mount). A tab outside the

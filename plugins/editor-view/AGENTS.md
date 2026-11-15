@@ -62,14 +62,18 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   between an empty column and the actions (equal `flex-1 basis-0` columns). Each crumb has the
   ghost `xs` button look (`buttonStyles`), muted, so it hovers like Share and •••.
   Each parent is a live `doc.get` (at most 8 up) and opens on click (`app.modeFor(event)`; middle
-  click too). On a page that opens on a cover (`useCoverOverlay`: an element with
+  click too). On a page that opens on a cover (an element with
   `data-page-cover` at the very top of the scroll container, which page-decor draws; not in the
-  trash, not under a banner) the bar lies over the cover instead of taking a row: its ink (`INK`,
-  set on the bar so plugins' controls follow) follows the cover's `data-cover-tone` (dark until
-  known); there is no fade or shade over the cover. Once the cover scrolls out from under it, the
-  bar takes `bg-surface` over the text. Meanwhile a colour cover (`data-cover-color`) tints the
-  tab (`useTabTint`, not in a host's panel) with its computed background (`coverTint`), so tab
-  and cover read as one. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
+  trash, not under a banner) the bar lies over the cover instead of taking a row (`useCoverBar`).
+  Scrolling is followed without a render: geometry is read when the view's DOM changes, then
+  each scroll frame reads only `scrollTop`. The bar's surface is a layer under its controls that
+  the cover's bottom edge pushes down (a transform), so the bar is transparent where the cover is
+  and the page's colour where it has gone; its ink (`INK`, set on the bar so plugins' controls
+  follow) turns by `data-over-cover` (the cover's `data-cover-tone`, dark until known) once the
+  edge passes the bar's middle. There is no fade over the cover. A colour cover
+  (`data-cover-color`) tints the tab (`useSetTabTint`, not in a host's panel) with its computed
+  background, mixed toward the card's colour as the edge crosses the bar, so tab and cover read
+  as one and part smoothly. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
   find bar keeps clear of. A long trail truncates. With `bare: true` in the tab state (a host's
   panel: the collections' page panel, which puts its ×, full page and to the side there) the bar
   stays but shows no breadcrumbs, actions or •••.
