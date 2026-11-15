@@ -46,8 +46,9 @@ export function EditorPopover({
     >
       <AriaDialog
         aria-label={label}
-        // The editor's own field needs no second frame: the popover is the frame.
-        className={`outline-none [&>div>:is(textarea,input)]:!border-transparent [&>div>:is(textarea,input)]:!text-gray-950 ${fill ? "[&>div]:!w-full [&>div]:min-w-0" : ""} ${strong ? "[&>div>:is(textarea,input)]:font-medium" : ""}`}
+        // The editor's own field needs no second frame: the popover is the frame, so the field
+        // drops its border, fill and drop shadow and reads as the popover itself.
+        className={`outline-none [&>div>:is(textarea,input)]:!border-transparent [&>div>:is(textarea,input)]:!bg-transparent [&>div>:is(textarea,input)]:!shadow-none [&>div>:is(textarea,input)]:!text-gray-950 ${fill ? "[&>div]:!w-full [&>div]:min-w-0" : ""} ${strong ? "[&>div>:is(textarea,input)]:font-medium" : ""}`}
       >
         {children}
       </AriaDialog>

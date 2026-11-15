@@ -94,7 +94,7 @@ export function PropertyEditor(props: PropertyEditorProps) {
 const panel = "flex w-72 flex-col gap-1 p-1 text-sm";
 // The shared fields at `size="sm"`, full width, with the edge drawn as a border rather than a ring:
 // a popover that covers the value it edits (`EditorPopover`) is the frame itself and strips the
-// border (`[&>div>:is(textarea,input)]:!border-transparent`).
+// field's border, fill and shadow (`[&>div>:is(textarea,input)]:!border-transparent` and so on).
 const inputClass =
   "w-full flex-none border border-gray-950/8 px-2 ring-0 outline-none focus:border-gray-950/20 focus:ring-0";
 
