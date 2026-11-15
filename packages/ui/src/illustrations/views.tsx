@@ -12,10 +12,11 @@ import {
   Solid,
   TextLines,
   tone,
+  useLine,
 } from "./kit";
 import type { IllustrationProps, P3 } from "./kit";
 
-const [W, H, DEPTH] = [56, 44, 3];
+const [W, H, DEPTH] = [56, 44, 2];
 const BASE: P3 = [0, 0, DEPTH];
 const FOOTPRINT = reach("floor", BASE, W, H, DEPTH);
 
@@ -25,12 +26,13 @@ const topBand = (w: number, h: number, r: number) =>
 
 /** Table: a sheet of rows and columns, one cell lifted as if being edited. */
 export function TableViewIllustration(props: IllustrationProps) {
-  const cell: P3 = [19, 22, DEPTH + 2.5];
+  const line = useLine();
+  const cell: P3 = [19, 22, DEPTH + 1.5];
   return (
-    <Drawing {...props} top={[...FOOTPRINT, ...reach("floor", cell, 19, 11, 2.5)]}>
+    <Drawing {...props} top={[...FOOTPRINT, ...reach("floor", cell, 19, 11, 1.5)]}>
       <Rise at={BASE} w={W} h={H} depth={DEPTH} shape={rect(W, H, 4)} delay={0}>
         <Solid plane="floor" at={BASE} depth={DEPTH} shape={rect(W, H, 4)}>
-          <path d={topBand(W, 11, 4)} fill={tone(2)} strokeWidth={1} {...ink} />
+          <path d={topBand(W, 11, 4)} fill={tone(2)} strokeWidth={line(1)} {...ink} />
           <Marks d="M0 22 h56 M0 33 h56 M19 0 v44 M38 0 v44" />
           <TextLines u={4} v={16.5} widths={[10, 8]} gap={11} />
           <TextLines u={23} v={16.5} widths={[7]} />
@@ -38,7 +40,7 @@ export function TableViewIllustration(props: IllustrationProps) {
         </Solid>
       </Rise>
       <Enter delay={0.18} drop={14}>
-        <Solid plane="floor" at={cell} depth={2.5} shape={rect(19, 11, 2)}>
+        <Solid plane="floor" at={cell} depth={1.5} shape={rect(19, 11, 2)}>
           <TextLines u={4} v={5.5} widths={[9]} />
         </Solid>
       </Enter>
@@ -57,12 +59,12 @@ const BOARD_COLUMNS = [
 export function BoardViewIllustration(props: IllustrationProps) {
   const cards = BOARD_COLUMNS.flatMap(({ u, cards }, column) =>
     cards.map((v, row) => ({
-      at: [u, v, DEPTH + 2] as P3,
+      at: [u, v, DEPTH + 1.5] as P3,
       delay: 0.12 + column * 0.1 + row * 0.05,
     })),
   );
   return (
-    <Drawing {...props} top={[...FOOTPRINT, [W, H, DEPTH + 2]]}>
+    <Drawing {...props} top={[...FOOTPRINT, [W, H, DEPTH + 1.5]]}>
       <Rise at={BASE} w={W} h={H} depth={DEPTH} shape={rect(W, H, 4)} delay={0}>
         <Solid plane="floor" at={BASE} depth={DEPTH} shape={rect(W, H, 4)}>
           <Marks d="M18.7 4 v36 M37.3 4 v36" />
@@ -70,7 +72,7 @@ export function BoardViewIllustration(props: IllustrationProps) {
       </Rise>
       {cards.map(({ at, delay }) => (
         <Enter key={at.join()} delay={delay} drop={14}>
-          <Solid plane="floor" at={at} depth={2} shape={rect(14, 9, 2)}>
+          <Solid plane="floor" at={at} depth={1.5} shape={rect(14, 9, 2)}>
             <TextLines u={3} v={3.5} widths={[7]} />
           </Solid>
         </Enter>
@@ -81,12 +83,13 @@ export function BoardViewIllustration(props: IllustrationProps) {
 
 /** List: pages one per line, each a strip with its icon and title, stacked in turn. */
 export function ListViewIllustration(props: IllustrationProps) {
+  const line = useLine();
   const rows = [0, 11.5, 23, 34.5];
   return (
-    <Drawing {...props} top={reach("floor", [0, 0, 2.5], W, H, 2.5)}>
+    <Drawing {...props} top={reach("floor", [0, 0, 2], W, H, 2)}>
       {rows.map((v, index) => (
         <Enter key={v} delay={index * 0.07} drop={12}>
-          <Solid plane="floor" at={[0, v, 2.5]} depth={2.5} shape={rect(W, 9.5, 2.5)}>
+          <Solid plane="floor" at={[0, v, 2]} depth={2} shape={rect(W, 9.5, 2.5)}>
             <rect
               x={4}
               y={2.5}
@@ -94,7 +97,7 @@ export function ListViewIllustration(props: IllustrationProps) {
               height={4.5}
               rx={1}
               fill={tone(2)}
-              strokeWidth={1}
+              strokeWidth={line(1)}
               {...ink}
             />
             <TextLines u={12} v={4.75} widths={[[22, 30, 18, 26][index] ?? 20]} />
@@ -107,23 +110,24 @@ export function ListViewIllustration(props: IllustrationProps) {
 
 /** Calendar: a month of days, two events set down on them. */
 export function CalendarViewIllustration(props: IllustrationProps) {
-  const long: P3 = [15, 23.5, DEPTH + 2];
-  const short: P3 = [43, 35, DEPTH + 2];
+  const line = useLine();
+  const long: P3 = [15, 23.5, DEPTH + 1.5];
+  const short: P3 = [43, 35, DEPTH + 1.5];
   return (
-    <Drawing {...props} top={[...FOOTPRINT, ...reach("floor", long, 26, 6.5, 2)]}>
+    <Drawing {...props} top={[...FOOTPRINT, ...reach("floor", long, 26, 6.5, 1.5)]}>
       <Rise at={BASE} w={W} h={H} depth={DEPTH} shape={rect(W, H, 4)} delay={0}>
         <Solid plane="floor" at={BASE} depth={DEPTH} shape={rect(W, H, 4)}>
-          <path d={topBand(W, 10, 4)} fill={tone(2)} strokeWidth={1} {...ink} />
+          <path d={topBand(W, 10, 4)} fill={tone(2)} strokeWidth={line(1)} {...ink} />
           <Marks d="M0 21.3 h56 M0 32.6 h56 M14 10 v34 M28 10 v34 M42 10 v34" />
         </Solid>
       </Rise>
       <Enter delay={0.16} drop={14}>
-        <Solid plane="floor" at={long} depth={2} shape={rect(26, 6.5, 2)}>
+        <Solid plane="floor" at={long} depth={1.5} shape={rect(26, 6.5, 2)}>
           <TextLines u={3} v={3.25} widths={[10]} />
         </Solid>
       </Enter>
       <Enter delay={0.26} drop={14}>
-        <Solid plane="floor" at={short} depth={2} shape={rect(11, 6.5, 2)} />
+        <Solid plane="floor" at={short} depth={1.5} shape={rect(11, 6.5, 2)} />
       </Enter>
     </Drawing>
   );
@@ -134,21 +138,22 @@ const COVER = "M3 11 L9 6 L13 9 L17 5.5 L23 11";
 
 /** Gallery: cards with covers in a grid, the last one still to come. */
 export function GalleryViewIllustration(props: IllustrationProps) {
+  const line = useLine();
   const cards: P3[] = [
-    [0, 0, 2.5],
-    [30, 0, 2.5],
-    [0, 24, 2.5],
+    [0, 0, 2],
+    [30, 0, 2],
+    [0, 24, 2],
   ];
   return (
-    <Drawing {...props} top={reach("floor", [0, 0, 2.5], W, H, 2.5)}>
+    <Drawing {...props} top={reach("floor", [0, 0, 2], W, H, 2)}>
       <Enter delay={0.3} drop={8}>
         <Dashed plane="floor" at={[30, 24, 0]} shape={rect(26, 20, 3)} />
       </Enter>
       {cards.map((at, index) => (
         <Enter key={at.join()} delay={index * 0.08} drop={14}>
-          <Solid plane="floor" at={at} depth={2.5} shape={rect(26, 20, 3)}>
-            <path d={topBand(26, 12, 3)} fill={tone(2)} strokeWidth={1} {...ink} />
-            <path d={COVER} strokeWidth={1} {...ink} />
+          <Solid plane="floor" at={at} depth={2} shape={rect(26, 20, 3)}>
+            <path d={topBand(26, 12, 3)} fill={tone(2)} strokeWidth={line(1)} {...ink} />
+            <path d={COVER} strokeWidth={line(1)} {...ink} />
             <TextLines u={4} v={16} widths={[12]} />
           </Solid>
         </Enter>

@@ -238,7 +238,7 @@ export function ViewTabs({
                         void addView(type);
                       }}
                     >
-                      <span className="flex h-12 w-16 shrink-0 items-center justify-center">
+                      <span className="flex h-10 w-14 shrink-0 items-center justify-center">
                         <Drawing size="xs" />
                       </span>
                       <span className="flex min-w-0 flex-col gap-0.5">

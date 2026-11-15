@@ -6,7 +6,7 @@
 // Every solid is a flat 2D shape on one of three planes, pushed back by its thickness: copies of
 // the shape stepping back fill the sides.
 import { LazyMotion, m, useReducedMotion } from "motion/react";
-import { useId } from "react";
+import { createContext, useContext, useId } from "react";
 import type { ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -80,6 +80,15 @@ export const reach = (plane: Plane, at: P3, w: number, h: number, depth = 0): P3
 export const ink = { vectorEffect: "non-scaling-stroke" } as const;
 export const LINE = 1.4;
 
+// Strokes are in screen pixels whatever the drawing's size, so a small drawing thins them to keep
+// the same weight as a large one.
+const LineScale = createContext(1);
+/** A stroke width (screen pixels at full size) for the drawing being drawn. */
+export function useLine() {
+  const scale = useContext(LineScale);
+  return (width: number) => n1(width * scale);
+}
+
 export type ShapeProps = {
   fill: string;
   stroke?: string;
@@ -129,6 +138,7 @@ export function Solid({
   children?: ReactNode;
 }) {
   const outside = useId();
+  const line = useLine();
   const matrix = planeMatrix(plane, at);
   const [dx, dy] = backOffset(plane, depth);
   // Fine steps, unrounded: coarse ones leave bumps along the silhouette.
@@ -156,14 +166,14 @@ export function Solid({
       {sideLines}
       <g transform={matrix}>
         {/* Under the face: only the half over the side shows. */}
-        {shape({ ...ink, fill: "none", stroke: INNER, strokeWidth: 2 })}
+        {shape({ ...ink, fill: "none", stroke: INNER, strokeWidth: line(2) })}
         {shape({ ...ink, fill: face, stroke: "none" })}
         <g stroke={INNER}>{children}</g>
       </g>
       <g mask={`url(#${outside})`}>
         {layers.map((transform, index) => (
           <g key={index} transform={transform}>
-            {shape({ ...ink, fill: "none", strokeWidth: LINE * 2 })}
+            {shape({ ...ink, fill: "none", strokeWidth: line(LINE * 2) })}
           </g>
         ))}
       </g>
@@ -185,17 +195,20 @@ export function Dashed({
   strength?: number;
   children?: ReactNode;
 }) {
+  const line = useLine();
+  const dashes = `${line(3)} ${line(4)}`;
   return (
     <g transform={planeMatrix(plane, at)} color={fadedInk(strength)}>
-      {shape({ ...ink, fill: "none", strokeWidth: LINE, strokeDasharray: "3 4" })}
-      <g strokeDasharray="3 4">{children}</g>
+      {shape({ ...ink, fill: "none", strokeWidth: line(LINE), strokeDasharray: dashes })}
+      <g strokeDasharray={dashes}>{children}</g>
     </g>
   );
 }
 
 /** Strokes drawn on a face. */
 export function Marks({ d, width = 1 }: { d: string; width?: number }) {
-  return <path d={d} strokeWidth={width} {...ink} />;
+  const line = useLine();
+  return <path d={d} strokeWidth={line(width)} {...ink} />;
 }
 
 /** Lines of text on a face, as short strokes. */
@@ -210,11 +223,12 @@ export function TextLines({
   widths: number[];
   gap?: number;
 }) {
+  const line = useLine();
   return (
     <path
       d={widths.map((w, i) => `M${u} ${v + i * gap} h${w}`).join(" ")}
       stroke={BAR}
-      strokeWidth={3}
+      strokeWidth={line(3)}
       {...ink}
     />
   );
@@ -222,7 +236,8 @@ export function TextLines({
 
 /** A thick bar on a face, for a heading or anything that matters. */
 export function Total({ u, v, w }: { u: number; v: number; w: number }) {
-  return <path d={`M${u} ${v} h${w}`} stroke={BAR} strokeWidth={5} {...ink} />;
+  const line = useLine();
+  return <path d={`M${u} ${v} h${w}`} stroke={BAR} strokeWidth={line(5)} {...ink} />;
 }
 
 export const DURATION = 3.2;
@@ -297,6 +312,7 @@ export function Rise({
   children: ReactNode;
 }) {
   const id = useId();
+  const line = useLine();
   const reduce = useReducedMotion();
   if (reduce) {
     return (
@@ -315,7 +331,7 @@ export function Rise({
   return (
     <m.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={fadeIn(delay, duration)}>
       {/* The outline along the floor, which the sunk box has none of. */}
-      <g transform={matrix}>{shape({ ...ink, fill: "none", strokeWidth: LINE * 2 })}</g>
+      <g transform={matrix}>{shape({ ...ink, fill: "none", strokeWidth: line(LINE * 2) })}</g>
       <mask id={id} maskUnits="objectBoundingBox" x={-1} y={-1} width={3} height={3}>
         <path
           d={`M${lx - pad} ${ly - 1000} H${rx + pad} V${ry} L${lx - pad} ${ly} Z`}
@@ -350,11 +366,12 @@ export function BoxEdge({
   depth: number;
   r: number;
 }) {
+  const line = useLine();
   const inset = r * (1 - Math.SQRT1_2);
   const [x, y, z] = onPlane("floor", at, w - inset, h - inset);
   const [x1, y1] = proj([x, y, z]).map(n1);
   const [x2, y2] = proj([x, y, z - depth]).map(n1);
-  return <path d={`M${x1} ${y1} L${x2} ${y2}`} stroke={INNER} strokeWidth={1} {...ink} />;
+  return <path d={`M${x1} ${y1} L${x2} ${y2}`} stroke={INNER} strokeWidth={line(1)} {...ink} />;
 }
 
 const viewBoxOf = (points: readonly P3[], pad = 6) => {
@@ -374,7 +391,8 @@ export type IllustrationProps = {
   className?: string;
 };
 
-const SIZES: Record<IllustrationSize, string> = { xs: "h-11", sm: "h-24", md: "h-32" };
+const SIZES: Record<IllustrationSize, string> = { xs: "h-9", sm: "h-24", md: "h-32" };
+const LINE_SCALES: Record<IllustrationSize, number> = { xs: 0.6, sm: 1, md: 1 };
 
 export function Drawing({
   size = "md",
@@ -397,14 +415,14 @@ export function Drawing({
       )}
       fill="none"
       stroke="currentColor"
-      strokeWidth={LINE}
+      strokeWidth={LINE * LINE_SCALES[size]}
       strokeLinejoin="round"
       strokeLinecap="round"
     >
       {/* Only the features the entrances use, fetched on first use: until then each part waits
           hidden in its initial state. */}
       <LazyMotion features={loadFeatures} strict>
-        {children}
+        <LineScale value={LINE_SCALES[size]}>{children}</LineScale>
       </LazyMotion>
     </svg>
   );
