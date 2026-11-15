@@ -186,7 +186,7 @@ documentMenuItems(doc, contributions) → ContextMenuItem[], runDocumentMenuActi
   contributions, app) → "open-tab" | "open-split" | "new-child" | "rename" | "delete" | null
 //   (src/document-menu.ts) the context menu on a document in a list, the same wherever it opens
 //   (the sidebar tree, Home): open in a new tab / to the right, new document inside, rename, the
-//   `documentMenu` contributions (by `order`), move to trash. The list carries out the built-in
+//   `documentMenu` contributions (by `order`), move to trash, each with its icon. The list carries out the built-in
 //   actions (rename is inline); a contribution runs and the call returns null
 findByPath(app, "Meta/Templates") → id | null; resolvePath(app, path) → { id, missing };
 //   createMissing(ops, workspaceId, match) in a transaction   // documents by title path

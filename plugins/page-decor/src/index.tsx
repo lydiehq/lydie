@@ -85,8 +85,8 @@ function isUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
 
-// "Set icon" and "Set cover" live in the page's menu and the palette, while the pickers open on
-// the page: the request waits here until that page's decor takes it.
+// "Set page icon" and "Set page cover" live in the palette, while the pickers open on the page:
+// the request waits here until that page's decor takes it.
 type Picker = "icon" | "cover";
 let requested: { docId: string; picker: Picker } | null = null;
 const takers = new Set<() => void>();
@@ -94,7 +94,7 @@ const takers = new Set<() => void>();
 function openPicker(app: AppApi, docId: string, picker: Picker) {
   requested = { docId, picker };
   for (const take of takers) take();
-  // Not on screen (the sidebar's row menu): open the page, whose decor takes the request.
+  // Not on screen: open the page, whose decor takes the request.
   if (requested) app.openDoc(docId);
 }
 
@@ -468,22 +468,6 @@ export const pageDecorPlugin = definePlugin({
   description: "An emoji icon and a cover image per page, kept as frontmatter properties.",
   activate(ctx) {
     ctx.documents.register({ id: "page-decor", slot: "top", order: 0, component: PageDecor });
-    ctx.documentMenu.register({
-      id: "page-decor.setIcon",
-      label: "Set icon",
-      icon: <EmojiRegular />,
-      group: "decor",
-      order: 2,
-      run: (doc, app) => openPicker(app, doc.id, "icon"),
-    });
-    ctx.documentMenu.register({
-      id: "page-decor.setCover",
-      label: "Set cover",
-      icon: <PicRegular />,
-      group: "decor",
-      order: 2,
-      run: (doc, app) => openPicker(app, doc.id, "cover"),
-    });
     for (const [picker, title, icon] of [
       ["icon", "Set page icon", <EmojiRegular key="icon" />],
       ["cover", "Set page cover", <PicRegular key="cover" />],

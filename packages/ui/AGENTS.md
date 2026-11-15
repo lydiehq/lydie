@@ -58,7 +58,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   { message, detail?, confirmLabel?, cancelLabel?, destructive? (red button, warning tile) };
   keeps the last request rendered while it animates out; a click outside, Escape or Cancel
   cancels; the dialog takes focus and Enter confirms, so no button shows a focus ring until Tab;
-  what `app.confirm` shows), ContextMenu (a menu at a point), Dialog,
+  what `app.confirm` shows), ContextMenu (a menu at a point; items take an `icon` as MenuItem does), Dialog,
   Disclosure(+Header, Panel, Group), Field parts (Label, Description, FieldError, FieldGroup,
   Input, TextArea; every field, Select's field variant and SearchField included, has Numina's
   input look (`../app`'s Input), `fieldSurfaceClass`: `surface-depth`'s hairline border and soft

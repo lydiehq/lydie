@@ -1,7 +1,15 @@
 // The context menu on a document in a list (the sidebar's tree, Home's "Jump back in"): the same
 // items wherever it opens. The list carries out the built-in actions itself (rename is inline
 // there); what plugins add (`documentMenu`) runs through `runDocumentMenuAction`.
+import {
+  Delete2Regular,
+  ExternalLinkRegular,
+  FileNewRegular,
+  LayoutRightRegular,
+  Pencil2Regular,
+} from "@lydie/ui";
 import type { ContextMenuItem } from "@lydie/ui";
+import { createElement } from "react";
 
 import { documentMenuLabel } from "./plugin.ts";
 import type { AppApi, Contributed, DocumentRef } from "./plugin.ts";
@@ -18,21 +26,22 @@ export function documentMenuItems(
   contributions: readonly Contribution[],
 ): ContextMenuItem[] {
   return [
-    { id: "open-tab", label: "Open in new tab" },
-    { id: "open-split", label: "Open to the right" },
+    { id: "open-tab", label: "Open in new tab", icon: createElement(ExternalLinkRegular) },
+    { id: "open-split", label: "Open to the right", icon: createElement(LayoutRightRegular) },
     { type: "separator", id: "s1" },
-    { id: "new-child", label: "New document inside" },
-    { id: "rename", label: "Rename" },
+    { id: "new-child", label: "New document inside", icon: createElement(FileNewRegular) },
+    { id: "rename", label: "Rename", icon: createElement(Pencil2Regular) },
     ...contributions
       .filter((m) => !m.when || m.when(doc))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       .map((m) => ({
         id: actionId(m),
         label: documentMenuLabel(m, doc),
+        ...(m.icon ? { icon: m.icon } : {}),
         ...(m.danger ? { danger: true } : {}),
       })),
     { type: "separator", id: "s2" },
-    { id: "delete", label: "Move to trash", danger: true },
+    { id: "delete", label: "Move to trash", icon: createElement(Delete2Regular), danger: true },
   ];
 }
 
