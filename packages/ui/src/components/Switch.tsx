@@ -13,11 +13,11 @@ export const switchTrack = tv({
   extend: focusRingFor,
   base: "relative flex h-4 w-7 px-px items-center shrink-0 cursor-default rounded-full transition duration-200 ease-in-out border border-transparent",
   variants: {
-    // On, the track is the primary button's flat gray; the handle takes its label colour.
+    // On, the track is the primary button's flat gray.
     isSelected: {
       false: "bg-gray-400 group-pressed:bg-gray-500",
       // react-aria's hover, not :hover, so a disabled switch does not lighten under the pointer.
-      true: "bg-gray-800 text-surface group-hovered:bg-gray-700 group-pressed:bg-gray-600 forced-colors:bg-[Highlight]!",
+      true: "bg-gray-800 group-hovered:bg-gray-700 group-pressed:bg-gray-600 forced-colors:bg-[Highlight]!",
     },
     // Faded like a disabled button or field, on or off.
     isDisabled: {
@@ -26,12 +26,13 @@ export const switchTrack = tv({
   },
 });
 
+// Raised like Numina's thumb (`surface-depth` on the elevated fill), in both states, but round.
 export const switchHandle = tv({
-  base: "h-3 w-3 transform rounded-full outline -outline-offset-1 outline-transparent transition duration-200 ease-in-out",
+  base: "surface-depth h-3 w-3 transform rounded-full bg-elevated outline -outline-offset-1 outline-transparent transition duration-200 ease-in-out",
   variants: {
     isSelected: {
-      false: "translate-x-0 bg-surface",
-      true: "translate-x-full bg-current",
+      false: "translate-x-0",
+      true: "translate-x-full",
     },
     isDisabled: {
       true: "forced-colors:outline-[GrayText]",

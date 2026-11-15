@@ -92,8 +92,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   RadioGroup/Radio (after shadcn's: a 16 px circle with a hairline edge, filled with
   the primary button's flat gray when selected, its dot in the button's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
   control, or `"ghost"`, a ghost `sm` or `xs` Button with a chevron, for toolbars and rows of
-  buttons), Switch (on, the track is the primary button's flat gray and the handle its label colour; no
-  shadows;
+  buttons), Switch (on, the track is the primary button's flat gray; the handle is raised like Numina's
+  thumb, `surface-depth` on `bg-elevated`, but round, in both states;
   disabled is `opacity-50`, on or off),
   Tabs/TabList/Tab/TabPanels/TabPanel, TagGroup/Tag, TextField, Toolbar, Tooltip/TooltipTrigger
   (fades and slides 4 px in and out, as in React Aria's docs; closes at once when its trigger stops
