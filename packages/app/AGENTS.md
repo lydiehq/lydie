@@ -229,7 +229,11 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
 - **Opening a tab**: a tab that joins a row grows in from no width and fades in (CSS
   `@starting-style`), pushing what follows along. The growth is 350ms on `ease`, which starts
   gently, so the new tab button glides over rather than jumps (an ease-out did); the fade waits
-  50ms and takes 250ms, so the label does not show squeezed. Not the tabs a row starts with (a restored
+  50ms and takes 250ms, so the label does not show squeezed.
+- **Closing a tab**: the row keeps a closed tab where it was (`leaving`, `withLeaving` in
+  `TabBar`), drawn as it last was but inert and without its tab role, while it fades (120ms)
+  and collapses (200ms), so what follows slides back; it goes on `transitionend`. Not a tab
+  that moved to another row, and not under reduced motion. Not the tabs a row starts with (a restored
   layout, a new split), nor a tab a drag drops there.
 - **Workspace menu**: the sidebar's workspace button opens a popover of `workspaceMenu`
   contributions (`shell/WorkspaceMenu.tsx`); without any it runs `core.openSettings`, which opens

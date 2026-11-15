@@ -484,6 +484,18 @@ const TabSlot = memo(function TabSlot({
 const tabRowIconStroke =
   "[&_path]:[vector-effect:non-scaling-stroke] [&_path]:[stroke-width:1.3px]";
 
+// The row's tabs with the leaving ones put back where they were drawn: after the nearest tab
+// before them that is still drawn.
+function withLeaving(tabIds: string[], shown: string[], leaving: string[]): string[] {
+  const out = [...tabIds];
+  shown.forEach((id, i) => {
+    if (!leaving.includes(id)) return;
+    const before = shown.slice(0, i).findLast((other) => out.includes(other));
+    out.splice(before === undefined ? 0 : out.indexOf(before) + 1, 0, id);
+  });
+  return out;
+}
+
 function TabBar({
   groupId,
   tabIds,
@@ -519,13 +531,28 @@ function TabBar({
   const [menu, setMenu] = useState<{ tabId: string; x: number; y: number } | null>(null);
   // Tabs that joined the row since the last render open with an animation (`TabButton`). Not
   // the row's first tabs (a restored layout, a new split), nor a tab dropped here by a drag.
+  // Closed tabs stay where they were while they collapse (`leaving`), so the row closes up
+  // behind them; `shown` is the row as drawn, with those tabs in it. Not a tab that went to
+  // another row, which still exists.
   const [seen, setSeen] = useState(tabIds);
   const [opening, setOpening] = useState<string[]>([]);
+  const [leaving, setLeaving] = useState<string[]>([]);
+  const [shown, setShown] = useState(tabIds);
   if (seen.join() !== tabIds.join()) {
     setSeen(tabIds);
     const added = tabIds.filter((id) => !seen.includes(id) && !tabDrag.landed(id));
     if (added.length > 0) setOpening([...opening.filter((id) => tabIds.includes(id)), ...added]);
+    const closed = seen.filter((id) => !tabIds.includes(id) && !host.layout.getTab(id));
+    const stay = matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? []
+      : [...leaving.filter((id) => !tabIds.includes(id)), ...closed];
+    setLeaving(stay);
+    setShown(withLeaving(tabIds, shown, stay));
   }
+  const onLeft = (id: string) => {
+    setLeaving((ids) => ids.filter((other) => other !== id));
+    setShown((ids) => ids.filter((other) => other !== id));
+  };
   // With the sidebar collapsed, the window buttons sit in this row.
   const insetLeft = topLeft && !sidebarOpen ? inset.left : 0;
   const openNewTab = () => host.dispatch({ type: "open", path: HOME_PATH, groupId, mode: "tab" });
@@ -728,8 +755,9 @@ function TabBar({
         style={noDragStyle}
         onKeyDown={onKeyDown}
       >
-        {tabIds.map((id, i) => {
+        {shown.map((id) => {
           const dragging = drag?.tabId === id;
+          const i = tabIds.indexOf(id);
           return (
             <TabButton
               key={id}
@@ -738,10 +766,12 @@ function TabBar({
               active={id === activeTabId}
               groupFocused={focused}
               atEdge={i === 0 && !topLeft}
-              dropBefore={dropIndex === i}
+              dropBefore={i !== -1 && dropIndex === i}
               dragging={dragging}
               opening={opening.includes(id)}
               onOpened={() => setOpening((ids) => ids.filter((other) => other !== id))}
+              leaving={leaving.includes(id)}
+              onLeft={() => onLeft(id)}
               // Tabs from the dragged one's slot on stand one tab further along.
               shift={
                 drag && !dragging && openSlot !== null && others.indexOf(id) >= openSlot
@@ -850,6 +880,8 @@ const TabButton = memo(function TabButton({
   dragging,
   opening,
   onOpened,
+  leaving,
+  onLeft,
   shift,
   animate,
   onContextMenu,
@@ -869,6 +901,10 @@ const TabButton = memo(function TabButton({
   // has some room, so its label does not show squeezed.
   opening: boolean;
   onOpened: () => void;
+  // Closed: the tab, gone from the layout, is drawn as it last was while it quickly fades and
+  // collapses, so what follows it slides back; then `onLeft`.
+  leaving: boolean;
+  onLeft: () => void;
   // How far along the row the tab stands aside for the dragged one, and whether it glides there.
   shift: number;
   animate: boolean;
@@ -879,8 +915,14 @@ const TabButton = memo(function TabButton({
   const position = useSyncExternalStore(tabDrag.subscribe, getPosition, getPosition);
   // Docked in a row the tab is part of the card as ever; between rows it is a card of its own.
   const floating = position !== null && !position.docked;
-  const path = useTabPath(tabId);
-  const pinned = useTabPinned(tabId);
+  const livePath = useTabPath(tabId);
+  const livePinned = useTabPinned(tabId);
+  const [last, setLast] = useState({ path: livePath, pinned: livePinned });
+  if (livePath && (livePath !== last.path || livePinned !== last.pinned)) {
+    setLast({ path: livePath, pinned: livePinned });
+  }
+  const path = livePath ?? (leaving ? last.path : null);
+  const pinned = livePath ? livePinned : last.pinned;
   const closeKeys = useShortcut("core.closeTab");
   const views = useContributions("view");
   if (!path) return null;
@@ -892,14 +934,19 @@ const TabButton = memo(function TabButton({
   return (
     <>
       {dropBefore && <TabDropGap />}
+      {/* A tab, or while leaving an inert picture of one: the rule cannot see a role chosen
+          by a condition. */}
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
-        id={`tab-${tabId}`}
-        role="tab"
-        aria-selected={active}
-        aria-controls={`tabpanel-${tabId}`}
+        id={leaving ? undefined : `tab-${tabId}`}
+        role={leaving ? "none" : "tab"}
+        aria-selected={leaving ? undefined : active}
+        aria-controls={leaving ? undefined : `tabpanel-${tabId}`}
+        aria-hidden={leaving || undefined}
+        inert={leaving}
         tabIndex={active ? 0 : -1}
-        draggable
-        data-testid="tab"
+        draggable={!leaving}
+        data-testid={leaving ? undefined : "tab"}
         data-tab-id={tabId}
         data-group-id={groupId}
         data-pinned={pinned || undefined}
@@ -932,8 +979,13 @@ const TabButton = memo(function TabButton({
         }}
         onClick={() => host.dispatch({ type: "activate", tabId })}
         onTransitionEnd={(event) => {
-          if (opening && event.target === event.currentTarget && event.propertyName === "width")
-            onOpened();
+          if (event.target !== event.currentTarget) return;
+          // A pinned tab has no set width: it collapses through its max-width.
+          if (leaving && event.propertyName === (pinned ? "max-width" : "width")) onLeft();
+          else if (opening && event.propertyName === "width") onOpened();
+        }}
+        onTransitionCancel={(event) => {
+          if (leaving && event.target === event.currentTarget) onLeft();
         }}
         onContextMenu={(event) => {
           event.preventDefault();
@@ -954,19 +1006,27 @@ const TabButton = memo(function TabButton({
         }}
         // Fixed-width pills as in v1; many tabs shrink to 80px before the row scrolls.
         className={clsx(
-          "group/tab relative flex h-7.5 min-w-20 cursor-default items-center rounded-lg px-3 text-sm font-medium select-none",
+          "group/tab relative flex h-7.5 cursor-default items-center rounded-lg text-sm font-medium select-none",
           focusRingClass,
-          pinned ? "max-w-[190px] shrink-0" : "w-[190px] shrink",
+          pinned ? "shrink-0" : "shrink",
+          leaving
+            ? clsx(
+                "-ml-1.5 min-w-0 overflow-hidden px-0 opacity-0 transition-[width,max-width,min-width,padding,margin,opacity] duration-[200ms,200ms,200ms,200ms,200ms,120ms] ease-[ease]",
+                pinned ? "max-w-0" : "w-0",
+              )
+            : clsx("min-w-20 px-3", pinned ? "max-w-[190px]" : "w-[190px]"),
           active
             ? clsx("z-10", groupFocused ? "text-gray-900" : "text-gray-700")
             : "text-gray-600 hover:bg-gray-950/3",
           floating && "surface-depth bg-surface opacity-90",
           opening &&
             !dragging &&
+            !leaving &&
             "transition-[width,min-width,padding,margin,opacity] duration-[350ms,350ms,350ms,350ms,250ms] ease-[ease] [transition-delay:0ms,0ms,0ms,0ms,50ms] motion-reduce:transition-none starting:-ml-1.5 starting:w-0 starting:min-w-0 starting:px-0 starting:opacity-0",
           animate &&
             !dragging &&
             !opening &&
+            !leaving &&
             "transition-transform duration-200 ease-out motion-reduce:transition-none",
         )}
         style={
