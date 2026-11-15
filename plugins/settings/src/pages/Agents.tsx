@@ -1,5 +1,5 @@
 import { useAccount, useApp, useHostedQuery, useObservable } from "@lydie/plugin-api";
-import type { AccountApi } from "@lydie/plugin-api";
+import type { AccountApi, VaultApi } from "@lydie/plugin-api";
 import {
   Button,
   Radio,
@@ -44,23 +44,11 @@ function Copyable({ value, label }: { value: string; label: string }) {
   );
 }
 
-function LocalMcp() {
-  const app = useApp();
-  const mcp = app.services?.vault?.mcp ?? null;
-  const status = useObservable(mcp?.status);
+// Folder windows only (desktop): the server is the vault's.
+function LocalMcp({ mcp }: { mcp: NonNullable<VaultApi["mcp"]> }) {
+  const status = useObservable(mcp.status);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  if (!mcp) {
-    return (
-      <SettingsCard>
-        <SettingsCardEmpty>
-          {app.workspace.mode === "synced"
-            ? "Agents reach a cloud workspace through the hosted API (below)."
-            : "The local MCP server runs in the desktop app, for a workspace opened from a folder."}
-        </SettingsCardEmpty>
-      </SettingsCard>
-    );
-  }
   return (
     <SettingsCard>
       <SettingsRow
@@ -422,14 +410,18 @@ function CopyButton({ value, label }: { value: string; label: string }) {
 }
 
 export function AgentsPage() {
+  const app = useApp();
   const { api, state } = useAccount();
   const [token, setToken] = useState<string | null>(null);
   const hosted = api?.scope.kind === "hosted" && state.status !== "signed-out";
+  const localMcp = app.services?.vault?.mcp ?? null;
   return (
     <SettingsSections>
-      <SettingsSection title="On this computer">
-        <LocalMcp />
-      </SettingsSection>
+      {localMcp && (
+        <SettingsSection title="On this computer">
+          <LocalMcp mcp={localMcp} />
+        </SettingsSection>
+      )}
       <SettingsSection
         title="Hosted MCP"
         description="Connect Claude, Cursor or another agent to this cloud workspace."

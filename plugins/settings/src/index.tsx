@@ -147,6 +147,8 @@ export const settingsPlugin = definePlugin({
       order: 30,
       description: "The folder this workspace is kept in, and how links are written.",
       keywords: ["folder", "vault", "excluded", "wiki links", "markdown links", "attachments"],
+      // Folder windows only (desktop): cloud and browser workspaces have no folder.
+      when: (app) => Boolean(app.services?.vault),
       component: FilesAndLinksPage,
     });
     ctx.settings.register({

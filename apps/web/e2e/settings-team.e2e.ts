@@ -70,7 +70,6 @@ describe("settings window", () => {
     await nav().getByRole("button", { name: "General", exact: true }).waitFor();
     for (const title of [
       "Keyboard shortcuts",
-      "Files & links",
       "Members",
       "Account",
       "Plugins",
@@ -79,10 +78,13 @@ describe("settings window", () => {
     ]) {
       await nav().getByRole("button", { name: title, exact: true }).waitFor();
     }
-    // Teamspaces are hidden while a workspace has no other teamspace than its default one.
-    await expect(
-      nav().getByRole("button", { name: "Teamspaces", exact: true }).count(),
-    ).resolves.toBe(0);
+    // Teamspaces are hidden while a workspace has no other teamspace than its default one, and
+    // folder settings outside a folder window.
+    for (const hidden of ["Teamspaces", "Files & links"]) {
+      await expect(nav().getByRole("button", { name: hidden, exact: true }).count()).resolves.toBe(
+        0,
+      );
+    }
     await page.waitForTimeout(300);
     await page.screenshot({ path: "/tmp/lydie-settings-general.png" });
     await goTo("Keyboard shortcuts");
@@ -194,19 +196,16 @@ describe("settings window", () => {
     ).resolves.toBe(false);
   });
 
-  test("team, account, folder and agent pages explain local mode", async () => {
+  test("team and account pages explain local mode; no folder-only settings", async () => {
     await openSettings();
     await goTo("Members");
     await settings().getByText("Members need a cloud workspace").waitFor();
     await settings().getByRole("button", { name: "Sign in to Lydie Cloud" }).waitFor();
     await goTo("Account");
     await settings().getByText("Not signed in").waitFor();
-    await goTo("Files & links");
-    await settings().getByText("No folder").waitFor();
     await goTo("Agents & API");
-    await settings()
-      .getByText(/The local MCP server runs in the desktop app/)
-      .waitFor();
+    await settings().getByText("Hosted API", { exact: true }).waitFor();
+    await expect(settings().getByText("On this computer").count()).resolves.toBe(0);
     await page.screenshot({ path: "/tmp/lydie-settings-local-team.png" });
   });
 });
