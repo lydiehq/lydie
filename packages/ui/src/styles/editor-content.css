@@ -259,8 +259,8 @@
     position: absolute;
     top: 50%;
     left: 0;
-    width: calc(var(--spacing) * 3.5);
-    height: calc(var(--spacing) * 3.5);
+    width: calc(var(--spacing) * 4);
+    height: calc(var(--spacing) * 4);
     margin: 0;
     translate: 0 -50%;
     opacity: 0;
@@ -273,8 +273,8 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    width: calc(var(--spacing) * 3.5);
-    height: calc(var(--spacing) * 3.5);
+    width: calc(var(--spacing) * 4);
+    height: calc(var(--spacing) * 4);
     border-radius: var(--radius-sm);
     background-color: var(--color-surface);
     box-shadow: var(--shadow-surface);
