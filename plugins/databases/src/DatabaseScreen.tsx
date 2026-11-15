@@ -31,7 +31,8 @@ export function DatabaseScreen({
 }: {
   definition: DatabaseDefinition;
   compact?: boolean;
-  // On its own page: the page is full width (`full-width: true`), so the views line up with it.
+  // The page it is on (its own, or the one it is embedded in) is full width (`full-width: true`),
+  // so the views and the bar of picked pages line up with its text.
   fullWidth?: boolean;
   // Inline embeds name a view (`![[Tasks.base#Board]]`).
   initialViewName?: string | null;
@@ -83,6 +84,7 @@ export function DatabaseScreen({
         overlayKey={key}
         params={params}
         compact={compact}
+        fullWidth={fullWidth}
       >
         <FilterUiProvider>
           <Screen

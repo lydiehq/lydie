@@ -2,7 +2,7 @@
 // shows the live view with a compact toolbar, and "Open as page" opens the collection itself.
 // Personal view changes made here belong to this embed. Events stay inside the embed so the
 // editor around it does not treat keys, clipboard or drags as its own.
-import { useApp, useQuery, useWorkspace } from "@lydie/plugin-api";
+import { pageFullWidthOf, useApp, useQuery, useQuerySelect, useWorkspace } from "@lydie/plugin-api";
 import { useDatabase } from "@lydie/plugin-api/databases";
 import { Button, EmptyState } from "@lydie/plugin-api/ui";
 import type { SyntheticEvent } from "react";
@@ -34,6 +34,12 @@ export function InlineDatabase({ target, sourceId }: { target: string; sourceId?
     ? databases.find((d) => d.title.toLowerCase() === parsed.name.toLowerCase())
     : undefined;
   const { definition } = useDatabase(match?.id ?? null);
+  // The page around it: the same query as its doc view, so this adds no read.
+  const fullWidth = useQuerySelect(
+    "doc.get",
+    sourceId ? { id: sourceId, includeBody: true } : null,
+    (s) => pageFullWidthOf(s.data[0]?.document.properties),
+  );
 
   const keys = (event: React.KeyboardEvent) => {
     event.stopPropagation();
@@ -99,6 +105,7 @@ export function InlineDatabase({ target, sourceId }: { target: string; sourceId?
             <DatabaseScreen
               definition={definition}
               compact
+              fullWidth={fullWidth}
               initialViewName={parsed.view}
               stateKey={`embed:${target}`}
               embedKey={`${sourceId ?? "none"}:${target}`}

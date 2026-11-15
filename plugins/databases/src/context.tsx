@@ -54,6 +54,8 @@ export type ViewContextValue = {
   params: DatabaseViewParams;
   // Inline in a document: shorter, fewer controls.
   compact: boolean;
+  // The page it is on is full width (`full-width: true`): its text column has no cap.
+  fullWidth: boolean;
   // A patch of the view's settings. Filter, sorts, grouping, columns, summaries, limit and layout
   // change this device's overlay (personal until saved); other keys are saved.
   updateView: (
@@ -119,6 +121,7 @@ export function ViewProvider({
   overlayKey,
   params,
   compact,
+  fullWidth,
   children,
 }: {
   definition: DatabaseDefinition;
@@ -128,6 +131,7 @@ export function ViewProvider({
   overlayKey: string;
   params: DatabaseViewParams;
   compact: boolean;
+  fullWidth: boolean;
   children: ReactNode;
 }) {
   const app = useApp();
@@ -167,6 +171,7 @@ export function ViewProvider({
       databaseId,
       params,
       compact,
+      fullWidth,
       updateView: (config, options) => {
         const { overlay: next, shared } = patchOverlay(savedView.config, currentOverlay(), config);
         writeOverlay(next);
@@ -302,6 +307,7 @@ export function ViewProvider({
     databaseId,
     params,
     compact,
+    fullWidth,
     saveBlockedReason,
   ]);
   return <Context value={value}>{children}</Context>;
