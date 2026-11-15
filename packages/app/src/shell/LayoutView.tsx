@@ -23,7 +23,15 @@ import {
 } from "@lydie/ui";
 import type { ContextMenuItem } from "@lydie/ui";
 import clsx from "clsx";
-import { memo, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  memo,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { CSSProperties, DragEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { flushSync } from "react-dom";
 
@@ -558,9 +566,9 @@ function TabBar({
   };
   // As in a browser: closing tabs with the pointer keeps the others as wide as they were, so the
   // next close button slides in under the pointer and tabs can be closed one click after another.
-  // They take their room again once the pointer leaves the row (`settling` animates that).
+  // They take their room again once the pointer leaves the row.
   const [frozen, setFrozen] = useState<number | null>(null);
-  const [settling, setSettling] = useState(false);
+  const [settle, setSettle] = useState<{ from: number } | null>(null);
   const freeze = () => {
     if (frozen !== null) return;
     const tab = list.current?.querySelector<HTMLElement>("[role=tab]:not([data-pinned])");
@@ -570,13 +578,24 @@ function TabBar({
   const release = () => {
     if (frozen === null) return;
     setFrozen(null);
-    setSettling(true);
+    setSettle({ from: frozen });
   };
-  useEffect(() => {
-    if (!settling) return;
-    const timer = setTimeout(() => setSettling(false), TAB_SETTLE_MS);
-    return () => clearTimeout(timer);
-  }, [settling]);
+  // From the frozen width to the width each tab now has, measured before paint. A CSS transition
+  // would run to the tabs' 190px basis, which the row caps far sooner, so it would look abrupt.
+  useLayoutEffect(() => {
+    const tabs = list.current?.querySelectorAll<HTMLElement>("[role=tab]:not([data-pinned])");
+    if (!settle || !tabs || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Every width first: an animation already started puts its tab back at the frozen width,
+    // which would give the tabs after it more room.
+    const widths = [...tabs].map((tab) => [tab, tab.getBoundingClientRect().width] as const);
+    const animations = widths.flatMap(([tab, to]) => {
+      if (Math.abs(to - settle.from) < 1) return [];
+      return [tab.animate([{ width: `${settle.from}px` }, { width: `${to}px` }], TAB_SETTLE)];
+    });
+    return () => {
+      for (const animation of animations) animation.cancel();
+    };
+  }, [settle]);
   // With the sidebar collapsed, the window buttons sit in this row.
   const insetLeft = topLeft && !sidebarOpen ? inset.left : 0;
   const openNewTab = () => host.dispatch({ type: "open", path: HOME_PATH, groupId, mode: "tab" });
@@ -800,7 +819,6 @@ function TabBar({
               leaving={leaving.includes(id)}
               onLeft={() => onLeft(id)}
               frozen={frozen !== null}
-              settling={settling}
               onPointerClose={freeze}
               // Tabs from the dragged one's slot on stand one tab further along.
               shift={
@@ -900,7 +918,6 @@ const TabButton = memo(function TabButton({
   leaving,
   onLeft,
   frozen,
-  settling,
   onPointerClose,
   shift,
   animate,
@@ -926,9 +943,8 @@ const TabButton = memo(function TabButton({
   leaving: boolean;
   onLeft: () => void;
   // Held at the width the row's tabs had when one was closed with the pointer
-  // (`--tab-frozen-width`), and easing back to its own once the pointer leaves the row.
+  // (`--tab-frozen-width`) until the pointer leaves the row.
   frozen: boolean;
-  settling: boolean;
   // Called before the tab closes from its close button or a middle click.
   onPointerClose: () => void;
   // How far along the row the tab stands aside for the dragged one, and whether it glides there.
@@ -1059,11 +1075,6 @@ const TabButton = memo(function TabButton({
             !opening &&
             !leaving &&
             "transition-transform duration-200 ease-out motion-reduce:transition-none",
-          settling &&
-            !animate &&
-            !opening &&
-            !leaving &&
-            "transition-[width] duration-200 ease-[ease] motion-reduce:transition-none",
         )}
         style={
           position
@@ -1157,7 +1168,7 @@ function ActiveTabShape({ atEdge }: { atEdge: boolean }) {
 // Measured from Dia's tabs: round top corners, and feet that are wider than tall, leaving the
 // side quickly and running a long way along the card's edge.
 const TAB_GAP = 6; // the tab list's gap-1.5
-const TAB_SETTLE_MS = 250; // a little over the tabs' 200ms ease back from a frozen width
+const TAB_SETTLE = { duration: 350, easing: "ease" }; // back from a frozen width
 const TAB_HEIGHT = 40; // ActiveTabShape: the tab's 30px, 3 above, 7 below
 const TAB_CORNER = 10;
 const TAB_FOOT_WIDTH = 16; // also the tab list's side padding

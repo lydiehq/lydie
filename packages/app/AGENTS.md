@@ -239,7 +239,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   that moved to another row, and not under reduced motion. As in a browser, closing with the
   pointer (close button, middle click) holds the row's other tabs at the width they had
   (`frozen`, `--tab-frozen-width`), so the next close button slides in under the pointer;
-  they ease back to their own width (200ms) when the pointer leaves the row. Not the tabs a row starts with (a restored
+  they ease back to their own width when the pointer leaves the row: measured before paint and
+  animated from the frozen width (WAAPI, 350ms), since a CSS transition would run to the 190px
+  basis, which the row caps long before it ends. Not the tabs a row starts with (a restored
   layout, a new split), nor a tab a drag drops there.
 - **Workspace menu**: the sidebar's workspace button opens a popover of `workspaceMenu`
   contributions (`shell/WorkspaceMenu.tsx`); without any it runs `core.openSettings`, which opens
