@@ -81,7 +81,8 @@ ViewDef { path ("/trash", "/d/:id", "/reports/*": the pages it shows, and their 
 //   docIdOf(path), HOME_PATH ("/"), matchesPath(pattern, path)
 SidebarSectionDef { id, order?, title?, fill?, replaces?, actions? [{ label, icon, run(app) }], component }
 //   actions: small buttons beside the title, shown while the section is hovered or focused; titles
-//   use `sidebarSectionTitleClass` from @lydie/ui (sentence case, font-medium), as should a plugin's own
+//   use `sidebarSectionTitleClass` from @lydie/ui (sentence case, font-medium), as should a plugin's own;
+//   a component that renders nothing hides the whole section, title included (Favorites with none)
    PanelDef { id, title, order?, component({ activeTab }) }
 StatusItemDef, SettingsPageDef, OverlayDef { id, component({ close, props }), url?: { path(props), parse(path) } /* its place in
 the web app's address bar, below the base: opening adds a history entry, Back closes it */ },

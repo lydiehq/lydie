@@ -57,8 +57,8 @@ Home's, the page's •••), and the document-scoped command `document-tree.to
 so the palette lists it once). They are kept per device and
 workspace in `app.storage` (`document-tree:favorites:<workspaceId>`, in the order added), not
 synced, so there is no operation behind them. The "Favorites" sidebar section (order 9, above the
-documents) lists the ones that are live documents (a trashed one is left out and returns when
-restored) and renders nothing while there are none. A row opens like a tree row, shows a star on
+documents; its title is the sidebar's) lists the ones that are live documents (a trashed one is left out and returns when
+restored) and renders nothing while there are none, which hides the title too. A row opens like a tree row, shows a star on
 hover that removes it, and has its own context menu. Tests: `favorites.test.ts`.
 
 Rows and favorites fetch their page ahead of the click (`useDocPrefetch`, `prefetchDoc` from the

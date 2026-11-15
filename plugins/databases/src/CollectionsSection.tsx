@@ -1,6 +1,6 @@
 // The sidebar's "Collections": every collection in the workspace, wherever it is in the tree, by
 // title. A shortcut like Favorites, not a second home: the collections stay pages in the tree.
-// Nothing at all (not even the title) while there are none.
+// Nothing at all while there are none, so the sidebar hides the section's title too.
 import {
   DocIcon,
   docIdOf,
@@ -13,14 +13,7 @@ import {
   useWorkspace,
 } from "@lydie/plugin-api";
 import type { DatabaseSummaryRow } from "@lydie/plugin-api/databases";
-import {
-  AddRegular,
-  Button,
-  ContextMenu,
-  focusRingInsetClass,
-  sidebarItemStyles,
-  sidebarSectionTitleClass,
-} from "@lydie/plugin-api/ui";
+import { ContextMenu, focusRingInsetClass, sidebarItemStyles } from "@lydie/plugin-api/ui";
 import type { ContextMenuItem } from "@lydie/plugin-api/ui";
 import { useState } from "react";
 
@@ -40,20 +33,6 @@ export function CollectionsSection() {
 
   return (
     <>
-      <div className="flex items-center gap-px pr-3 pb-1 pl-4">
-        <h2 className={`grow ${sidebarSectionTitleClass}`}>Collections</h2>
-        {/* As the sidebar draws section actions: shown while the section is hovered. */}
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label="New collection"
-          tooltipOptions={{ placement: "top", offset: 8 }}
-          onPress={() => void app.runCommand("databases.new")}
-          className="-my-0.5 text-gray-500 opacity-0 group-hover/section:opacity-100 hover:text-gray-700 focus-visible:opacity-100"
-        >
-          <AddRegular />
-        </Button>
-      </div>
       <ul aria-label="Collections" className="max-h-64 scroll-fade overflow-y-auto px-2">
         {data.map((collection) => (
           <CollectionRow

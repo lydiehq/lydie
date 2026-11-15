@@ -29,7 +29,12 @@ export const documentTreePlugin = definePlugin({
       component: SidebarDocumentTree,
     });
     // Shows nothing (not even its title) while there are no favorites.
-    ctx.sidebar.register({ id: "favorites", order: 9, component: FavoritesSection });
+    ctx.sidebar.register({
+      id: "favorites",
+      title: "Favorites",
+      order: 9,
+      component: FavoritesSection,
+    });
     ctx.commands.register({
       id: "document-tree.toggleFavorite",
       title: "Add to or remove from favorites",

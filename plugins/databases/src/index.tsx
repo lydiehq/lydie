@@ -1,7 +1,7 @@
 import { definePlugin, docIdOf, useQuery, useWorkspace } from "@lydie/plugin-api";
 import type { AppApi, OpenOptions } from "@lydie/plugin-api";
 import type { Editor } from "@lydie/plugin-api/editor";
-import { FileRegular, PickerDialog, Table2Regular } from "@lydie/plugin-api/ui";
+import { AddRegular, FileRegular, PickerDialog, Table2Regular } from "@lydie/plugin-api/ui";
 import { useState } from "react";
 
 import { COLLECTION_STATE_KEY, CollectionBody } from "./CollectionPage.tsx";
@@ -143,8 +143,20 @@ export const databasesPlugin = definePlugin({
       component: InlineDatabase,
     });
     ctx.overlays.register({ id: "databases.pick", component: CollectionPicker });
-    // Between Favorites (9) and the documents (10).
-    ctx.sidebar.register({ id: "collections", order: 9.5, component: CollectionsSection });
+    // Under the documents (10), above Trash.
+    ctx.sidebar.register({
+      id: "collections",
+      title: "Collections",
+      order: 11,
+      actions: [
+        {
+          label: "New collection",
+          icon: <AddRegular />,
+          run: (app) => app.runCommand("databases.new"),
+        },
+      ],
+      component: CollectionsSection,
+    });
     const app = ctx.app;
     ctx.editor.register({
       slashItems: collectionSlashItems({

@@ -5,7 +5,6 @@ import {
   ContextMenu,
   focusRingInsetClass,
   sidebarItemStyles,
-  sidebarSectionTitleClass,
   StarFilled,
 } from "@lydie/plugin-api/ui";
 import type { ContextMenuItem } from "@lydie/plugin-api/ui";
@@ -20,7 +19,8 @@ const MENU: ContextMenuItem[] = [
   { id: "remove", label: "Remove from favorites" },
 ];
 
-// The sidebar's "Favorites", above the documents. Nothing at all while there are none.
+// The sidebar's "Favorites", above the documents. Nothing at all while there are none, so the
+// sidebar hides the section's title too.
 export function FavoritesSection() {
   const app = useApp();
   const backend = useBackend();
@@ -41,9 +41,6 @@ export function FavoritesSection() {
 
   return (
     <>
-      <div className="flex items-center pr-3 pb-1 pl-4">
-        <h2 className={sidebarSectionTitleClass}>Favorites</h2>
-      </div>
       <ul aria-label="Favorites" className="max-h-64 scroll-fade overflow-y-auto px-2">
         {docs.map((doc) => {
           const title = doc.title || "Untitled";

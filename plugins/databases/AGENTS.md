@@ -65,10 +65,11 @@ Licence: AGPL-3.0-only.
 - `databases.openView` (hidden, args `{ databaseId, viewId, mode? }`): opens the collection on a
   view by setting its page's tab state (`COLLECTION_STATE_KEY` + `:view`, `CollectionPage.tsx`); in
   the active tab when it already shows the collection. The sidebar tree's view rows run it.
-- Sidebar section "collections" (`CollectionsSection.tsx`, order 9.5: after Favorites, before the
-  documents; LYD-427): every collection by title (`database.list`), wherever it is in the tree, a
-  shortcut like Favorites. "+" on hover runs "New collection"; a row opens like a tree row, with
-  "Open in new tab" / "Open to the right" on right-click. Renders nothing while there are none.
+- Sidebar section "collections" (`CollectionsSection.tsx`, order 11: under the documents, above
+  Trash; LYD-427): every collection by title (`database.list`), wherever it is in the tree, a
+  shortcut like Favorites. The title and its "+" (a section action, "New collection") are the
+  sidebar's; a row opens like a tree row, with "Open in new tab" / "Open to the right" on
+  right-click. Renders nothing while there are none, so the sidebar hides the title too.
 - Document menu: "Turn into collection" / "Turn back into page".
 - Slash items (`slash.ts`): "Collection" (a child collection of this page, embedded here) and
   "View of a collection…" (overlay `databases.pick`, then an embed). "database" still finds them.
