@@ -1,5 +1,5 @@
-import { useApp, useHostedQuery } from "@lydie/plugin-api";
-import type { AppApi } from "@lydie/plugin-api";
+import { useApp, useContributions, useHostedQuery } from "@lydie/plugin-api";
+import type { AppApi, ImporterDef } from "@lydie/plugin-api";
 import {
   Button,
   Select,
@@ -15,6 +15,7 @@ import { useState } from "react";
 
 import { exportWorkspace, saveLink } from "../export.ts";
 import type { SaveProgress } from "../export.ts";
+import { ImportDialog } from "../ImportDialog.tsx";
 
 type Frequency = "off" | "daily" | "weekly";
 
@@ -166,12 +167,48 @@ function HostedBackups({ app }: { app: AppApi }) {
   );
 }
 
-export function ExportPage() {
+function Importers() {
+  const importers = [...useContributions("importer")].sort(
+    (a, b) => (a.order ?? 100) - (b.order ?? 100),
+  );
+  const [importing, setImporting] = useState<ImporterDef | null>(null);
+  return (
+    <SettingsSection title="Import" description="Bring pages in from another app.">
+      <SettingsCard data-testid="importers">
+        {importers.length === 0 && (
+          <SettingsCardEmpty>No importers are turned on.</SettingsCardEmpty>
+        )}
+        {importers.map((importer) => (
+          <SettingsListItem
+            key={`${importer.pluginId}:${importer.id}`}
+            icon={importer.icon}
+            title={importer.name}
+            meta={importer.description}
+            trailing={
+              <Button
+                size="sm"
+                variant="secondary"
+                aria-label={`Import from ${importer.name}`}
+                onPress={() => setImporting(importer)}
+              >
+                Import
+              </Button>
+            }
+          />
+        ))}
+      </SettingsCard>
+      {importing && <ImportDialog importer={importing} close={() => setImporting(null)} />}
+    </SettingsSection>
+  );
+}
+
+export function ImportExportPage() {
   const app = useApp();
   const hosted = app.backend.info.mode === "synced" && Boolean(app.services?.account);
   const folder = Boolean(app.services?.vault);
   return (
     <SettingsSections>
+      <Importers />
       <SettingsSection title="Export">
         <SettingsCard>
           <ExportRow />

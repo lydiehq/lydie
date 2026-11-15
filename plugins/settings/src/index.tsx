@@ -16,7 +16,7 @@ import { ActivityPage } from "./pages/Activity.tsx";
 import { AgentsPage } from "./pages/Agents.tsx";
 import { FilesAndLinksPage } from "./pages/FilesAndLinks.tsx";
 import { GeneralPage } from "./pages/General.tsx";
-import { ExportPage } from "./pages/ImportExport.tsx";
+import { ImportExportPage } from "./pages/ImportExport.tsx";
 import { PluginsPage } from "./pages/Plugins.tsx";
 import { ShortcutsPage } from "./pages/Shortcuts.tsx";
 import { applyPreferences, DEFAULTS, PREFS } from "./preferences.ts";
@@ -154,12 +154,23 @@ export const settingsPlugin = definePlugin({
       component: FilesAndLinksPage,
     });
     ctx.settings.register({
-      id: "export",
-      title: "Export and backups",
+      id: "import-export",
+      title: "Import and export",
       order: 40,
-      description: "Download everything as Markdown files, and keep automatic backups.",
-      keywords: ["export", "backup", "download", "zip", "markdown", "obsidian"],
-      component: ExportPage,
+      description:
+        "Bring pages in from Notion and other apps, download everything as Markdown files, and keep automatic backups.",
+      keywords: [
+        "import",
+        "notion",
+        "migrate",
+        "export",
+        "backup",
+        "download",
+        "zip",
+        "markdown",
+        "obsidian",
+      ],
+      component: ImportExportPage,
     });
     ctx.settings.register({
       id: "activity",

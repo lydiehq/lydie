@@ -35,8 +35,14 @@ per device via `app.plugins`, applied on reload), Agents & API (local MCP server
 workspaces, hosted MCP URL with copyable client configs (`mcp-snippets.ts`: API token or OAuth),
 connected OAuth apps with Disconnect, hosted API URL, personal API tokens of the hosted workspace:
 create with access (read and write, read only, or add to the inbox only: `inbox:write`) and
-expiry, secret shown once and filled into the configs, revoke), Export and
-backups (`pages/Export.tsx`: "Export workspace" runs `workspace.export` through `export.ts`, on the
+expiry, secret shown once and filled into the configs, revoke), Import and export
+(`pages/ImportExport.tsx`, `/settings/import-export`; Import: the `importer` contributions by
+`order`, each with Import, which opens `ImportDialog.tsx` in the page (not an overlay): the
+importer's instructions, a drop zone and "Choose file…", reading with progress (Stop), a summary
+(`import-summary.ts`: pages, collections with their pages, files and their size) with what did not
+carry over, then `runImport` with a progress bar per phase (Stop keeps what was written), and the
+result with "Open" (closes Settings, opens the root page); a cloud workspace is told the pages
+upload in the background. Export: "Export workspace" runs `workspace.export` through `export.ts`, on the
 hosted API for synced workspaces (`account.callContract`), else the window's runtime; a local
 export shows its progress as a percentage on the button (`OperationOptions.onProgress`). A hosted
 export's link and a backup's are saved with `app.download` (desktop: a save dialog; Chromium: the
@@ -83,5 +89,5 @@ new documents at the top level.
 
 `bun test` (navigation, search, deep links, shortcut recording and conflicts; the activity
 page's wording, date groups, session folding and filters, and `pages/Activity.test.tsx` against a
-fake backend: sessions and Undo, hosted reads, an older server, retry).
+fake backend: sessions and Undo, hosted reads, an older server, retry; `import-summary.test.ts`).
 End-to-end: `apps/web/e2e/settings-team.e2e.ts`.
