@@ -13,8 +13,6 @@ import {
   LoadingState,
   Modal,
   ProgressBar,
-  Radio,
-  RadioGroup,
   Select,
   SelectItem,
   TextField,
@@ -59,9 +57,9 @@ export function HandoffDialog({ close, props }: { close: () => void; props: unkn
   const [neverAsk, setNeverAsk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [workspaces, setWorkspaces] = useState<HostedWorkspaceSummary[] | null>(null);
-  const [target, setTarget] = useState<"new" | "existing">("new");
+  // A cloud workspace's id, or "new".
+  const [choice, setChoice] = useState("new");
   const [name, setName] = useState(app.workspace.workspaceName);
-  const [existingId, setExistingId] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -77,8 +75,7 @@ export function HandoffDialog({ close, props }: { close: () => void; props: unkn
         const before =
           readCopied(app, app.workspace.workspaceId)?.workspaceId ?? readCloud(app)?.workspaceId;
         const known = own.find((w) => w.id === before);
-        if (known) setTarget("existing");
-        setExistingId(known?.id ?? own[0]?.id ?? null);
+        if (known) setChoice(known.id);
       })
       .catch(() => live && setWorkspaces([]));
     return () => {
@@ -125,10 +122,10 @@ export function HandoffDialog({ close, props }: { close: () => void; props: unkn
     setStep({ kind: "planning" });
     try {
       let ws: { id: string; name: string };
-      if (target === "new") {
+      if (choice === "new") {
         ws = await api.createWorkspace({ name: name.trim() || app.workspace.workspaceName });
       } else {
-        const found = workspaces?.find((w) => w.id === existingId);
+        const found = workspaces?.find((w) => w.id === choice);
         if (!found) throw new Error("Choose a workspace");
         ws = found;
       }
@@ -240,38 +237,23 @@ export function HandoffDialog({ close, props }: { close: () => void; props: unkn
               Your notes {moves ? "move" : "are copied"} to a workspace in Lydie Cloud, which syncs
               across your devices and can be shared. {stays}
             </p>
-            <RadioGroup
-              aria-label={moves ? "Where to move to" : "Where to copy to"}
-              value={target}
-              onChange={(value) => setTarget(value as "new" | "existing")}
+            <Select
+              label="Cloud workspace"
+              selectedKey={choice}
+              onSelectionChange={(key) => setChoice(String(key))}
             >
-              <Radio value="new">A new cloud workspace</Radio>
-              {target === "new" && (
-                <TextField
-                  aria-label="Workspace name"
-                  value={name}
-                  onChange={setName}
-                  className="ml-6"
-                />
-              )}
-              <Radio value="existing" isDisabled={!workspaces?.length}>
-                A cloud workspace I already have
-              </Radio>
-              {target === "existing" && workspaces && workspaces.length > 0 && (
-                <Select
-                  aria-label="Workspace"
-                  className="ml-6"
-                  selectedKey={existingId}
-                  onSelectionChange={(key) => setExistingId(String(key))}
-                >
-                  {workspaces.map((w) => (
-                    <SelectItem key={w.id} id={w.id}>
-                      {w.name}
-                    </SelectItem>
-                  ))}
-                </Select>
-              )}
-            </RadioGroup>
+              {[
+                ...(workspaces ?? []).map((w) => (
+                  <SelectItem key={w.id} id={w.id}>
+                    {w.name}
+                  </SelectItem>
+                )),
+                <SelectItem key="new" id="new">
+                  New workspace…
+                </SelectItem>,
+              ]}
+            </Select>
+            {choice === "new" && <TextField label="Name" value={name} onChange={setName} />}
           </>
         )}
 
