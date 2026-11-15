@@ -124,7 +124,9 @@ useOps() (records on the tab's / active tab's undo scope), useHistory(scope?), u
 useTab(), useActiveTab(), useTabState(key, initial) (the tab's persisted state bag),
 useTabStateSnapshot(), useContributions(kind), <DocumentSlots slot docId tab? fallback? />
 useShortcut(commandId) → key caps | null   // for the tooltip of a button that runs the command
-Providers (host only): BackendProvider, HostProvider (HostBridge), TabProvider
+Providers (host only): BackendProvider, HostProvider (HostBridge), TabProvider ({ tab, state? }:
+  `state` is the state bag of a tab outside the layout, such as the collections' page panel,
+  which `useTabStateSnapshot` reads when the host keeps none for it)
 
 // Hosted mode and host services (src/hosted.ts, src/hosted-react.tsx); every part optional
 app.services?: { account?: AccountApi, collab?: CollabApi, vault?: VaultApi, about?: AboutInfo,

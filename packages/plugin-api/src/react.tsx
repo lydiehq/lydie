@@ -70,9 +70,24 @@ export function useApp(): AppApi {
 }
 
 const TabContext = createContext<TabInfo | null>(null);
+const TabStateContext = createContext<Readonly<Record<string, unknown>> | null>(null);
 
-export function TabProvider({ tab, children }: { tab: TabInfo; children: ReactNode }) {
-  return <TabContext value={tab}>{children}</TabContext>;
+// `state`: the state bag of a tab that is not one in the layout (a collection's page panel), which
+// the host keeps none for: what `useTabStateSnapshot` reads there, e.g. `{ focusTitle: true }`.
+export function TabProvider({
+  tab,
+  state,
+  children,
+}: {
+  tab: TabInfo;
+  state?: Readonly<Record<string, unknown>> | null;
+  children: ReactNode;
+}) {
+  return (
+    <TabContext value={tab}>
+      <TabStateContext value={state ?? null}>{children}</TabStateContext>
+    </TabContext>
+  );
 }
 
 // The tab a view is rendered in, or null outside a tab.
@@ -231,11 +246,17 @@ export function useTabState<T>(key: string, initial: T): [T, (value: T) => void]
   return [stored === undefined ? initial : stored, set];
 }
 
-// Reads the tab's state bag once, without subscribing (for restoring on mount).
+// Reads the tab's state bag once, without subscribing (for restoring on mount). A tab outside the
+// layout reads the `state` its TabProvider was given.
 export function useTabStateSnapshot(): (key: string) => unknown {
   const host = useHost();
   const tab = useTab();
-  return (key) => (tab ? host.tabs.get(tab.id)?.state[key] : undefined);
+  const given = use(TabStateContext);
+  return (key) => {
+    if (!tab) return undefined;
+    const kept = host.tabs.get(tab.id);
+    return kept ? kept.state[key] : given?.[key];
+  };
 }
 
 // The key caps of a command's first shortcut, for the tooltip of a button that does the same

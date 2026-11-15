@@ -12,6 +12,7 @@ import {
   useApp,
   useContributions,
   useDeviceSetting,
+  useQuerySelect,
   useTab,
   useTabState,
 } from "@lydie/plugin-api";
@@ -227,7 +228,8 @@ function PageSheet({
         ),
       ];
     });
-    self.focus({ preventScroll: true });
+    // Unless its page already took focus (a new page's title).
+    if (!self.contains(document.activeElement)) self.focus({ preventScroll: true });
     return () => {
       for (const el of behind) el.inert = false;
       for (const animation of animations) {
@@ -433,6 +435,16 @@ function SheetPage({
     () => ({ ...tab, id: `${tab.id}:sheet:${docId}`, path: docPath(docId) }),
     [tab, docId],
   );
+  // A page without a name opens with its title focused, so a new page can be named at once.
+  // The doc view reads it as it reads a tab's (`focusTitle`, also set by "New document").
+  const untitled = useQuerySelect("doc.get", { id: docId }, (s) => {
+    const title = s.data[0]?.document.title;
+    return title !== undefined && (title.trim() === "" || title === "Untitled");
+  });
+  const state = useMemo(
+    () => (untitled && !leaving ? { focusTitle: true } : null),
+    [untitled, leaving],
+  );
   const fadeIn = useRef(swapped);
   useLayoutEffect(() => {
     const el = layer.current;
@@ -454,7 +466,7 @@ function SheetPage({
       inert={leaving}
       className={`absolute inset-0 flex flex-col bg-surface ${leaving ? "pointer-events-none" : "z-[1]"}`}
     >
-      <TabProvider tab={sheetTab}>
+      <TabProvider tab={sheetTab} state={state}>
         <View tab={sheetTab} />
       </TabProvider>
     </div>

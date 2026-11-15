@@ -138,7 +138,10 @@ Licence: AGPL-3.0-only.
   one in the layout, so scroll and selection are not remembered). The collection beside it stays
   in use and its card does not change; the panel floats 4px inside the card, its right corners following the card's (card radius less the gap), with the popovers'
   edge (`shadow-popover`, `rounded-lg`). Another "Open" swaps the page.
-  The open page is tab state (`<stateKey>:peek`), so it returns with the tab. A page opened from
+  The open page is tab state (`<stateKey>:peek`), so it returns with the tab. A page without a
+  name ("" or "Untitled": a new page from the toolbar or the table) opens with its title focused,
+  so it can be named at once: the panel's tab gets `{ focusTitle: true }` through `TabProvider`'s
+  `state`, which the doc view reads as for "New document". A page opened from
   inside the panel stacks on it (the panel steps back, inert). Escape with focus in the panel
   (once the editor has no use for it), Escape in the collection's tab that nothing there used
   (the table closes the panel before unwinding its selection), or × closes; "Open as full page" and "Open to the side"
