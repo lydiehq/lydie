@@ -43,12 +43,15 @@ function importNode(json: JsonNode): Node {
   const content = (json.content ?? [])
     .filter((c) => !(c.type === "text" && !c.text))
     .map(importNode);
-  return type.create(
-    pickAttrs(type.spec.attrs ?? {}, json.attrs),
-    Fragment.fromArray(content),
-    marks,
-  );
+  const attrs = pickAttrs(type.spec.attrs ?? {}, json.attrs);
+  // The editor's callout folds are "open"/"closed"; Markdown writes them as "+"/"-".
+  if (type === schema.nodes.callout && typeof attrs.fold === "string") {
+    attrs.fold = EDITOR_FOLDS[attrs.fold] ?? attrs.fold;
+  }
+  return type.create(attrs, Fragment.fromArray(content), marks);
 }
+
+const EDITOR_FOLDS: Record<string, string> = { open: "+", closed: "-" };
 
 // ---------------------------------------------------------------------------------------------
 

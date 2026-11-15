@@ -120,6 +120,20 @@ describe("save", () => {
     expect(save({ original: src, doc }).source).toBe("> [!tip] New\n> body\n");
   });
 
+  test("the editor's callout folds (open/closed) are written as + and -", () => {
+    const src = "> [!tip] Old\n> body\n";
+    const doc = json(src);
+    doc.content![0]!.attrs!.fold = "closed";
+    expect(save({ original: src, doc }).source).toBe("> [!tip]- Old\n> body\n");
+    doc.content![0]!.attrs!.fold = "open";
+    expect(save({ original: src, doc }).source).toBe("> [!tip]+ Old\n> body\n");
+    const callout = { type: "callout", attrs: { kind: "note", fold: "closed", title: "More" } };
+    const paragraph = { type: "paragraph", content: [{ type: "text", text: "x" }] };
+    expect(serialize({ type: "doc", content: [{ ...callout, content: [paragraph] }] })).toBe(
+      "> [!note]- More\n> x\n",
+    );
+  });
+
   test("CRLF files get CRLF in re-serialised blocks", () => {
     const src = "a\r\n\r\nb\r\n";
     const doc = json(src);

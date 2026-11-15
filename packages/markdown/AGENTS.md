@@ -35,7 +35,8 @@ merge3(base, ours, theirs): MergeResult          // the text merge reconcile use
 extract(source): Extracted                       // links, blocks, headings, tags, blockIds, text, properties
 rewriteLinks(source, link => newTarget | undefined): string
 assignBlockId(source, blockIndex, id?): { source, id }
-importDoc(docOrJson): Node                       // editor doc (TipTap schema or JSON) → this schema
+importDoc(docOrJson): Node                       // editor doc (TipTap schema or JSON) → this schema;
+                                                 // the editor's callout folds open/closed become +/-
 normalizeForMarkdown(doc): Node                  // what the doc reads back as after save
 plainText(node): string
 columnShares(widths): number[]                   // each column's share of its row (percent; null widths share the rest);
