@@ -37,6 +37,9 @@ const INSET = 4;
 // it closes; the collection keeps at least BESIDE of the tab.
 // How long two pages cross-fade when another one is opened in the panel.
 const SWAP_MS = 180;
+// "Open as full page" grows the panel over the whole tab before the tab takes the page.
+const EXPAND_MS = 300;
+const EXPAND_EASE = "cubic-bezier(0.65,0,0.35,1)";
 const MIN_WIDTH = 360;
 const BESIDE = 240;
 // Close, full page and to the side (3 × 24px, 2px apart) from 8px in, and a gap before the page's
@@ -92,6 +95,24 @@ export function PageSheetHost({ stateKey, children }: { stateKey?: string; child
 const reducedMotion = () =>
   typeof window.matchMedia === "function" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// A custom property only animates once registered; then the page's breadcrumb bar glides to where
+// the full page has it instead of jumping at the hand-over.
+let headerStartRegistered = false;
+function registerHeaderStart() {
+  if (headerStartRegistered || typeof CSS === "undefined" || !("registerProperty" in CSS)) return;
+  headerStartRegistered = true;
+  try {
+    CSS.registerProperty({
+      name: "--page-header-start",
+      syntax: "<length>",
+      inherits: true,
+      initialValue: "0px",
+    });
+  } catch {
+    // Registered already (a hot reload).
+  }
+}
 
 // What an Escape could have changed: the selection, the focus and the open menus.
 function uiSignature(): string {
@@ -240,8 +261,11 @@ function PageSheet({
     };
   }, [stacked, container, closing]);
 
+  const [expanding, setExpanding] = useState(false);
+  const controls = useRef<HTMLDivElement>(null);
+
   const close = () => {
-    if (state === "closing") return;
+    if (state === "closing" || expanding) return;
     if (reducedMotion()) return onClose();
     setState("closing");
     closeTimer.current = setTimeout(onClose, EXIT_MS);
@@ -283,6 +307,63 @@ function PageSheet({
   const move = (mode: "replace" | "split") => {
     onClose();
     app.openDoc(docId, { mode });
+  };
+
+  // The panel grows to fill the tab as the full page lies in it (the card's corners, no edge of
+  // its own, the breadcrumbs at the bar's start), so the hand-over does not show. A stacked panel
+  // is clipped by the one under it, so it moves at once.
+  const openFull = () => {
+    const self = wrapper.current;
+    if (expanding || closing) return;
+    if (stacked || !self || !panel || reducedMotion() || typeof self.animate !== "function") {
+      return move("replace");
+    }
+    setExpanding(true);
+    registerHeaderStart();
+    const from = getComputedStyle(panel);
+    const width = `${container.clientWidth}px`;
+    const timing = { duration: EXPAND_MS, easing: EXPAND_EASE, fill: "forwards" } as const;
+    self.animate(
+      [
+        {
+          top: `${INSET}px`,
+          right: `${INSET}px`,
+          bottom: `${INSET}px`,
+          width: `${self.offsetWidth}px`,
+          maxWidth: "none",
+        },
+        { top: "0px", right: "0px", bottom: "0px", width, maxWidth: "none" },
+      ],
+      timing,
+    );
+    const grow = panel.animate(
+      [
+        {
+          width: `${panel.offsetWidth}px`,
+          borderRadius: from.borderRadius,
+          boxShadow: from.boxShadow,
+          "--page-header-start": `${CONTROLS_WIDTH}px`,
+        },
+        {
+          width,
+          borderRadius: `${nestedRadius + INSET}px`,
+          boxShadow: "none",
+          "--page-header-start": "0px",
+        },
+      ],
+      timing,
+    );
+    controls.current?.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: EXPAND_MS / 2,
+      easing: "ease-out",
+      fill: "forwards",
+    });
+    grow.finished.then(
+      () => {
+        if (self.isConnected) move("replace");
+      },
+      () => {},
+    );
   };
 
   return (
@@ -335,7 +416,7 @@ function PageSheet({
         onDrop={stop}
       >
         {/* The edge every popover has (`shadow-popover`: its hairline and drop) and their radius. */}
-        {!stacked && (
+        {!stacked && !expanding && (
           <ElasticHandle
             panel={elastic}
             controls={`page-sheet-${tab.id}`}
@@ -367,7 +448,11 @@ function PageSheet({
         >
           {/* At the left of the page's breadcrumb bar, as in Notion's side peek, lined up with
               its ••• (24px buttons in the 36px bar). */}
-          <div className="absolute top-1.5 left-2 z-[5] flex items-center gap-0.5">
+          <div
+            ref={controls}
+            inert={expanding}
+            className="absolute top-1.5 left-2 z-[5] flex items-center gap-0.5"
+          >
             <Button
               variant="ghost"
               size="icon-xs"
@@ -382,7 +467,7 @@ function PageSheet({
               size="icon-xs"
               className={CONTROL}
               aria-label="Open as full page"
-              onPress={() => move("replace")}
+              onPress={openFull}
             >
               <FullscreenRegular aria-hidden />
             </Button>

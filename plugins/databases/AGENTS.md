@@ -145,7 +145,10 @@ Licence: AGPL-3.0-only.
   inside the panel stacks on it (the panel steps back, inert). Escape with focus in the panel
   (once the editor has no use for it), Escape in the collection's tab that nothing there used
   (the table closes the panel before unwinding its selection), or × closes; "Open as full page" and "Open to the side"
-  move the page out. The three sit at the left of the page's breadcrumb bar, as in Notion's side
+  move the page out; "Open as full page" first grows the panel over the whole tab (300 ms,
+  ease-in-out: width, insets, the card's corners, its edge fading, the breadcrumbs gliding to the
+  bar's start through a registered `--page-header-start`), so the hand-over to the tab does not
+  show (a stacked panel moves at once). The three sit at the left of the page's breadcrumb bar, as in Notion's side
   peek; the panel sets `--page-header-start` (`CONTROLS_WIDTH`) so the bar starts after them. Swapping pages cross-fades the two in place (opacity only, 180 ms; the page before stays mounted
   meanwhile). `ctx.peekedId` is the open page: the table rings its row like the active cell
   (`Overlay.tsx`; the ring glides between rows by transform)
