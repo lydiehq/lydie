@@ -54,10 +54,12 @@ type Section = { id: string; title: string | null; cells: Cell[] };
 // emoji tab mounts a few rows, not two thousand cells.
 const GRID = { columns: 8, cellSize: 36, headerHeight: 28 };
 const listClass = "min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none";
-const titleClass = "flex items-center px-1 text-xs font-medium text-gray-500";
+// The virtualizer puts each title and cell in a wrapper of the layout's size: they fill it, or a
+// cell's hover tile is only as tall as its emoji.
+const titleClass = "flex size-full items-center px-1 text-xs font-medium text-gray-500";
 // Focus stays in the search field (virtual focus): the cell it points at shows the ring.
 const cellClass =
-  "flex cursor-default items-center justify-center rounded-md outline-none hover:bg-gray-950/5 selected:bg-gray-950/10 data-focus-visible:ring-2 data-focus-visible:ring-blue-600 data-focus-visible:ring-inset";
+  "flex size-full cursor-default items-center justify-center rounded-md outline-none hover:bg-gray-950/5 selected:bg-gray-950/10 data-focus-visible:ring-2 data-focus-visible:ring-blue-600 data-focus-visible:ring-inset";
 const tabClass = `cursor-default rounded-md px-2 py-1 text-[13px] font-medium text-gray-500 hover:text-gray-800 selected:bg-gray-950/5 selected:text-gray-900 ${focusRingClass}`;
 
 const COLOR_NAMES = Object.keys(DOODLE_COLORS) as DoodleColor[];
