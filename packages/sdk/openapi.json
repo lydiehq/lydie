@@ -733,6 +733,7 @@
       "get": {
         "operationId": "connection.get",
         "summary": "Get a connection",
+        "description": "Owners and admins only.",
         "tags": ["connection"],
         "parameters": [
           {
@@ -945,7 +946,7 @@
       "post": {
         "operationId": "connection.test",
         "summary": "Test a connection",
-        "description": "Checks the stored credentials with the destination and records the result.",
+        "description": "Checks the stored credentials with the destination and records the result. Owners and admins only.",
         "tags": ["connection"],
         "parameters": [
           {
@@ -4234,7 +4235,7 @@
       "post": {
         "operationId": "publication.create",
         "summary": "Publish a document to a connection",
-        "description": "Creates a publication of a document (and its subpages with `includeSubpages`) to a connection, and queues the first run unless `publishNow` is false. `config` follows the connector's configSchema (connector.list). Needs edit access to the document.",
+        "description": "Creates a publication of a document (and its subpages with `includeSubpages`) to a connection, and queues the first run unless `publishNow` is false. `config` follows the connector's configSchema (connector.list). Owners and admins with edit access to the document.",
         "tags": ["publication"],
         "parameters": [
           {
@@ -5880,6 +5881,192 @@
         "x-lydie-undoable": true
       }
     },
+    "/doodles": {
+      "post": {
+        "operationId": "doodle.share",
+        "summary": "Share your doodle",
+        "description": "Shares a drawing on lydie.co/doodles, replacing the one you shared before. It is shown there once it has been approved; the returned link shows it to you straight away.",
+        "tags": ["doodle"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/LydieVersion"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shape": {
+                    "default": "circle",
+                    "type": "string",
+                    "enum": ["circle", "squircle"]
+                  },
+                  "pen": {
+                    "type": "string",
+                    "enum": ["#2747c9", "#20232b", "#d93a3a", "#1f8a5b", "#6a4bd1", "#7a4a2a"]
+                  },
+                  "strokes": {
+                    "minItems": 1,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "minItems": 1,
+                      "maxItems": 2000,
+                      "type": "array",
+                      "items": {
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "number",
+                          "minimum": -10,
+                          "maximum": 110
+                        },
+                        "description": "[x, y]"
+                      }
+                    },
+                    "description": "Strokes in the 100 × 100 box, each a list of [x, y] points."
+                  }
+                },
+                "required": ["pen", "strokes"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "lydie.co/doodles, showing your doodle for the next hour."
+                    }
+                  },
+                  "required": ["id", "url"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-lydie-kind": "mutation",
+        "x-lydie-scopes": [],
+        "x-lydie-destructive": false,
+        "x-lydie-idempotent": true,
+        "x-lydie-undoable": false
+      }
+    },
+    "/doodles/wall": {
+      "get": {
+        "operationId": "doodle.list",
+        "summary": "List shared doodles",
+        "description": "The approved doodles on lydie.co/doodles, newest first. With `yours` (the token in the link doodle.share returns), also the sharer's own doodle, approved or not. No account needed.",
+        "tags": ["doodle"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/LydieVersion"
+          },
+          {
+            "name": "yours",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 300
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "doodles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WallDoodle"
+                      }
+                    },
+                    "yours": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "shape": {
+                              "type": "string",
+                              "enum": ["circle", "squircle"]
+                            },
+                            "image": {
+                              "type": "string",
+                              "description": "The picture: an SVG URL, or an SVG data: URL for yours."
+                            },
+                            "approved": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": ["id", "shape", "image", "approved"],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": ["doodles", "yours"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-lydie-kind": "query",
+        "x-lydie-scopes": [],
+        "x-lydie-destructive": false,
+        "x-lydie-idempotent": true
+      }
+    },
     "/history/sessions": {
       "get": {
         "operationId": "history.listSessions",
@@ -6640,6 +6827,7 @@
       "patch": {
         "operationId": "publication.update",
         "summary": "Change a publication",
+        "description": "Owners and admins with edit access to the document.",
         "tags": ["publication"],
         "parameters": [
           {
@@ -6737,7 +6925,7 @@
       "delete": {
         "operationId": "publication.delete",
         "summary": "Remove a publication",
-        "description": "Stops publishing. What was published stays at the destination: run publication.unpublish first to take it down.",
+        "description": "Stops publishing. What was published stays at the destination: run publication.unpublish first to take it down. Owners and admins with edit access to the document.",
         "tags": ["publication"],
         "parameters": [
           {
@@ -6792,7 +6980,7 @@
       "post": {
         "operationId": "publication.resolve",
         "summary": "Resolve a diverged document",
-        "description": "Settles a document that changed both in Lydie and at the destination. `overwrite` publishes the Lydie version over the remote edits. `keepRemote` accepts the destination's version as published without changing the document. `pull` merges the remote edits into the document (connectors that can pull) and publishes the result; a merge conflict leaves it diverged.",
+        "description": "Settles a document that changed both in Lydie and at the destination. `overwrite` publishes the Lydie version over the remote edits. `keepRemote` accepts the destination's version as published without changing the document. `pull` merges the remote edits into the document (connectors that can pull) and publishes the result; a merge conflict leaves it diverged. Owners and admins with edit access to the document.",
         "tags": ["publication"],
         "parameters": [
           {
@@ -6867,7 +7055,7 @@
       "post": {
         "operationId": "publication.run",
         "summary": "Publish now",
-        "description": "Queues a run that publishes what changed: unchanged documents are skipped (content hash), remote edits are detected and pulled back or shown as a divergence, never overwritten. `force` republishes unchanged documents. `import` first creates a document under the publication's root for everything the destination already has in its place and Lydie has no document for (connectors that can pull, publications with subpages); those files are left as they are until their documents change. `scheduledAt` runs it later. A waiting run absorbs repeated requests.",
+        "description": "Queues a run that publishes what changed: unchanged documents are skipped (content hash), remote edits are detected and pulled back or shown as a divergence, never overwritten. `force` republishes unchanged documents. `import` first creates a document under the publication's root for everything the destination already has in its place and Lydie has no document for (connectors that can pull, publications with subpages); those files are left as they are until their documents change. `scheduledAt` runs it later. A waiting run absorbs repeated requests. Owners and admins with edit access to the document.",
         "tags": ["publication"],
         "parameters": [
           {
@@ -7021,7 +7209,7 @@
       "post": {
         "operationId": "publication.unpublish",
         "summary": "Unpublish",
-        "description": "Queues a run that takes every published document down at the destination (deletes the file, sets the post back to draft or trashes it, or notifies, per connector).",
+        "description": "Queues a run that takes every published document down at the destination (deletes the file, sets the post back to draft or trashes it, or notifies, per connector). Owners and admins with edit access to the document.",
         "tags": ["publication"],
         "parameters": [
           {
@@ -9143,7 +9331,7 @@
       "get": {
         "operationId": "connection.list",
         "summary": "List connections",
-        "description": "The workspace's destination connections (no credentials). Members and above.",
+        "description": "The workspace's destination connections (no credentials). Owners and admins only.",
         "tags": ["connection"],
         "parameters": [
           {
@@ -15247,6 +15435,26 @@
       "ViewType": {
         "type": "string",
         "enum": ["table", "board", "list", "calendar"]
+      },
+      "WallDoodle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "shape": {
+            "type": "string",
+            "enum": ["circle", "squircle"]
+          },
+          "image": {
+            "type": "string",
+            "description": "The picture: an SVG URL, or an SVG data: URL for yours."
+          }
+        },
+        "required": ["id", "shape", "image"],
+        "additionalProperties": false
       },
       "Warning": {
         "type": "object",

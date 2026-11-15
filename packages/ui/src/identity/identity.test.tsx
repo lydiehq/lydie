@@ -51,6 +51,47 @@ describe("workspace pictures", () => {
     expect(decodeURIComponent(onSave.mock.calls[0]![0])).toContain(SQUIRCLE_PATH);
   });
 
+  it("shares a drawing only when asked to", async () => {
+    const onSave = mock(async (_image: string) => {});
+    const onShare = mock(async (_drawing: unknown) => {});
+    const draw = () => {
+      const canvas = screen.getByLabelText("Drawing area");
+      canvas.setPointerCapture = () => {};
+      fireEvent.pointerDown(canvas, { clientX: 10, clientY: 10, pointerId: 1 });
+      fireEvent.pointerUp(canvas, { pointerId: 1 });
+    };
+    render(
+      <AvatarEditor
+        seed="Ada"
+        image={null}
+        shape="circle"
+        title="Avatar"
+        description="Shown next to your name."
+        onSave={onSave}
+        share={{ label: "Also share it", onShare }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Draw your own" }));
+    draw();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    });
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onShare).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Draw your own" }));
+    draw();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Also share it" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    });
+    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(onShare.mock.calls[0]![0]).toMatchObject({
+      shape: "circle",
+      strokes: [expect.any(Array)],
+    });
+  });
+
   it("picks a random doodle for a new picture", () => {
     const image = decodeURIComponent(randomScribbleImage("squircle"));
     expect(image).toStartWith("data:image/svg+xml,<svg");

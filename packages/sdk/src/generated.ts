@@ -1020,6 +1020,8 @@ export type ViewRow = {
 
 export type ViewType = "table" | "board" | "list" | "calendar";
 
+export type WallDoodle = { id: string; shape: "circle" | "squircle"; image: string };
+
 export type Warning = { code: "no_match" | "ambiguous_match"; message: string; editIndex?: number };
 
 export type WorkspaceExport = { url: string | null; filename: string; expiresAt: Timestamp | null };
@@ -1546,6 +1548,23 @@ export type ApiOperations = {
     input: { id: Uuid } & { markdown?: string; edits?: BodyEditInput[]; expectedVersion?: string };
     output: { document: Document; version: string; warnings: Warning[] };
   };
+  // GET /doodles/wall: List shared doodles
+  "doodle.list": {
+    input: { yours?: string };
+    output: {
+      doodles: WallDoodle[];
+      yours: { id: string; shape: "circle" | "squircle"; image: string; approved: boolean } | null;
+    };
+  };
+  // POST /doodles: Share your doodle
+  "doodle.share": {
+    input: {
+      shape?: "circle" | "squircle";
+      pen: "#2747c9" | "#20232b" | "#d93a3a" | "#1f8a5b" | "#6a4bd1" | "#7a4a2a";
+      strokes: number[][][];
+    };
+    output: { id: string; url: string };
+  };
   // GET /history/sessions/{sessionId}: List a session's changes
   "history.listBySession": {
     input: { sessionId: string; limit?: number };
@@ -2029,6 +2048,8 @@ export const apiRoutes = {
     query: [],
   },
   "doc.updateBody": { method: "PATCH", path: "/documents/{id}/body", query: [] },
+  "doodle.list": { method: "GET", path: "/doodles/wall", query: ["yours"] },
+  "doodle.share": { method: "POST", path: "/doodles", query: [] },
   "history.listBySession": {
     method: "GET",
     path: "/history/sessions/{sessionId}",

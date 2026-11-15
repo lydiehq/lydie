@@ -120,7 +120,9 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   workspace id; new accounts and cloud workspaces get a random doodle as their `image` from the
   core, so the seeded one is only a fallback), `AvatarEditor` (`AvatarEditor.tsx`: a picture at
   96 px with "Choose a doodle" and "Draw your own"; props `seed`, `image`, `shape`, `title`,
-  `description`, `onSave(image)` (a rejection keeps the editor open), `readOnly`; the
+  `description`, `onSave(image)` (a rejection keeps the editor open), `readOnly`, `share`
+  (`{ label, onShare(drawing) }`: a checkbox under a drawing, off by default; `onShare` gets the
+  strokes, pen and shape after the picture is saved); the
   account's avatar and a workspace's picture), `BotAvatar` (an MCP client, API token or the CLI:
   `logo` if it has one, else `ScribbleIcon` with `ink="screen"`; `behalf` puts the person it
   worked for in a cut-out at the bottom right), `LydieAvatar` (the system: the white mark on the

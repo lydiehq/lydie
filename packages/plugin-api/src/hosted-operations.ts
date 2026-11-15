@@ -306,6 +306,8 @@ export type UserId = string;
 // UUID (lowercase, with hyphens).
 export type Uuid = string;
 
+export type WallDoodle = { id: string; shape: "circle" | "squircle"; image: string };
+
 // Workspace id.
 export type WorkspaceId = string;
 
@@ -417,6 +419,23 @@ export type HostedOperations = {
   "doc.moveToSpace": {
     input: { id: Uuid } & { teamspaceId: string | null; sortKey?: SortKey };
     output: Document;
+  };
+  // GET /doodles/wall: List shared doodles
+  "doodle.list": {
+    input: { yours?: string };
+    output: {
+      doodles: WallDoodle[];
+      yours: { id: string; shape: "circle" | "squircle"; image: string; approved: boolean } | null;
+    };
+  };
+  // POST /doodles: Share your doodle
+  "doodle.share": {
+    input: {
+      shape?: "circle" | "squircle";
+      pen: "#2747c9" | "#20232b" | "#d93a3a" | "#1f8a5b" | "#6a4bd1" | "#7a4a2a";
+      strokes: number[][][];
+    };
+    output: { id: string; url: string };
   };
   // POST /invitations/accept: Accept an invitation
   "invitation.accept": {

@@ -37,7 +37,9 @@ says so (the shell shows it in the tab row while the sidebar is collapsed).
 The Account page opens with the avatar (`AvatarCard.tsx`, `AvatarEditor` from the UI package):
 the picture at 96 px, "Choose a doodle" (the ten scribbles and six pens, `scribbleImage`), "Draw
 your own" (`ScribbleCanvas`, `drawnScribbleImage`); a new account starts with a random doodle. Saving calls
-`api.setImage`, so it follows the account into every workspace. The workspace list shows each
+`api.setImage`, so it follows the account into every workspace. A drawing can also go to the
+Lydie site's doodle wall ("Also share it on lydie.co/doodles", `doodle.share`): it shows there once
+approved, and the toast's Open shows it to the sharer at once. The workspace list shows each
 synced workspace's picture (`image` from `workspaces()`; this window's live, `useWorkspaceImage`).
 
 Two-step verification (LYD-384): the sign-in dialog asks for a code from the authenticator app (or
