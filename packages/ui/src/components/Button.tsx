@@ -26,10 +26,10 @@ export const buttonStyles = tv({
   ].join(" "),
   variants: {
     variant: {
-      // After Paper's app icon: its cornflower fill, off-white label and rim of light
-      // (`button-primary` in styles/index.css), in our sizes and radii.
+      // Flat very dark gray: no gradient, rim or shadow. The ramp mirrors in dark mode, so it
+      // turns near-white there with a dark label.
       primary:
-        "button-primary border border-transparent font-[530] tracking-[-0.04px] hover:[--button-primary-overlay:rgb(40_80_170/0.2)] pressed:[--button-primary-overlay:rgb(32_66_150/0.36)] disabled:opacity-40",
+        "border border-transparent bg-gray-900 text-surface hover:bg-gray-800 pressed:bg-gray-700 disabled:opacity-40",
       // Raised on a hairline border that strengthens on hover (Numina's secondary button).
       secondary:
         "surface-depth bg-elevated text-gray-900 not-data-current:hover:border-gray-950/12 disabled:bg-gray-100 disabled:text-gray-500",
@@ -41,14 +41,14 @@ export const buttonStyles = tv({
       destructive:
         "border border-transparent bg-transparent text-red-600 hover:bg-red-600/10 pressed:bg-red-600/15",
     },
-    // sm, md, lg and icon-2xs..icon-lg are Numina's sizes (sm, default, lg, icon-2xs, icon-xs,
-    // icon-sm, icon, icon-lg); xs and the xl pair are Lydie's own.
+    // Text sizes are 2px under Numina's (sm, default, lg); icon-2xs..icon-lg are Numina's
+    // icon-2xs, icon-xs, icon-sm, icon, icon-lg. xs and the xl pair are Lydie's own.
     size: {
-      xs: "h-6 gap-1 px-2 text-xs [--button-radius:var(--radius-md)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-      sm: "h-7.5 gap-1 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-md)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-4",
-      md: "h-8 gap-1.5 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-lg)] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-4",
-      lg: "h-9 gap-1.5 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-lg)] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-4",
-      xl: "h-11 gap-2.5 px-8 text-sm [--button-radius:var(--radius-xl)] [&_svg:not([class*='size-'])]:size-5",
+      xs: "h-5.5 gap-1 px-2 text-xs [--button-radius:var(--radius-md)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+      sm: "h-7 gap-1 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-md)] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-4",
+      md: "h-7.5 gap-1.5 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-lg)] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-4",
+      lg: "h-8.5 gap-1.5 px-2.5 text-[0.8125rem] [--button-radius:var(--radius-lg)] has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-4",
+      xl: "h-10.5 gap-2.5 px-8 text-sm [--button-radius:var(--radius-xl)] [&_svg:not([class*='size-'])]:size-5",
       "icon-2xs": "size-5 [--button-radius:var(--radius-sm)] [&_svg:not([class*='size-'])]:size-4",
       "icon-xs": "size-6 [--button-radius:var(--radius-md)] [&_svg:not([class*='size-'])]:size-4",
       "icon-sm": "size-7.5 [--button-radius:var(--radius-md)] [&_svg:not([class*='size-'])]:size-4",

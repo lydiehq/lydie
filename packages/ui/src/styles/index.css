@@ -220,7 +220,7 @@
   box-shadow: var(--shadow-depth);
 }
 
-/* The primary button, after Paper's app icon (paper.design), in the icon's own hue, a good
+/* An on Switch and a selected Radio (the primary button's look until it went flat gray), after Paper's app icon (paper.design), in the icon's own hue, a good
    deal darker: the cornflower fill running a touch deeper towards the bottom, the glyph's off-white
    for the label, a line of light along the top edge and a deeper blue one along the bottom. The
    gradient is half the icon's and the edge lines are faint: at full strength a button this small

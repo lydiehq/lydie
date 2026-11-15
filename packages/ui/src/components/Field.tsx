@@ -93,13 +93,13 @@ export function FieldGroup(props: GroupProps) {
 }
 
 // Field heights follow the Button scale, so a field and a button of the same size line up in a
-// row: `md` (32px, the default) beside md buttons, `sm` (30px) beside sm ones.
+// row: `md` (30px, the default) beside md buttons, `sm` (28px) beside sm ones.
 export type FieldSize = "sm" | "md";
 
 // The radius follows the Button of the same size too.
 export const inputSizeClass: Record<FieldSize, string> = {
-  sm: "h-7.5 px-2.5 rounded-md",
-  md: "h-8 px-2.5 rounded-lg",
+  sm: "h-7 px-2.5 rounded-md",
+  md: "h-7.5 px-2.5 rounded-lg",
 };
 
 // Invalid adds Numina's soft red halo around the edge.

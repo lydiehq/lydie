@@ -34,8 +34,8 @@ export function RadioGroup(props: RadioGroupProps) {
   );
 }
 
-// After shadcn's radio: a small circle with a hairline edge, filled when selected. The fill is the
-// primary button's (`button-primary`), and the dot takes its label colour through `bg-current`.
+// After shadcn's radio: a small circle with a hairline edge, filled when selected. The fill is
+// `button-primary` (styles/index.css), and the dot takes its label colour through `bg-current`.
 const styles = tv({
   extend: focusRingFor,
   base: "relative flex size-4 shrink-0 items-center justify-center rounded-full border transition-[border-color,box-shadow] duration-150",

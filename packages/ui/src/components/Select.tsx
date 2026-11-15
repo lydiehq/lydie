@@ -23,8 +23,8 @@ const styles = tv({
   base: `flex items-center text-start gap-4 w-full cursor-default min-w-[150px] ${fieldSurfaceClass}`,
   variants: {
     size: {
-      sm: "h-7.5 pl-2.5 pr-1.5 rounded-md",
-      md: "h-8 pl-2.5 pr-2 rounded-lg",
+      sm: "h-7 pl-2.5 pr-1.5 rounded-md",
+      md: "h-7.5 pl-2.5 pr-2 rounded-lg",
     },
     isDisabled: {
       false:

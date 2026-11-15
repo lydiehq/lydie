@@ -13,7 +13,7 @@ export const switchTrack = tv({
   extend: focusRingFor,
   base: "relative flex h-4 w-7 px-px items-center shrink-0 cursor-default rounded-full transition duration-200 ease-in-out border border-transparent",
   variants: {
-    // On, the track is the primary button (`button-primary`); the handle takes its label colour.
+    // On, the track is `button-primary` (styles/index.css); the handle takes its label colour.
     isSelected: {
       false: "bg-gray-400 shadow-inner group-pressed:bg-gray-500",
       // react-aria's hover, not :hover, so a disabled switch does not darken under the pointer.

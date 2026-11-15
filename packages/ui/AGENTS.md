@@ -42,9 +42,10 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
 - **Components** (`src/components`, react-aria wrappers): AlertDialog, Autocomplete(+Item,
   Section), Breadcrumbs/Breadcrumb, Button and LinkButton (one look,
   `buttonStyles`, also for plain elements that must look like a button: variant
-  primary|secondary|ghost|destructive (primary is after Paper's app icon, in its hue, a good deal darker: cornflower fill,
-  off-white label, a rim of light on top; the `button-primary` utility in `styles/index.css`, in our sizes and radii; destructive is ghost with red text); size xs..xl, icon-2xs..icon-xl, the same heights as
-  Numina's buttons (sm 30px, md 32px, lg 36px; icon-2xs 20 to icon-lg 36); rounded;
+  primary|secondary|ghost|destructive (primary is flat very dark gray, `bg-gray-900 text-surface`,
+  no gradient or shadow; destructive is ghost with red text); size xs..xl, icon-2xs..icon-xl, text
+  sizes 2px under Numina's (xs 22px, sm 28px, md 30px, lg 34px, xl 42px), icon sizes Numina's
+  (icon-2xs 20 to icon-lg 36); rounded;
   an icon without a `size-*` class takes the size's icon size, `data-icon="inline-start|end"` on it
   tightens that side's padding; `data-current` marks the selected item of a set, such as the open
   view; Button has isPending, LinkButton navigates; a Button at an icon size shows its `aria-label`
@@ -65,7 +66,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   drop on `bg-surface`, the border stronger (`gray-950/12`) with focus and a soft red halo
   (`ring-3 ring-red-500/20`) when invalid; no focus ring on text fields (Select, a button, keeps
   it for the keyboard); disabled is `opacity-50`;
-  heights and radii on the Button scale: `size="md"` 32px `rounded-lg` (default), `"sm"` 30px
+  heights and radii on the Button scale: `size="md"` 30px `rounded-lg` (default), `"sm"` 28px
   `rounded-md`, on Input, TextArea, TextField, SearchField and Select, so a field lines up with
   the buttons in its row; an Input inside a FieldGroup takes `groupedInputClass`), Heading, Link, ListBox/ListBoxItem/DropdownItem/DropdownSection
   (section titles in menus and dropdowns: `sectionHeaderClass`),
@@ -88,10 +89,11 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   away until the pointer moves again; the trigger gets only a ref and pointer handlers, so it keeps its own role; timed apart from
   tooltips in `hover-card-state.ts`, so neither makes the other instant or closes it; `pause`/
   `resume` for controls inside the trigger that have tooltips), ProgressBar,
-  RadioGroup/Radio (after shadcn's: a 16 px circle with a hairline edge, filled with the primary
-  button's `button-primary` when selected, its dot in the button's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
+  RadioGroup/Radio (after shadcn's: a 16 px circle with a hairline edge, filled with
+  `button-primary` (Paper's cornflower, the old primary button's look) when selected, its dot in
+  that utility's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
   control, or `"ghost"`, a ghost `sm` or `xs` Button with a chevron, for toolbars and rows of
-  buttons), Switch (on, the track is `button-primary` and the handle the button's label colour;
+  buttons), Switch (on, the track is `button-primary` and the handle its label colour;
   disabled is `opacity-50`, on or off),
   Tabs/TabList/Tab/TabPanels/TabPanel, TagGroup/Tag, TextField, Toolbar, Tooltip/TooltipTrigger
   (fades and slides 4 px in and out, as in React Aria's docs; closes at once when its trigger stops
@@ -138,6 +140,25 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   other outlines: `cutOutlinePieces` cuts any closed outline with the same true fillets,
   `cutEdge` is a band's edge curve, `SQUIRCLE_PATH` the 100-box squircle. `cutFor(seed)` gives
   one of eight turns and two of `CUT_COLORS` (the playground's mark-based avatars).
+- **Doodles as icons** (`identity/doodles.ts`, `identity/Doodle.tsx`): `DOODLES`, 64 pen doodles
+  (the avatars' ten, then things a page might be about; each a `Scribble` with `keywords` for
+  search), drawn without paper in the text colour or one of `DOODLE_COLORS` (by name, classes that
+  follow the theme). As an icon a doodle is the text `doodle:star` or `doodle:star:blue`:
+  `doodleIcon(id, color?)` writes it, `parseDoodleIcon(icon)` reads it (null for an emoji or a
+  doodle we do not have). `DoodleIcon` (`doodle`, `color`, `size` in px or 1em) draws one;
+  `doodleMarkup(doodle)` is the same as an SVG string for places React does not draw. Add a doodle
+  to `THINGS` with the helpers there (strokes of dense points within about 28 of the centre) and
+  keep the count a multiple of 8, the picker's row; never rename an id, pages keep it.
+- **Emoji** (`src/emoji`): `loadEmoji()` (every emoji by group with its name and search words;
+  `emoji-data.json`, its own chunk, written from emojibase-data by `bun run generate:emoji`, which
+  leaves out emoji newer than 15.1) and `searchEmoji(groups, query)` (words by their start, the
+  name before the search words; a pasted emoji finds itself).
+- **IconPicker** (`components/IconPicker.tsx`): the content of an icon popover. Tabs "Doodles" (a
+  colour row and the 8 by 8 grid) and "Emoji" (the host's `suggested`, then every group, with
+  buttons that jump to a group); one search over both, the open tab's matches first. `value`,
+  `onPick(icon)` (the host closes), `onRecolor(icon)` (the current doodle in another colour; stays
+  open), `onRemove` (shows "Remove"). Only what is listed can be picked: Enter in the search takes
+  the first match, never the text. Arrow keys move through the cells and back up to the search.
 - **QrCode** (`src/components/QrCode.tsx`): `value`, `label`, `size`; an `<img>` of an SVG built
   with `uqr`, dark on white in both themes.
 - **Settings** (`src/layout/Settings.tsx`): SettingsSections, SettingsSection, SettingsCard,

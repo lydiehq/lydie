@@ -30,7 +30,7 @@ describe("@lydie/ui", () => {
         <LinkButton href="/x">Link</LinkButton>
       </>,
     );
-    expect(screen.getByRole("button", { name: "Save" }).className).toContain("h-7.5");
+    expect(screen.getByRole("button", { name: "Save" }).className).toContain("h-7 ");
     expect(
       screen.getByRole("button", { name: "Busy" }).querySelector(".animate-spin"),
     ).not.toBeNull();
