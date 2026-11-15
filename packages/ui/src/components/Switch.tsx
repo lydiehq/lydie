@@ -16,10 +16,13 @@ export const switchTrack = tv({
     // On, the track is the primary button (`button-primary`); the handle takes its label colour.
     isSelected: {
       false: "bg-gray-400 shadow-inner group-pressed:bg-gray-500",
-      true: "button-primary group-hover:[--button-primary-overlay:rgb(40_80_170/0.2)] group-pressed:[--button-primary-overlay:rgb(32_66_150/0.36)] forced-colors:bg-[Highlight]!",
+      // react-aria's hover, not :hover, so a disabled switch does not darken under the pointer.
+      true: "button-primary group-hovered:[--button-primary-overlay:rgb(40_80_170/0.2)] group-pressed:[--button-primary-overlay:rgb(32_66_150/0.36)] forced-colors:bg-[Highlight]!",
     },
+    // Faded like a disabled button or field: a background colour would not show on an "on"
+    // track, which `button-primary` paints with a gradient.
     isDisabled: {
-      true: "bg-gray-200 forced-colors:group-selected:bg-[GrayText]! forced-colors:border-[GrayText]",
+      true: "cursor-not-allowed opacity-50 forced-colors:group-selected:bg-[GrayText]! forced-colors:border-[GrayText]",
     },
   },
 });
@@ -43,7 +46,7 @@ export function Switch({ children, ...props }: SwitchProps) {
       {...props}
       className={composeTailwindRenderProps(
         props.className,
-        "group flex gap-2 items-center text-gray-800 disabled:text-gray-300 forced-colors:disabled:text-[GrayText] text-sm transition",
+        "group flex gap-2 items-center text-gray-800 disabled:cursor-not-allowed disabled:text-gray-300 forced-colors:disabled:text-[GrayText] text-sm transition",
       )}
     >
       {(renderProps) => (

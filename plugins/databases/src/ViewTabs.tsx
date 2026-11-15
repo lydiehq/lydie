@@ -7,8 +7,8 @@ import {
   AddRegular,
   CalendarRegular,
   Columns2Regular,
-  DownRegular,
   Input,
+  More1Regular,
   PicRegular,
   Rows3Regular,
   TableRegular,
@@ -121,7 +121,7 @@ export function ViewTabs({
             <div
               key={view.id}
               data-current={current || undefined}
-              className={`relative flex h-7 shrink-0 items-center rounded-full text-sm font-medium outline-solid outline-0 outline-offset-2 outline-blue-600 has-[:focus-visible]:outline-2 ${
+              className={`relative flex h-7 shrink-0 items-center rounded-md text-sm font-medium outline-solid outline-0 outline-offset-2 outline-blue-600 has-[:focus-visible]:outline-2 ${
                 current
                   ? "text-gray-950 after:absolute after:inset-x-2.5 after:-bottom-2 after:h-0.5 after:rounded-full after:bg-gray-950"
                   : "text-gray-500 hover:bg-gray-950/5 hover:text-gray-950"
@@ -150,17 +150,19 @@ export function ViewTabs({
                 data-view-id={view.id}
                 onClick={() => onSelect(view.id)}
                 onDoubleClick={() => setRenaming(view.id)}
-                className={`flex h-full items-center gap-1.5 rounded-[inherit] pl-3 outline-none ${current ? "pr-1" : "pr-3"}`}
+                className={`flex h-full items-center gap-1.5 rounded-[inherit] pl-3 outline-none transition-[padding] duration-150 ease-out motion-reduce:transition-none ${current ? "pr-1.5" : "pr-3"}`}
               >
                 <ViewIcon aria-hidden className={`size-3.5 ${current ? "" : "opacity-70"}`} />
                 {view.name}
               </button>
+              {/* Like a sidebar row's "…"; it grows in as the tab opens (the tab's padding
+                  shrinks alongside) so the pill does not jump wider. */}
               {current && (
                 <PopoverButton
                   label={`View options for ${view.name}`}
-                  button={<DownRegular aria-hidden className="size-3 opacity-60" />}
-                  size="icon-xs"
-                  className="mr-1.5 size-4 rounded-full focus-visible:outline-0"
+                  button={<More1Regular aria-hidden className="size-4" />}
+                  size="icon-2xs"
+                  className="mr-1 rounded-md text-gray-500 transition-[width,margin,opacity,scale] duration-150 ease-out hover:bg-gray-950/5 hover:text-gray-700 focus-visible:outline-0 pressed:bg-gray-950/8 motion-reduce:transition-none starting:mr-0 starting:w-0 starting:scale-75 starting:opacity-0"
                 >
                   {(close) => (
                     <ViewMenu

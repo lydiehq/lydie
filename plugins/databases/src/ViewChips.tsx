@@ -40,8 +40,10 @@ import { MenuButtonItem, PanelSection, PopoverButton } from "./ui.tsx";
 // A pill of segments ("Label | value | ×"), each its own control, with hairlines between them.
 // The segments are plain buttons (or Buttons stripped of their frame): the pill is the frame, so
 // a segment has no rounding or border of its own. The pill clips, so focus is drawn inside.
+// Only the left edge is coloured: a Button keeps its transparent border on every side, and a
+// coloured one would draw a second frame inside the pill's ring.
 const chip =
-  "inline-flex h-6 items-stretch overflow-hidden rounded-md bg-surface text-xs whitespace-nowrap text-gray-950 ring ring-gray-950/10 ring-inset [&>*+*]:border-l [&>*+*]:border-gray-950/[0.07]";
+  "inline-flex h-6 items-stretch overflow-hidden rounded-md bg-surface text-xs whitespace-nowrap text-gray-950 ring ring-gray-950/10 ring-inset [&>*+*]:border-l [&>*+*]:border-l-gray-950/[0.07]";
 const part = "!h-auto !gap-1.5 !rounded-none !px-1.5 !text-xs !font-medium -outline-offset-2";
 const muted = "!font-normal !text-gray-600";
 const remove = `flex items-center px-1 text-gray-400 hover:bg-gray-950/5 hover:text-gray-800 active:bg-gray-950/8 ${focusRingInsetClass}`;
@@ -49,7 +51,6 @@ const cross = <CloseRegular aria-hidden className="size-3" />;
 
 export function ViewChips() {
   const { definition, view, updateView, edited } = useViewContext();
-  const ui = useFilterUi();
   const filters = filterChips(view.config.filter, definition.properties);
   if (filters.kind === "none" && !edited) return null;
   return (
@@ -79,16 +80,16 @@ export function ViewChips() {
             </button>
           </div>
         )}
+        {/* Its own popover, so the menu opens under the "+" rather than at the toolbar's Filter. */}
         {filters.kind !== "none" && (
-          <Button
-            variant="ghost"
+          <PopoverButton
+            label="Add filter"
+            button={<AddRegular aria-hidden className="size-3.5" />}
             size="icon-xs"
-            aria-label="Add filter"
-            onPress={() => ui.setMenuOpen(true)}
             className="text-gray-500"
           >
-            <AddRegular aria-hidden className="size-3.5" />
-          </Button>
+            {(close) => <FilterMenu close={close} />}
+          </PopoverButton>
         )}
       </div>
       <ViewStateControls />
@@ -370,7 +371,10 @@ export function FilterMenu({ close }: { close: () => void }) {
             if (event.key === "Enter" && items[0]) {
               event.preventDefault();
               items[0].run();
+              return;
             }
+            // react-aria stops a handled key here; Escape has to reach the popover to close it.
+            event.continuePropagation();
           }}
         />
       </div>

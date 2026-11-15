@@ -91,7 +91,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   RadioGroup/Radio (after shadcn's: a 16 px circle with a hairline edge, filled with the primary
   button's `button-primary` when selected, its dot in the button's label colour), SearchField, Select/SelectItem/SelectSection (`variant="field"`, the form
   control, or `"ghost"`, a ghost `sm` or `xs` Button with a chevron, for toolbars and rows of
-  buttons), Switch (on, the track is `button-primary` and the handle the button's label colour),
+  buttons), Switch (on, the track is `button-primary` and the handle the button's label colour;
+  disabled is `opacity-50`, on or off),
   Tabs/TabList/Tab/TabPanels/TabPanel, TagGroup/Tag, TextField, Toolbar, Tooltip/TooltipTrigger
   (fades and slides 4 px in and out, as in React Aria's docs; closes at once when its trigger stops
   being drawn, such as hover-only row actions, instead of jumping to the window's top left),
