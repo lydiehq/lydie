@@ -129,7 +129,9 @@ createMemoryPorts(): { db, search, blob (+ size), events (published[], subscribe
 reduceLayout(layout, action, newId): Layout     // structural sharing; no-ops return the same object
 emptyLayout(newId), checkLayout(layout): string[], findTab, findGroup, activeGroup, groupsOf,
 HISTORY_LIMIT (50 per tab), MIN_SIZE (0.05)
-type LayoutAction = open (replace | tab | background) | close | closeOthers |
+type LayoutAction = open (replace | tab | background; a replace of a document or page that
+  another tab of the same pane shows activates that tab instead, moving it to the asked heading or
+  block, and closes the blank tab it came from) | close | closeOthers |
   closeAll { windowId? } (every unpinned tab of the window, in every pane; a lone Home: no-op) |
   activate | move | split |
   moveToSplit | resize | navigate | back | forward | leaveDocs | pin | setTabState | openWindow |

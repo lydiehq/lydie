@@ -67,6 +67,61 @@ describe("tabs", () => {
     expect(titles(layout)).toEqual([["001", "002*"]]);
   });
 
+  it("goes to the tab that already shows a document instead of opening it twice", () => {
+    const newId = ids();
+    let layout = emptyLayout(newId);
+    const apply = (...actions: LayoutAction[]) => {
+      for (const action of actions) layout = reduceLayout(layout, action, newId);
+      expect(checkLayout(layout)).toEqual([]);
+    };
+    apply(
+      { type: "open", path: doc(1) },
+      { type: "open", path: doc(2), mode: "tab" },
+      { type: "open", path: doc(3), mode: "tab" },
+      { type: "open", path: doc(1) },
+    );
+    // 3's tab keeps its page; 1's comes forward.
+    expect(titles(layout)).toEqual([["001*", "002", "003"]]);
+
+    // A heading in it moves that tab there, with history, as navigating would.
+    const heading = `${doc(2)}#Plan`;
+    apply({ type: "open", path: heading });
+    expect(titles(layout)).toEqual([["001", "002*", "003"]]);
+    const tab = activeGroup(layout).tabs[1]!;
+    expect(tab.path).toBe(heading);
+    expect(tab.back.map((e) => e.path)).toEqual([doc(2)]);
+
+    // Pages other than documents too; a new tab is still a new tab when asked for.
+    apply(
+      { type: "open", path: "/trash" },
+      { type: "open", path: doc(9) },
+      { type: "open", path: "/trash", mode: "tab" },
+      { type: "open", path: doc(3), mode: "tab" },
+    );
+    expect(titles(layout)).toEqual([["001", "009", "/trash", "003*", "003"]]);
+  });
+
+  it("closes the blank tab it opened from, and stays in its own pane", () => {
+    const newId = ids();
+    let layout = emptyLayout(newId);
+    layout = reduceLayout(layout, { type: "open", path: doc(1) }, newId);
+    layout = reduceLayout(layout, { type: "open", path: HOME_PATH, mode: "tab" }, newId);
+    layout = reduceLayout(layout, { type: "open", path: doc(1) }, newId);
+    expect(titles(layout)).toEqual([["001*"]]);
+
+    // Open to the side, then open 1 from there: it is shown again in that pane.
+    const left = activeGroup(layout).id;
+    layout = reduceLayout(
+      layout,
+      { type: "split", groupId: left, side: "right", path: doc(2) },
+      newId,
+    );
+    layout = reduceLayout(layout, { type: "open", path: doc(1) }, newId);
+    expect(titles(layout)).toEqual([["001*"], ["001*"]]);
+    expect(activeGroup(layout).id).not.toBe(left);
+    expect(checkLayout(layout)).toEqual([]);
+  });
+
   it("closes all tabs of the window but pinned ones, in every pane, then shows Home", () => {
     const newId = ids();
     let layout = reduceLayout(emptyLayout(newId), { type: "open", path: doc(1) }, newId);

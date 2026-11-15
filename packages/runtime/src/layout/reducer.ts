@@ -348,6 +348,19 @@ function apply(layout: Layout, action: LayoutAction, newId: () => string): Layou
       if (!group) return layout;
       const mode = action.mode ?? "replace";
       const active = group.tabs.find((t) => t.id === group.activeTabId);
+      // What another tab of this pane already shows is not opened twice: that tab comes forward
+      // (moving to a heading or block when one is asked for), and a blank tab it was opened from
+      // closes. Explicit new tabs and other panes are left alone.
+      const existing =
+        mode === "replace" && !(active && sameView(active.path, action.path))
+          ? group.tabs.find((t) => sameView(t.path, action.path))
+          : undefined;
+      if (existing) {
+        let next = navigate(layout, existing.id, action.path, action.state ?? existing.state);
+        next = updateGroup(next, group.id, (g) => ({ ...g, activeTabId: existing.id }));
+        if (active && !active.pinned && isBlank(active)) next = removeTab(next, active.id);
+        return focus(next, group.id);
+      }
       if (mode === "replace" && active && !active.pinned) {
         return focus(navigate(layout, active.id, action.path, action.state), group.id);
       }
@@ -538,6 +551,12 @@ function navigate(layout: Layout, tabId: string, path: TabPath, state: TabState 
           forward: [],
         },
   );
+}
+
+// Two paths show the same thing: the same document (wherever in it), or the same page.
+function sameView(a: TabPath, b: TabPath): boolean {
+  const doc = docIdOf(a);
+  return doc !== null ? doc === docIdOf(b) : a === b;
 }
 
 function isBlank(tab: Tab): boolean {
