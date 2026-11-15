@@ -68,8 +68,9 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   set on the bar so plugins' controls follow) and a 80 px fade from the top follow the cover's
   `data-cover-tone` (dark until known); once the cover scrolls out from under it, the bar takes
   `bg-surface` over the text. It sets `--page-bar-overlay` (the bar's height) meanwhile, which the
-  find bar keeps clear of. A long trail truncates; the bar starts at `--page-header-start` (default 0), which
-  a host sets to keep room for its own controls (the collections panel's ×, full page, to the side).
+  find bar keeps clear of. A long trail truncates. With `bare: true` in the tab state (a host's
+  panel: the collections' page panel, which puts its ×, full page and to the side there) the bar
+  stays but shows no breadcrumbs, actions or •••.
 - **Sub-pages from the editor**: `createSubPage` (Notion's Mod-Alt-9 "turn into page" and the `+`
   menu) creates a child of the open document with `doc.create`, placed first (`atTop`), and links
   it the way `[[` would (folder link settings apply). The `+` menu reuses the `[[` menu renderer;

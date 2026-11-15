@@ -42,10 +42,7 @@ const EXPAND_MS = 300;
 const EXPAND_EASE = "cubic-bezier(0.65,0,0.35,1)";
 const MIN_WIDTH = 360;
 const BESIDE = 240;
-// Close, full page and to the side (3 × 24px, 2px apart) from 8px in, and a gap before the page's
-// breadcrumbs, which keep their own 8px padding.
-const CONTROLS_WIDTH = 8 + 3 * 24 + 2 * 2 + 4;
-// The ••• of the page's breadcrumb bar (editor-view's PageMenu).
+// As the ••• of a page's breadcrumb bar (editor-view's PageMenu).
 const CONTROL = "text-gray-950/45 hover:text-gray-700";
 
 export type Peek = {
@@ -95,24 +92,6 @@ export function PageSheetHost({ stateKey, children }: { stateKey?: string; child
 const reducedMotion = () =>
   typeof window.matchMedia === "function" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-// A custom property only animates once registered; then the page's breadcrumb bar glides to where
-// the full page has it instead of jumping at the hand-over.
-let headerStartRegistered = false;
-function registerHeaderStart() {
-  if (headerStartRegistered || typeof CSS === "undefined" || !("registerProperty" in CSS)) return;
-  headerStartRegistered = true;
-  try {
-    CSS.registerProperty({
-      name: "--page-header-start",
-      syntax: "<length>",
-      inherits: true,
-      initialValue: "0px",
-    });
-  } catch {
-    // Registered already (a hot reload).
-  }
-}
 
 // What an Escape could have changed: the selection, the focus and the open menus.
 function uiSignature(): string {
@@ -310,8 +289,8 @@ function PageSheet({
   };
 
   // The panel grows to fill the tab as the full page lies in it (the card's corners, no edge of
-  // its own, the breadcrumbs at the bar's start), so the hand-over does not show. A stacked panel
-  // is clipped by the one under it, so it moves at once.
+  // its own), so the hand-over does not show. A stacked panel is clipped by the one under it, so
+  // it moves at once.
   const openFull = () => {
     const self = wrapper.current;
     if (expanding || closing) return;
@@ -319,7 +298,6 @@ function PageSheet({
       return move("replace");
     }
     setExpanding(true);
-    registerHeaderStart();
     const from = getComputedStyle(panel);
     const width = `${container.clientWidth}px`;
     const timing = { duration: EXPAND_MS, easing: EXPAND_EASE, fill: "forwards" } as const;
@@ -342,13 +320,11 @@ function PageSheet({
           width: `${panel.offsetWidth}px`,
           borderRadius: from.borderRadius,
           boxShadow: from.boxShadow,
-          "--page-header-start": `${CONTROLS_WIDTH}px`,
         },
         {
           width,
           borderRadius: `${nestedRadius + INSET}px`,
           boxShadow: "none",
-          "--page-header-start": "0px",
         },
       ],
       timing,
@@ -438,20 +414,18 @@ function PageSheet({
             ...(stacked
               ? {}
               : { borderTopRightRadius: nestedRadius, borderBottomRightRadius: nestedRadius }),
-            // The page's breadcrumb bar starts after the controls (editor-view's DocView).
-            ["--page-header-start" as string]: `${CONTROLS_WIDTH}px`,
             transition:
               state === "closing"
                 ? `translate ${EXIT_MS}ms cubic-bezier(0.32,0.72,0,1), opacity ${EXIT_MS}ms cubic-bezier(0.32,0.72,0,1)`
                 : `translate ${ENTER_MS}ms ${EASE}, opacity 120ms ease-out`,
           }}
         >
-          {/* At the left of the page's breadcrumb bar, as in Notion's side peek, lined up with
-              its ••• (24px buttons in the 36px bar). */}
+          {/* In the page's bar, which shows nothing else here (`bare`), where a page has its •••
+              (24px buttons in the 36px bar, 8px from the right). */}
           <div
             ref={controls}
             inert={expanding}
-            className="absolute top-1.5 left-2 z-[5] flex items-center gap-0.5"
+            className="absolute top-1.5 right-2 z-[5] flex items-center gap-0.5"
           >
             <Button
               variant="ghost"
@@ -526,8 +500,9 @@ function SheetPage({
     const title = s.data[0]?.document.title;
     return title !== undefined && (title.trim() === "" || title === "Untitled");
   });
+  // `bare`: the page's bar keeps no breadcrumbs or actions, only the panel's controls.
   const state = useMemo(
-    () => (untitled && !leaving ? { focusTitle: true } : null),
+    () => (untitled && !leaving ? { bare: true, focusTitle: true } : { bare: true }),
     [untitled, leaving],
   );
   const fadeIn = useRef(swapped);

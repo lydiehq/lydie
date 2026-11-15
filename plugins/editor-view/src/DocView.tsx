@@ -90,6 +90,8 @@ export function DocView({ tab }: ViewProps) {
   const fullWidth = pageFullWidthOf(entry?.document.properties);
   const root = useWidthTransition(entry?.document.id ?? null, fullWidth);
   const bar = useRef<HTMLDivElement>(null);
+  // In a host's panel (the collections' page panel) the bar is left to the host's own controls.
+  const bare = useTabStateSnapshot()("bare") === true;
   const overlay = useCoverOverlay(
     root,
     bar,
@@ -127,14 +129,13 @@ export function DocView({ tab }: ViewProps) {
       data-doc-id={route.id}
       data-full-width={fullWidth || undefined}
     >
-      {/* `--page-header-start`: room a host keeps for its own controls (the collection's panel).
-          The breadcrumbs sit in the middle between two equal columns; when the trail is long
+      {/* The breadcrumbs sit in the middle between two equal columns; when the trail is long
           the left one gives way first, as the actions never shrink below their width. */}
       <div
         ref={bar}
         data-testid="page-bar"
         data-over-cover={overlay?.over ? overlay.tone : undefined}
-        className={`flex h-9 shrink-0 items-center gap-2 pr-2 pl-[var(--page-header-start,0px)] ${
+        className={`flex h-9 shrink-0 items-center gap-2 pr-2 ${
           overlay
             ? `absolute inset-x-0 top-0 z-10 transition-colors duration-150 ${overlay.over ? INK[overlay.tone] : "bg-surface"}`
             : ""
@@ -148,12 +149,16 @@ export function DocView({ tab }: ViewProps) {
             } ${overlay.over ? "opacity-100" : "opacity-0"}`}
           />
         )}
-        <div aria-hidden className="flex-1 basis-0" />
-        <Breadcrumbs doc={ref} />
-        <div className="flex flex-1 basis-0 items-center justify-end gap-1">
-          <DocumentSlots slot="actions" docId={route.id} />
-          <PageMenu doc={ref} fullWidth={fullWidth} />
-        </div>
+        {!bare && (
+          <>
+            <div aria-hidden className="flex-1 basis-0" />
+            <Breadcrumbs doc={ref} />
+            <div className="flex flex-1 basis-0 items-center justify-end gap-1">
+              <DocumentSlots slot="actions" docId={route.id} />
+              <PageMenu doc={ref} fullWidth={fullWidth} />
+            </div>
+          </>
+        )}
       </div>
       {entry.document.deletedAt && (
         <StatusBanner
