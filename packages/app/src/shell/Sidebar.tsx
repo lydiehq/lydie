@@ -65,6 +65,19 @@ function BetaNotice() {
   );
 }
 
+// Sections that are each a single row (Trash, Playground) stand together without the gap
+// between sections, as Home does with Search and New document.
+function groupRows<T extends { title?: string; fill?: boolean }>(sections: T[]): T[][] {
+  const groups: T[][] = [];
+  for (const section of sections) {
+    const row = !section.title && !section.fill;
+    const last = groups.at(-1);
+    if (row && last && !last[0]!.title && !last[0]!.fill) last.push(section);
+    else groups.push([section]);
+  }
+  return groups;
+}
+
 export function Sidebar({ footer }: Props) {
   const host = useHostInternal();
   const inset = useTitleBarInset(host.platform);
@@ -174,7 +187,15 @@ export function Sidebar({ footer }: Props) {
           {lead && renderSection(lead)}
           {actions}
         </div>
-        {sections.filter((section) => section !== lead).map(renderSection)}
+        {groupRows(sections.filter((section) => section !== lead)).map((group) =>
+          group.length === 1 ? (
+            renderSection(group[0]!)
+          ) : (
+            <div key={`${group[0]!.pluginId}:${group[0]!.id}`} className="flex shrink-0 flex-col">
+              {group.map(renderSection)}
+            </div>
+          ),
+        )}
       </div>
       <BetaNotice />
       <div className="flex shrink-0 flex-col gap-1 px-3 py-2">
