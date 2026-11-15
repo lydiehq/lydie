@@ -259,7 +259,7 @@ working. So:
 
 - Backgrounds: `bg-surface` for pages, cards and inputs (never `bg-white`); `bg-elevated` for
   popovers, menus, dialogs, toasts and floating cards; `bg-canvas` for the window behind the
-  content cards (the shell, standalone pages): the avatars' warm paper, `#141414` in dark mode.
+  content cards (the shell, standalone pages): the avatars' warm paper, `#181818` in dark mode.
   `apps/web/public/boot-shell.js` and the desktop window's `backgroundColor` repeat it.
 - Neutral overlays, borders and rings: `gray-950/N` (e.g. `hover:bg-gray-950/5`), never `black/N`.
 - Text on a solid dark-gray chip or button: `text-surface`, not `text-white`.
