@@ -609,6 +609,19 @@ export const InformationRegular = createIcon("InformationRegular", [
     },
   ],
 ]);
+export const QuestionRegular = createIcon("QuestionRegular", [
+  [
+    "path",
+    {
+      fill: "none",
+      stroke: "currentColor",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      strokeWidth: "2",
+      d: "M9.5 9.5a2.5 2.5 0 1 1 3.5 2.29c-.6.26-1 .85-1 1.5V14m0 3h.002M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0",
+    },
+  ],
+]);
 export const ItalicRegular = createIcon("ItalicRegular", [
   [
     "path",

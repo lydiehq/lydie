@@ -35,6 +35,7 @@
     "@lydie/plugin-account": "workspace:*",
     "@lydie/plugin-api": "workspace:*",
     "@lydie/plugin-backlinks": "workspace:*",
+    "@lydie/plugin-changelog": "workspace:*",
     "@lydie/plugin-databases": "workspace:*",
     "@lydie/plugin-document-tree": "workspace:*",
     "@lydie/plugin-editor-view": "workspace:*",

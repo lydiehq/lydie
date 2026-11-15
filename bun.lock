@@ -65,6 +65,7 @@
         "@lydie/plugin-account": "workspace:*",
         "@lydie/plugin-api": "workspace:*",
         "@lydie/plugin-backlinks": "workspace:*",
+        "@lydie/plugin-changelog": "workspace:*",
         "@lydie/plugin-databases": "workspace:*",
         "@lydie/plugin-document-tree": "workspace:*",
         "@lydie/plugin-editor-view": "workspace:*",
@@ -435,6 +436,23 @@
     },
     "plugins/backlinks": {
       "name": "@lydie/plugin-backlinks",
+      "version": "0.0.0",
+      "dependencies": {
+        "@lydie/plugin-api": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "catalog:",
+      },
+    },
+    "plugins/changelog": {
+      "name": "@lydie/plugin-changelog",
       "version": "0.0.0",
       "dependencies": {
         "@lydie/plugin-api": "workspace:*",
@@ -1018,6 +1036,8 @@
     "@lydie/plugin-api": ["@lydie/plugin-api@workspace:packages/plugin-api"],
 
     "@lydie/plugin-backlinks": ["@lydie/plugin-backlinks@workspace:plugins/backlinks"],
+
+    "@lydie/plugin-changelog": ["@lydie/plugin-changelog@workspace:plugins/changelog"],
 
     "@lydie/plugin-databases": ["@lydie/plugin-databases@workspace:plugins/databases"],
 

@@ -1,5 +1,6 @@
 import { accountPlugin } from "@lydie/plugin-account";
 import { backlinksPlugin } from "@lydie/plugin-backlinks";
+import { changelogPlugin } from "@lydie/plugin-changelog";
 import { databasesPlugin } from "@lydie/plugin-databases";
 import { documentTreePlugin } from "@lydie/plugin-document-tree";
 import { editorViewPlugin } from "@lydie/plugin-editor-view";
@@ -96,5 +97,6 @@ export const plugins = [
   teamPlugin,
   sharingPlugin,
   publishingPlugin,
+  changelogPlugin,
   ...devPlugins,
 ];
