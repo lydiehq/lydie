@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
-import { Tab, TabList, TabPanel, Tabs } from "react-aria-components";
+import {
+  Autocomplete,
+  Collection,
+  Header,
+  ListBox,
+  ListBoxItem,
+  ListBoxSection,
+  Radio,
+  RadioGroup,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  Virtualizer,
+} from "react-aria-components";
+import type { Key } from "react-aria-components";
 
 import { loadEmoji, searchEmoji } from "../emoji/emoji";
 import type { Emoji, EmojiGroup } from "../emoji/emoji";
@@ -9,8 +23,8 @@ import { DOODLE_COLORS, doodleIcon, DOODLES, parseDoodleIcon } from "../identity
 import type { Doodle, DoodleColor } from "../identity/doodles";
 import { Button } from "./Button";
 import { SearchField } from "./SearchField";
-import { WithTooltip } from "./Tooltip";
-import { focusRingClass, focusRingInsetClass } from "./utils";
+import { SectionedGridLayout } from "./sectioned-grid-layout";
+import { focusRingClass } from "./utils";
 
 export type IconPickerProps = {
   // The icon now: an emoji, a doodle (`doodle:star:blue`) or none.
@@ -27,10 +41,23 @@ export type IconPickerProps = {
 
 type TabId = "doodles" | "emoji";
 
-const COLUMNS = "grid grid-cols-8";
-// `scroll-mt`: a cell reached with the keyboard is not left under a sticky section title.
-const cellClass = `flex size-9 scroll-mt-7 items-center justify-center rounded-md hover:bg-gray-950/5 aria-pressed:bg-gray-950/10 ${focusRingInsetClass}`;
-const titleClass = "sticky top-0 z-10 bg-elevated px-1 py-1.5 text-xs font-medium text-gray-500";
+// One cell of the grid: an emoji or a doodle. `id` is unique in the list (a suggested emoji is
+// also in its group, so it has its own); `icon` is what picking it gives.
+type Cell = { id: string; name: string } & (
+  | { kind: "emoji"; emoji: string }
+  | { kind: "doodle"; doodle: Doodle }
+);
+type Section = { id: string; title: string | null; cells: Cell[] };
+
+// The list scrolls; the virtualizer places sections, titles and cells (SectionedGridLayout: eight
+// columns of 36 px cells under a 28 px title per section) and renders those in view, so the
+// emoji tab mounts a few rows, not two thousand cells.
+const GRID = { columns: 8, cellSize: 36, headerHeight: 28 };
+const listClass = "min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none";
+const titleClass = "flex items-center px-1 text-xs font-medium text-gray-500";
+// Focus stays in the search field (virtual focus): the cell it points at shows the ring.
+const cellClass =
+  "flex cursor-default items-center justify-center rounded-md outline-none hover:bg-gray-950/5 selected:bg-gray-950/10 data-focus-visible:ring-2 data-focus-visible:ring-blue-600 data-focus-visible:ring-inset";
 const tabClass = `cursor-default rounded-md px-2 py-1 text-[13px] font-medium text-gray-500 hover:text-gray-800 selected:bg-gray-950/5 selected:text-gray-900 ${focusRingClass}`;
 
 const COLOR_NAMES = Object.keys(DOODLE_COLORS) as DoodleColor[];
@@ -58,56 +85,23 @@ function searchDoodles(query: string): Doodle[] {
   });
 }
 
-// Arrow keys move between the cells as they are laid out, across sections; up from the top row
-// goes back to the search field.
-function moveBetweenCells(event: KeyboardEvent<HTMLElement>, leave: () => void) {
-  const { key } = event;
-  if (key !== "ArrowLeft" && key !== "ArrowRight" && key !== "ArrowUp" && key !== "ArrowDown")
-    return;
-  const current = (event.target as HTMLElement).closest<HTMLElement>("[data-cell]");
-  if (!current) return;
-  const cells = [...event.currentTarget.querySelectorAll<HTMLElement>("[data-cell]")];
-  const index = cells.indexOf(current);
-  let next: HTMLElement | undefined;
-  if (key === "ArrowLeft") next = cells[index - 1];
-  else if (key === "ArrowRight") next = cells[index + 1];
-  else {
-    // The cell of the next row that is nearest in the line.
-    const from = current.getBoundingClientRect();
-    const step = key === "ArrowDown" ? 1 : -1;
-    let row: number | null = null;
-    let distance = Infinity;
-    for (let i = index + step; i >= 0 && i < cells.length; i += step) {
-      const box = cells[i]!.getBoundingClientRect();
-      if (Math.abs(box.top - from.top) < 2) continue;
-      if (row === null) row = box.top;
-      else if (Math.abs(box.top - row) > 2) break;
-      if (Math.abs(box.left - from.left) < distance) {
-        distance = Math.abs(box.left - from.left);
-        next = cells[i];
-      }
-    }
-    if (!next && key === "ArrowUp") {
-      event.preventDefault();
-      leave();
-      return;
-    }
-  }
-  if (!next) return;
-  event.preventDefault();
-  next.focus();
-}
+const doodleCells = (list: readonly Doodle[]): Cell[] =>
+  list.map((doodle) => ({ kind: "doodle", id: `doodle:${doodle.id}`, name: doodle.name, doodle }));
+const emojiCells = (list: readonly Emoji[], prefix = ""): Cell[] =>
+  list.map((e) => ({ kind: "emoji", id: `${prefix}${e.emoji}`, name: e.name, emoji: e.emoji }));
 
 // Picks an icon: one of our doodles in a colour, or any emoji. One search covers both; nothing
-// but what is in the lists can be chosen.
+// but what is in the lists can be chosen. React Aria's Autocomplete over a grid ListBox: focus
+// stays in the search while the arrow keys move through the cells, Enter takes the one they are
+// on (after typing, the first match), Escape clears the search and then closes the popover.
 export function IconPicker({ value, onPick, onRecolor, onRemove, suggested }: IconPickerProps) {
   const current = parseDoodleIcon(value);
   const [tab, setTab] = useState<TabId>(value && !current ? "emoji" : "doodles");
   const [query, setQuery] = useState("");
   const [color, setColor] = useState<DoodleColor>(current?.color ?? "gray");
   const [groups, setGroups] = useState<EmojiGroup[] | null>(null);
-  const input = useRef<HTMLInputElement>(null);
-  const scroller = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const [layout] = useState(() => new SectionedGridLayout());
 
   useEffect(() => {
     let live = true;
@@ -120,98 +114,79 @@ export function IconPicker({ value, onPick, onRecolor, onRemove, suggested }: Ic
   }, []);
   // A new search or tab starts at the top.
   useEffect(() => {
-    if (scroller.current) scroller.current.scrollTop = 0;
+    if (list.current) list.current.scrollTop = 0;
   }, [query, tab]);
 
   const searching = query.trim() !== "";
-  const doodles = useMemo(() => searchDoodles(query), [query]);
-  const found = useMemo(() => (groups ? searchEmoji(groups, query) : []), [groups, query]);
   const names = useMemo(() => {
     const out = new Map<string, string>();
     for (const group of groups ?? []) for (const e of group.emojis) out.set(bare(e.emoji), e.name);
     return out;
   }, [groups]);
-  const chosenEmoji = value && !current ? bare(value) : null;
+  const sections = useMemo((): Section[] => {
+    if (searching) {
+      const parts: Section[] = [];
+      const doodles = searchDoodles(query);
+      const found = groups ? searchEmoji(groups, query) : [];
+      if (doodles.length > 0)
+        parts.push({ id: "doodles", title: "Doodles", cells: doodleCells(doodles) });
+      if (found.length > 0) parts.push({ id: "emoji", title: "Emoji", cells: emojiCells(found) });
+      // The open tab's kind first.
+      return tab === "emoji" ? parts.reverse() : parts;
+    }
+    if (tab === "doodles") return [{ id: "doodles", title: null, cells: doodleCells(DOODLES) }];
+    const out: Section[] = [];
+    if (suggested && suggested.length > 0) {
+      const emojis = suggested.map((emoji) => ({
+        emoji,
+        name: names.get(bare(emoji)) ?? emoji,
+        tags: "",
+      }));
+      out.push({ id: "suggested", title: "Suggested", cells: emojiCells(emojis, "suggested:") });
+    }
+    for (const group of groups ?? []) {
+      out.push({ id: `group:${group.name}`, title: group.name, cells: emojiCells(group.emojis) });
+    }
+    return out;
+  }, [searching, query, tab, groups, names, suggested]);
 
-  const emojiCells = (emojis: readonly Emoji[]) => (
-    <div className={COLUMNS}>
-      {emojis.map((e) => (
-        <button
-          key={e.emoji}
-          type="button"
-          data-cell=""
-          title={e.name}
-          aria-label={e.name}
-          aria-pressed={chosenEmoji === bare(e.emoji) || undefined}
-          onClick={() => onPick(e.emoji)}
-          className={`${cellClass} text-[22px] leading-none`}
-        >
-          {e.emoji}
-        </button>
-      ))}
-    </div>
+  const iconOf = (cell: Cell) =>
+    cell.kind === "doodle" ? doodleIcon(cell.doodle.id, color) : cell.emoji;
+  const cells = useMemo(
+    () => new Map(sections.flatMap((s) => s.cells.map((c) => [c.id, c]))),
+    [sections],
   );
-  const doodleCells = (list: readonly Doodle[]) => (
-    <div className={COLUMNS}>
-      {list.map((doodle) => (
-        <WithTooltip key={doodle.id} label={doodle.name}>
-          <button
-            type="button"
-            data-cell=""
-            aria-label={doodle.name}
-            aria-pressed={current?.doodle.id === doodle.id || undefined}
-            onClick={() => onPick(doodleIcon(doodle.id, color))}
-            className={cellClass}
-          >
-            <DoodleIcon doodle={doodle} color={color} size={24} />
-          </button>
-        </WithTooltip>
-      ))}
-    </div>
-  );
-  const section = (title: string, cells: ReactNode) => (
-    <section key={title} data-group={title}>
-      <h3 className={titleClass}>{title}</h3>
-      {cells}
-    </section>
+  // The icon now, wherever it shows (an emoji can be in Suggested and in its group).
+  const selected = useMemo(() => {
+    const chosen = value && !current ? bare(value) : null;
+    const out: Key[] = [];
+    for (const cell of cells.values()) {
+      if (
+        cell.kind === "doodle" ? cell.doodle.id === current?.doodle.id : bare(cell.emoji) === chosen
+      )
+        out.push(cell.id);
+    }
+    return out;
+  }, [cells, value, current]);
+
+  const renderCell = (cell: Cell) => (
+    <ListBoxItem id={cell.id} textValue={cell.name} aria-label={cell.name} className={cellClass}>
+      {/* The name on hover too. */}
+      <span title={cell.name} className="flex size-full items-center justify-center">
+        {cell.kind === "emoji" ? (
+          <span className="text-[22px] leading-none">{cell.emoji}</span>
+        ) : (
+          <DoodleIcon doodle={cell.doodle} color={color} size={24} />
+        )}
+      </span>
+    </ListBoxItem>
   );
 
-  let body: ReactNode;
-  if (searching) {
-    const parts = [
-      doodles.length > 0 && section("Doodles", doodleCells(doodles)),
-      found.length > 0 && section("Emoji", emojiCells(found)),
-    ];
-    if (tab === "emoji") parts.reverse();
-    body =
-      doodles.length + found.length > 0 ? (
-        parts
-      ) : (
-        <p className="px-1 py-6 text-center text-sm text-gray-500">
-          {groups ? "No doodle or emoji matches." : "Loading emoji…"}
-        </p>
-      );
-  } else if (tab === "doodles") {
-    body = doodleCells(DOODLES);
-  } else {
-    body = (
-      <>
-        {suggested &&
-          suggested.length > 0 &&
-          section(
-            "Suggested",
-            emojiCells(
-              suggested.map((emoji) => ({
-                emoji,
-                name: names.get(bare(emoji)) ?? emoji,
-                tags: "",
-              })),
-            ),
-          )}
-        {groups?.map((group) => section(group.name, emojiCells(group.emojis)))}
-      </>
-    );
-  }
+  // Sections out of view are not rendered: their place comes from the layout.
+  const jumpTo = (group: string) => {
+    const top = layout.getLayoutInfo(`group:${group}`)?.rect.y;
+    if (top !== undefined && list.current) list.current.scrollTop = top;
+  };
 
   return (
     <Tabs
@@ -235,76 +210,92 @@ export function IconPicker({ value, onPick, onRecolor, onRemove, suggested }: Ic
           </Button>
         )}
       </div>
-      <SearchField
-        size="sm"
-        aria-label="Search icons"
-        placeholder={tab === "doodles" ? "Search doodles and emoji" : "Search emoji and doodles"}
-        autoFocus
-        inputRef={input}
-        value={query}
-        onChange={setQuery}
-        // Enter takes the first match. What was typed is never the icon itself.
-        onSubmit={() => {
-          if (searching) scroller.current?.querySelector<HTMLElement>("[data-cell]")?.click();
-        }}
-        onKeyDown={(event) => {
-          if (event.key !== "ArrowDown") return;
-          const first = scroller.current?.querySelector<HTMLElement>("[data-cell]");
-          if (!first) return;
-          event.preventDefault();
-          first.focus();
-        }}
-      />
-      <TabPanel id={tab} className="flex h-[324px] flex-col gap-1 outline-none">
-        {tab === "doodles" && !searching && (
-          <fieldset className="flex h-7 shrink-0 items-center gap-2 px-2">
-            <legend className="sr-only">Colour</legend>
-            {COLOR_NAMES.map((name) => (
-              <button
-                key={name}
-                type="button"
-                aria-label={`Colour ${name}`}
-                aria-pressed={color === name}
-                onClick={() => {
-                  setColor(name);
-                  if (current && current.color !== name)
-                    onRecolor?.(doodleIcon(current.doodle.id, name));
-                }}
-                className={`size-5 rounded-full bg-current outline-offset-2 outline-gray-800 aria-pressed:outline-2 ${DOODLE_COLORS[name]}`}
-              />
-            ))}
-          </fieldset>
-        )}
-        <div
-          ref={scroller}
-          role="presentation"
-          onKeyDown={(event) => moveBetweenCells(event, () => input.current?.focus())}
-          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
-        >
-          {body}
-        </div>
-        {tab === "emoji" && !searching && groups && (
-          <div className="-mx-2 -mb-2 flex shrink-0 justify-between border-t border-gray-950/8 px-2 py-1">
-            {groups.map((group) => (
-              <WithTooltip key={group.name} label={group.name}>
-                <button
-                  type="button"
+      <Autocomplete inputValue={query} onInputChange={setQuery}>
+        <SearchField
+          size="sm"
+          aria-label="Search icons"
+          placeholder={tab === "doodles" ? "Search doodles and emoji" : "Search emoji and doodles"}
+          autoFocus
+        />
+        <TabPanel id={tab} className="flex h-[324px] flex-col gap-1 outline-none">
+          {tab === "doodles" && !searching && (
+            <RadioGroup
+              aria-label="Colour"
+              orientation="horizontal"
+              value={color}
+              onChange={(next) => {
+                const name = next as DoodleColor;
+                setColor(name);
+                if (current && current.color !== name)
+                  onRecolor?.(doodleIcon(current.doodle.id, name));
+              }}
+              className="flex h-7 shrink-0 items-center gap-2 px-2"
+            >
+              {COLOR_NAMES.map((name) => (
+                <Radio
+                  key={name}
+                  value={name}
+                  aria-label={`Colour ${name}`}
+                  className={`size-5 rounded-full bg-current outline-offset-2 selected:outline-2 selected:outline-gray-800 data-focus-visible:outline-2 data-focus-visible:outline-blue-600 ${DOODLE_COLORS[name]}`}
+                />
+              ))}
+            </RadioGroup>
+          )}
+          <Virtualizer layout={layout} layoutOptions={GRID}>
+            <ListBox
+              ref={list}
+              aria-label={searching ? "Doodles and emoji" : tab === "doodles" ? "Doodles" : "Emoji"}
+              layout="grid"
+              selectionMode="single"
+              selectedKeys={selected}
+              // Picking the icon it already is deselects it in the list: still a pick (the host closes).
+              onSelectionChange={(keys) => {
+                if (keys === "all") return;
+                const [key] = keys;
+                const cell =
+                  key === undefined ? cells.get(String(selected[0])) : cells.get(String(key));
+                if (cell) onPick(iconOf(cell));
+              }}
+              items={sections}
+              renderEmptyState={() => (
+                <p className="px-1 py-6 text-center text-sm text-gray-500">
+                  {groups || tab === "doodles" ? "No doodle or emoji matches." : "Loading emoji…"}
+                </p>
+              )}
+              className={listClass}
+            >
+              {(section) =>
+                section.title === null ? (
+                  <ListBoxSection id={section.id} aria-label="Doodles">
+                    <Collection items={section.cells}>{renderCell}</Collection>
+                  </ListBoxSection>
+                ) : (
+                  <ListBoxSection id={section.id}>
+                    <Header className={titleClass}>{section.title}</Header>
+                    <Collection items={section.cells}>{renderCell}</Collection>
+                  </ListBoxSection>
+                )
+              }
+            </ListBox>
+          </Virtualizer>
+          {tab === "emoji" && !searching && groups && (
+            <div className="-mx-2 -mb-2 flex shrink-0 justify-between border-t border-gray-950/8 px-2 py-1">
+              {groups.map((group) => (
+                <Button
+                  key={group.name}
+                  size="icon-sm"
+                  variant="ghost"
                   aria-label={group.name}
-                  onClick={() => {
-                    const target = scroller.current?.querySelector<HTMLElement>(
-                      `[data-group="${group.name}"]`,
-                    );
-                    if (target && scroller.current) scroller.current.scrollTop = target.offsetTop;
-                  }}
-                  className={`flex size-7 items-center justify-center rounded-md text-[15px] leading-none opacity-60 grayscale hover:bg-gray-950/5 hover:opacity-100 hover:grayscale-0 ${focusRingInsetClass}`}
+                  onPress={() => jumpTo(group.name)}
+                  className="text-[15px] leading-none opacity-60 grayscale hover:opacity-100 hover:grayscale-0"
                 >
                   {GROUP_MARKS[group.name] ?? group.emojis[0]?.emoji}
-                </button>
-              </WithTooltip>
-            ))}
-          </div>
-        )}
-      </TabPanel>
+                </Button>
+              ))}
+            </div>
+          )}
+        </TabPanel>
+      </Autocomplete>
     </Tabs>
   );
 }

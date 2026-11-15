@@ -160,7 +160,14 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   buttons that jump to a group); one search over both, the open tab's matches first. `value`,
   `onPick(icon)` (the host closes), `onRecolor(icon)` (the current doodle in another colour; stays
   open), `onRemove` (shows "Remove"). Only what is listed can be picked: Enter in the search takes
-  the first match, never the text. Arrow keys move through the cells and back up to the search.
+  the first match, never the text. Built from React Aria, nothing home-made: `Autocomplete` over a
+  `SearchField` and a `ListBox layout="grid"` with `ListBoxSection`/`Header` (focus stays in the
+  search while the arrow keys move through the cells as laid out; Enter picks; Escape clears the
+  search, then reaches the popover), the colours a `RadioGroup`, the group jumps `Button`s. The
+  list is virtualized (`Virtualizer` with `SectionedGridLayout`, `components/sectioned-grid-layout.ts`:
+  React Aria's GridLayout has no sections), so the emoji tab mounts a few rows, not 2,000 cells.
+  Never give a React Aria field an `onKeyDown` that does not call `e.continuePropagation()`: its
+  handler stops every key it gets, Escape included (the bug that kept this picker open).
 - **QrCode** (`src/components/QrCode.tsx`): `value`, `label`, `size`; an `<img>` of an SVG built
   with `uqr`, dark on white in both themes.
 - **Settings** (`src/layout/Settings.tsx`): SettingsSections, SettingsSection, SettingsCard,

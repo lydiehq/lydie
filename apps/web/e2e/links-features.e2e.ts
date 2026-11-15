@@ -594,7 +594,7 @@ describe("page icons and quick capture", () => {
     await picker.getByRole("tab", { name: "Emoji" }).click();
     const search = picker.getByRole("searchbox", { name: "Search icons" });
     await search.fill("rocket");
-    await picker.getByRole("button", { name: "rocket", exact: true }).waitFor();
+    await picker.getByRole("option", { name: "rocket", exact: true }).waitFor();
     await search.press("Enter");
     await tabs(page).filter({ hasText: "Rocket" }).locator("[data-page-icon='🚀']").waitFor();
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
