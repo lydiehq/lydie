@@ -42,7 +42,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
 - **Components** (`src/components`, react-aria wrappers): AlertDialog, Autocomplete(+Item,
   Section), Breadcrumbs/Breadcrumb, Button and LinkButton (one look,
   `buttonStyles`, also for plain elements that must look like a button: variant
-  primary|secondary|ghost|destructive (primary is flat very dark gray, `bg-gray-900 text-surface`,
+  primary|secondary|ghost|destructive (primary is flat dark gray, `bg-gray-800 text-surface`,
   no gradient or shadow; destructive is ghost with red text); size xs..xl, icon-2xs..icon-xl, text
   sizes 2px under Numina's (xs 22px, sm 28px, md 30px, lg 34px, xl 42px), icon sizes Numina's
   (icon-2xs 20 to icon-lg 36); rounded;
