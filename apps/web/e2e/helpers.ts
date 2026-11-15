@@ -91,7 +91,10 @@ export async function newProfile(): Promise<BrowserContext> {
 export function watchErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() !== "error") return;
+    // "Failed to load resource" names no URL; the location does.
+    const { url } = message.location();
+    errors.push(url ? `${message.text()} (${url})` : message.text());
   });
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   return errors;
