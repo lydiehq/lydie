@@ -126,17 +126,19 @@ function isUrl(value: string) {
 }
 
 // The colours a cover can be instead of an image, by the name kept in the file (`cover: blue`).
-// The classes follow the theme, so a colour cover is a tint in dark mode.
+// Solid shades from 400-600, which the dark theme leaves as they are: a cover is a picture, so
+// it keeps its colour rather than turning into a tint of the surface. Gray and brown are literal:
+// the gray ramp mirrors in dark mode, and Tailwind has no brown.
 export const COVER_COLORS = {
-  gray: "bg-gray-200",
-  brown: "bg-amber-200",
-  orange: "bg-orange-200",
-  yellow: "bg-yellow-200",
-  green: "bg-green-200",
-  blue: "bg-blue-200",
-  purple: "bg-purple-200",
-  pink: "bg-pink-200",
-  red: "bg-red-200",
+  gray: "bg-[oklch(0.556_0_0)]",
+  brown: "bg-[oklch(0.55_0.08_55)]",
+  orange: "bg-orange-500",
+  yellow: "bg-yellow-400",
+  green: "bg-green-500",
+  blue: "bg-blue-500",
+  purple: "bg-purple-500",
+  pink: "bg-pink-500",
+  red: "bg-red-500",
 } as const;
 export type CoverColor = keyof typeof COVER_COLORS;
 

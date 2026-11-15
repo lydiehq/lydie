@@ -140,6 +140,58 @@ function IconPopover({
 
 const COLOR_NAMES = Object.keys(COVER_COLORS) as CoverColor[];
 
+// As the place icons (ConfirmDialog's tile): a true squircle where `corner-shape` works, else
+// rounded corners close to it.
+const SWATCH =
+  "size-6 rounded-[28%] ring-1 ring-inset supports-[corner-shape:squircle]:rounded-[50%] supports-[corner-shape:squircle]:[corner-shape:squircle]";
+const swatchRing = (selected: boolean) => (selected ? "ring-gray-950/60" : "ring-gray-950/10");
+
+// `#abc` as `#aabbcc`, the only form a colour input takes.
+function longHex(hex: string) {
+  return hex.length === 4 ? `#${[...hex.slice(1)].map((c) => c + c).join("")}` : hex;
+}
+
+// Any colour, from the system's picker: a colour input laid over a rainbow swatch (the colour
+// itself once it is one), so a press on the swatch opens it. Kept as a hex (`cover: "#3b82f6"`).
+// Written once the picker closes (the input's `change`, which React does not expose: its onChange
+// is every `input` while dragging).
+function CustomColor({
+  current,
+  onPick,
+}: {
+  current: string | null;
+  onPick: (hex: string) => void;
+}) {
+  const swatch = useRef<HTMLSpanElement>(null);
+  // On the swatch: `change` bubbles, and the tooltip wraps the input.
+  useEffect(() => {
+    const el = swatch.current;
+    if (!el) return;
+    const changed = (event: Event) => onPick((event.target as HTMLInputElement).value);
+    el.addEventListener("change", changed);
+    return () => el.removeEventListener("change", changed);
+  }, [onPick]);
+  const hex = current?.startsWith("#") ? longHex(current) : null;
+  return (
+    <span
+      ref={swatch}
+      className={`relative ${SWATCH} ${swatchRing(hex !== null)} has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600`}
+      style={{
+        background: hex ?? "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)",
+      }}
+    >
+      <WithTooltip label="Any colour">
+        <input
+          type="color"
+          aria-label="Any cover colour"
+          defaultValue={hex ?? "#3b82f6"}
+          className="absolute inset-0 size-full cursor-pointer opacity-0"
+        />
+      </WithTooltip>
+    </span>
+  );
+}
+
 function ColorPicker({
   anchor,
   isOpen,
@@ -151,7 +203,7 @@ function ColorPicker({
   anchor: RefObject<HTMLElement | null>;
   isOpen: boolean;
   current: string | null;
-  onPick: (color: CoverColor) => void;
+  onPick: (color: string) => void;
   onClose: () => void;
   placement: "bottom start" | "top end";
 }) {
@@ -172,9 +224,10 @@ function ColorPicker({
             aria-label={`Cover colour ${color}`}
             aria-pressed={current === color}
             onClick={() => onPick(color)}
-            className={`size-6 rounded-full ring-1 ring-inset ${current === color ? "ring-gray-950/60" : "ring-gray-950/10"} ${COVER_COLORS[color]} ${focusRingClass}`}
+            className={`${SWATCH} ${swatchRing(current === color)} ${COVER_COLORS[color]} ${focusRingClass}`}
           />
         ))}
+        <CustomColor current={current} onPick={onPick} />
       </FocusFirst>
     </DecorPopover>
   );

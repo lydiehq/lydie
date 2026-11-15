@@ -239,7 +239,8 @@ PAGE_OPTION_KEYS (the four keys above), isPageOptionKey(key), userPropertyEntrie
   // properties (the properties panel) leaves them out; doc.setProperties still sets them
 pageCoverOf(properties) → { cover, position } | null, useCoverUrl(cover) → URL | null (an http(s)
   URL as is, else the attachment with that file name; null for a colour)
-COVER_COLORS (name → class, type CoverColor), coverFillOf(cover) → { className, style? } | null
+COVER_COLORS (name → class, type CoverColor; solid 400-600 shades that stay the same in dark
+  mode), coverFillOf(cover) → { className, style? } | null
   // a solid-colour cover: a palette name (`cover: blue`) or a hex; null when the cover is an image
 app.editor.outline(markdown) → { headings, blocks }, app.editor.assignBlockId(markdown, index)
 
