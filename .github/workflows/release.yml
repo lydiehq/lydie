@@ -101,8 +101,14 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           SIGNED: ${{ steps.signing.outputs.signed }}
+        # A secret that is not set arrives as an empty variable, and electron-builder reads an empty
+        # CSC_LINK as a certificate path (the project folder): unsigned builds unset them.
         run: |
-          if [ "$SIGNED" = true ]; then export APPLE_API_KEY="$APPLE_API_KEY_PATH"; fi
+          if [ "$SIGNED" = true ]; then
+            export APPLE_API_KEY="$APPLE_API_KEY_PATH"
+          else
+            unset CSC_LINK CSC_KEY_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER
+          fi
           bunx electron-builder --config electron-builder.config.ts --mac --arm64 --x64 --publish never
 
       - name: Check the release files
