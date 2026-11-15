@@ -107,8 +107,10 @@ Licence: AGPL-3.0-only.
   `overlay`, `edited`, `saveView`, `resetView`, `saveBlockedReason`), `useDraft` for edits faster
   than a re-render.
 - Look of the controls: view tabs are text pills with a line under the open one, sitting on the
-  bar's bottom border; tabs and toolbar share one line that never wraps (the tabs scroll and fade
-  at the right edge, "add a view" stays beside them; an embed shows Filter and Display as icons);
+  bar's bottom border; tabs and toolbar share one line that never wraps (as in Notion, the tabs
+  take the bar's width and the ones that do not fit go under "N more…", measured from invisible
+  copies before paint, `tabs-model.ts`; the open view always shows, in its place; "add a view"
+  stays beside them; an embed shows Filter and Display as icons);
   chips are 24px segmented pills ("icon label | operator | value | ×") in `text-xs`; menus have a
   fixed width.
 - `PageSheet.tsx`: `ctx.peekRow` ("Open" on a page, Space in the table, a new page from the
@@ -130,7 +132,9 @@ Licence: AGPL-3.0-only.
   The panel's left edge resizes it with the sidebar's elastic handle (`useElasticPanel` /
   `ElasticHandle` from the UI package): width per device in `databases.peekWidth`, half the tab
   by default; dragged shut it closes.
-- `ViewTabs.tsx` (add/rename/duplicate/change type/delete/drag to reorder; "New view" lists the
+- `ViewTabs.tsx` (add/rename/duplicate/change type/delete/drag to reorder; a view's menu has no
+  button, so nothing appears on the open tab: it opens on right-click, a click on the open tab, or
+  Shift+F10 / the menu key, and starts with the view's name as a field, saved as the menu closes; "New view" lists the
   types with their `xs` drawings from the UI package and a line on each), `Toolbar.tsx` (
   "Filter", "Display" = sort, group/sub-group, card or calendar settings and properties with order
   and visibility in one popover, a search icon that opens the field, New; keep the
