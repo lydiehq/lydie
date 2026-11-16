@@ -14,7 +14,6 @@ import {
   createEventHub,
   createLocalBackend,
   handledOperations,
-  markdownExtract,
   serveBackend,
 } from "@lydie/app/backend";
 import type { BackendContract } from "@lydie/app/backend";
@@ -337,7 +336,7 @@ export class HostedManager {
   private async open(scope: WindowScope & { kind: "hosted" }): Promise<HostedHost> {
     const hub = createEventHub();
     const blob = createDirectoryBlob(join(this.options.dataDir, "attachments"));
-    const { createHostedBackendParts } = await import("./hosted-lazy.ts");
+    const { createHostedBackendParts, markdownExtract } = await import("./hosted-lazy.ts");
     const parts = await createHostedBackendParts({
       scope,
       baseUrl: this.options.apiUrl,
