@@ -58,12 +58,44 @@ describe("collab provider", () => {
     expect(status(a)).toBe("offline");
     expect(s.sockets()).toBe(0);
     expect(await persistence.dirty()).toEqual(["new-doc"]);
-    expect((await persistence.load("new-doc")).length).toBeGreaterThan(0);
+    // Written within the flush interval.
+    await waitFor(async () => (await persistence.load("new-doc")).length > 0, {
+      what: "the edit to be stored",
+    });
     open();
     await a.whenSynced();
     const b = client(s, "bob").open("new-doc");
     await b.whenSynced();
     expect(text(b)).toBe("typed before the server knew");
+  });
+
+  test("stores a burst of updates as one merged write, and what is left when it closes", async () => {
+    const persistence = createMemoryYjsPersistence();
+    const writes: number[] = [];
+    const counted: YjsPersistence = {
+      ...persistence,
+      append: (docId, update) => (writes.push(update.length), persistence.append(docId, update)),
+    };
+    const collab = createCollab({
+      token: () => new Promise(() => {}),
+      persistence: counted,
+      flushMs: 50,
+    });
+    const doc = collab.open("burst");
+    await doc.loaded;
+    const body = doc.ydoc.getText("body");
+    for (const ch of "typing") body.insert(body.length, ch);
+    await waitFor(() => writes.length > 0, { what: "the merged write" });
+    expect(writes).toHaveLength(1);
+    body.insert(body.length, " more");
+    doc.release();
+    await collab.close();
+    expect(writes).toHaveLength(2);
+    const copy = createCollab({ token: () => new Promise(() => {}), persistence });
+    const again = copy.open("burst");
+    await again.loaded;
+    expect(again.ydoc.getText("body").toJSON()).toBe("typing more");
+    await copy.close();
   });
 
   test("releasing a gated document stops waiting and keeps its edits", async () => {

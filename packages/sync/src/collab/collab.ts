@@ -88,6 +88,8 @@ export type CollabOptions = {
   reconnect?: { delayMs?: number; maxDelayMs?: number };
   // Compact a document's stored updates into one after this many appends. Default 200.
   compactEvery?: number;
+  // Updates are written merged, one write at most this often per document. Default 500 ms.
+  flushMs?: number;
   // Close the socket this long after the last document is released. Default 30 s.
   idleDisconnectMs?: number;
   // Resolves once the server has the document and this user's access to it (hosted: the page's
@@ -122,6 +124,9 @@ type Entry = {
   loaded: Promise<void>;
   writes: Promise<void>;
   appended: number;
+  // Updates not written yet, and the timer that writes them.
+  unwritten: Uint8Array[];
+  flushTimer: ReturnType<typeof setTimeout> | null;
   dirty: boolean;
   closing: boolean;
   tokenRetries: number;
@@ -133,6 +138,7 @@ type Entry = {
 
 export function createCollab(options: CollabOptions): Collab {
   const compactEvery = options.compactEvery ?? 200;
+  const flushMs = options.flushMs ?? 500;
   const entries = new Map<string, Entry>();
   let user = options.user ?? null;
   let socket: HocuspocusProviderWebsocket | null = null;
@@ -141,9 +147,17 @@ export function createCollab(options: CollabOptions): Collab {
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
 
+  // A document's state object stays the same until it changes, so comparing references is enough.
   const status = createObservable<CollabPoolStatus>(
     { connection: "idle", documents: {} },
-    jsonEqual,
+    (a, b) => {
+      if (a.connection !== b.connection) return false;
+      const ids = Object.keys(b.documents);
+      return (
+        ids.length === Object.keys(a.documents).length &&
+        ids.every((id) => a.documents[id] === b.documents[id])
+      );
+    },
   );
   const publish = () => {
     const documents: Record<string, CollabDocState> = {};
@@ -183,7 +197,7 @@ export function createCollab(options: CollabOptions): Collab {
   function setConnection(next: CollabConnection) {
     if (connection === next) return;
     connection = next;
-    for (const entry of entries.values()) refresh(entry);
+    for (const entry of entries.values()) refresh(entry, {}, false);
     publish();
   }
 
@@ -238,7 +252,9 @@ export function createCollab(options: CollabOptions): Collab {
 
   // ---- Per-document state
 
-  function refresh(entry: Entry, patch: Partial<CollabDocState> = {}) {
+  // `notify`: republish the pool if the document's state changed (callers refreshing every
+  // document publish once themselves).
+  function refresh(entry: Entry, patch: Partial<CollabDocState> = {}, notify = true) {
     const current = { ...entry.state.get(), ...patch };
     if (current.status !== "unavailable" && current.status !== "loading") {
       const provider = entry.provider;
@@ -255,8 +271,9 @@ export function createCollab(options: CollabOptions): Collab {
       }
       current.unsyncedChanges = provider?.unsyncedChanges ?? current.unsyncedChanges;
     }
+    const before = entry.state.get();
     entry.state.set(current);
-    publish();
+    if (notify && entry.state.get() !== before) publish();
   }
 
   function persist(entry: Entry, fn: () => Promise<void>) {
@@ -265,12 +282,47 @@ export function createCollab(options: CollabOptions): Collab {
     });
   }
 
+  // Typing makes an update per keystroke and each write is a database transaction, so updates
+  // are written merged: at most every `flushMs`, and at once before the document closes, before
+  // `whenSynced` resolves, and when the page is hidden or goes away.
+  function flush(entry: Entry) {
+    if (entry.flushTimer) clearTimeout(entry.flushTimer);
+    entry.flushTimer = null;
+    if (entry.unwritten.length === 0) return;
+    const updates = entry.unwritten.splice(0);
+    persist(entry, async () => {
+      entry.appended++;
+      if (entry.appended >= compactEvery) {
+        entry.appended = 0;
+        // The whole state, which holds these updates (and any still unwritten).
+        await options.persistence.replace(entry.id, Y.encodeStateAsUpdate(entry.ydoc));
+      } else {
+        await options.persistence.append(
+          entry.id,
+          updates.length === 1 ? updates[0]! : Y.mergeUpdates(updates),
+        );
+      }
+    });
+  }
+
+  const flushAll = () => {
+    for (const entry of entries.values()) flush(entry);
+  };
+  const onVisibility = () => {
+    if (globalThis.document?.visibilityState === "hidden") flushAll();
+  };
+  globalThis.addEventListener?.("pagehide", flushAll);
+  globalThis.document?.addEventListener("visibilitychange", onVisibility);
+
   function makeUnavailable(entry: Entry, reason: string) {
     if (entry.state.get().status === "unavailable") return;
     const provider = entry.provider;
     entry.provider = null;
     provider?.destroy();
     if (entry.retryTimer) clearTimeout(entry.retryTimer);
+    if (entry.flushTimer) clearTimeout(entry.flushTimer);
+    entry.flushTimer = null;
+    entry.unwritten = [];
     // The user lost access (or the page is gone): do not keep a readable copy on the device.
     persist(entry, () => options.persistence.clear(entry.id));
     entry.dirty = false;
@@ -372,6 +424,8 @@ export function createCollab(options: CollabOptions): Collab {
       loaded: Promise.resolve(),
       writes: Promise.resolve(),
       appended: 0,
+      unwritten: [],
+      flushTimer: null,
       dirty: false,
       closing: false,
       tokenRetries: 0,
@@ -387,15 +441,8 @@ export function createCollab(options: CollabOptions): Collab {
         persist(entry, () => options.persistence.setDirty(docId, true));
       }
       if (entry.state.get().status === "unavailable") return;
-      persist(entry, async () => {
-        entry.appended++;
-        if (entry.appended >= compactEvery) {
-          entry.appended = 0;
-          await options.persistence.replace(docId, Y.encodeStateAsUpdate(ydoc));
-        } else {
-          await options.persistence.append(docId, update);
-        }
-      });
+      entry.unwritten.push(update);
+      entry.flushTimer ??= setTimeout(() => flush(entry), flushMs);
     };
     ydoc.on("update", onUpdate);
     entry.offUpdate = () => ydoc.off("update", onUpdate);
@@ -454,6 +501,7 @@ export function createCollab(options: CollabOptions): Collab {
       const check = (s: CollabDocState) => {
         if (s.status === "synced" && s.unsyncedChanges === 0) {
           finish();
+          flush(entry);
           entry.writes.then(() => resolve(), resolve);
           return true;
         }
@@ -485,6 +533,7 @@ export function createCollab(options: CollabOptions): Collab {
     entry.provider?.destroy();
     entry.provider = null;
     entry.offUpdate();
+    flush(entry);
     await entry.writes;
     entry.ydoc.destroy();
     if (entries.get(entry.id) === entry) entries.delete(entry.id);
@@ -536,6 +585,8 @@ export function createCollab(options: CollabOptions): Collab {
     },
     async close() {
       closed = true;
+      globalThis.removeEventListener?.("pagehide", flushAll);
+      globalThis.document?.removeEventListener("visibilitychange", onVisibility);
       if (idleTimer) clearTimeout(idleTimer);
       if (socketTimer) clearTimeout(socketTimer);
       await Promise.all([...entries.values()].map((entry) => dispose(entry)));

@@ -68,13 +68,19 @@ SyncStatus { state: signed-out|auth-expired|offline|connecting|syncing|synced|er
     (PowerSync's lastSyncedAt is older): the window's data may not be here yet */ }
 toBackendStatus(status) -> plugin-api BackendStatus shape; deriveStatus(facts)
 createConnector({ api, uploader, oplog, mutex? }) -> PowerSyncBackendConnector & { drain() }
-createUploader({ api, oplog, batchSize? (≤500), onRejected?, onWarnings?, onResults?,
-  retries?, backoff? }).{ send(entries), drain() }; settle(entries, results)
+createUploader({ api, oplog, batchSize? (≤500), batchBytes? (MAX_BATCH_BYTES, 4 MB of entry JSON;
+  a larger entry goes alone), onRejected?, onWarnings?, onResults?, retries?, backoff? })
+  .{ send(entries), drain() }; settle(entries, results), bySize(entries, maxBytes)
+OplogPort { list({ limit? }), remove(ids), isEmpty?() }   // isEmpty: the connector's check
+  // between CRUD batches without reading an entry (falls back to list({ limit: 1 }))
 RejectedChange { operationId, operation, input, workspaceId, createdAt, reason, rejectedAt }
 
 // Collab
-createCollab({ api | token, persistence, url?, user?, reconnect?, compactEvery?, idleDisconnectMs?,
-  gate?: (docId, signal) => Promise<void>, WebSocketPolyfill? }): Collab
+createCollab({ api | token, persistence, url?, user?, reconnect?, compactEvery?, flushMs? (500),
+  idleDisconnectMs?, gate?: (docId, signal) => Promise<void>, WebSocketPolyfill? }): Collab
+  // updates are stored merged (Y.mergeUpdates), one append per document at most every flushMs,
+  // and at once when the document is released, before whenSynced resolves, on close, and on
+  // pagehide or when the page is hidden; compactEvery counts those appends
   // gate: a document is edited and persisted locally at once and connects only after its gate
   // (the server has it); so pages created offline or a moment ago are never refused or lost
   // { open(docId): CollabDocument, status, setUser(user), pushPending(timeoutMs?), close() }
