@@ -25,7 +25,11 @@ const API = "http://api.test";
 const user = { id: "u1", email: "u@example.com", name: "U", image: null, twoFactorEnabled: false };
 
 // A core that knows the stored session (or is unreachable).
-async function manager(options: { signedIn: boolean; preferred?: string }) {
+async function manager(options: {
+  signedIn: boolean;
+  preferred?: string;
+  fetch?: (input: string, init?: RequestInit) => Promise<Response>;
+}) {
   const dir = mkdtempSync(join(tmpdir(), "lydie-hosted-"));
   dirs.push(dir);
   const kv = createFileKv(join(dir, "account.json"));
@@ -38,8 +42,15 @@ async function manager(options: { signedIn: boolean; preferred?: string }) {
     apiUrl: API,
     secrets,
     kv,
-    fetch: async () => Response.json({ user }),
+    fetch: options.fetch ?? (async () => Response.json({ user })),
   });
+}
+
+// A core that never answers, until `answer` is called.
+function stalledCore() {
+  let answer: (response: Response) => void = () => {};
+  const reply = new Promise<Response>((resolve) => (answer = resolve));
+  return { fetch: () => reply, answer: (response: Response) => answer(response) };
 }
 
 describe("desktop window scopes", () => {
@@ -62,6 +73,30 @@ describe("desktop window scopes", () => {
     const info = await m.scopeFor("win", { kind: "none" });
     expect(info.scope).toBeNull();
     expect(info.wanted).toEqual({ kind: "hosted", workspaceId: "w1" });
+  });
+
+  test("windows open from the stored session without waiting for the server", async () => {
+    const core = stalledCore();
+    const m = await manager({ signedIn: true, preferred: "hosted:w1", fetch: core.fetch });
+    expect((await m.scopeFor("win", { kind: "none" })).scope).toEqual({
+      kind: "hosted",
+      workspaceId: "w1",
+    });
+    expect(m.session.state.get().status).toBe("signed-in");
+    // The server's answer arrives later and moves the session on.
+    core.answer(Response.json({ message: "no" }, { status: 401 }));
+    await Bun.sleep(10);
+    expect(m.session.state.get().status).toBe("expired");
+  });
+
+  test("a folder window does not wait for the session at all", async () => {
+    const m = await manager({
+      signedIn: true,
+      preferred: "hosted:w1",
+      fetch: stalledCore().fetch,
+    });
+    const info = await m.scopeFor("win", { kind: "local", folder: { id: "/f", name: "f" } });
+    expect(info.scope).toEqual({ kind: "local", workspaceId: null });
   });
 
   test("the scope is fixed until setScope, which applies on the next load", async () => {

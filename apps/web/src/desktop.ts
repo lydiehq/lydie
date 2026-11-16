@@ -53,20 +53,29 @@ export function unwrap<T>(wire: Wire<T>): T {
   throw error;
 }
 
-function observable<T>(initial: T, subscribe: (set: (value: T) => void) => () => void) {
-  let value = initial;
+// A value the main process pushes on a stream, starting from `current`. The stream is joined first,
+// so a change made while the answer to `current` is on its way is not lost.
+async function followed<T>(
+  current: Promise<T>,
+  subscribe: (set: (value: T) => void) => () => void,
+): Promise<Observable<T>> {
+  let value: T | undefined;
+  let pushed = false;
   const listeners = new Set<() => void>();
   subscribe((next) => {
     value = next;
+    pushed = true;
     for (const listener of [...listeners]) listener();
   });
+  const first = await current;
+  if (!pushed) value = first;
   return {
-    get: () => value,
+    get: () => value as T,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-  } satisfies Observable<T>;
+  };
 }
 
 const toState = (wire: AccountWireState): AccountState =>
@@ -134,17 +143,19 @@ export async function desktopAccount(
   platform: Platform,
 ): Promise<AccountApi> {
   const folder = platform.scope.kind === "local" ? platform.scope.folder : null;
-  const folders = await recentFolders(platform);
-  const state = observable(toState(await client.request("state", null)), (set) =>
-    client.subscribe("state", null, (next) => set(toState(next))),
-  );
   const hosted = info.scope?.kind === "hosted";
-  const firstSync = hosted ? await client.request("sync", null) : null;
-  const details = hosted
-    ? observable<SyncDetails | null>(firstSync ? toDetails(firstSync) : null, (set) =>
-        client.subscribe("sync", null, (next) => set(toDetails(next))),
-      )
-    : null;
+  const [folders, state, details] = await Promise.all([
+    recentFolders(platform),
+    followed(client.request("state", null).then(toState), (set) =>
+      client.subscribe("state", null, (next) => set(toState(next))),
+    ),
+    hosted
+      ? followed<SyncDetails | null>(
+          client.request("sync", null).then((first) => (first ? toDetails(first) : null)),
+          (set) => client.subscribe("sync", null, (next) => set(toDetails(next))),
+        )
+      : null,
+  ]);
   const caller = createApiCaller(async (request) =>
     unwrap(await client.request("request", request)),
   );

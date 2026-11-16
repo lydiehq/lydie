@@ -25,12 +25,9 @@ import { createRuntime } from "@lydie/runtime";
 import { createDirectoryBlob, openNodeStore, unpackedAsar } from "@lydie/store/node";
 import {
   accountService,
-  createHostedBackendParts,
   createScopePreference,
   createSession,
-  planHandoff,
   readProviderReturn,
-  runHandoff,
   toWire,
 } from "@lydie/sync";
 import type {
@@ -157,7 +154,9 @@ export async function nodeFetch(input: string, init: RequestInit = {}): Promise<
       },
     );
     req.on("error", reject);
-    init.signal?.addEventListener("abort", () => req.destroy(new Error("aborted")));
+    const signal = init.signal;
+    if (signal?.aborted) req.destroy(new Error("aborted"));
+    signal?.addEventListener("abort", () => req.destroy(new Error("aborted")), { once: true });
     if (body !== null) req.write(body);
     req.end();
   });
@@ -171,6 +170,25 @@ function withUserAgent(fetch: typeof nodeFetch): typeof nodeFetch {
     if (!headers.has("user-agent")) headers.set("user-agent", agent);
     return fetch(input, { ...init, headers });
   };
+}
+
+// The session as stored, as soon as `restore` has read it: signed in from the stored token without
+// waiting for the server to confirm it, or whatever `restoring` settles with when there is none.
+export function storedSession(
+  session: Session,
+  restoring: Promise<SessionState>,
+): Promise<SessionState> {
+  return new Promise((resolve) => {
+    const stop = session.state.subscribe((state) => {
+      if (state.status === "signed-out") return;
+      stop();
+      resolve(state);
+    });
+    void restoring.then((state) => {
+      stop();
+      resolve(state);
+    });
+  });
 }
 
 const wireState = (state: SessionState): AccountWireState =>
@@ -207,8 +225,13 @@ export class HostedManager {
     });
     this.kv = options.kv ?? createFileKv(join(options.dataDir, "account.json"));
     this.scopes = createScopePreference(this.kv);
-    // Offline or no keychain: the window opens signed out (or from the stored session).
-    this.ready = this.session.restore().catch(() => this.session.state.get());
+    // Windows open from the stored session: the server's answer (fresh details, or that the
+    // session expired) arrives later through `session.state`, which the renderer follows. Offline
+    // or no keychain: the window opens signed out (or from the stored session).
+    this.ready = storedSession(
+      this.session,
+      this.session.restore().catch(() => this.session.state.get()),
+    );
   }
 
   // Opens the browser on the provider and waits for the deep link that brings the session back.
@@ -269,14 +292,12 @@ export class HostedManager {
   async scopeFor(windowId: string, platform: PlatformScope): Promise<WindowScopeInfo> {
     const known = this.windowScopes.get(windowId);
     if (known) return known;
-    await this.ready;
-    const state = this.session.state.get();
     const local: WindowScope = { kind: "local", workspaceId: null };
     let info: WindowScopeInfo;
     if (platform.kind === "local") {
       info = { scope: local, wanted: null, apiUrl: this.options.apiUrl };
     } else {
-      const choice = await this.scopes.choose(state, local);
+      const choice = await this.scopes.choose(await this.ready, local);
       info =
         choice.reason === "needs-sign-in"
           ? { scope: null, wanted: choice.wanted, apiUrl: this.options.apiUrl }
@@ -337,6 +358,7 @@ export class HostedManager {
   private async open(scope: WindowScope & { kind: "hosted" }): Promise<HostedHost> {
     const hub = createEventHub();
     const blob = createDirectoryBlob(join(this.options.dataDir, "attachments"));
+    const { createHostedBackendParts } = await import("./hosted-lazy.ts");
     const parts = await createHostedBackendParts({
       scope,
       baseUrl: this.options.apiUrl,
@@ -586,6 +608,7 @@ export class HostedManager {
                 throw new Error("Sign in first");
               }
               const spaces = await session.teamspaces(workspaceId);
+              const { planHandoff } = await import("./hosted-lazy.ts");
               const plan = await planHandoff(source, {
                 api: session.api,
                 userId: user.id,
@@ -606,6 +629,7 @@ export class HostedManager {
               if (!entry) throw new Error("Unknown hand-off plan");
               try {
                 // Bodies go up as Markdown with each page; the server builds the documents.
+                const { runHandoff } = await import("./hosted-lazy.ts");
                 const result = await runHandoff(entry.plan, {
                   storage: this.kv,
                   signal: entry.abort.signal,
