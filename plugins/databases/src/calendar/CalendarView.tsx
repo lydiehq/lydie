@@ -1,7 +1,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role, jsx-a11y/interactive-supports-focus, jsx-a11y/no-static-element-interactions, jsx-a11y/no-noninteractive-element-interactions -- the month grid is an ARIA grid of positioned days; days are reached through their buttons */
 // The calendar: month or week, rows placed by a date property. Drag an event to another day to
 // move it, drag its edges to change a range, click a day to create a row on it.
-import { useApp, useBackend, useOps, useTab } from "@lydie/plugin-api";
+import { docPath, PageLink, useApp, useBackend, useOps, useTab } from "@lydie/plugin-api";
 import { todayIso, useDatabaseView } from "@lydie/plugin-api/databases";
 import type { DatabaseProperty, ViewRow } from "@lydie/plugin-api/databases";
 import {
@@ -132,6 +132,15 @@ export function CalendarView(_props: { maxHeight?: number | undefined }) {
     from: string,
   ) => {
     event.stopPropagation();
+    if (mode === "move") {
+      // The drag starts on the event's link; the chip is what the pointer holds.
+      const box = event.currentTarget.getBoundingClientRect();
+      event.dataTransfer.setDragImage(
+        event.currentTarget,
+        event.clientX - box.left,
+        event.clientY - box.top,
+      );
+    }
     event.dataTransfer.setData(
       EVENT_MIME,
       JSON.stringify({ id: row.id, mode, from, value: row.properties[property.key] }),
@@ -277,19 +286,19 @@ export function CalendarView(_props: { maxHeight?: number | undefined }) {
                         className="absolute top-0 left-0 h-full w-1.5 cursor-ew-resize"
                       />
                     )}
-                    {/* Plain: the event's whole chip is its hit area and a drag source; react-aria's
-                        press handling on a child would get in the way of the native drag. */}
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (event.metaKey || event.ctrlKey) ctx.openRow(row.id, event);
-                        else ctx.peekRow(row.id);
-                      }}
+                    {/* A link to the page: a plain click opens it to the side, a modified one as any
+                        link. */}
+                    <PageLink
+                      path={docPath(row.id)}
+                      title={row.title}
+                      onClick={(event) => event.stopPropagation()}
+                      onOpen={(mode) =>
+                        mode === "replace" ? ctx.peekRow(row.id) : app.openDoc(row.id, { mode })
+                      }
                       className={`min-w-0 flex-1 truncate rounded text-left ${focusRingInsetClass}`}
                     >
-                      {day === start || day === days[0] ? row.title || "Untitled" : " "}
-                    </button>
+                      {day === start || day === days[0] ? row.title || "Untitled" : " "}
+                    </PageLink>
                     {day === end && (
                       <span
                         draggable

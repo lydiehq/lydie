@@ -2,6 +2,7 @@
 // menu on click, the link editor), follows links, and feeds the unresolved-link decoration.
 import {
   DOC_CARD_CLASS,
+  docPath,
   linkStyleOf,
   pageIconOf,
   prefetchDoc,
@@ -422,7 +423,7 @@ function LinkMenu({
 
   // Opened from the keyboard: move focus into the card (Escape returns it to the editor).
   useLayoutEffect(() => {
-    if (state.focus) ref.current?.querySelector<HTMLElement>("button")?.focus();
+    if (state.focus) ref.current?.querySelector<HTMLElement>("a, button")?.focus();
   }, [state.focus]);
 
   // A press outside the editor closes it; inside the editor the selection decides.
@@ -481,6 +482,14 @@ function LinkMenu({
         </Button>
       ) : (
         <OpenButtons
+          path={
+            resolved.state === "found"
+              ? docPath(resolved.id, {
+                  heading: link.heading ?? undefined,
+                  blockId: link.blockId ?? undefined,
+                })
+              : null
+          }
           onOpen={(mode) => {
             onClose(false);
             onFollow(hit, mode);

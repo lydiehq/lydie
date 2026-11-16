@@ -389,4 +389,25 @@ describe("the address bar", () => {
     expect(focused()!.path).toBe(docPath(two));
     await until(() => stale.url() === `/w/acme/d/two-${hex(two)}`);
   });
+
+  test("links to pages get the address bar's URLs, and the browser their modified clicks", async () => {
+    const { host, ids } = await setup({ slug: "acme" });
+    const [one] = ids as [string];
+    const hex = one.replaceAll("-", "");
+    // Without the address bar (the desktop app, an embed) links are the app's.
+    expect(host.app.linkClicks).toBe("app");
+    expect(host.app.href(docPath(one), "One")).toBe(docPath(one));
+
+    const stop = syncUrl(host, {
+      base: "/app/",
+      history: createHistory("/app/").history,
+      workspaceId: WS,
+    });
+    expect(host.app.linkClicks).toBe("browser");
+    expect(host.app.href(docPath(one), "One")).toBe(`/app/w/acme/d/one-${hex}`);
+    expect(host.app.href(docPath(one, { heading: "Plan" }))).toBe(`/app/w/acme/d/${one}#Plan`);
+    expect(host.app.href("/trash")).toBe("/app/w/acme/trash");
+    stop();
+    expect(host.app.linkClicks).toBe("app");
+  });
 });

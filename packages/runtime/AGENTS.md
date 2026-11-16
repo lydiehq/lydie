@@ -131,7 +131,8 @@ emptyLayout(newId), checkLayout(layout): string[], findTab, findGroup, activeGro
 HISTORY_LIMIT (50 per tab), MIN_SIZE (0.05)
 type LayoutAction = open (replace | tab | background; a replace of a document or page that
   another tab of the same pane shows activates that tab instead, moving it to the asked heading or
-  block, and closes the blank tab it came from) | close | closeOthers |
+  block, merging asked-for `state` such as a collection's view, and closes the blank tab it came
+  from) | close | closeOthers |
   closeAll { windowId? } (every unpinned tab of the window, in every pane; a lone Home: no-op) |
   activate | move | split |
   moveToSplit | resize | navigate | back | forward | leaveDocs | pin | setTabState | openWindow |

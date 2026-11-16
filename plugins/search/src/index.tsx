@@ -1,7 +1,8 @@
 import {
   definePlugin,
+  docPath,
   docPreviewTarget,
-  useApp,
+  PageLink,
   useHoverPreview,
   useQuery,
   useTabState,
@@ -38,26 +39,22 @@ function Snippet({ text }: { text: string }) {
 }
 
 const Result = memo(function Result({ hit }: { hit: SearchHit }) {
-  const app = useApp();
   const { trigger, preview } = useHoverPreview(docPreviewTarget(hit.id));
   return (
     <li>
       {preview}
-      <button
-        type="button"
+      <PageLink
+        path={docPath(hit.id)}
+        title={hit.title}
         {...trigger}
         data-testid="search-result"
-        onClick={(event) => app.openDoc(hit.id, { mode: app.modeFor(event) })}
-        onAuxClick={(event) => {
-          if (event.button === 1) app.openDoc(hit.id, { mode: "tab" });
-        }}
         className={`flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left hover:bg-gray-950/3 ${focusRingInsetClass}`}
       >
         <span className="text-sm font-medium text-gray-900">{hit.title || "Untitled"}</span>
         <span className="line-clamp-2 text-xs text-gray-500">
           <Snippet text={hit.snippet} />
         </span>
-      </button>
+      </PageLink>
     </li>
   );
 });

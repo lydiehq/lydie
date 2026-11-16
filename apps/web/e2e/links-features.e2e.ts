@@ -380,7 +380,7 @@ describe("link preview and menu", () => {
     await embed.getByText("kept text").waitFor();
     expect(await embed.innerText()).not.toContain("skipped text");
     await shot("embed");
-    await embed.getByRole("button", { name: "Open Embedded" }).click();
+    await embed.getByRole("link", { name: "Open Embedded" }).click();
     await until(async () => (await focusedTitle()) === "Embedded", 3000, "opened");
   });
 });
@@ -623,8 +623,12 @@ describe("page icons and quick capture", () => {
     // A doodle in a colour, kept as text in the page's properties.
     await view.getByRole("textbox", { name: "Title" }).hover();
     await add.click();
-    await picker.getByRole("button", { name: "Colour blue" }).click();
-    await picker.getByRole("button", { name: "Spiral" }).click();
+    // The swatch's radio input is visually hidden: click the swatch (its label).
+    await picker
+      .locator("label")
+      .filter({ has: page.getByRole("radio", { name: "Colour blue" }) })
+      .click();
+    await picker.getByRole("option", { name: "Spiral" }).click();
     await tabs(page)
       .filter({ hasText: "Rocket" })
       .locator("[data-page-icon='doodle:spiral:blue'] svg[data-doodle=spiral]")

@@ -8,6 +8,7 @@ export * from "./doc-summary.ts";
 export * from "./doc-marks.ts";
 export * from "./page-icon.tsx";
 export * from "./prefetch.ts";
+export * from "./page-link.tsx";
 export * from "./doc-picker-item.tsx";
 export * from "./link-style.ts";
 export * from "./keys.ts";

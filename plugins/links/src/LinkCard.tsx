@@ -1,8 +1,8 @@
 // What a link popover shows: the target document as the tree's hover card shows it (`DocCard`) or,
 // for a web link, its address. Read only when the card is open.
-import { DocCard, useApp, useBackend, useQuery } from "@lydie/plugin-api";
-import type { DocCardSection, OpenOptions } from "@lydie/plugin-api";
-import { Button, ExternalLinkRegular } from "@lydie/plugin-api/ui";
+import { DocCard, PageLink, useApp, useBackend, useQuery } from "@lydie/plugin-api";
+import type { DocCardSection, OpenOptions, TabPath } from "@lydie/plugin-api";
+import { Button, buttonStyles, ExternalLinkRegular } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -121,28 +121,47 @@ export function IconAction({
 
 type OpenAction = (mode: OpenOptions["mode"]) => void;
 
-// The three ways to open, the same in every card.
-export function OpenButtons({ onOpen, label = "Open" }: { onOpen: OpenAction; label?: string }) {
+// The three ways to open, the same in every card. With the page's `path`, "Open" is a link to it.
+export function OpenButtons({
+  onOpen,
+  label = "Open",
+  path,
+}: {
+  onOpen: OpenAction;
+  label?: string;
+  path?: TabPath | null;
+}) {
   const app = useApp();
   return (
     <>
-      <Button
-        size="sm"
-        variant="ghost"
-        onPress={(e) =>
-          onOpen(
-            app.modeFor({
-              metaKey: e.metaKey,
-              ctrlKey: e.ctrlKey,
-              shiftKey: e.shiftKey,
-              altKey: e.altKey,
-            }),
-          )
-        }
-      >
-        <ExternalLinkRegular aria-hidden className="size-3.5" />
-        {label}
-      </Button>
+      {path ? (
+        <PageLink
+          path={path}
+          onOpen={onOpen}
+          className={buttonStyles({ size: "sm", variant: "ghost" })}
+        >
+          <ExternalLinkRegular aria-hidden className="size-3.5" />
+          {label}
+        </PageLink>
+      ) : (
+        <Button
+          size="sm"
+          variant="ghost"
+          onPress={(e) =>
+            onOpen(
+              app.modeFor({
+                metaKey: e.metaKey,
+                ctrlKey: e.ctrlKey,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+              }),
+            )
+          }
+        >
+          <ExternalLinkRegular aria-hidden className="size-3.5" />
+          {label}
+        </Button>
+      )}
       <Button size="sm" variant="ghost" aria-label="Open in new tab" onPress={() => onOpen("tab")}>
         New tab
       </Button>

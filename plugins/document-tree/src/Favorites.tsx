@@ -1,4 +1,13 @@
-import { DocIcon, docIdOf, prefetchDoc, useActiveTab, useApp, useBackend } from "@lydie/plugin-api";
+import {
+  DocIcon,
+  docIdOf,
+  docPath,
+  PageLink,
+  prefetchDoc,
+  useActiveTab,
+  useApp,
+  useBackend,
+} from "@lydie/plugin-api";
 import type { Document } from "@lydie/plugin-api";
 import {
   Button,
@@ -28,7 +37,9 @@ export function FavoritesSection() {
   const ids = useSyncExternalStore(favorites.subscribe, favorites.ids, favorites.ids);
   const watch = useMemo(() => watchFavoriteDocs(backend, ids), [backend, ids]);
   const docs = useSyncExternalStore(watch.subscribe, watch.docs, watch.docs);
-  const activeId = docIdOf(useActiveTab()?.path);
+  // As the tree: where the tab is going is marked at once.
+  const tab = useActiveTab();
+  const activeId = docIdOf(tab?.opening ?? tab?.path);
   const [menu, setMenu] = useState<{ doc: Document; x: number; y: number } | null>(null);
 
   if (docs.length === 0) return null;
@@ -54,15 +65,11 @@ export function FavoritesSection() {
                 className: `pr-1 select-none ${current ? "text-gray-900" : ""}`,
               })}
             >
-              {/* A plain button: the middle click and the context menu need the DOM events. */}
-              <button
-                type="button"
+              <PageLink
+                path={docPath(doc.id)}
+                title={doc.title}
                 aria-current={current ? "page" : undefined}
                 onMouseEnter={() => void prefetchDoc(backend, doc.id)}
-                onClick={(event) => app.openDoc(doc.id, { mode: app.modeFor(event) })}
-                onAuxClick={(event) => {
-                  if (event.button === 1) app.openDoc(doc.id, { mode: "tab" });
-                }}
                 onContextMenu={(event) => {
                   event.preventDefault();
                   setMenu({ doc, x: event.clientX, y: event.clientY });
@@ -74,7 +81,7 @@ export function FavoritesSection() {
                   <DocIcon id={doc.id} properties={doc.properties} className="size-4" />
                 </span>
                 <span className="min-w-0 grow truncate">{title}</span>
-              </button>
+              </PageLink>
               <Button
                 variant="ghost"
                 size="icon-xs"

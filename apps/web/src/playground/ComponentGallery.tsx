@@ -6,6 +6,7 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  Calendar,
   Checkbox,
   CheckboxGroup,
   CodeRegular,
@@ -15,6 +16,8 @@ import {
   ComboBoxItem,
   CommandList,
   ConfirmDialog,
+  DateField,
+  DatePicker,
   Dialog,
   Disclosure,
   DisclosureGroup,
@@ -46,6 +49,7 @@ import {
   QuoteLeftRegular,
   Radio,
   RadioGroup,
+  RangeCalendar,
   SearchField,
   Select,
   SelectItem,
@@ -91,6 +95,33 @@ function Line({ label, children }: { label?: string; children: ReactNode }) {
 }
 
 // What `app.confirm` shows: the host keeps the request and resolves its promise.
+// The date components take and give ISO text, as values are stored.
+function DatesDemo() {
+  const [date, setDate] = useState<string | null>("2026-11-15");
+  const [range, setRange] = useState({ start: "2026-11-09", end: "2026-11-13" });
+  const [moment, setMoment] = useState<string | null>("2026-11-15T09:30");
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-3 gap-6">
+        <DatePicker aria-label="Date picker" value={date} onChange={setDate} />
+        <DateField aria-label="Date field" value={date} onChange={setDate} />
+        <DateField aria-label="Date and time" withTime value={moment} onChange={setMoment} />
+      </div>
+      <div className="flex items-start gap-6">
+        <div className="rounded-lg bg-elevated p-2 shadow-popover">
+          <Calendar aria-label="Calendar" value={date} onChange={setDate} />
+        </div>
+        <div className="rounded-lg bg-elevated p-2 shadow-popover">
+          <RangeCalendar aria-label="Range" value={range} onChange={setRange} />
+        </div>
+        <span className="text-xs text-gray-500">
+          {date ?? "–"} · {range.start} → {range.end} · {moment ?? "–"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function ConfirmDemo() {
   const [request, setRequest] = useState<ConfirmOptions | null>(null);
   const [answer, setAnswer] = useState<boolean | null>(null);
@@ -223,6 +254,10 @@ export function ComponentGallery() {
             <Switch>Switch off</Switch>
           </div>
         </div>
+      </Section>
+
+      <Section title="Dates">
+        <DatesDemo />
       </Section>
 
       <Section title="Overlays">

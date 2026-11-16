@@ -1,5 +1,6 @@
 import {
   definePlugin,
+  PageLink,
   useActiveTab,
   useApp,
   useOps,
@@ -119,19 +120,17 @@ function TrashView() {
 
 // The sidebar's "Trash" entry, laid out as Home's (`HomeLink`): current while the trash is open.
 function TrashLink() {
-  const app = useApp();
   const current = useActiveTab()?.path === "/trash";
   const hotkeys = useShortcut("trash.open");
   const button = (
-    <button
-      type="button"
+    <PageLink
+      path={"/trash"}
       aria-current={current ? "page" : undefined}
-      onClick={(event) => app.open("/trash", { mode: app.modeFor(event) })}
       className={sidebarItemStyles({ isCurrent: current, className: "mx-2 gap-1.5 px-1.5" })}
     >
       <Delete2Regular aria-hidden className="size-4 text-gray-500" />
       Trash
-    </button>
+    </PageLink>
   );
   return hotkeys ? (
     <WithTooltip label="Open trash" hotkeys={hotkeys} placement="right">

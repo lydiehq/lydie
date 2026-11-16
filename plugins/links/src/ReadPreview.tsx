@@ -1,6 +1,6 @@
 // The hover card for links outside the editor (backlinks, search results, the tree), through
 // `useHoverPreview`: the same preview and open buttons as the editor's popover, without editing.
-import { useApp } from "@lydie/plugin-api";
+import { docPath, useApp } from "@lydie/plugin-api";
 import { Button } from "@lydie/plugin-api/ui";
 
 import {
@@ -45,6 +45,10 @@ export function ReadPreview({ target, sourceId }: { target: string; sourceId?: s
       <DocPreview id={id} heading={part.heading} blockId={part.blockId} />
       <CardActions>
         <OpenButtons
+          path={docPath(id, {
+            heading: part.heading ?? undefined,
+            blockId: part.blockId ?? undefined,
+          })}
           onOpen={(mode) =>
             void follow(
               app,

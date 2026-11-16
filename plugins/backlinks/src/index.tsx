@@ -3,6 +3,7 @@ import {
   docIdOf,
   docPath,
   docPreviewTarget,
+  PageLink,
   useApp,
   useHoverPreview,
   useQuery,
@@ -45,24 +46,19 @@ function Section({
   );
 }
 
-// A document title that opens it (modifiers as everywhere) and previews it on hover. A plain
-// `<button>`: the hover preview's pointer handlers and the middle click need the DOM events.
+// A link to a document that previews it on hover.
 function DocButton({ id, title }: { id: string; title: string }) {
-  const app = useApp();
   const { trigger, preview } = useHoverPreview(docPreviewTarget(id));
   return (
     <>
-      <button
-        type="button"
+      <PageLink
+        path={docPath(id)}
+        title={title}
         {...trigger}
-        onClick={(event) => app.openDoc(id, { mode: app.modeFor(event) })}
-        onAuxClick={(event) => {
-          if (event.button === 1) app.openDoc(id, { mode: "tab" });
-        }}
         className="max-w-full truncate rounded-md px-1 text-left text-sm font-medium text-gray-800 hover:bg-gray-950/5"
       >
         {title || "Untitled"}
-      </button>
+      </PageLink>
       {preview}
     </>
   );

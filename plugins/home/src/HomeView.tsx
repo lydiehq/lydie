@@ -4,10 +4,12 @@
 import {
   atTop,
   DocIcon,
+  docPath,
   documentMenuItems,
   gettingStartedId,
   moveToTrash,
   pageIconOf,
+  PageLink,
   runDocumentMenuAction,
   useApp,
   useBackend,
@@ -299,7 +301,6 @@ function Snippet({ snippet }: { snippet: string }) {
 // ---- Getting started: the page a new workspace starts with, while it is there
 
 function GettingStarted({ id }: { id: string }) {
-  const app = useApp();
   const doc = useQuery("doc.get", { id, includeBody: false }).data[0]?.document;
   const headingId = useId();
   if (!doc || doc.deletedAt) return null;
@@ -308,9 +309,9 @@ function GettingStarted({ id }: { id: string }) {
       <h2 id={headingId} className={`px-3 ${sidebarSectionTitleClass}`}>
         Start here
       </h2>
-      <button
-        type="button"
-        onClick={(e) => app.openDoc(id, { mode: app.modeFor(e) })}
+      <PageLink
+        path={docPath(id)}
+        title={doc.title}
         className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-3 text-left text-sm hover:bg-gray-950/3 ${focusRingInsetClass}`}
       >
         <span className="flex shrink-0 text-gray-500">
@@ -318,7 +319,7 @@ function GettingStarted({ id }: { id: string }) {
         </span>
         <span className="truncate font-medium text-gray-900">{doc.title || "Untitled"}</span>
         <span className="truncate text-gray-400">The basics in three minutes</span>
-      </button>
+      </PageLink>
     </section>
   );
 }
@@ -449,7 +450,6 @@ function RecentRow({
   onRename: (doc: DocumentRef, title: string) => void;
   onCancelRename: () => void;
 }) {
-  const app = useApp();
   const doc = useQuery("doc.get", { id }).data[0]?.document;
   const parent = useQuery("doc.get", doc?.parentId ? { id: doc.parentId } : null).data[0]?.document;
   const trashed = Boolean(doc?.deletedAt);
@@ -484,9 +484,9 @@ function RecentRow({
           />
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={(e) => app.openDoc(id, { mode: app.modeFor(e) })}
+        <PageLink
+          path={docPath(id)}
+          title={doc.title}
           onContextMenu={(e) => {
             e.preventDefault();
             onMenu(ref, e.clientX, e.clientY);
@@ -508,7 +508,7 @@ function RecentRow({
           >
             {ago(doc.updatedAt, now)}
           </span>
-        </button>
+        </PageLink>
       )}
       {!renaming && (
         <Button

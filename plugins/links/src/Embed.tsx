@@ -1,7 +1,16 @@
 // `![[note]]`, `![[note#heading]]`, `![[note#^block]]` (read-only transclusion with an "open"
 // affordance) and `![[image.png]]` (an attachment) inside the editor.
-import { DocIcon, useApp, useBackend, useQuery, useWorkspace } from "@lydie/plugin-api";
-import { Button, ExternalLinkRegular } from "@lydie/plugin-api/ui";
+import {
+  DocIcon,
+  docPath,
+  PageLink,
+  useApp,
+  useBackend,
+  useQuery,
+  useWorkspace,
+} from "@lydie/plugin-api";
+import type { OpenMode } from "@lydie/plugin-api";
+import { Button, buttonStyles, ExternalLinkRegular } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
 
 import { useResolved } from "./LinkCard.tsx";
@@ -85,7 +94,7 @@ export function EmbedBlock({ target, sourceId }: { target: string; sourceId?: st
           id={resolved.id}
           heading={link.heading}
           blockId={link.blockId}
-          onOpen={(gesture) => void follow(app, link, sourceId ?? null, app.modeFor(gesture))}
+          onOpen={(mode) => void follow(app, link, sourceId ?? null, mode)}
         />
       ) : resolved.state === "missing" ? (
         <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
@@ -116,12 +125,7 @@ function EmbeddedDoc({
   id: string;
   heading: string | null;
   blockId: string | null;
-  onOpen: (gesture: {
-    metaKey: boolean;
-    ctrlKey: boolean;
-    shiftKey: boolean;
-    altKey: boolean;
-  }) => void;
+  onOpen: (mode: OpenMode) => void;
 }) {
   const app = useApp();
   const { data } = useQuery("doc.get", { id, includeBody: true });
@@ -138,22 +142,16 @@ function EmbeddedDoc({
         <span className="truncate font-medium text-gray-700">{entry.document.title}</span>
         {part && <span className="truncate">› {part}</span>}
         <span className="grow" />
-        <Button
-          size="sm"
-          variant="ghost"
+        <PageLink
+          path={docPath(id, { heading: heading ?? undefined, blockId: blockId ?? undefined })}
+          title={entry.document.title}
           aria-label={`Open ${entry.document.title}`}
-          onPress={(e) =>
-            onOpen({
-              metaKey: e.metaKey,
-              ctrlKey: e.ctrlKey,
-              shiftKey: e.shiftKey,
-              altKey: e.altKey,
-            })
-          }
+          onOpen={onOpen}
+          className={buttonStyles({ size: "sm", variant: "ghost" })}
         >
           <ExternalLinkRegular aria-hidden className="size-3.5" />
           Open
-        </Button>
+        </PageLink>
       </div>
       <div className="px-3 pb-2">
         {section.found ? (

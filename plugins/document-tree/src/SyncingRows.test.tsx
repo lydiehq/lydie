@@ -75,6 +75,8 @@ async function renderTree(
       storage: { get: () => null, set() {} },
       activeTab: () => null,
       subscribeActiveTab: () => () => {},
+      href: (path: string) => path,
+      linkClicks: "app",
     },
     contributions: { list: () => NONE, subscribe: () => () => {} },
     tabs: { get: () => null, subscribe: () => () => {}, setState() {} },

@@ -1,5 +1,6 @@
 import {
   atTop,
+  createAndOpen,
   createMissing,
   definePlugin,
   docIdOf,
@@ -91,29 +92,30 @@ export const corePlugin = definePlugin({
       async run({ app }) {
         const workspaceId = app.workspace.workspaceId;
         const where = await newDocumentParent(app);
+        const scope = app.historyScope();
         // A folder just made is empty, so only an existing one needs a place at the top.
-        const id = where.missing.length
-          ? // The folder and the note as one undo step.
-            await app.backend.transaction(
-              "New document",
-              async (ops) => {
-                const parentId = await createMissing(ops, workspaceId, where);
-                return (await ops.doc.create({ workspaceId, title: "Untitled", parentId })).id;
-              },
-              { scope: app.historyScope() },
-            )
-          : (
-              await app.backend.ops.doc.create(
-                {
-                  workspaceId,
-                  title: "Untitled",
-                  parentId: where.id,
-                  ...(await atTop(app.backend, workspaceId, where.id)),
-                },
-                { scope: app.historyScope() },
-              )
-            ).id;
-        app.openDoc(id, { state: { focusTitle: true } });
+        const placement = where.missing.length
+          ? {}
+          : await atTop(app.backend, workspaceId, where.id);
+        await createAndOpen(
+          app,
+          (id) =>
+            where.missing.length
+              ? // The folder and the note as one undo step.
+                app.backend.transaction(
+                  "New document",
+                  async (ops) => {
+                    const parentId = await createMissing(ops, workspaceId, where);
+                    return ops.doc.create({ workspaceId, id, title: "Untitled", parentId });
+                  },
+                  { scope },
+                )
+              : app.backend.ops.doc.create(
+                  { workspaceId, id, title: "Untitled", parentId: where.id, ...placement },
+                  { scope },
+                ),
+          { state: { focusTitle: true } },
+        );
       },
     });
     ctx.commands.register({

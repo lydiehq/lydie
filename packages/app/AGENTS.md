@@ -77,7 +77,11 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   screen stays instead of an empty or half-filled one; when it returns nothing (the data is here:
   prefetched on hover, or still lingering), `open` is synchronous as before. Any other layout
   action drops a waiting page. Back and forward are not held. Test: "a page with a preload…" in
-  `shell.test.tsx`.
+  `shell.test.tsx`. While a page waits, `activeTab().opening` names it (not for background tabs),
+  so the sidebar marks it at once; on landing the new path and the cleared `opening` are one
+  notification. `OpenOptions.after` (a page being created, `createAndOpen`) is waited for first,
+  without the 150 ms limit, and a failure drops the open. Tests: "while a page is held…", "a new
+  page is where the tab goes…".
 - **Tabs**: the layout tree comes from `@lydie/runtime/layout`, saved per workspace and window
   (`window:<workspaceId>:<windowId>`) through `backend.layouts`. Views subscribe per tab
   (`subscribeTab`/`subscribeGroup` with selectors), so a change in one tab re-renders nothing else.
@@ -172,6 +176,10 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   it with its own back/forward (state restored); a closed tab's page opens in the focused tab.
   The app's own Back and Forward (`core.back`, `core.forward`) are the window's there
   (`host.attachWindowHistory`, set by `syncUrl`), so there is one history, not two.
+  `syncUrl` also gives links to pages their URLs (`host.attachLinks`: `AppApi.href`, the same
+  `appUrl` with the workspace and title) and the browser their modified clicks
+  (`AppApi.linkClicks` "browser"); without it (desktop, try-out, embed) hrefs are paths and every
+  click is the app's.
   An overlay with `OverlayDef.url` is an entry over the page, under the same workspace prefix:
   Back closes it, closing it goes back. On load a URL wins over the saved layout: the entry's tab after a reload, else a tab
   that shows it, else a new tab; a path no view shows stays until a later plugin's overlay

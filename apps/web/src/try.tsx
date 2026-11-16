@@ -16,7 +16,7 @@ import {
   markdownExtract,
 } from "@lydie/app/backend";
 import type { Operations } from "@lydie/contract";
-import { definePlugin, useActiveTab, useApp } from "@lydie/plugin-api";
+import { definePlugin, PageLink, useActiveTab } from "@lydie/plugin-api";
 import type { TabPath } from "@lydie/plugin-api";
 import { sidebarItemStyles } from "@lydie/plugin-api/ui";
 import { createGettingStarted, createRuntime, uuid } from "@lydie/runtime";
@@ -74,18 +74,16 @@ function aboutPlugin(about: About) {
   }
 
   function AboutLink() {
-    const app = useApp();
     const current = useActiveTab()?.path === ABOUT_PATH;
     return (
-      <button
-        type="button"
+      <PageLink
+        path={ABOUT_PATH}
         aria-current={current ? "page" : undefined}
-        onClick={(event) => app.open(ABOUT_PATH, { mode: app.modeFor(event) })}
         className={sidebarItemStyles({ isCurrent: current, className: "mx-2 gap-1.5 px-1.5" })}
       >
         <LydieMark size={16} className="text-gray-400" />
         {ABOUT_TITLE}
-      </button>
+      </PageLink>
     );
   }
 

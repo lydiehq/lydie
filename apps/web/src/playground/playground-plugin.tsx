@@ -1,7 +1,7 @@
 // Development only: an in-app playground for design explorations (little worlds, the Mac icon),
 // linked at the bottom of the sidebar. The /playground page is the design-system check outside
 // the app.
-import { definePlugin, useActiveTab, useApp } from "@lydie/plugin-api";
+import { definePlugin, PageLink, useActiveTab } from "@lydie/plugin-api";
 import { BulbRegular, sidebarItemStyles } from "@lydie/plugin-api/ui";
 
 import { Explorations } from "./Explorations.tsx";
@@ -10,18 +10,16 @@ import { Explorations } from "./Explorations.tsx";
 const path = "/explorations";
 
 function PlaygroundLink() {
-  const app = useApp();
   const current = useActiveTab()?.path === path;
   return (
-    <button
-      type="button"
+    <PageLink
+      path={path}
       aria-current={current ? "page" : undefined}
-      onClick={(event) => app.open(path, { mode: app.modeFor(event) })}
       className={sidebarItemStyles({ isCurrent: current, className: "mx-2 gap-1.5 px-1.5" })}
     >
       <BulbRegular aria-hidden className="size-4 text-gray-500" />
       Playground
-    </button>
+    </PageLink>
   );
 }
 

@@ -96,6 +96,8 @@ function show(mode: "local" | "synced" = "local") {
       overlays: { close() {} },
       openDoc() {},
       modeFor: () => "replace",
+      href: (path: string) => path,
+      linkClicks: "app",
       services:
         mode === "synced"
           ? {
@@ -140,7 +142,7 @@ test("reads rows as sentences and folds an agent's session, which can be undone"
     "You added file x.png",
   ]);
   // The page is a link; the file is not.
-  expect(within(rows[0]!).getByRole("button", { name: "Roadmap" })).toBeDefined();
+  expect(within(rows[0]!).getByRole("link", { name: "Roadmap" })).toBeDefined();
   expect(within(rows[1]!).queryByRole("button")).toBeNull();
 
   const session = within(list).getByTestId("activity-session");

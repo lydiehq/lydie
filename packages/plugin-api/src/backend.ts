@@ -352,6 +352,9 @@ export type BackendInfo = {
 export type Backend = {
   readonly info: BackendInfo;
   readonly ops: BackendOps;
+  // An id for something about to be created (`doc.create`'s `id`), known before the write
+  // commits, so the page can start opening in the frame its row paints (`createAndOpen`).
+  newId(): string;
   execute<K extends OperationId>(
     id: K,
     input: InputOf<Operations[K]>,

@@ -1,10 +1,13 @@
 import {
   atTop,
+  createAndOpen,
   DocIcon,
   docIdOf,
+  docPath,
   documentMenuItems,
   DRAG_TYPES,
   gettingStartedId,
+  linkMode,
   moveToTrash,
   runDocumentMenuAction,
   useActiveTab,
@@ -22,6 +25,7 @@ import type {
   DocumentTreeDropTarget,
   DocumentTreeProps,
   OpenGesture,
+  OpenOptions,
 } from "@lydie/plugin-api";
 import { VIEW_ICONS } from "@lydie/plugin-api/databases";
 import {
@@ -180,7 +184,11 @@ export function DocumentTree(props: DocumentTreeProps) {
   const loading = useSyncExternalStore(model.subscribe, model.loading, model.loading);
   const awaitingFirstSync = useAwaitingFirstSync();
   const activeTab = useActiveTab();
-  const activeDocId = docIdOf(activeTab?.path);
+  // Where the tab is going counts: a press (or a new page) is marked at once, while the page on
+  // screen stays until the next one has its data.
+  const activeDocId = docIdOf(activeTab?.opening ?? activeTab?.path);
+  // What is revealed is the page on screen: one being created cannot be looked up yet.
+  const shownDocId = docIdOf(activeTab?.path);
   const menuItems = useContributions("documentMenu");
   // Pages with a public link of their own get a globe (hosted workspaces only).
   const publicPages = useQuery(
@@ -282,10 +290,10 @@ export function DocumentTree(props: DocumentTreeProps) {
   // per change of document (collapsing a folder above it afterwards sticks).
   const revealing = useRef<string | null>(null);
   useEffect(() => {
-    if (!activeDocId || loading) return;
+    if (!shownDocId || loading) return;
     let current = true;
     // A page inside a collection is not listed: the collection's row stands for it.
-    void model.reveal(activeDocId).then((found) => {
+    void model.reveal(shownDocId).then((found) => {
       if (!current || !found) return;
       setFocusedId(found);
       const index = model.rows().findIndex((r) => r.id === found);
@@ -295,7 +303,7 @@ export function DocumentTree(props: DocumentTreeProps) {
     return () => {
       current = false;
     };
-  }, [model, activeDocId, loading, scroll]);
+  }, [model, shownDocId, loading, scroll]);
   useLayoutEffect(() => {
     if (!revealing.current) return;
     const index = rows.findIndex((r) => r.id === revealing.current);
@@ -338,8 +346,9 @@ export function DocumentTree(props: DocumentTreeProps) {
 
   // Through the collections plugin, which knows where its page keeps the open view; without it,
   // the collection's page.
-  const openView = (row: ViewRow, event?: OpenGesture) => {
-    const mode = event ? app.modeFor(event) : "replace";
+  const openView = (row: ViewRow, event?: OpenGesture) =>
+    openViewIn(row, event ? app.modeFor(event) : "replace");
+  const openViewIn = (row: ViewRow, mode: OpenOptions["mode"]) => {
     const databaseId = row.collection.id;
     app
       .runCommand("databases.openView", { databaseId, viewId: row.view.id, mode })
@@ -352,20 +361,35 @@ export function DocumentTree(props: DocumentTreeProps) {
     if (!isDoc(row) || !row.collection) model.setExpanded(id, true);
   };
 
-  // Mod+click selects instead of opening a tab (Mod+Shift+click and middle-click still do), and
-  // Shift+click selects a range.
+  // Rows are links. A plain click opens the page here and starts over the selection; Shift+click
+  // selects a range. Cmd/Ctrl- and middle-clicks are the browser's on the web (a browser tab) and
+  // open a tab in the desktop app (`linkMode`).
   const press = (row: DocRow, event: MouseEvent) => {
     setFocusedId(row.doc.id);
-    const mod = app.modeFor(event) === "tab" && event.button === 0;
-    if (event.shiftKey && !event.altKey && !event.metaKey && !event.ctrlKey) {
+    if (event.button === 0 && event.shiftKey && !event.altKey && !event.metaKey && !event.ctrlKey) {
+      event.preventDefault();
       extendTo(row.doc.id);
-    } else if (mod && !event.shiftKey) {
-      toggle(row.doc.id, true);
-    } else {
+      return;
+    }
+    const mode = linkMode(app, event);
+    if (mode === null) return;
+    event.preventDefault();
+    // Opening another tab leaves the selection as it is.
+    if (mode === "replace") {
       anchor.current = row.doc.id;
       clearSelection();
-      open(row.doc, event);
     }
+    app.openDoc(row.doc.id, { mode });
+  };
+
+  const pressView = (row: ViewRow, event: MouseEvent) => {
+    setFocusedId(row.id);
+    const mode = linkMode(app, event);
+    if (mode === null) return;
+    event.preventDefault();
+    anchor.current = row.id;
+    clearSelection();
+    openViewIn(row, mode);
   };
 
   // Changes paint before they are written; when one fails it is rolled back on screen, and said.
@@ -380,15 +404,21 @@ export function DocumentTree(props: DocumentTreeProps) {
     createInRaw(parentId).catch(failed("create the page"));
   const createInRaw = async (parentId: string | null) => {
     const workspaceId = backend.info.workspaceId;
-    const doc = await ops.doc.create({
-      ...(parentId === null ? props.createInput : undefined),
-      workspaceId,
-      parentId,
-      title: "Untitled",
-      ...(await atTop(backend, workspaceId, parentId)),
-    });
+    const placement = await atTop(backend, workspaceId, parentId);
+    await createAndOpen(
+      app,
+      (id) =>
+        ops.doc.create({
+          ...(parentId === null ? props.createInput : undefined),
+          workspaceId,
+          id,
+          parentId,
+          title: "Untitled",
+          ...placement,
+        }),
+      { state: { focusTitle: true } },
+    );
     if (parentId) expandToShow(parentId);
-    app.openDoc(doc.id, { state: { focusTitle: true } });
   };
 
   // Several documents go in one transaction, so one undo brings them all back. Asks first when one
@@ -530,6 +560,16 @@ export function DocumentTree(props: DocumentTreeProps) {
   const startDrag = (row: DocRow, event: DragEvent<HTMLElement>) => {
     const { all, top } = targetsOf(row.doc);
     const transfer = event.dataTransfer;
+    // The drag starts on the row's link: the row is what is dragged and what the pointer holds.
+    const box = event.currentTarget.getBoundingClientRect();
+    transfer.setDragImage(event.currentTarget, event.clientX - box.left, event.clientY - box.top);
+    // The browser filled in the link's URL and HTML, which an editor would paste as a link to the
+    // web app. Only the URLs stay (dragged out of the app, they are links to the pages).
+    transfer.clearData();
+    transfer.setData(
+      "text/uri-list",
+      all.map((d) => app.href(docPath(d.id), d.title)).join("\r\n"),
+    );
     transfer.setData(DRAG_TYPES.doc, row.doc.id);
     if (top.length > 1) transfer.setData(DRAG_IDS_TYPE, JSON.stringify(top.map((d) => d.id)));
     transfer.setData(dragKeyType(dragKey), "");
@@ -664,6 +704,14 @@ export function DocumentTree(props: DocumentTreeProps) {
     );
   }
 
+  // A press on a row focuses its link; afterwards the tree takes focus back, since it has the
+  // keys (aria-activedescendant). Not on the press itself: moving focus then cancels a drag.
+  const takeFocus = (event: { target: EventTarget }) => {
+    if (event.target instanceof Element && event.target.closest("[data-row-link]")) {
+      treeRef.current?.focus({ preventScroll: true });
+    }
+  };
+
   return (
     <div
       ref={scroller}
@@ -686,12 +734,17 @@ export function DocumentTree(props: DocumentTreeProps) {
         aria-activedescendant={focusedId ? `tree-row-${focusedId}` : undefined}
         onKeyDown={onKeyDown}
         // Also when the drag ends elsewhere (another tree, a tab group) or is cancelled.
-        onDragEnd={() => setDragging(EMPTY)}
-        onFocus={() => {
-          if (rows[0] && !rows.some((r) => r.id === focusedId))
-            setFocusedId(
-              activeDocId && rows.some((r) => r.id === activeDocId) ? activeDocId : rows[0].id,
-            );
+        onDragEnd={(event) => {
+          setDragging(EMPTY);
+          takeFocus(event);
+        }}
+        onClick={takeFocus}
+        onFocus={(event) => {
+          if (event.target !== event.currentTarget || !rows[0]) return;
+          const start =
+            activeDocId && rows.some((r) => r.id === activeDocId) ? activeDocId : rows[0].id;
+          // A press focuses the tree in the same event that picked its row: keep that one.
+          setFocusedId((id) => (rows.some((r) => r.id === id) ? id : start));
         }}
         className="group/tree relative outline-none"
         style={{ height: rows.length * ROW_HEIGHT }}
@@ -704,12 +757,8 @@ export function DocumentTree(props: DocumentTreeProps) {
               row={row}
               top={(first + i) * ROW_HEIGHT}
               focused={row.id === focusedId}
-              onOpen={(event) => {
-                setFocusedId(row.id);
-                anchor.current = row.id;
-                clearSelection();
-                openView(row, event);
-              }}
+              href={app.href(docPath(row.collection.id), row.collection.title)}
+              onPress={(event) => pressView(row, event)}
             />
           ) : (
             <TreeItem
@@ -726,11 +775,8 @@ export function DocumentTree(props: DocumentTreeProps) {
               dimmed={dragging.has(row.doc.id)}
               drop={drop && drop.id === row.doc.id ? drop.where : null}
               onToggle={() => model.setExpanded(row.doc.id, !row.expanded)}
+              href={app.href(docPath(row.doc.id), row.doc.title)}
               onPress={(event) => press(row, event)}
-              onOpen={(event) => {
-                setFocusedId(row.doc.id);
-                open(row.doc, event);
-              }}
               onRename={(title) => void rename(row.doc, title)}
               onCancelRename={() => setRenamingId(null)}
               onAddChild={() => void createIn(row.doc.id)}
@@ -791,8 +837,9 @@ type ItemProps = {
   dimmed: boolean;
   drop: "before" | "after" | "inside" | "end" | null;
   onToggle: () => void;
+  // The row is a link to the page.
+  href: string;
   onPress: (event: MouseEvent) => void;
-  onOpen: (event: MouseEvent) => void;
   onRename: (title: string) => void;
   onCancelRename: () => void;
   onAddChild: () => void;
@@ -816,8 +863,8 @@ const TreeItem = memo(function TreeItem({
   dimmed,
   drop,
   onToggle,
+  href,
   onPress,
-  onOpen,
   onRename,
   onCancelRename,
   onAddChild,
@@ -849,9 +896,10 @@ const TreeItem = memo(function TreeItem({
   };
   // The tree owns focus (aria-activedescendant) and handles the keys; rows take pointer input only.
   // The card is the row's sibling, not its child, so events inside it do not reach the row.
+  // The title is the row's link, stretched over the row; the buttons sit above it.
   return (
     <>
-      {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus */}
+      {/* oxlint-disable-next-line jsx-a11y/interactive-supports-focus */}
       <div
         {...hover.triggerProps}
         {...prefetch}
@@ -867,12 +915,6 @@ const TreeItem = memo(function TreeItem({
         onDragStart={onDragStartRow}
         onDragOver={onDragOverRow}
         onDrop={onDropRow}
-        onClick={(event) => {
-          if (!renaming) onPress(event);
-        }}
-        onAuxClick={(event) => {
-          if (event.button === 1) onOpen(event);
-        }}
         onContextMenu={(event) => {
           event.preventDefault();
           onMenu(event.clientX, event.clientY);
@@ -920,7 +962,7 @@ const TreeItem = memo(function TreeItem({
                 event.stopPropagation();
                 onToggle();
               }}
-              className="relative -ml-1 flex size-5 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-950/5"
+              className="relative z-10 -ml-1 flex size-5 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-950/5"
             >
               <DocIcon
                 id={doc.id}
@@ -948,11 +990,12 @@ const TreeItem = memo(function TreeItem({
           <RenameInput initial={doc.title} onCommit={onRename} onCancel={onCancelRename} />
         ) : (
           <>
-            <span className={`min-w-0 truncate ${published ? "" : "grow"}`}>
+            <RowLink href={href} onPress={onPress} className={published ? "" : "grow"}>
               {doc.title || "Untitled"}
-            </span>
+            </RowLink>
             {published && (
               <GlobeRegular
+                // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an inline SVG icon with a name
                 role="img"
                 aria-hidden={false}
                 aria-label="Published to web"
@@ -967,7 +1010,7 @@ const TreeItem = memo(function TreeItem({
         {!renaming && (
           <span
             {...overControl}
-            className={`shrink-0 gap-px ${menuOpen ? "flex" : `hidden group-hover:flex pointer-coarse:flex ${focused ? "group-focus-visible/tree:flex" : ""}`}`}
+            className={`relative z-10 shrink-0 gap-px ${menuOpen ? "flex" : `hidden group-hover:flex pointer-coarse:flex ${focused ? "group-focus-visible/tree:flex" : ""}`}`}
           >
             <RowAction
               label={`New document inside ${doc.title || "Untitled"}`}
@@ -997,16 +1040,18 @@ const ViewItem = memo(function ViewItem({
   row,
   top,
   focused,
-  onOpen,
+  href,
+  onPress,
 }: {
   row: ViewRow;
   top: number;
   focused: boolean;
-  onOpen: (event: MouseEvent) => void;
+  href: string;
+  onPress: (event: MouseEvent) => void;
 }) {
   const ViewIcon = VIEW_ICONS[row.view.type];
   return (
-    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
+    // oxlint-disable-next-line jsx-a11y/interactive-supports-focus
     <div
       id={`tree-row-${row.id}`}
       role="treeitem"
@@ -1014,10 +1059,6 @@ const ViewItem = memo(function ViewItem({
       aria-selected={false}
       data-testid="tree-view-row"
       data-view-id={row.view.id}
-      onClick={onOpen}
-      onAuxClick={(event) => {
-        if (event.button === 1) onOpen(event);
-      }}
       onContextMenu={(event) => event.preventDefault()}
       className="group isolate absolute inset-x-0 flex cursor-default items-center gap-1 pr-1 text-sm font-medium text-gray-600 select-none"
       style={{ top, height: ROW_HEIGHT, paddingLeft: indentOf(row.depth) }}
@@ -1034,10 +1075,42 @@ const ViewItem = memo(function ViewItem({
       <span className="-ml-1 flex size-5 shrink-0 items-center justify-center text-gray-500">
         <ViewIcon aria-hidden className="size-4" />
       </span>
-      <span className="min-w-0 grow truncate">{row.view.name}</span>
+      <RowLink href={href} onPress={onPress} className="grow">
+        {row.view.name}
+      </RowLink>
     </div>
   );
 });
+
+// A row's link: its title, stretched over the whole row (under the row's buttons), so a click
+// anywhere on the row follows it and the browser treats the row as a link. Out of the tab order:
+// the tree takes focus and keys. Drags start on it and the row's handler takes them over.
+function RowLink({
+  href,
+  onPress,
+  className,
+  children,
+}: {
+  href: string;
+  onPress: (event: MouseEvent) => void;
+  className: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      tabIndex={-1}
+      data-row-link
+      onClick={onPress}
+      onAuxClick={(event) => {
+        if (event.button === 1) onPress(event);
+      }}
+      className={`min-w-0 cursor-default truncate outline-none before:absolute before:inset-0 ${className}`}
+    >
+      {children}
+    </a>
+  );
+}
 
 // A hover action on a row (v1's): a tooltip after a rest, and out of the tab order, since the tree
 // handles the keys. The menu opens under the button.

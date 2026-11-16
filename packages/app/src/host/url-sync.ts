@@ -177,6 +177,11 @@ export function syncUrl(host: Host, options: UrlSyncOptions): () => void {
 
   let last = shown();
 
+  // Links to pages carry their URL, and modified clicks on them are the browser's.
+  const offLinks = host.attachLinks({
+    href: (path, title) => appUrl(base, path, workspace, history.location().search, title),
+  });
+
   const entry = (under: boolean): { lydie: Entry } => ({
     lydie: { tab: last.tab?.id ?? null, under },
   });
@@ -323,6 +328,7 @@ export function syncUrl(host: Host, options: UrlSyncOptions): () => void {
     host.attachWindowHistory({ go: (delta) => history.go(delta) }),
   ];
   return () => {
+    offLinks();
     for (const off of disposers) off();
   };
 }

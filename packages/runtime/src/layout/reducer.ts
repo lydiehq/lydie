@@ -356,7 +356,14 @@ function apply(layout: Layout, action: LayoutAction, newId: () => string): Layou
           ? group.tabs.find((t) => sameView(t.path, action.path))
           : undefined;
       if (existing) {
-        let next = navigate(layout, existing.id, action.path, action.state ?? existing.state);
+        // Asked-for state (a collection's view) merges into the tab's when it stays on the path.
+        const asked = action.state;
+        let next =
+          existing.path !== action.path
+            ? navigate(layout, existing.id, action.path, asked ?? existing.state)
+            : asked
+              ? updateTab(layout, existing.id, (t) => ({ ...t, state: { ...t.state, ...asked } }))
+              : layout;
         next = updateGroup(next, group.id, (g) => ({ ...g, activeTabId: existing.id }));
         if (active && !active.pinned && isBlank(active)) next = removeTab(next, active.id);
         return focus(next, group.id);

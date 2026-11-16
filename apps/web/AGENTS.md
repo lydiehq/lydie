@@ -114,6 +114,9 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   Signed in, a workspace this browser has not listed before is looked up (`session.workspaces()`);
   one the user cannot open falls back to the last one with a toast (`Composition.notice`).
   Switching workspace goes to the other one's URL (`reopen` in `src/hosted.ts`).
+- Links to pages are real links in a browser tab (`syncUrl` attaches them): Cmd/Ctrl- and
+  middle-clicks open browser tabs at the page's URL, which open that page (see above). On
+  Safari and mobile browsers that tab says "Lydie is open in another tab" (`single-tab.ts`).
 - `?embed=1`: for a page that frames the app; posts `{ type: "lydie:embed-ready" }` to the parent
   once mounted. The marketing site no longer frames it (it mounts the try-out instead).
   `Content-Security-Policy: frame-ancestors 'self' https://lydie.co http://localhost:4300` is set

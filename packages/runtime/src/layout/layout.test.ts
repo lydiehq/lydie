@@ -91,6 +91,11 @@ describe("tabs", () => {
     expect(tab.path).toBe(heading);
     expect(tab.back.map((e) => e.path)).toEqual([doc(2)]);
 
+    // State asked for with it (a collection's view) reaches that tab.
+    apply({ type: "setTabState", tabId: tab.id, state: { scroll: 10 } });
+    apply({ type: "open", path: doc(3) }, { type: "open", path: heading, state: { view: "b" } });
+    expect(activeGroup(layout).tabs[1]!.state).toEqual({ scroll: 10, view: "b" });
+
     // Pages other than documents too; a new tab is still a new tab when asked for.
     apply(
       { type: "open", path: "/trash" },

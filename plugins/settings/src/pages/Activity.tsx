@@ -1,4 +1,4 @@
-import { useAccount, useApp, useQuery, useWorkspace } from "@lydie/plugin-api";
+import { docPath, PageLink, useAccount, useApp, useQuery, useWorkspace } from "@lydie/plugin-api";
 import type { Activity, Actor } from "@lydie/plugin-api";
 import {
   AriaDialog,
@@ -436,16 +436,17 @@ function TargetLink({ id, title, current }: { id: string; title: string; current
   if (!doc) return <span className="text-gray-900">{title}</span>;
   const shown = current ? doc.document.title.trim() || title : title;
   return (
-    <button
-      type="button"
+    <PageLink
+      path={docPath(id)}
+      title={shown}
       className={`rounded-xs text-left text-gray-900 underline decoration-gray-950/20 underline-offset-2 hover:decoration-gray-950/50 ${focusRingClass}`}
-      onClick={(event) => {
+      onOpen={(mode) => {
         app.overlays.close("settings");
-        app.openDoc(id, { mode: app.modeFor(event) });
+        app.openDoc(id, { mode });
       }}
     >
       {shown}
-    </button>
+    </PageLink>
   );
 }
 

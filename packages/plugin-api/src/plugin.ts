@@ -37,6 +37,9 @@ export type OpenOptions = {
   mode?: "replace" | "tab" | "background" | "split";
   side?: Side;
   state?: TabState;
+  // A page being created: the open waits for it (then for the page's data, as always) and is
+  // dropped if it fails. Meanwhile `TabInfo.opening` already names the page (`createAndOpen`).
+  after?: Promise<unknown>;
 };
 
 // How a pointer or keyboard gesture opens a link: Cmd/Ctrl-click or middle-click → new tab.
@@ -137,6 +140,10 @@ export type TabInfo = {
   isActive: boolean;
   // The active tab of the active group.
   isFocused: boolean;
+  // `activeTab()` only: the page the focused tab is going to, while the page on screen stays until
+  // that one has its data (`ViewDef.preload`, `OpenOptions.after`). Lists that mark the open page
+  // mark this one, so a press shows at once: `docIdOf(tab.opening ?? tab.path)`.
+  opening?: TabPath;
 };
 
 export type ViewProps = { tab: TabInfo };
@@ -406,6 +413,15 @@ export type AppApi = {
   // Read contexts: plain click "replace", Mod-click "tab". In the editor ("edit"): Mod-click
   // "replace". Everywhere: Mod+Shift-click and middle-click "tab", Mod+Alt-click "split".
   modeFor(gesture: OpenGesture, context?: GestureContext): OpenOptions["mode"];
+  // The URL of a page, for a link's href: on the web what the address bar shows for it (the
+  // workspace, and a document's title when given); elsewhere the path itself. Links to pages are
+  // built with `pageLinkProps` / `PageLink`, which read `linkClicks`.
+  href(path: TabPath, title?: string | null): string;
+  // Who handles modified clicks on links to pages. "browser" (the web app in a browser tab):
+  // Cmd/Ctrl-, Shift-, Alt- and middle-clicks do what they do on any page (a browser tab or
+  // window); only a plain click opens the page in the app. "app" (the desktop app, the try-out,
+  // an embed): every click opens it in the app, modified ones in a tab or split (`modeFor`).
+  readonly linkClicks: "browser" | "app";
   activeTab: () => TabInfo | null;
   // Called when the focused tab or its path changes.
   subscribeActiveTab: (listener: () => void) => () => void;

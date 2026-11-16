@@ -89,6 +89,9 @@ export type HostOptions = {
   services?: HostServices;
 };
 
+// What `syncUrl` tells the host about links: the URL of a page (`AppApi.href`).
+export type HostLinks = { href(path: TabPath, title: string | null): string };
+
 export type Host = {
   readonly app: AppApi;
   readonly bridge: HostBridge;
@@ -113,6 +116,9 @@ export type Host = {
   // In a browser tab the window has a history of its own (the address bar's): Back and Forward
   // then go through it instead of the focused tab's (`syncUrl` sets it). Returns a disposer.
   attachWindowHistory(history: { go(delta: number): void }): () => void;
+  // Gives links to pages their URLs and the browser their modified clicks (`syncUrl` sets it).
+  // Returns a disposer.
+  attachLinks(links: HostLinks): () => void;
   // Handles a keydown for the whole window: commands and global undo/redo. Returns true if used.
   handleKey(event: KeyboardEvent): boolean;
   tabInfo(tabId: string): TabInfo | null;
@@ -220,35 +226,61 @@ export function createHost(options: HostOptions): Host {
     };
   };
 
-  // A navigation waiting for its page's data. Whatever the user does next replaces it.
-  let held: { cancel(): void } | null = null;
+  // A navigation waiting for its page's data. Whatever the user does next replaces it. `opening`:
+  // what the focused tab will show (not a background tab), reported as `TabInfo.opening`.
+  let held: { opening: TabPath | null; cancel(): void } | null = null;
+  const heldListeners = new Set<() => void>();
+  const setHeld = (next: typeof held) => {
+    held = next;
+    for (const listener of [...heldListeners]) listener();
+  };
   const holdMs = options.holdMs ?? 150;
 
   // Runs `go` once the page at `path` has what it reads, or after `holdMs`: until then the page
-  // on screen stays, so a page that loads in a few ms never shows empty or half filled.
-  const whenReady = (path: TabPath, go: () => void) => {
-    let waiting: void | Promise<void>;
-    try {
-      waiting = findView(contributions.list("view"), path)?.preload?.(path, app);
-    } catch {
-      waiting = undefined;
-    }
-    if (!waiting || holdMs <= 0) return go();
+  // on screen stays, so a page that loads in a few ms never shows empty or half filled. `after`
+  // (a page being created) comes first, without a limit: there is nothing to show before it.
+  const whenReady = (
+    path: TabPath,
+    opening: TabPath | null,
+    go: () => void,
+    after?: Promise<unknown>,
+  ) => {
     let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const mine = {
+      opening,
+      cancel: () => {
+        live = false;
+        clearTimeout(timer);
+        if (held === mine) setHeld(null);
+      },
+    };
     const land = () => {
       if (!live) return;
-      cancel();
-      go();
-    };
-    const timer = setTimeout(land, holdMs);
-    const cancel = () => {
       live = false;
       clearTimeout(timer);
-      if (held === mine) held = null;
+      // Quietly first: the layout change says it, in one notification with the new path.
+      const wasHeld = held === mine;
+      if (wasHeld) held = null;
+      go();
+      if (wasHeld) setHeld(null);
     };
-    const mine = { cancel };
-    held = mine;
-    void waiting.then(land, land);
+    const load = () => {
+      if (!live) return;
+      let waiting: void | Promise<void>;
+      try {
+        waiting = findView(contributions.list("view"), path)?.preload?.(path, app);
+      } catch {
+        waiting = undefined;
+      }
+      if (!waiting || holdMs <= 0) return land();
+      if (held !== mine) setHeld(mine);
+      timer = setTimeout(land, holdMs);
+      void waiting.then(land, land);
+    };
+    if (!after) return load();
+    setHeld(mine);
+    after.then(load, mine.cancel);
   };
 
   const dispatch = (action: LayoutAction) => {
@@ -298,37 +330,42 @@ export function createHost(options: HostOptions): Host {
     if (mode === "split") {
       // "Open to the side" reuses the pane beside the active one (as a new tab) when there is one.
       const beside = openOptions.side ? null : adjacentGroup(group.id);
-      if (beside) {
-        dispatch({
-          type: "open",
-          path,
-          groupId: beside,
-          mode: "tab",
-          ...(state ? { state } : {}),
-        });
-        return;
-      }
-      dispatch({
-        type: "split",
-        groupId: group.id,
-        side: openOptions.side ?? "right",
-        path,
-        ...(state ? { state } : {}),
-      });
+      const go = () =>
+        beside
+          ? dispatch({
+              type: "open",
+              path,
+              groupId: beside,
+              mode: "tab",
+              ...(state ? { state } : {}),
+            })
+          : dispatch({
+              type: "split",
+              groupId: group.id,
+              side: openOptions.side ?? "right",
+              path,
+              ...(state ? { state } : {}),
+            });
+      if (openOptions.after) void openOptions.after.then(go, () => {});
+      else go();
       return;
     }
     // Opening what the active tab already shows just focuses it.
     const active = group.tabs.find((t) => t.id === group.activeTabId);
     if (mode === "replace" && active?.path === path) return;
     held?.cancel();
-    whenReady(path, () =>
-      dispatch({
-        type: "open",
-        path,
-        groupId: group.id,
-        mode,
-        ...(state ? { state } : {}),
-      }),
+    whenReady(
+      path,
+      mode === "background" ? null : path,
+      () =>
+        dispatch({
+          type: "open",
+          path,
+          groupId: group.id,
+          mode,
+          ...(state ? { state } : {}),
+        }),
+      openOptions.after,
     );
   };
 
@@ -339,23 +376,32 @@ export function createHost(options: HostOptions): Host {
   const activeDocId = () => docIdOf(activeTab()?.path);
   const historyScope = () => activeTab()?.id ?? `window:${windowId}`;
 
-  // A stable TabInfo for the focused tab, recomputed when the layout changes it.
+  // A stable TabInfo for the focused tab, with where it is going; recomputed when the layout or a
+  // held navigation changes it.
   let activeCache: { key: string; info: TabInfo | null } = { key: "", info: null };
   const activeTabStable = (): TabInfo | null => {
-    const info = activeTab();
-    const key = info ? `${info.id}|${info.groupId}|${info.path}` : "";
+    const base = activeTab();
+    const opening = held?.opening;
+    const info = base && opening ? { ...base, opening } : base;
+    const key = info ? `${info.id}|${info.groupId}|${info.path}|${opening ?? ""}` : "";
     if (key !== activeCache.key) activeCache = { key, info };
     return activeCache.info;
   };
   const subscribeActiveTab = (listener: () => void) => {
     let last = activeTabStable();
-    return layout.subscribe(() => {
+    const check = () => {
       const next = activeTabStable();
       if (next !== last) {
         last = next;
         listener();
       }
-    });
+    };
+    const off = layout.subscribe(check);
+    heldListeners.add(check);
+    return () => {
+      off();
+      heldListeners.delete(check);
+    };
   };
 
   // The toaster (`shell/Toasts.tsx`) times toasts out and removes them, since hovering pauses them.
@@ -462,6 +508,10 @@ export function createHost(options: HostOptions): Host {
     }
   };
 
+  // Links to pages are the browser's once `syncUrl` gives them URLs (a browser tab); until then
+  // (the desktop app, the try-out, an embed) their href is the path and every click is the app's.
+  let links: HostLinks | null = null;
+
   const app: AppApi = {
     backend,
     workspace: backend.info,
@@ -474,6 +524,10 @@ export function createHost(options: HostOptions): Host {
       if (mod && gesture.shiftKey) return "tab";
       if (mod) return context === "edit" ? "replace" : "tab";
       return "replace";
+    },
+    href: (path, title = null) => (links ? links.href(path, title) : path),
+    get linkClicks() {
+      return links ? "browser" : "app";
     },
     activeTab: activeTabStable,
     subscribeActiveTab,
@@ -1030,6 +1084,12 @@ export function createHost(options: HostOptions): Host {
       windowHistory = history;
       return () => {
         if (windowHistory === history) windowHistory = null;
+      };
+    },
+    attachLinks(next) {
+      links = next;
+      return () => {
+        if (links === next) links = null;
       };
     },
     handleKey,

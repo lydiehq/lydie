@@ -348,6 +348,7 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
     info,
     runtime,
     ops: opsProxy(execute),
+    newId: uuid,
     execute: execute as Backend["execute"],
     async transaction(label, fn, opOptions) {
       const result = await runtime.transaction(

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, spyOn, test } from "bun:test";
 
 import { createTestPlatform } from "@lydie/platform/testing";
 import {
+  createAndOpen,
   definePlugin,
   docIdOf,
   docPath,
@@ -898,6 +899,71 @@ describe("shell", () => {
     await settle(120);
     expect(path()).toBe("/slow/here");
     expect(start).not.toBe("/slow/here");
+  });
+
+  test("while a page is held, the focused tab says where it is going", async () => {
+    let ready = () => {};
+    const slow = definePlugin({
+      id: "test-slow",
+      name: "Slow pages",
+      activate(ctx) {
+        ctx.views.register({
+          path: "/slow/:id",
+          component: () => null,
+          preload: () => new Promise<void>((resolve) => (ready = resolve)),
+        });
+      },
+    });
+    const { host } = await setup({ plugins: [slow], holdMs: 1000 });
+    const heard: (string | undefined)[] = [];
+    const off = host.app.subscribeActiveTab(() => heard.push(host.app.activeTab()?.opening));
+
+    host.app.open("/slow/a");
+    expect(host.app.activeTab()?.opening).toBe("/slow/a");
+    expect(host.app.activeTab()?.path).not.toBe("/slow/a");
+    ready();
+    await settle(0);
+    expect(host.app.activeTab()?.path).toBe("/slow/a");
+    expect(host.app.activeTab()?.opening).toBeUndefined();
+    // One change on landing: the new path and no destination together.
+    expect(heard).toEqual(["/slow/a", undefined]);
+
+    // A background tab is not where the focused tab goes.
+    host.app.open("/slow/b", { mode: "background" });
+    expect(host.app.activeTab()?.opening).toBeUndefined();
+    off();
+  });
+
+  test("a new page is where the tab goes from the moment its row paints, and opens once written", async () => {
+    const { host, backend } = await setup();
+    const open = await backend.ops.doc.create({ workspaceId: WS, title: "Open" });
+    await act(async () => host.app.openDoc(open.id));
+    const top = backend.live("doc.children", { workspaceId: WS, parentId: null });
+    const off = top.subscribe(() => {});
+    while (top.getSnapshot().isLoading) await settle(5);
+
+    let id = "";
+    const done = createAndOpen(host.app, (newId) => {
+      id = newId;
+      return backend.ops.doc.create({ workspaceId: WS, id, title: "Untitled", beforeId: open.id });
+    });
+    // Same task: the row is first, the tab is going to it and the open page stays meanwhile.
+    expect(top.getSnapshot().data.map((d) => d.id)).toEqual([id, open.id]);
+    expect(host.app.activeTab()?.opening).toBe(docPath(id));
+    expect(host.app.activeTab()?.path).toBe(docPath(open.id));
+    await act(async () => void (await done));
+    await settle(0);
+    expect(host.app.activeTab()?.path).toBe(docPath(id));
+    expect(host.app.activeTab()?.opening).toBeUndefined();
+
+    // A create that fails opens nothing.
+    const failed = createAndOpen(host.app, () => Promise.reject(new Error("no")));
+    expect(host.app.activeTab()?.opening).toBeDefined();
+    await expect(failed).rejects.toThrow("no");
+    await settle(0);
+    expect(host.app.activeTab()?.path).toBe(docPath(id));
+    expect(host.app.activeTab()?.opening).toBeUndefined();
+    off();
   });
 
   test("prefetchDoc holds a page's queries: the view's first read has the body and its parents", async () => {

@@ -1,11 +1,13 @@
 // Read-only rendering of a property value (table cells, cards, the properties panel). Cheap: one
 // per visible cell.
+import { docPath } from "@lydie/contract";
 import type { RelatedRow } from "@lydie/contract";
 import { Avatar, CheckboxMark, FileFilled, focusRingClass } from "@lydie/ui";
 import { memo, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
-import { useApp, useContributions } from "../react.tsx";
+import { PageLink } from "../page-link.tsx";
+import { useContributions } from "../react.tsx";
 import { useMembers } from "./members.ts";
 import type { PropertyLike } from "./values.ts";
 import {
@@ -282,17 +284,13 @@ export function RelationChips({
 }
 
 function RelationChip({ row, shrink = false }: { row: RelatedRow; shrink?: boolean }) {
-  const app = useApp();
   const previews = useContributions("link");
   const [hover, setHover] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const target = `doc:${row.id}`;
   const preview = previews.find((p) => p.kind === "preview" && p.match(target));
-  const open = (event: MouseEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-    app.openDoc(row.id, { mode: app.modeFor(event) });
-  };
+  // The cell under the chip must not act on its clicks.
+  const keep = (event: MouseEvent) => event.stopPropagation();
   return (
     <span
       className={`relative inline-flex min-w-0 ${shrink ? "shrink" : "shrink-0"}`}
@@ -304,18 +302,19 @@ function RelationChip({ row, shrink = false }: { row: RelatedRow; shrink?: boole
         setHover(false);
       }}
     >
-      {/* A plain button, not the shared Button: it needs the native click (modifier keys for
-          `modeFor`, stopping the cell's own click) and must not swallow the grid's pointer events. */}
-      <button
-        type="button"
+      {/* A link to the page, which must not swallow the grid's pointer events. */}
+      <PageLink
+        path={docPath(row.id)}
+        title={row.title}
         data-related={row.id}
-        onClick={open}
-        onDoubleClick={(event) => event.stopPropagation()}
+        onClick={keep}
+        onAuxClick={keep}
+        onDoubleClick={keep}
         className={`${chipClass} bg-gray-950/5 text-gray-800 hover:bg-gray-950/10 ${focusRingClass}`}
       >
         <FileFilled className="size-3.5 shrink-0 text-gray-400" />
         <span className="truncate">{row.title || "Untitled"}</span>
-      </button>
+      </PageLink>
       {hover && (
         <span
           role="tooltip"

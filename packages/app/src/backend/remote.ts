@@ -213,6 +213,7 @@ export async function createRemoteBackend(
   return {
     info,
     ops: opsProxy(execute),
+    newId: uuid,
     execute: execute as Backend["execute"],
     async transaction(label, fn, opOptions) {
       const tx = unwrap(

@@ -123,7 +123,7 @@ describe("documents", () => {
 
     await treeItem(page, "Old idea").click({ button: "right" });
     await page.getByRole("menuitem", { name: "Move to trash" }).click();
-    await page.getByRole("button", { name: "Trash" }).click();
+    await page.getByRole("link", { name: "Trash" }).click();
     const item = page.getByTestId("trash-item").filter({ hasText: "Old idea" });
     await item.waitFor();
     await screenshot(page, "e2e-trash");
@@ -132,7 +132,7 @@ describe("documents", () => {
 
     await treeItem(page, "Old idea").click({ button: "right" });
     await page.getByRole("menuitem", { name: "Move to trash" }).click();
-    await page.getByRole("button", { name: "Trash" }).click();
+    await page.getByRole("link", { name: "Trash" }).click();
     await page.getByRole("button", { name: "Delete Old idea forever" }).click();
     await page
       .getByRole("alertdialog")
@@ -146,12 +146,28 @@ describe("documents", () => {
   });
 });
 
+// The app's own new tab, from a tree row's menu (Cmd-click on the row is the browser's).
+async function openInNewTab(page: Page, title: string) {
+  await treeItem(page, title).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Open in new tab" }).click();
+}
+
 describe("tabs", () => {
   test("open in a new tab, switch, close, reopen, split, back and forward, restore after reload", async () => {
     await createDoc(page, "Alpha");
     await createDoc(page, "Beta");
-    // Cmd-Shift-click opens in a new tab (Cmd-click selects in the tree).
-    await treeItem(page, "Alpha").click({ modifiers: [MOD, "Shift"] });
+    // Tree rows are links: Cmd-click is the browser's, a browser tab at the page's URL.
+    const [popup] = await Promise.all([
+      context.waitForEvent("page"),
+      treeItem(page, "Alpha")
+        .getByRole("link")
+        .click({ modifiers: [MOD] }),
+    ]);
+    await until(async () => /\/d\/alpha-[0-9a-f]{32}$/.test(popup.url()), 5000, "page URL");
+    await popup.close();
+    await expect(tabs(page).count()).resolves.toBe(1);
+    // The app's own new tab is in the row's menu.
+    await openInNewTab(page, "Alpha");
     await until(async () => (await tabs(page).count()) === 2, 5000, "two tabs");
     await expect(activeTitle(page).inputValue()).resolves.toBe("Alpha");
     // A browser tab leaves Cmd+1…9, Cmd+W, Cmd+Shift+T and Cmd+[ / ] to the browser
@@ -204,7 +220,7 @@ describe("tabs", () => {
 
   test("drag a tab to the right edge makes a split", async () => {
     await createDoc(page, "Left");
-    await treeItem(page, "Getting started").click({ modifiers: [MOD, "Shift"] });
+    await openInNewTab(page, "Getting started");
     await until(async () => (await tabs(page).count()) === 2, 5000, "two tabs");
     const group = page.getByTestId("tab-group").first();
     const box = (await group.boundingBox())!;

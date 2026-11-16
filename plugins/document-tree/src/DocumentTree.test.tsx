@@ -40,8 +40,11 @@ function setup(
     activeDocId,
     collections = {},
     expanded = null,
+    linkClicks = "app",
   }: {
     activeDocId?: string;
+    // Who handles modified clicks on links: the desktop app's way by default.
+    linkClicks?: "app" | "browser";
     collections?: Record<string, { id: string; name: string; type: "table" | "board" }[]>;
     // What `app.storage` remembers as expanded; null: nothing yet.
     expanded?: string[] | null;
@@ -119,6 +122,8 @@ function setup(
         opened.push({ id, mode: options?.mode }),
       modeFor: (gesture: { metaKey?: boolean; button?: number }) =>
         gesture.button === 1 || gesture.metaKey ? "tab" : "replace",
+      href: (path: string) => `https://app.test${path}`,
+      linkClicks,
       activeTab: () => activeTab,
       runCommand: async (id: string, args: unknown) => void commands.push({ id, args }),
       subscribeActiveTab: () => () => {},
@@ -153,6 +158,11 @@ function dataTransfer() {
       data[type] = value;
     },
     getData: (type: string) => data[type] ?? "",
+    clearData() {
+      for (const type of Object.keys(data)) delete data[type];
+      this.types.length = 0;
+    },
+    setDragImage() {},
   };
 }
 
@@ -174,6 +184,10 @@ const row = (tree: string, title: string) =>
   within(screen.getByRole("tree", { name: tree })).getByRole("treeitem", {
     name: new RegExp(title),
   });
+
+// A row's link (its title, stretched over the row), which takes the row's clicks.
+const link = (tree: string, title: string) =>
+  within(row(tree, title)).getByRole("link", { name: new RegExp(title) });
 
 describe("document tree over one space", () => {
   test("filters the top level; drops from another tree go to its handler", async () => {
@@ -229,7 +243,7 @@ describe("document tree over one space", () => {
 });
 
 describe("multiple selection", () => {
-  test("Mod+click and Shift+click select; delete and drag act on the selection as one step", async () => {
+  test("Shift+click selects; delete and drag act on the selection as one step", async () => {
     const { backend, host, executed, transactions, opened, confirms } = setup();
     render(
       <BackendProvider backend={backend}>
@@ -246,11 +260,19 @@ describe("multiple selection", () => {
         .filter((el) => el.getAttribute("aria-selected") === "true")
         .map((el) => el.dataset.docId);
 
-    // A plain click opens; Mod+click adds to it instead of opening a tab.
-    fireEvent.click(row("Docs", "Roadmap"));
-    fireEvent.click(row("Docs", "Diary"), { metaKey: true });
-    expect(opened).toEqual([{ id: "A1", mode: "replace" }]);
-    expect(selectedIds()).toEqual(["A1", "B1"]);
+    // A plain click opens; Mod+click opens a tab (in the desktop app) and selects nothing.
+    fireEvent.click(link("Docs", "Roadmap"));
+    fireEvent.click(link("Docs", "Diary"), { metaKey: true });
+    expect(opened).toEqual([
+      { id: "A1", mode: "replace" },
+      { id: "B1", mode: "tab" },
+    ]);
+    expect(selectedIds()).toEqual([]);
+
+    // Shift+click selects from the last plainly clicked row.
+    fireEvent.click(link("Docs", "Notes"), { shiftKey: true });
+    expect(selectedIds()).toEqual(["A1", "A2"]);
+    expect(opened).toHaveLength(2);
 
     // Delete takes the selection, in one transaction, after asking (the roadmap has a body).
     await pressDelete(tree);
@@ -259,14 +281,15 @@ describe("multiple selection", () => {
       label: "Move 2 documents to trash",
       ops: [
         { id: "doc.delete", input: { id: "A1" } },
-        { id: "doc.delete", input: { id: "B1" } },
+        { id: "doc.delete", input: { id: "A2" } },
       ],
     });
     expect(executed.filter((e) => e.id === "doc.delete")).toHaveLength(0);
     expect(selectedIds()).toEqual([]);
 
-    // Shift+click runs from the last Mod+clicked row; dragging one of them moves both.
-    fireEvent.click(row("Docs", "Notes"), { shiftKey: true });
+    // Dragging one of a selection moves all of it.
+    fireEvent.click(link("Docs", "Notes"));
+    fireEvent.click(link("Docs", "Diary"), { shiftKey: true });
     expect(selectedIds()).toEqual(["A2", "B1"]);
     await act(async () => drag(row("Docs", "Diary"), row("Docs", "Roadmap")));
     expect(transactions.at(-1)).toEqual({
@@ -306,10 +329,10 @@ describe("multiple selection", () => {
     const tree = screen.getByRole("tree", { name: "Docs" });
 
     // One selected row is not a selection the palette acts on.
-    fireEvent.click(row("Docs", "Roadmap"));
-    fireEvent.click(row("Docs", "Roadmap"), { shiftKey: true });
+    fireEvent.click(link("Docs", "Roadmap"));
+    fireEvent.click(link("Docs", "Roadmap"), { shiftKey: true });
     expect(currentSelection(host.app)).toBeNull();
-    fireEvent.click(row("Docs", "Diary"), { shiftKey: true });
+    fireEvent.click(link("Docs", "Diary"), { shiftKey: true });
     expect(currentSelection(host.app)?.count).toBe(3);
 
     await act(async () => {
@@ -333,6 +356,60 @@ describe("multiple selection", () => {
   });
 });
 
+describe("rows are links", () => {
+  test("on the web a plain click opens in the app and modified clicks are the browser's", async () => {
+    const { backend, host, opened } = setup(pages, { linkClicks: "browser" });
+    render(
+      <BackendProvider backend={backend}>
+        <HostProvider host={host}>
+          <DocumentTree label="Docs" scroll="parent" />
+        </HostProvider>
+      </BackendProvider>,
+    );
+    await act(async () => {});
+    const roadmap = link("Docs", "Roadmap");
+    expect(roadmap.getAttribute("href")).toBe("https://app.test/d/A1");
+    // fireEvent returns false when the default (following the link) was prevented.
+    expect(fireEvent.click(roadmap)).toBe(false);
+    expect(fireEvent.click(roadmap, { metaKey: true })).toBe(true);
+    expect(fireEvent.click(roadmap, { ctrlKey: true })).toBe(true);
+    expect(
+      fireEvent(
+        roadmap,
+        new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }),
+      ),
+    ).toBe(true);
+    expect(opened).toEqual([{ id: "A1", mode: "replace" }]);
+    // Shift+click is still the tree's: it selects instead of opening a window.
+    expect(fireEvent.click(link("Docs", "Diary"), { shiftKey: true })).toBe(false);
+    expect(opened).toHaveLength(1);
+  });
+
+  test("in the desktop app every click is the app's", async () => {
+    const { backend, host, opened } = setup();
+    render(
+      <BackendProvider backend={backend}>
+        <HostProvider host={host}>
+          <DocumentTree label="Docs" scroll="parent" />
+        </HostProvider>
+      </BackendProvider>,
+    );
+    await act(async () => {});
+    const roadmap = link("Docs", "Roadmap");
+    expect(fireEvent.click(roadmap, { metaKey: true })).toBe(false);
+    expect(
+      fireEvent(
+        roadmap,
+        new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }),
+      ),
+    ).toBe(false);
+    expect(opened).toEqual([
+      { id: "A1", mode: "tab" },
+      { id: "A1", mode: "tab" },
+    ]);
+  });
+});
+
 describe("move to trash", () => {
   test("an empty page goes at once; one with a body asks first, and No keeps it", async () => {
     const { backend, host, executed, confirms, setAnswer } = setup();
@@ -347,19 +424,19 @@ describe("move to trash", () => {
     const tree = screen.getByRole("tree", { name: "Docs" });
     const deleted = () => executed.filter((e) => e.id === "doc.delete").map((e) => e.input);
 
-    fireEvent.click(row("Docs", "Diary"));
+    fireEvent.click(link("Docs", "Diary"));
     await pressDelete(tree);
     expect(confirms).toEqual([]);
     expect(deleted()).toEqual([{ id: "B1" }]);
 
     // Whitespace is not content.
-    fireEvent.click(row("Docs", "Notes"));
+    fireEvent.click(link("Docs", "Notes"));
     await pressDelete(tree);
     expect(confirms).toEqual([]);
     expect(deleted()).toEqual([{ id: "B1" }, { id: "A2" }]);
 
     setAnswer(false);
-    fireEvent.click(row("Docs", "Roadmap"));
+    fireEvent.click(link("Docs", "Roadmap"));
     await pressDelete(tree);
     expect(confirms).toEqual([
       {
@@ -388,7 +465,7 @@ describe("move to trash", () => {
     await act(async () => {});
     const tree = screen.getByRole("tree", { name: "Docs" });
 
-    fireEvent.click(row("Docs", "Diary"));
+    fireEvent.click(link("Docs", "Diary"));
     await pressDelete(tree);
     const toast = toasts.at(-1);
     expect(toast).toMatchObject({
@@ -709,7 +786,7 @@ describe("collections in the tree", () => {
     expect(queried.some((q) => q.parentId === "C1")).toBe(false);
 
     await act(async () => {
-      fireEvent.click(views[1]!);
+      fireEvent.click(within(views[1]!).getByRole("link"));
     });
     expect(commands).toEqual([
       { id: "databases.openView", args: { databaseId: "C1", viewId: "v2", mode: "replace" } },

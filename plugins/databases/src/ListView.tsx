@@ -1,6 +1,7 @@
 /* oxlint-disable jsx-a11y/prefer-tag-over-role, jsx-a11y/interactive-supports-focus, jsx-a11y/no-static-element-interactions, jsx-a11y/no-noninteractive-element-interactions -- a virtualised list of positioned rows */
 // The list: one line per row (title, then the visible properties), virtualised, with group headers
-// when grouped. Click opens the row; Mod-click in a new tab.
+// when grouped. A row's title is a link to its page.
+import { docPath, PageLink } from "@lydie/plugin-api";
 import {
   isEmptyValue,
   PropertyValueView,
@@ -183,7 +184,6 @@ const ListRow = memo(function ListRow({
   columns: readonly Column[];
   top: number;
 }) {
-  const ctx = useViewContext();
   return (
     <div
       role="listitem"
@@ -197,16 +197,13 @@ const ListRow = memo(function ListRow({
       )}
       {row ? (
         <>
-          <a
-            href={`#${row.id}`}
-            onClick={(event) => {
-              event.preventDefault();
-              ctx.openRow(row.id, event);
-            }}
+          <PageLink
+            path={docPath(row.id)}
+            title={row.title}
             className="min-w-0 truncate text-sm font-medium text-gray-900 hover:underline"
           >
             {row.title || "Untitled"}
-          </a>
+          </PageLink>
           <span className="ml-auto flex min-w-0 items-center gap-3 overflow-hidden">
             {columns.slice(1).map((c) => {
               const value = rowValue(c.property, row);

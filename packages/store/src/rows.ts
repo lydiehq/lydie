@@ -461,7 +461,7 @@ export function toPublicAccess(row: Row): PublicAccess {
   return {
     documentId: String(row.id),
     sourceId: String(row.source_id),
-    sourceTitle: String(row.source_title ?? ""),
+    sourceTitle: str(row.source_title) ?? "",
     links: Number(row.links),
   };
 }

@@ -16,6 +16,8 @@ function show(active: TabInfo | null) {
       subscribeActiveTab: () => () => {},
       open: (route: unknown, options: unknown) => opened.push([route, options]),
       modeFor: (g: { metaKey?: boolean }) => (g.metaKey ? "tab" : "replace"),
+      href: (path: string) => path,
+      linkClicks: "app",
       keybindings: () => [],
       keymap: { subscribe: () => () => {} },
     },
@@ -40,7 +42,7 @@ const tab = (path: string): TabInfo => ({
 
 test("opens the home page; current while the focused tab shows it", () => {
   const opened = show(tab("/d/01928000-0000-0000-0000-000000000000"));
-  const link = screen.getByRole("button", { name: "Home" });
+  const link = screen.getByRole("link", { name: "Home" });
   expect(link.getAttribute("aria-current")).toBeNull();
   fireEvent.click(link);
   fireEvent.click(link, { metaKey: true });
@@ -52,5 +54,5 @@ test("opens the home page; current while the focused tab shows it", () => {
 
 test("marked current on the home page", () => {
   show(tab(HOME_PATH));
-  expect(screen.getByRole("button", { name: "Home" }).getAttribute("aria-current")).toBe("page");
+  expect(screen.getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe("page");
 });

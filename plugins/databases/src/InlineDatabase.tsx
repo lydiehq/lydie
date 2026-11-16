@@ -2,9 +2,17 @@
 // shows the live view with a compact toolbar, and "Open as page" opens the collection itself.
 // Personal view changes made here belong to this embed. Events stay inside the embed so the
 // editor around it does not treat keys, clipboard or drags as its own.
-import { pageFullWidthOf, useApp, useQuery, useQuerySelect, useWorkspace } from "@lydie/plugin-api";
+import {
+  docPath,
+  pageFullWidthOf,
+  PageLink,
+  useApp,
+  useQuery,
+  useQuerySelect,
+  useWorkspace,
+} from "@lydie/plugin-api";
 import { useDatabase } from "@lydie/plugin-api/databases";
-import { Button, EmptyState } from "@lydie/plugin-api/ui";
+import { buttonStyles, EmptyState } from "@lydie/plugin-api/ui";
 import type { SyntheticEvent } from "react";
 
 import { DatabaseScreen } from "./lazy.tsx";
@@ -84,22 +92,28 @@ export function InlineDatabase({ target, sourceId }: { target: string; sourceId?
       ) : (
         <>
           <div className="group/embed flex items-center gap-2" data-embed-column="">
-            <Button
-              variant="ghost"
-              size="md"
-              onPress={(event) => app.openDoc(match.id, { mode: app.modeFor(event) })}
-              className="-ml-1.5 px-1.5 text-base font-semibold text-gray-900"
+            <PageLink
+              path={docPath(match.id)}
+              title={match.title}
+              className={buttonStyles({
+                variant: "ghost",
+                size: "md",
+                className: "-ml-1.5 px-1.5 text-base font-semibold text-gray-900",
+              })}
             >
               {match.title}
-            </Button>
-            <Button
-              variant="ghost"
-              size="xs"
-              onPress={(event) => app.openDoc(match.id, { mode: app.modeFor(event) })}
-              className="ml-auto font-normal text-gray-400 hover:text-gray-800"
+            </PageLink>
+            <PageLink
+              path={docPath(match.id)}
+              title={match.title}
+              className={buttonStyles({
+                variant: "ghost",
+                size: "xs",
+                className: "ml-auto font-normal text-gray-400 hover:text-gray-800",
+              })}
             >
               Open as page ↗
-            </Button>
+            </PageLink>
           </div>
           <div>
             <DatabaseScreen

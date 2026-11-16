@@ -2,12 +2,14 @@
 // One table row and its cells. Rows are memoised on their data and on which columns are rendered;
 // a cell subscribes to the interaction store only for whether it is selected, so moving the active
 // cell re-renders the two cells it leaves and enters (the outline itself is the overlay's).
+import { docPath, PageLink, useApp } from "@lydie/plugin-api";
 import { PropertyValueView, relatedRows, rowValue } from "@lydie/plugin-api/databases";
 import type { ViewRow } from "@lydie/plugin-api/databases";
 import { inRect, rectOf, useStoreSelector } from "@lydie/plugin-api/grid";
 import type { GridStore, GridStoreState } from "@lydie/plugin-api/grid";
 import {
   Button,
+  buttonStyles,
   CheckboxMark,
   DotsVerticalRegular,
   LayoutRightRegular,
@@ -258,9 +260,25 @@ function TitleContent({
 }
 
 // Mounted only on the hovered row and the open one, so it can be the real Button and read the
-// view's context. On the open one it closes the panel.
+// view's context. On the open one it closes the panel. Otherwise it is a link to the page: a plain
+// click opens it to the side, a modified one as any link (`linkMode`).
 function OpenButton({ id, name, peeked }: { id: string; name: string; peeked: boolean }) {
+  const app = useApp();
   const { peekRow, closePeek } = useViewContext();
+  if (!peeked) {
+    return (
+      <PageLink
+        path={docPath(id)}
+        title={name}
+        tabIndex={-1}
+        aria-label={`Open ${name} to the side`}
+        onOpen={(mode) => (mode === "replace" ? peekRow(id) : app.openDoc(id, { mode }))}
+        className={buttonStyles({ variant: "secondary", size: "xs" })}
+      >
+        Open
+      </PageLink>
+    );
+  }
   return (
     <Button
       variant="secondary"

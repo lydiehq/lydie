@@ -2,7 +2,8 @@
 // The board: one column per group (select, status, person, relation, …), optionally sub-grouped
 // (rows of columns) by a second property. Each column loads its own window and grows as it scrolls. Cards drag between
 // columns (setting the grouped value) and within one (manual order); drops paint at once.
-import { useApp } from "@lydie/plugin-api";
+import { docPath, PageLink, useApp } from "@lydie/plugin-api";
+import type { OpenMode } from "@lydie/plugin-api";
 import { groupable, OPTION_COLORS, optionFor, useDatabaseView } from "@lydie/plugin-api/databases";
 import type { DatabaseProperty, GroupKey, ViewGroup, ViewRow } from "@lydie/plugin-api/databases";
 import {
@@ -15,7 +16,7 @@ import {
   SelectItem,
 } from "@lydie/plugin-api/ui";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { DragEvent, MouseEvent } from "react";
+import type { DragEvent } from "react";
 
 import { Card } from "../Card.tsx";
 import { useViewContext } from "../context.tsx";
@@ -269,10 +270,9 @@ function BoardColumn({
       );
   };
 
-  const open = (row: ViewRow, event: MouseEvent) => {
-    if (event.metaKey || event.ctrlKey || event.button === 1) ctx.openRow(row.id, event);
-    else ctx.peekRow(row.id);
-  };
+  // A card is a link to its page: a plain click opens it to the side, a modified one as any link.
+  const openCard = (row: ViewRow, mode: OpenMode) =>
+    mode === "replace" ? ctx.peekRow(row.id) : app.openDoc(row.id, { mode });
   const create = () =>
     void ctx
       .createRow({ group: groupKey, ...(subKey !== undefined ? { subGroup: subKey } : {}) })
@@ -344,12 +344,18 @@ function BoardColumn({
             className="relative -m-1 p-1 [contain-intrinsic-size:auto_72px] [content-visibility:auto]"
           >
             {dropAt === i && <div className={`${line} top-0`} />}
-            {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- the card's button opens it from the keyboard */}
             <div
               data-card={row.id}
               data-dragging={dragging === row.id || undefined}
               draggable
               onDragStart={(event) => {
+                // The drag starts on the card's link; the card is what the pointer holds.
+                const box = event.currentTarget.getBoundingClientRect();
+                event.dataTransfer.setDragImage(
+                  event.currentTarget,
+                  event.clientX - box.left,
+                  event.clientY - box.top,
+                );
                 event.dataTransfer.setData(
                   CARD_MIME,
                   JSON.stringify({ row, key: groupKey, sub: subKey ?? null }),
@@ -358,20 +364,18 @@ function BoardColumn({
                 setDragging(row.id);
               }}
               onDragEnd={() => setDragging(null)}
-              onClick={(event) => open(row, event)}
               className={`group/card relative cursor-pointer ${BOARD_CARD} outline-solid outline-0 outline-offset-2 outline-blue-600 transition-[box-shadow,opacity] duration-150 hover:shadow-sm hover:ring-gray-950/[0.12] has-[:focus-visible]:outline-2 data-dragging:opacity-40`}
             >
-              {/* Plain: one per card (columns hold hundreds) and visually hidden, so no look to share. */}
-              <button
-                type="button"
-                className="sr-only"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  open(row, event);
-                }}
+              {/* Covers the card under its relation chips and grip, which are positioned and
+                  later, so they stay above it. */}
+              <PageLink
+                path={docPath(row.id)}
+                title={row.title}
+                onOpen={(mode) => openCard(row, mode)}
+                className="absolute inset-0 rounded-[inherit] outline-none"
               >
-                Open {row.title || "Untitled"}
-              </button>
+                <span className="sr-only">Open {row.title || "Untitled"}</span>
+              </PageLink>
               <Card row={row} columns={columns} coverHeight={coverHeight} />
               {/* The grip shows that the card can be dragged (the whole card drags); it covers the
                   title's end on hover, like the table rows' grip. */}

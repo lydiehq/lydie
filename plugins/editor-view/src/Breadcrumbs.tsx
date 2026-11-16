@@ -1,14 +1,14 @@
 // Where the page sits, above it as in v1: parents › title. Each parent is its own live
 // `doc.get`, so a rename or a move shows at once.
-import { useApp, useDocPrefetch, useQuerySelect } from "@lydie/plugin-api";
+import { docPath, PageLink, useDocPrefetch, useQuerySelect } from "@lydie/plugin-api";
 import type { DocumentRef } from "@lydie/plugin-api";
 import { buttonStyles, RightRegular } from "@lydie/plugin-api/ui";
 
 // Guards against a parent cycle and keeps a deep page's bar to one line's worth of lookups.
 const MAX_DEPTH = 8;
 
-// Plain buttons: a middle click opens a tab, which a react-aria press does not report. They take
-// the look of the bar's ghost buttons (Share, •••), muted, so a crumb hovers the same way.
+// Links to the pages above, with the look of the bar's ghost buttons (Share, •••), muted, so a
+// crumb hovers the same way.
 const crumb = buttonStyles({
   variant: "ghost",
   size: "xs",
@@ -20,7 +20,6 @@ function Separator() {
 }
 
 function Ancestors({ id, depth }: { id: string; depth: number }) {
-  const app = useApp();
   const doc = useQuerySelect("doc.get", { id }, (s) => s.data[0]?.document ?? null);
   const prefetch = useDocPrefetch(id);
   if (!doc) return null;
@@ -28,17 +27,9 @@ function Ancestors({ id, depth }: { id: string; depth: number }) {
     <>
       {doc.parentId && depth < MAX_DEPTH && <Ancestors id={doc.parentId} depth={depth + 1} />}
       <li className="flex min-w-0 items-center gap-0.5">
-        <button
-          type="button"
-          className={crumb}
-          {...prefetch}
-          onClick={(event) => app.openDoc(id, { mode: app.modeFor(event) })}
-          onAuxClick={(event) => {
-            if (event.button === 1) app.openDoc(id, { mode: app.modeFor(event) });
-          }}
-        >
+        <PageLink path={docPath(id)} title={doc.title} className={crumb} {...prefetch}>
           <span className="truncate">{doc.title || "Untitled"}</span>
-        </button>
+        </PageLink>
         <Separator />
       </li>
     </>

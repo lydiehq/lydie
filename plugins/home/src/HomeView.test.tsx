@@ -2,7 +2,13 @@
 // changes, and the find box (titles, text hits, create) by keyboard and pointer.
 import { afterEach, beforeEach, expect, test } from "bun:test";
 
-import { BackendProvider, gettingStartedId, HOME_PATH, HostProvider } from "@lydie/plugin-api";
+import {
+  BackendProvider,
+  docIdOf,
+  gettingStartedId,
+  HOME_PATH,
+  HostProvider,
+} from "@lydie/plugin-api";
 import type { Backend, HostBridge, LiveState, TabInfo } from "@lydie/plugin-api";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
@@ -103,6 +109,11 @@ function hostWith(commandIds: string[]) {
       },
       openDoc: (id: string, options: { mode?: unknown } = {}) =>
         opened.push({ id, mode: options.mode }),
+      // Links open through `open`; recorded as the document they show.
+      open: (path: string, options: { mode?: unknown } = {}) =>
+        opened.push({ id: docIdOf(path) ?? path, mode: options.mode }),
+      href: (path: string) => path,
+      linkClicks: "app",
       modeFor: (g: { metaKey?: boolean; ctrlKey?: boolean }) =>
         g.metaKey || g.ctrlKey ? "tab" : "replace",
       historyScope: () => "default",
@@ -143,8 +154,7 @@ const type = async (text: string) => {
 
 const jumpTitles = () =>
   within(screen.getByRole("region", { name: "Jump back in" }))
-    .getAllByRole("button")
-    .filter((b) => !b.getAttribute("aria-label")?.startsWith("More actions"))
+    .getAllByRole("link")
     .map((b) => b.textContent);
 
 test("jump back in: opened here first, then recent changes; parents, times, trash", async () => {
@@ -169,8 +179,8 @@ test("jump back in: opened here first, then recent changes; parents, times, tras
   await waitFor(() =>
     expect((stored.get(recentKey(WS)) as { id: string }[]).map((o) => o.id)).toEqual([B, A]),
   );
-  fireEvent.click(screen.getByRole("button", { name: /^Beta/ }));
-  fireEvent.click(screen.getByRole("button", { name: /^Delta/ }), { metaKey: true });
+  fireEvent.click(screen.getByRole("link", { name: /^Beta/ }));
+  fireEvent.click(screen.getByRole("link", { name: /^Delta/ }), { metaKey: true });
   expect(opened).toEqual([
     { id: B, mode: "replace" },
     { id: D, mode: "tab" },
@@ -193,7 +203,7 @@ test("jump back in: the tree's menu on right-click and the … button", async ()
   show();
   const items = () => screen.getAllByRole("menuitem").map((i) => i.textContent);
 
-  fireEvent.contextMenu(screen.getByRole("button", { name: /^Alpha/ }));
+  fireEvent.contextMenu(screen.getByRole("link", { name: /^Alpha/ }));
   await waitFor(() =>
     expect(items()).toEqual([
       "Open in new tab",
@@ -216,7 +226,7 @@ test("jump back in: the tree's menu on right-click and the … button", async ()
   await act(async () => fireEvent.keyDown(input, { key: "Enter" }));
   expect(executed).toEqual([{ id: "doc.rename", input: { id: A, title: "Alpha two" } }]);
 
-  fireEvent.contextMenu(screen.getByRole("button", { name: /^Alpha/ }));
+  fireEvent.contextMenu(screen.getByRole("link", { name: /^Alpha/ }));
   await act(async () =>
     fireEvent.click(await screen.findByRole("menuitem", { name: "Move to trash" })),
   );
@@ -236,7 +246,7 @@ test("start here: the Getting started page while it exists, not repeated below",
   rows[`doc.recent:${WS}`] = [doc(welcome, "Getting started"), doc(A, "Alpha")];
   show();
   const start = screen.getByRole("region", { name: "Start here" });
-  fireEvent.click(within(start).getByRole("button", { name: /Getting started/ }));
+  fireEvent.click(within(start).getByRole("link", { name: /Getting started/ }));
   expect(opened).toEqual([{ id: welcome, mode: "replace" }]);
   await waitFor(() => expect(jumpTitles().length).toBe(1));
   expect(jumpTitles()[0]).toStartWith("Alpha");

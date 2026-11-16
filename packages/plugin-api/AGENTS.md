@@ -33,6 +33,7 @@ type Backend = {
           ephemeral? /* in memory on purpose (the site's try-out): the sidebar does not warn */;
           welcomeDocId? /* the Getting started page this open created (a new folder) */ };
   ops: BackendOps;                      // ops.doc.move(input, { scope?, coalesce?, history?, sessionId?, label? })
+  newId(): string;                      // a version 7 id for something about to be created (doc.create's `id`)
   execute(id, input, options?);
   transaction(label, async (ops) => …, options?);   // one DB transaction, one undo step
   live(name, params): LiveHandle<Row>;  // { key, getSnapshot, subscribe } for useSyncExternalStore
@@ -102,11 +103,16 @@ DocumentSlotDef { id, slot: "actions" | "top" | "header" | "body", order?, compo
 //   inside the doc view: actions at the right of the top bar, before the ••• menu (Share); top slots above the title, header slots under it (properties); body slots replace the
 //   editor and chain (return `fallback` for documents a slot does not handle, e.g. non-databases).
 //   The doc view renders them with <DocumentSlots slot docId tab? fallback? />.
-AppApi { backend, workspace, open(path, { mode: replace|tab|background|split, side?, state? }),
+AppApi { backend, workspace, open(path, { mode: replace|tab|background|split, side?, state?,
+  after? /* a page being created: the open waits for it, dropped if it fails */ }),
   openDoc(id, opts), modeFor(gesture { meta, ctrl, shift, alt, button }, "read" | "edit"),
+  href(path, title?) /* a page's URL for a link: the address bar's on the web, else the path */,
+  linkClicks: "browser" | "app" /* who handles modified clicks on links to pages */,
   //   read: click replace, Mod tab; edit: Mod replace; both: Mod+Shift/middle tab, Mod+Alt split
   //   (open "split" reuses the pane beside when the window is split)
-  activeTab(), subscribeActiveTab(fn), setTabState(tabId, state),
+  activeTab() /* TabInfo; `opening`: the page the focused tab is going to while it is held
+  (preload, `after`). Lists that mark the open page use docIdOf(opening ?? path) */,
+  subscribeActiveTab(fn), setTabState(tabId, state),
   historyScope(), runCommand(id), commands(), formatKeybinding(binding), keymap: { set, subscribe },
   keyCaps(binding) → [["⌘", "K"]] | [["G"], ["H"]], keybindings(commandId) /* the ones that work here */,
   overlays: { open, close }, panels: { toggle, show },
@@ -214,6 +220,9 @@ findByPath(app, "Meta/Templates") → id | null; resolvePath(app, path) → { id
 //   createMissing(ops, workspaceId, match) in a transaction   // documents by title path
 atTop(backend, workspaceId, parentId) → { beforeId? }   // spread into doc.create: new pages made
 //   from the UI go first among their siblings (as in Notion); doc.create alone appends (API, MCP, CLI)
+createAndOpen(app, (id) => write, openOptions?) → id   // makes a page and opens it: the id is
+//   minted first, so the open starts with the write and the new row is marked (`opening`) in the
+//   frame it paints, not the page that was open. "New document" and the tree's "+" use it
 useHoverPreview(target, sourceId?) → { trigger, preview, open }; docPreviewTarget(id, part?)
 //   hover/focus card for links outside the editor, drawn by a `links` "preview" contribution
 DocCard({ id, entry?, section? }), DOC_CARD_CLASS   // the one document preview card (cover, emoji,
@@ -228,6 +237,14 @@ DocumentTreeView(props: DocumentTreeProps)   // the registered `documentTree` co
 linkStyleOf(app) → { format: "wiki" | "markdown", path: "shortest" | "relative" | "absolute" } | null
 //   (folder windows: `vault.settings.current()`, read when a link is made), linkTargetFor(backend,
 //   fromId, toId, path) → "Projects/Plan" | "../Plan" | "Plan", markdownHref(target) → "My%20note.md"
+PageLink({ path, title?, onOpen?(mode), ...<a> props }), pageLinkProps(app, path, { title?, onOpen? })
+  → { href, onClick, onAuxClick }, linkMode(app, click) → OpenMode | null   // (src/page-link.tsx)
+//   every element that opens a page is a link: a real href, a plain click opens it in the app
+//   (`onOpen` for another way, such as a collection's peek), and modified clicks are the browser's
+//   on the web (`linkClicks` "browser": a browser tab or window) or the app's tabs and splits
+//   (`modeFor`) in the desktop app. No buttons inside a link: stretch the link over a row or card
+//   (`before:absolute before:inset-0`, or `absolute inset-0`) and lift the buttons above it.
+//   Pickers (palette, quick switcher, Home's find box) and links in the editor keep `modeFor`.
 prefetchDoc(backend, id) → void | Promise<void>   // (src/prefetch.ts) starts the live queries the
 //   doc view and its slots read (body, row, collection and the page's row view, links, the pages
 //   it embeds, access, the pages above); they
