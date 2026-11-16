@@ -18,6 +18,7 @@ import {
 } from "@lydie/ui";
 import { useEffect, useMemo, useState } from "react";
 
+import { useAttachmentNamed } from "./attachments.ts";
 import { useDocumentMark } from "./doc-marks.ts";
 import { useBackend, useQuery, useWorkspace } from "./react.tsx";
 
@@ -159,17 +160,8 @@ export function coverFillOf(cover: string | null | undefined): CoverFill | null 
 // loads, when there is no such attachment, or when the cover is a colour).
 export function useCoverUrl(cover: string | null): string | null {
   const backend = useBackend();
-  const workspace = useWorkspace();
   const file = cover && !isUrl(cover) && !coverFillOf(cover) ? cover : null;
-  const attachments = useQuery(
-    "attachment.list",
-    file ? { workspaceId: workspace.workspaceId } : null,
-  );
-  const match = file
-    ? attachments.data.find(
-        (a) => a.filename.toLowerCase() === file.split("/").pop()!.toLowerCase(),
-      )
-    : undefined;
+  const match = useAttachmentNamed(file).attachment;
   const [url, setUrl] = useState<{ id: string; url: string | null } | null>(null);
   useEffect(() => {
     if (!match) return;

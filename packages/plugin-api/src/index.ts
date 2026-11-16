@@ -7,6 +7,7 @@ export * from "./doc-card.tsx";
 export * from "./doc-summary.ts";
 export * from "./doc-marks.ts";
 export * from "./page-icon.tsx";
+export * from "./attachments.ts";
 export * from "./prefetch.ts";
 export * from "./page-link.tsx";
 export * from "./doc-picker-item.tsx";

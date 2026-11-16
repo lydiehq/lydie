@@ -5,9 +5,9 @@ import {
   docPath,
   PageLink,
   useApp,
+  useAttachmentNamed,
   useBackend,
   useQuery,
-  useWorkspace,
 } from "@lydie/plugin-api";
 import type { OpenMode } from "@lydie/plugin-api";
 import { Button, buttonStyles, ExternalLinkRegular } from "@lydie/plugin-api/ui";
@@ -20,10 +20,7 @@ import { isExternalHref, isImageTarget, parseWikiTarget, sectionOf } from "./tar
 
 function useAttachmentUrl(filename: string): { url: string | null; missing: boolean } {
   const backend = useBackend();
-  const workspace = useWorkspace();
-  const { data, isLoading } = useQuery("attachment.list", { workspaceId: workspace.workspaceId });
-  const name = filename.split("/").pop()!.toLowerCase();
-  const attachment = data.find((a) => a.filename.toLowerCase() === name);
+  const { attachment, isLoading } = useAttachmentNamed(filename || null);
   const [url, setUrl] = useState<{ id: string; url: string | null } | null>(null);
   useEffect(() => {
     if (!attachment) return;
