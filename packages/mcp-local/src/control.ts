@@ -8,11 +8,8 @@ import { basename, dirname, join } from "node:path";
 import type { McpControl, McpStatus, Vault } from "@lydie/bridge-fs";
 import type { McpWorkspaceRef } from "@lydie/contract";
 import type { Runtime } from "@lydie/runtime";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import { startHttpMcp } from "./http.ts";
 import type { HttpMcpServer } from "./http.ts";
-import { createMcpServer } from "./server.ts";
 
 // The token lives in the user's data directory, not in the vault: `.lydie/` is meant to be synced
 // (iCloud, Dropbox, git) and a secret should not travel with it.
@@ -70,6 +67,9 @@ export function createMcpControl(
           return set({ running: false, url: null, tokenPath, error: null });
         }
         try {
+          // The MCP SDK and its HTTP server load when a server first starts: the desktop app
+          // creates a control per folder at startup, and the server is off by default.
+          const { startHttpMcp } = await import("./http.ts");
           server = await startHttpMcp({
             runtime: vault.runtime,
             workspace: vaultWorkspace(vault),
@@ -109,6 +109,10 @@ export async function runStdio(
   sessionId: string = randomUUID(),
   options: { workspace?: McpWorkspaceRef } = {},
 ): Promise<void> {
+  const [{ createMcpServer }, { StdioServerTransport }] = await Promise.all([
+    import("./server.ts"),
+    import("@modelcontextprotocol/sdk/server/stdio.js"),
+  ]);
   const server = createMcpServer(runtime, {
     sessionId,
     ...(options.workspace ? { workspace: options.workspace } : {}),

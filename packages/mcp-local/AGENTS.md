@@ -26,6 +26,10 @@ vaultWorkspace(vault) → { id: vault.workspaceId, name: <folder name> }
 tokenPathFor(folder, dataDir), loadOrCreateToken(path)
 ```
 
+The SDK and the HTTP server (`http.ts`, `server.ts`) load on first use (`setEnabled(true)`,
+`runStdio`): `control.ts` imports them dynamically and the package is `"sideEffects": false`, so a
+process that creates controls (the desktop app, one per folder) does not evaluate the SDK at start.
+
 ## Rules
 
 - **Sessions and actors.** Each MCP session (HTTP: the transport's `Mcp-Session-Id`; stdio: one per
