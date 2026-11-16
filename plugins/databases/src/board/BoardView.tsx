@@ -15,7 +15,7 @@ import {
   Select,
   SelectItem,
 } from "@lydie/plugin-api/ui";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 
 import { Card } from "../Card.tsx";
@@ -25,16 +25,52 @@ import {
   BOARD_COLUMN,
   BOARD_COLUMN_BG,
   BOARD_FOOTER,
+  BOARD_GAP,
   BOARD_HEADER,
   BOARD_LANE,
   BOARD_LIST,
+  BOARD_LIST_TOP,
   BoardSkeleton,
   CardSkeleton,
 } from "../skeleton.tsx";
 import { groupLabel, visibleColumns } from "../view-model.ts";
+import { cardLayout, cardRange, firstAbove, spacers } from "./board-layout.ts";
 
 const CARD_MIME = "application/x-lydie-db-card";
 const PAGE = 50;
+// A card's height until it has been measured (a title and a line or two), without its cover.
+const CARD_ESTIMATE = 72;
+// The list renders the cards within this much of its viewport, and its scroll position is kept
+// in steps of this much, so scrolling within one renders nothing.
+const BAND = 400;
+
+// Heights of the cards measured since the last time (a card that left the list measures nothing).
+function measured(entries: readonly ResizeObserverEntry[], observer: ResizeObserver) {
+  const out: [string, number][] = [];
+  for (const entry of entries) {
+    const el = entry.target as HTMLElement;
+    const id = el.dataset.card;
+    if (!el.isConnected || !id) {
+      observer.unobserve(el);
+      continue;
+    }
+    out.push([id, entry.borderBoxSize[0]?.blockSize ?? el.offsetHeight]);
+  }
+  return out;
+}
+
+function withHeights(
+  heights: ReadonlyMap<string, number>,
+  sizes: readonly [string, number][],
+): ReadonlyMap<string, number> {
+  let next: Map<string, number> | null = null;
+  for (const [id, height] of sizes) {
+    if (heights.get(id) === height) continue;
+    next ??= new Map(heights);
+    next.set(id, height);
+  }
+  return next ?? heights;
+}
 
 type Pending = { row: ViewRow; key: GroupKey; sub: GroupKey; beforeId: string | null };
 
@@ -182,6 +218,24 @@ function BoardColumn({
     return () => window.removeEventListener("drop", end, true);
   }, [dragging]);
   const list = useRef<HTMLDivElement>(null);
+  // Only the cards near the list's viewport are rendered (a column can hold 1,000): measured as
+  // they render, so the rest are placed by their heights, or an estimate before they have been.
+  const [heights, setHeights] = useState<ReadonlyMap<string, number>>(() => new Map());
+  const [observer] = useState(() =>
+    typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver((entries, self) => {
+          const sizes = measured(entries, self);
+          if (sizes.length) setHeights((current) => withHeights(current, sizes));
+        }),
+  );
+  useEffect(() => () => observer?.disconnect(), [observer]);
+  useLayoutEffect(() => {
+    if (!observer) return;
+    for (const card of list.current?.querySelectorAll<HTMLElement>("[data-card]") ?? [])
+      observer.observe(card);
+  });
+  const [viewport, setViewport] = useState(() => ({ band: 0, height: window.innerHeight }));
   const win = useDatabaseView({
     ...params,
     window: {
@@ -213,14 +267,30 @@ function BoardColumn({
       : `${BOARD_COLUMN_BG} data-drop-target:bg-gray-950/[0.06]`;
   const coverHeight = view.config.layout.cover ? 120 : 0;
   const manual = view.config.sorts.length === 0;
+  const layout = useMemo(
+    () =>
+      cardLayout(
+        rows.map((r) => r.id),
+        heights,
+        CARD_ESTIMATE + coverHeight,
+        BOARD_GAP,
+      ),
+    [rows, heights, coverHeight],
+  );
+  const scrolled = viewport.band * BAND;
+  const { start, end } = cardRange(
+    layout.tops,
+    scrolled - BAND,
+    scrolled + viewport.height + 2 * BAND,
+  );
+  const room = spacers(layout.tops, start, end, BOARD_GAP);
 
+  // From the cards' places, not their boxes: one rect per dragover, not one per card.
   const indexAt = (event: DragEvent) => {
-    const cards = [...(list.current?.querySelectorAll<HTMLElement>("[data-card]") ?? [])];
-    const i = cards.findIndex((el) => {
-      const box = el.getBoundingClientRect();
-      return event.clientY < box.top + box.height / 2;
-    });
-    return i === -1 ? cards.length : i;
+    const el = list.current;
+    if (!el) return rows.length;
+    const y = event.clientY - el.getBoundingClientRect().top + el.scrollTop - BOARD_LIST_TOP;
+    return firstAbove(layout.mids, y);
   };
 
   const onDrop = (event: DragEvent) => {
@@ -333,17 +403,18 @@ function BoardColumn({
         className={`${BOARD_LIST} relative max-h-[70vh] overflow-y-auto`}
         onScroll={(event) => {
           const el = event.currentTarget;
+          const band = Math.floor(el.scrollTop / BAND);
+          const height = el.clientHeight;
+          setViewport((v) => (v.band === band && v.height === height ? v : { band, height }));
           if (el.scrollTop + el.clientHeight > el.scrollHeight - 200 && limit < count)
             setLimit((l) => Math.min(1000, l + PAGE));
         }}
       >
-        {rows.map((row, i) => (
-          // Paint-contained (fast with hundreds of cards), so it reaches 4px past the card.
-          <div
-            key={row.id}
-            className="relative -m-1 p-1 [contain-intrinsic-size:auto_72px] [content-visibility:auto]"
-          >
-            {dropAt === i && <div className={`${line} top-0`} />}
+        {room.before > 0 && <div aria-hidden style={{ height: room.before }} />}
+        {rows.slice(start, end).map((row, j) => (
+          // Reaches 4px past the card, for the drop line.
+          <div key={row.id} className="relative -m-1 p-1">
+            {dropAt === start + j && <div className={`${line} top-0`} />}
             <div
               data-card={row.id}
               data-dragging={dragging === row.id || undefined}
@@ -388,11 +459,12 @@ function BoardColumn({
                 <DotsVerticalRegular aria-hidden className="size-3 rotate-90" />
               </span>
             </div>
-            {dropAt === rows.length && i === rows.length - 1 && (
+            {dropAt === rows.length && start + j === rows.length - 1 && (
               <div className={`${line} bottom-0`} />
             )}
           </div>
         ))}
+        {room.after > 0 && <div aria-hidden style={{ height: room.after }} />}
         {dropAt !== null && rows.length === 0 && <div className={`${line} top-0`} />}
         {win.isLoading &&
           rows.length === 0 &&

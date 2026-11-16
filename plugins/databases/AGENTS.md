@@ -203,7 +203,10 @@ Licence: AGPL-3.0-only.
   left of a single cell; through `fill`, so one undo step, values converted per column type and
   computed columns skipped).
 - `board/BoardView.tsx` (a window per column, swimlanes, drag cards with optimistic placement;
-  `Card.tsx` with covers), `ListView.tsx`, `calendar/` (month/week, drag to move,
+  `Card.tsx` with covers). A column renders only the cards within a band of its viewport: cards
+  are measured as they render (`ResizeObserver`; an estimate before), spacers take the rest's
+  room, and a drop's place comes from those heights by binary search (`board-layout.ts`, pure,
+  tested), not from every card's box, `ListView.tsx`, `calendar/` (month/week, drag to move,
   drag edges for ranges, click a day to create; `calendar-model.ts` pure, tested).
 
 ## Controls

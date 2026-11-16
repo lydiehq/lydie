@@ -91,6 +91,9 @@ export const BOARD_HEADER = "flex h-8 shrink-0 items-center gap-1.5 pr-1.5 pl-2"
 // Room on every side, so the cards' rings, shadows and focus rings are not cut off by the
 // scrolling list or by each card's `content-visibility` (which clips to its box).
 export const BOARD_LIST = "flex flex-col gap-1.5 px-1.5 py-1";
+// BOARD_LIST's gap between cards and its top padding, in px (the board places cards by them).
+export const BOARD_GAP = 6;
+export const BOARD_LIST_TOP = 4;
 // Elevated: the same as the surface in light mode, lighter than the column in dark mode.
 export const BOARD_CARD = "rounded-lg bg-elevated shadow-xs ring-1 ring-gray-950/[0.07]";
 export const BOARD_FOOTER = "mx-1.5 mt-1 h-7.5 shrink-0";
