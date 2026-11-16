@@ -151,7 +151,9 @@ export function Margin({ editor, items, active, draft, open }: Props) {
 
   useLayoutEffect(layout);
 
-  // Again after edits (passages move), and when the text or a card changes size.
+  // Again after edits (passages move), and when the text or a card changes size. Cards that come
+  // later are observed as they register.
+  const resized = useRef<ResizeObserver | null>(null);
   useEffect(() => {
     let frame = 0;
     const schedule = () => {
@@ -159,19 +161,25 @@ export function Margin({ editor, items, active, draft, open }: Props) {
       frame = requestAnimationFrame(layout);
     };
     const observer = new ResizeObserver(schedule);
+    resized.current = observer;
     observer.observe(editor.view.dom);
     for (const box of boxes.current.values()) observer.observe(box);
     editor.on("transaction", schedule);
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      resized.current = null;
       editor.off("transaction", schedule);
     };
-  });
+  }, [editor, layout]);
 
   const register = (id: string) => (el: HTMLElement | null) => {
-    if (el) boxes.current.set(id, el);
-    else boxes.current.delete(id);
+    const previous = boxes.current.get(id);
+    if (previous && previous !== el) resized.current?.unobserve(previous);
+    if (el) {
+      boxes.current.set(id, el);
+      resized.current?.observe(el);
+    } else boxes.current.delete(id);
   };
 
   // Narrow pages: the open card and a new one float under their passage (a thread on the page

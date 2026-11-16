@@ -51,7 +51,9 @@ and people always create `comment`.
   with an empty field. An anchor is taken from the editor's text and sent with `exact: true`.
 - **Anchors follow edits** (`text.ts`): a passage is mapped through every transaction; a thread
   whose passage is unknown is found by its quote (`findQuote` over `docText`, the document as one
-  text with the position of every character). About 1.5 s after a local edit changed a passage's
+  text with the position of every character). One looked for and not found is not looked for
+  again on every edit, only `RETRY_DELAY` (1 s) after typing pauses (`applyThreads`,
+  `extension.test.ts`). About 1.5 s after a local edit changed a passage's
   text, `thread.setAnchor` saves it (`history: false`). Changes from collaboration are not saved
   from here.
 - **The top bar** (`documents` "actions" slot): a Comments button with the count of open
@@ -68,7 +70,7 @@ and people always create `comment`.
 ## Tests
 
 `bun --filter=@lydie/plugin-threads run test` (`text.test.ts`, `people.test.ts`,
-`margin.test.ts`). In a browser: `bun run test:e2e:threads` in `apps/web` (`e2e/threads.e2e.ts`,
+`margin.test.ts`, `extension.test.ts`). In a browser: `bun run test:e2e:threads` in `apps/web` (`e2e/threads.e2e.ts`,
 local mode: the margin, focus, a second draft, the page, hiding, a narrow page) and
 `bun run test:e2e:threads:hosted` (`e2e/threads-hosted.e2e.ts`: a guest with comment access,
 against the running core).
