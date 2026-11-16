@@ -1,7 +1,7 @@
 // `/invite?token=…`: the link in an invitation email. Shows what the invitation is for, asks the
 // person to sign in or create an account (with the invited address), accepts, and opens the
 // workspace. Runs before any workspace is opened, so it never touches a local database.
-import type { InvitationPreview } from "@lydie/plugin-api";
+import type { InvitationPreview } from "@lydie/plugin-api/hosted";
 import { createScopePreference } from "@lydie/sync";
 import type { SessionState } from "@lydie/sync";
 import { Button, ErrorState, Heading, LoadingState, SpaceIcon } from "@lydie/ui";

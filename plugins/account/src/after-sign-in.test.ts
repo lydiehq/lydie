@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { HostedWorkspaceSummary } from "@lydie/plugin-api";
+import type { HostedWorkspaceSummary } from "@lydie/plugin-api/hosted";
 
 import { afterSignIn } from "./after-sign-in.ts";
 

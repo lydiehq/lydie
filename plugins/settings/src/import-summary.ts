@@ -1,5 +1,5 @@
 // Words for the import dialog: what a plan brings in and what step a run is at.
-import type { ImportPhase, ImportPlan } from "@lydie/plugin-api";
+import type { ImportPhase, ImportPlan } from "@lydie/plugin-api/import";
 
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;

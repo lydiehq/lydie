@@ -1,5 +1,6 @@
-import { useAccount, useApp, useHostedQuery } from "@lydie/plugin-api";
-import type { Connection, ConnectorInfo, HostedApiError } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
+import { useAccount, useHostedQuery } from "@lydie/plugin-api/hosted";
+import type { Connection, ConnectorInfo, HostedApiError } from "@lydie/plugin-api/hosted";
 import {
   Button,
   Dialog,

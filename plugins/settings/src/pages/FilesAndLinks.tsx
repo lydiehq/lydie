@@ -1,5 +1,5 @@
 import { useApp } from "@lydie/plugin-api";
-import type { FolderSettings, FolderSettingsPatch } from "@lydie/plugin-api";
+import type { FolderSettings, FolderSettingsPatch } from "@lydie/plugin-api/hosted";
 import {
   Button,
   EmptyState,

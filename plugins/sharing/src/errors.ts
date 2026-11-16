@@ -1,4 +1,4 @@
-import type { AccessLevel, HostedApiError } from "@lydie/plugin-api";
+import type { AccessLevel, HostedApiError } from "@lydie/plugin-api/hosted";
 
 export function errorText(error: unknown): string {
   const e = error as HostedApiError | null;

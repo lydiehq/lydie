@@ -1,5 +1,6 @@
-import { useApp, useHostedQuery, useQuery } from "@lydie/plugin-api";
-import type { ShareLink } from "@lydie/plugin-api";
+import { useApp, useQuery } from "@lydie/plugin-api";
+import { useHostedQuery } from "@lydie/plugin-api/hosted";
+import type { ShareLink } from "@lydie/plugin-api/hosted";
 import {
   Button,
   focusRingClass,

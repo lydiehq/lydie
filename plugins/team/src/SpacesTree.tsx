@@ -4,17 +4,9 @@
 // drag and drop, inline rename, keyboard, icons, optimistic paint) over one space's top level;
 // rows carry their space, and subpages share their parent's. Dropping a page into another group
 // moves it to that space (`doc.moveToSpace`).
-import {
-  atTop,
-  DocumentTreeView,
-  spaceName,
-  teamspacesShown,
-  useAccount,
-  useApp,
-  useOps,
-  useQuery,
-} from "@lydie/plugin-api";
+import { atTop, DocumentTreeView, useApp, useOps, useQuery } from "@lydie/plugin-api";
 import type { ChildEntry, DocumentTreeDropTarget, DocumentTreeSpace } from "@lydie/plugin-api";
+import { spaceName, teamspacesShown, useAccount } from "@lydie/plugin-api/hosted";
 import { AddRegular, Button, RightRegular, sidebarSectionTitleClass } from "@lydie/plugin-api/ui";
 import { useCallback, useEffect, useState } from "react";
 

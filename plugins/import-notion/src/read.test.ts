@@ -2,8 +2,9 @@
 // inline database, a full-page database whose rows relate to the inline one, files and links.
 import { describe, expect, test } from "bun:test";
 
-import { IMPORT_FILE_PREFIX } from "@lydie/plugin-api";
-import type { AppApi, ImportEntry, ImportPage, ImportReadContext } from "@lydie/plugin-api";
+import type { AppApi } from "@lydie/plugin-api";
+import { IMPORT_FILE_PREFIX } from "@lydie/plugin-api/import";
+import type { ImportEntry, ImportPage, ImportReadContext } from "@lydie/plugin-api/import";
 
 import { MARKDOWN_EXPORT, planFromEntries } from "./read.ts";
 

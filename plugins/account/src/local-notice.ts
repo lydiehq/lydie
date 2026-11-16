@@ -2,7 +2,8 @@
 // person believes they are in the other: after signing out of a cloud workspace the window shows
 // this browser's own notes, and a workspace that was copied to the cloud stays behind as a copy
 // that no longer follows it.
-import type { AccountState, AppApi } from "@lydie/plugin-api";
+import type { AppApi } from "@lydie/plugin-api";
+import type { AccountState } from "@lydie/plugin-api/hosted";
 
 type Storage = Pick<AppApi, "storage">;
 

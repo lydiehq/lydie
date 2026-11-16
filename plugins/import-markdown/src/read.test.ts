@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
-import { IMPORT_FILE_PREFIX } from "@lydie/plugin-api";
-import type { AppApi, ImportEntry, ImportReadContext, JSONContent } from "@lydie/plugin-api";
+import type { AppApi, JSONContent } from "@lydie/plugin-api";
+import { IMPORT_FILE_PREFIX } from "@lydie/plugin-api/import";
+import type { ImportEntry, ImportReadContext } from "@lydie/plugin-api/import";
 
 import { planFromEntries, rewriteAttachments } from "./read.ts";
 

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import type { HandoffApi, HandoffOutcome, HostServices } from "@lydie/plugin-api";
+import type { HostServices } from "@lydie/plugin-api";
+import type { HandoffApi, HandoffOutcome } from "@lydie/plugin-api/hosted";
 
 import { createMemoryStorage } from "./stores.ts";
 import { carryOnHandoff, carryWorkspaceStorage } from "./workspace-storage.ts";

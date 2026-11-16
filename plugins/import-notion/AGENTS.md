@@ -11,7 +11,7 @@ Licence: AGPL-3.0-only.
 
 ## Rules
 
-- It only reads files into an `ImportPlan`; `runImport` (plugin API) writes it, through operations,
+- It only reads files into an `ImportPlan`; `runImport` (`@lydie/plugin-api/import`) writes it, through operations,
   in every kind of workspace. Never write documents here.
 - User-facing words are the app's: collection and page for what is made; Notion's own words
   (database, property type) only for what the export holds.

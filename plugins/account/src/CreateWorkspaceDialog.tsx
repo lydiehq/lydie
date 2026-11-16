@@ -1,4 +1,4 @@
-import { useAccount } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
 import { Button, Dialog, Heading, Modal, TextField } from "@lydie/plugin-api/ui";
 import { useState } from "react";
 import type { FormEvent } from "react";

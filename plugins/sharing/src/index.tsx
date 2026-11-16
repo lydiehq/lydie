@@ -1,5 +1,6 @@
-import { definePlugin, docIdOf, useAccount, useApp, useQuery } from "@lydie/plugin-api";
+import { definePlugin, docIdOf, useApp, useQuery } from "@lydie/plugin-api";
 import type { DocumentSlotProps } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
 import { Button, GlobeRegular, Share2Regular } from "@lydie/plugin-api/ui";
 
 import { LEVELS } from "./errors.ts";

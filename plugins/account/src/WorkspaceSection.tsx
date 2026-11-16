@@ -1,5 +1,6 @@
-import { useAccount, useApp, useWorkspaceImage } from "@lydie/plugin-api";
-import type { HostedWorkspaceSummary, WorkspaceScope } from "@lydie/plugin-api";
+import { useApp, useWorkspaceImage } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
+import type { HostedWorkspaceSummary, WorkspaceScope } from "@lydie/plugin-api/hosted";
 import {
   AddRegular,
   CheckRegular,

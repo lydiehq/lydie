@@ -1,5 +1,6 @@
-import { useAccount, useApp, useHostedQuery, useQuery } from "@lydie/plugin-api";
-import type { HostedApiError, Member, WorkspaceRole } from "@lydie/plugin-api";
+import { useApp, useQuery } from "@lydie/plugin-api";
+import { useAccount, useHostedQuery } from "@lydie/plugin-api/hosted";
+import type { HostedApiError, Member, WorkspaceRole } from "@lydie/plugin-api/hosted";
 import { Button, EmptyState, SyncIllustration } from "@lydie/plugin-api/ui";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { ReactNode } from "react";

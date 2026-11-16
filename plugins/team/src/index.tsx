@@ -1,4 +1,5 @@
-import { definePlugin, teamspacesShown } from "@lydie/plugin-api";
+import { definePlugin } from "@lydie/plugin-api";
+import { teamspacesShown } from "@lydie/plugin-api/hosted";
 import { ArrowRightUpRegular, UserAddRegular } from "@lydie/plugin-api/ui";
 
 import { MembersPage } from "./MembersPage.tsx";

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import type { WorkspaceScope } from "@lydie/plugin-api";
+import type { WorkspaceScope } from "@lydie/plugin-api/hosted";
 
 import { urlNamesHosted } from "./routes.ts";
 import { decideScope, linkedScope, LOCAL } from "./scope.ts";

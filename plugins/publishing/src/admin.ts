@@ -1,7 +1,9 @@
 // For now publishing is for workspace owners and admins only (the server refuses everyone else).
 // The role comes from the synced `workspace.members` rows.
-import { useAccount, useApp, useQuerySelect } from "@lydie/plugin-api";
-import type { AccountState, AppApi } from "@lydie/plugin-api";
+import { useApp, useQuerySelect } from "@lydie/plugin-api";
+import type { AppApi } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
+import type { AccountState } from "@lydie/plugin-api/hosted";
 
 type Members = { data: readonly { userId: string; role: string }[]; isLoading: boolean };
 

@@ -1,6 +1,14 @@
 // React bindings for plugins. The host provides the values; plugins only call the hooks.
 import type { TabState } from "@lydie/contract";
-import { createContext, use, useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -18,6 +26,7 @@ import type {
 } from "./backend.ts";
 import { ContributionBoundary } from "./contribution-boundary.tsx";
 import { HostContext, ScopeContext } from "./host-context.ts";
+import type { Observable } from "./hosted.ts";
 import type {
   AppApi,
   Contributed,
@@ -323,6 +332,37 @@ export function useShortcut(commandId: string): string[][] | null {
 export function useActiveTab(): TabInfo | null {
   const app = useApp();
   return useSyncExternalStore(app.subscribeActiveTab, app.activeTab, app.activeTab);
+}
+
+// ---- Device settings and observables
+
+const NEVER: Observable<null> = { get: () => null, subscribe: () => () => {} };
+
+// The current value of an `Observable` (null when there is none).
+export function useObservable<T>(observable: Observable<T> | null | undefined): T | null {
+  const source = (observable ?? NEVER) as Observable<T | null>;
+  return useSyncExternalStore(source.subscribe, source.get, source.get);
+}
+
+// A per-device setting in the calling plugin's storage (`app.storage`), re-rendering when it changes
+// in this window.
+export function useDeviceSetting<T>(key: string, initial: T): [T, (value: T) => void] {
+  const app = useApp();
+  const subscribe = useCallback(
+    (listener: () => void) => app.storage.subscribe?.(key, listener) ?? (() => {}),
+    [app, key],
+  );
+  // Storage parses on every read: keep one object per stored value, for useSyncExternalStore.
+  const cache = useRef<{ json: string; value: T | null } | null>(null);
+  const read = useCallback(() => {
+    const value = app.storage.get<T>(key);
+    const json = JSON.stringify(value);
+    if (cache.current?.json !== json) cache.current = { json, value };
+    return cache.current.value;
+  }, [app, key]);
+  const stored = useSyncExternalStore(subscribe, read, read);
+  const set = useCallback((value: T) => app.storage.set(key, value), [app, key]);
+  return [stored ?? initial, set];
 }
 
 // ---- Contributions

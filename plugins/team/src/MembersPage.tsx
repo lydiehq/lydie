@@ -1,5 +1,6 @@
-import { useApp, useHostedQuery, useTeamspacesShown } from "@lydie/plugin-api";
-import type { Invitation, Member, WorkspaceRole } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
+import { useHostedQuery, useTeamspacesShown } from "@lydie/plugin-api/hosted";
+import type { Invitation, Member, WorkspaceRole } from "@lydie/plugin-api/hosted";
 import {
   Button,
   Checkbox,

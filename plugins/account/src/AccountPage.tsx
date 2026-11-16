@@ -1,4 +1,5 @@
-import { useAccount, useApp, useObservable } from "@lydie/plugin-api";
+import { useApp, useObservable } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
 import {
   Avatar,
   Button,

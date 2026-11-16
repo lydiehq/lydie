@@ -1,4 +1,5 @@
-import type { HostedApiError, RejectedChange } from "@lydie/plugin-api";
+import type { RejectedChange } from "@lydie/plugin-api";
+import type { HostedApiError } from "@lydie/plugin-api/hosted";
 
 // What a piece of work failed with, or null when it did not. Instead of `try` in components: the
 // React Compiler skips a component whose `try` has a `finally`, a `throw` or a condition in it.

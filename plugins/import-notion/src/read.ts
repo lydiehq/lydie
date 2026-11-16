@@ -3,7 +3,9 @@
 // (an inline database has a folder but no page of its own). Two passes over the pages: the first
 // reads titles, properties and tables (to know every page, database and file), the second
 // converts the bodies, whose links need all of that.
-import { importEntries, importFileRef, newImportId } from "@lydie/plugin-api";
+
+import type { PropertyValue } from "@lydie/plugin-api/databases";
+import { importEntries, importFileRef, newImportId } from "@lydie/plugin-api/import";
 import type {
   ImportEntry,
   ImportFile,
@@ -11,8 +13,7 @@ import type {
   ImportPlan,
   ImportReadContext,
   ImportWarning,
-} from "@lydie/plugin-api";
-import type { PropertyValue } from "@lydie/plugin-api/databases";
+} from "@lydie/plugin-api/import";
 
 import { prepareBody } from "./body.ts";
 import { inferDayFirst } from "./dates.ts";

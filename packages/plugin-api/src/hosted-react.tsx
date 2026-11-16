@@ -10,15 +10,9 @@ import {
 
 import type { HostedInput, HostedOperationId, HostedOutput } from "./hosted-operations.ts";
 import type { AccountApi, AccountState, CollabSession, Observable } from "./hosted.ts";
-import { useApp } from "./react.tsx";
+import { useApp, useObservable } from "./react.tsx";
 
 const NEVER: Observable<null> = { get: () => null, subscribe: () => () => {} };
-
-// The current value of an `Observable` (null when there is none).
-export function useObservable<T>(observable: Observable<T> | null | undefined): T | null {
-  const source = (observable ?? NEVER) as Observable<T | null>;
-  return useSyncExternalStore(source.subscribe, source.get, source.get);
-}
 
 const SIGNED_OUT: AccountState = { status: "signed-out" };
 
@@ -156,25 +150,4 @@ export function useHostedQuery<K extends HostedOperationId>(
         return { ...s, data };
       }),
   };
-}
-
-// A per-device setting in the calling plugin's storage (`app.storage`), re-rendering when it changes
-// in this window.
-export function useDeviceSetting<T>(key: string, initial: T): [T, (value: T) => void] {
-  const app = useApp();
-  const subscribe = useCallback(
-    (listener: () => void) => app.storage.subscribe?.(key, listener) ?? (() => {}),
-    [app, key],
-  );
-  // Storage parses on every read: keep one object per stored value, for useSyncExternalStore.
-  const cache = useRef<{ json: string; value: T | null } | null>(null);
-  const read = useCallback(() => {
-    const value = app.storage.get<T>(key);
-    const json = JSON.stringify(value);
-    if (cache.current?.json !== json) cache.current = { json, value };
-    return cache.current.value;
-  }, [app, key]);
-  const stored = useSyncExternalStore(subscribe, read, read);
-  const set = useCallback((value: T) => app.storage.set(key, value), [app, key]);
-  return [stored ?? initial, set];
 }

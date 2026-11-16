@@ -2,7 +2,8 @@
 // gives its root document the destination's icon, wherever a document icon is drawn, and marks
 // the folder's pages, whose frontmatter is the destination's files' own.
 import { setConnectedPages, setDocumentMarks } from "@lydie/plugin-api";
-import type { AppApi, DocumentMark, Publication } from "@lydie/plugin-api";
+import type { AppApi, DocumentMark } from "@lydie/plugin-api";
+import type { Publication } from "@lydie/plugin-api/hosted";
 
 const OWNER = "publishing";
 const NAMES: Record<string, string> = { github: "GitHub", wordpress: "WordPress" };

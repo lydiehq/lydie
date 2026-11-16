@@ -1,6 +1,6 @@
 import { belowBase, parseAppUrl } from "@lydie/app/url";
 import { isUuid } from "@lydie/contract";
-import type { WorkspaceScope } from "@lydie/plugin-api";
+import type { WorkspaceScope } from "@lydie/plugin-api/hosted";
 
 export const LOCAL: WorkspaceScope = { kind: "local", workspaceId: null };
 

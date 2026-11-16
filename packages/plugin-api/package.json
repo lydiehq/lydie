@@ -11,7 +11,9 @@
     "./ui": "./src/ui.ts",
     "./editor": "./src/editor.ts",
     "./databases": "./src/databases/index.ts",
-    "./grid": "./src/grid/index.ts"
+    "./grid": "./src/grid/index.ts",
+    "./hosted": "./src/hosted-entry.ts",
+    "./import": "./src/import/index.ts"
   },
   "scripts": {
     "test": "bun test",

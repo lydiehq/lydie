@@ -1,13 +1,11 @@
+import { useApp, useQuery, useWorkspaceImage } from "@lydie/plugin-api";
 import {
   spaceName,
   useAccount,
-  useApp,
   useHostedQuery,
-  useQuery,
   useTeamspacesShown,
-  useWorkspaceImage,
-} from "@lydie/plugin-api";
-import type { AccessLevel, DocumentGrant, PrincipalType } from "@lydie/plugin-api";
+} from "@lydie/plugin-api/hosted";
+import type { AccessLevel, DocumentGrant, PrincipalType } from "@lydie/plugin-api/hosted";
 import {
   Avatar,
   Button,

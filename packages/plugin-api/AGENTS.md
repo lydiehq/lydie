@@ -26,10 +26,17 @@ is authoritative and runs in CI.
 
 ## Public API
 
-Entry points: `@lydie/plugin-api` (everything below), `@lydie/plugin-api/backend` (types only),
-`@lydie/plugin-api/ui` (re-exports `@lydie/ui`), `@lydie/plugin-api/editor` (re-exports
-`@lydie/editor`), `@lydie/plugin-api/databases` (database hooks, shared value editors, the contract's
-database helpers). Plugins import only these.
+Entry points. The plugin surface proper: `@lydie/plugin-api` (the block below),
+`@lydie/plugin-api/backend` (types only), `@lydie/plugin-api/ui` (re-exports `@lydie/ui`),
+`@lydie/plugin-api/editor` (re-exports `@lydie/editor`). Shared code for the built-in features,
+which changes with them and is not what a third-party plugin should build on:
+`@lydie/plugin-api/databases` (database hooks, shared value editors, the contract's database
+helpers), `@lydie/plugin-api/grid` (the grid engine), `@lydie/plugin-api/import` (plans and
+`runImport`, under Importers), `@lydie/plugin-api/hosted` (the host services in depth: the hosted
+account API and its operations, collaboration, folder settings, teamspaces; under Hosted). The
+main entry never re-exports those (lazily loaded plugins keep them out of the startup chunk); it
+keeps the types `AppApi` and `PluginContext` name (`HostServices`, `PluginsApi`, `PluginInfo`,
+`AboutInfo`, `Observable`, `ImporterDef`). Plugins import only these.
 
 ```ts
 // Backend (src/backend.ts) — what the UI needs from the data layer, wherever the database runs
@@ -177,27 +184,9 @@ Providers (host only): BackendProvider, HostProvider (HostBridge { app, appFor?(
   `state` is the state bag of a tab outside the layout, such as the collections' page panel,
   which `useTabStateSnapshot` reads when the host keeps none for it)
 
-// Hosted mode and host services (src/hosted.ts, src/hosted-react.tsx); every part optional
-app.services?: { account?: AccountApi, collab?: CollabApi, vault?: VaultApi, about?: AboutInfo,
-  renameWorkspace?(name) }
-AccountApi { apiUrl, scope, wanted, state: Observable<AccountState>, signIn /* rejects with code
-  "two_factor_required" */, verifySignIn({ code, method: "app" | "backup" }), twoFactor: { hasPassword(),
-  enable(password) → { uri, backupCodes }, confirm(code), disable(password), backupCodes(password) } | null
-  /* AccountUser.twoFactorEnabled */, setImage(image | null) /* a URL or a drawn SVG data: URL;
-  null: the generated avatar */, signUp, signOut,
-  signInWith("google", { then? }) /* web: leaves the page; desktop: system browser */,
-  cancelSignInWith(), takeProviderReturn() /* { then, error } once after the web app returns */,
-  workspaces(), createWorkspace({ name, gettingStarted? /* the server adds the Getting started page */ }),
-  localWorkspaces() /* this browser's, or recent folders (desktop); { id, name, kind, path?, current } */,
-  openLocalWorkspace(id) /* in place of this window */, openFolder: (() => Promise<void>) | null
-  /* pick a folder, in place of this window; null in the browser */, openScope(scope) /* reopens */,
-  call(hostedOperationId, input) /* typed by hosted-operations.ts */,
-  callContract?(operationId, input) /* a contract operation on the server, not the replica
-  (workspace.export) */, handoff: { plan, run /* outcome.renamed: local → hosted ids that
-  changed */, changedSince?(since) /* pages here the cloud may lack */, discard?() /* a move:
-  forgets the local workspace after a complete run; browser workspaces only */ } | null,
-  sync: { details: Observable<SyncDetails>, retry() } | null, webUrl(path) }
-CollabApi { open(docId) → CollabSession { ydoc, awareness, user, state, loaded, release() } }
+// Host services (types in src/hosted.ts); every part optional
+app.services?: HostServices { account?: AccountApi, collab?: CollabApi, vault?: VaultApi,
+  about?: AboutInfo, renameWorkspace?(name) }   // the first three in depth: "/hosted" below
 app.plugins?: { list() → PluginInfo[], subscribe?(fn), setEnabled(id, on) }   // per device,
 //   applied on reload. PluginInfo { id, name, description, enabled, essential, permissions,
 //   error? /* why it, or part of it, did not start in this window */ }; subscribe: the list
@@ -212,18 +201,8 @@ Live queries += "workspace.teamspaces" | "teamspace.members" | "doc.access" | "d
   with a live public link of their own) | "doc.publicAccess" ({ id } → 0/1 PublicAccess
   { documentId, sourceId, sourceTitle, links }: the nearest page whose link reaches this one,
   itself or one above with subpages, as the core's public read resolves it)
-TEAMSPACES_UI (false: hidden for the alpha; the one switch), teamspacesShown(teamspaces) /* the
-  switch, or `workspace.teamspaces` rows other than one default teamspace */,
-  useTeamspacesShown(), spaceName(teamspace, shown) /* "Workspace" for the default one while
-  hidden */, WORKSPACE_SECTION (src/teamspaces.ts)
-useAccount() /* the calling plugin's account: null without "account" */, useObservable(obs),
-useDeviceSetting(key, initial) /* in the calling plugin's storage */, useHostedQuery(id, input | null)
-/* needs "account" */
-  → { data, error, isLoading, reload, setData }, useCollabDocument(docId)
-  → { session, readOnly, unavailable, level } | "loading" | null (re-renders only when access
-  changes; read session.state for the rest)
-  // (bound before the first paint when the document is already loaded; waits for the Yjs chunk too)
-src/hosted-operations.ts: generated by @lydie/sdk's scripts/generate.ts (do not edit)
+useObservable(obs) /* Observable { get, subscribe } */, useDeviceSetting(key, initial) /* in the
+  calling plugin's storage */   (src/react.tsx)
 
 // Helpers
 gettingStartedId(workspaceId), GETTING_STARTED_TITLE   // the contract's: a new workspace's page
@@ -364,6 +343,46 @@ PropertyLike { id, name, type, key, config, databaseId? }; rowValue(property, ro
 `bun test` (DOM preload in `test/setup.ts`). The Backend contract is tested in `@lydie/app`
 (`src/backend/backend.test.ts`, run against the local and the remote implementation).
 
+## Hosted (`@lydie/plugin-api/hosted`, `src/hosted-entry.ts`)
+
+The host services behind `app.services` in depth and the built-in features' hooks over them
+(src/hosted.ts, src/hosted-operations.ts, src/hosted-react.tsx, src/teamspaces.ts). Shared code
+that changes with the hosted service, not the stable plugin surface.
+
+```ts
+AccountApi { apiUrl, scope, wanted, state: Observable<AccountState>, signIn /* rejects with code
+  "two_factor_required" */, verifySignIn({ code, method: "app" | "backup" }), twoFactor: { hasPassword(),
+  enable(password) → { uri, backupCodes }, confirm(code), disable(password), backupCodes(password) } | null
+  /* AccountUser.twoFactorEnabled */, setImage(image | null) /* a URL or a drawn SVG data: URL;
+  null: the generated avatar */, signUp, signOut,
+  signInWith("google", { then? }) /* web: leaves the page; desktop: system browser */,
+  cancelSignInWith(), takeProviderReturn() /* { then, error } once after the web app returns */,
+  workspaces(), createWorkspace({ name, gettingStarted? /* the server adds the Getting started page */ }),
+  localWorkspaces() /* this browser's, or recent folders (desktop); { id, name, kind, path?, current } */,
+  openLocalWorkspace(id) /* in place of this window */, openFolder: (() => Promise<void>) | null
+  /* pick a folder, in place of this window; null in the browser */, openScope(scope) /* reopens */,
+  call(hostedOperationId, input) /* typed by hosted-operations.ts */,
+  callContract?(operationId, input) /* a contract operation on the server, not the replica
+  (workspace.export) */, handoff: { plan, run /* outcome.renamed: local → hosted ids that
+  changed */, changedSince?(since) /* pages here the cloud may lack */, discard?() /* a move:
+  forgets the local workspace after a complete run; browser workspaces only */ } | null,
+  sync: { details: Observable<SyncDetails>, retry() } | null, webUrl(path) }
+CollabApi { open(docId) → CollabSession { ydoc, awareness, user, state, loaded, release() } }
+VaultApi { folder, mcp: { status, setEnabled } | null, settings: { get, current, set(FolderSettingsPatch),
+  subscribe } | null }   // a folder workspace (desktop); FolderSettings, McpServerStatus
+TEAMSPACES_UI (false: hidden for the alpha; the one switch), teamspacesShown(teamspaces) /* the
+  switch, or `workspace.teamspaces` rows other than one default teamspace */,
+  useTeamspacesShown(), spaceName(teamspace, shown) /* "Workspace" for the default one while
+  hidden */, WORKSPACE_SECTION (src/teamspaces.ts)
+useAccount() /* the calling plugin's account: null without "account" */,
+useHostedQuery(id, input | null) /* needs "account" */
+  → { data, error, isLoading, reload, setData }, useCollabDocument(docId)
+  → { session, readOnly, unavailable, level } | "loading" | null (re-renders only when access
+  changes; read session.state for the rest)
+  // (bound before the first paint when the document is already loaded; waits for the Yjs chunk too)
+src/hosted-operations.ts: generated by @lydie/sdk's scripts/generate.ts (do not edit)
+```
+
 ## Grid
 
 `@lydie/plugin-api/grid` (`src/grid/`): the engine for spreadsheet-like grids (the collections
@@ -410,9 +429,11 @@ measured); fixed row height per grid; keep interaction state in the store, data 
   (the editor-view plugin draws them). `readOnly: true` actions are also shown, on their own, to
   someone who may comment on the page but not edit it.
 
-## Importers (`src/import/`)
+## Importers (`@lydie/plugin-api/import`, `src/import/index.ts`)
 
 Sources Settings → Import and export offers (the settings plugin draws the list and the dialog).
+`ImporterDef` is in the main entry (`ctx.importers.register` takes it); everything else below is
+`@lydie/plugin-api/import`, shared code for the built-in importers, not the stable plugin surface.
 An importer only reads; writing is `runImport`, so every source writes the same way, in every
 kind of workspace (operations reach a folder, this browser's database and a cloud workspace's
 replica alike).

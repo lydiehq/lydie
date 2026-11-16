@@ -1,5 +1,7 @@
-import { docIdOf, useAccount, useApp, useHostedQuery } from "@lydie/plugin-api";
-import type { Publication, PublicationItem, PublicationRun, TabInfo } from "@lydie/plugin-api";
+import { docIdOf, useApp } from "@lydie/plugin-api";
+import type { TabInfo } from "@lydie/plugin-api";
+import { useAccount, useHostedQuery } from "@lydie/plugin-api/hosted";
+import type { Publication, PublicationItem, PublicationRun } from "@lydie/plugin-api/hosted";
 import {
   Button,
   EmptyState,

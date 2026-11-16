@@ -29,7 +29,8 @@ fetchPublicShare({ baseUrl, token, documentId?, password?, fetch? }) → PublicS
 ```
 
 The generator also writes `../plugin-api/src/hosted-operations.ts`: the types of the operations
-only the hosted API has (not in `@lydie/contract`), so plugins get typed `app.services.account.call`.
+only the hosted API has (not in `@lydie/contract`), so plugins get typed `app.services.account.call`
+(exported from `@lydie/plugin-api/hosted`).
 
 ```bash
 bun run generate          # from the running API (http://localhost:4100), or --url <url>

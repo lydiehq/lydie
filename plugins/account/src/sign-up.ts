@@ -1,4 +1,4 @@
-import type { AccountApi } from "@lydie/plugin-api";
+import type { AccountApi } from "@lydie/plugin-api/hosted";
 
 // What putting this window's workspace in Lydie Cloud is called: a move where the local workspace
 // goes away once it is there (this browser's), a copy where it stays (a folder).

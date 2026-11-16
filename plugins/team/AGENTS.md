@@ -19,7 +19,7 @@ Licence: AGPL-3.0-only.
 
 ## What it does
 
-Teamspaces are hidden for the alpha (`TEAMSPACES_UI` in `@lydie/plugin-api`, `src/teamspaces.ts`,
+Teamspaces are hidden for the alpha (`TEAMSPACES_UI` in `@lydie/plugin-api/hosted`, `src/teamspaces.ts`,
 is the one switch): a hosted workspace's sidebar is the flat document tree, as a folder's is. New
 top-level pages go to the default teamspace, which every member joins (the core's default for a
 `doc.create` without `teamspaceId`); pages already private stay private, in the same tree, and a

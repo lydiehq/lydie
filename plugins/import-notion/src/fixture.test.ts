@@ -2,8 +2,8 @@
 // its zip: Notion's zip holds a zip per part, each with an "Export-<uuid>/" folder at the top.
 import { expect, test } from "bun:test";
 
-import { IMPORT_FILE_PREFIX, IMPORT_LINK_PREFIX } from "@lydie/plugin-api";
 import type { AppApi } from "@lydie/plugin-api";
+import { IMPORT_FILE_PREFIX, IMPORT_LINK_PREFIX } from "@lydie/plugin-api/import";
 
 import { readNotionExport } from "./read.ts";
 

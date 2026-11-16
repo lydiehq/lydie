@@ -1,4 +1,5 @@
-import { useAccount, useApp, useHostedQuery } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
+import { useAccount, useHostedQuery } from "@lydie/plugin-api/hosted";
 import {
   Button,
   SettingsCard,

@@ -16,7 +16,6 @@ import {
   parseDocPath,
   useApp,
   useBackend,
-  useCollabDocument,
   useContributions,
   useOps,
   useQuery,
@@ -36,6 +35,7 @@ import type {
 } from "@lydie/plugin-api";
 import { defaultSlashItems, Extension, LydieEditor } from "@lydie/plugin-api/editor";
 import type { Editor, WikiLinkSuggestion } from "@lydie/plugin-api/editor";
+import { useCollabDocument } from "@lydie/plugin-api/hosted";
 import {
   Button,
   CommandList,

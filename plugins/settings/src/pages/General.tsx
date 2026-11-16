@@ -1,5 +1,4 @@
 import {
-  useAccount,
   useApp,
   useDeviceSetting,
   useQuerySelect,
@@ -7,6 +6,7 @@ import {
   useWorkspace,
   useWorkspaceImage,
 } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
 import {
   AvatarEditor,
   Radio,

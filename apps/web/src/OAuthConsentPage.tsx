@@ -1,6 +1,6 @@
 // `/oauth/consent?request=<id>`: an app asks to use the hosted MCP server for the signed-in person.
 // Sign in (inline) first, then see who asks for what, pick the workspace, and approve or deny.
-import type { HostedWorkspaceSummary } from "@lydie/plugin-api";
+import type { HostedWorkspaceSummary } from "@lydie/plugin-api/hosted";
 import {
   Button,
   ErrorState,

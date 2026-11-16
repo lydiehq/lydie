@@ -1,10 +1,11 @@
-import { useAccount, useApp } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
 import type {
   HandoffOutcome,
   HandoffPlanHandle,
   HandoffProgress,
   HostedWorkspaceSummary,
-} from "@lydie/plugin-api";
+} from "@lydie/plugin-api/hosted";
 import {
   Button,
   Checkbox,

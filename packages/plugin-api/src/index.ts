@@ -21,15 +21,11 @@ export * from "./routes.ts";
 export * from "./placement.ts";
 export * from "./trash.ts";
 export * from "./document-menu.ts";
-export * from "./import/files.ts";
-export * from "./import/plan.ts";
-export * from "./import/run.ts";
-export * from "./import/zip.ts";
-export type * from "./hosted.ts";
-export type * from "./hosted-operations.ts";
-export * from "./hosted-react.tsx";
-export * from "./teamspaces.ts";
 export * from "./actors.ts";
+// What `AppApi` names; the services in depth are `@lydie/plugin-api/hosted`, importing is
+// `@lydie/plugin-api/import`.
+export type { AboutInfo, HostServices, Observable, PluginInfo, PluginsApi } from "./hosted.ts";
+export type { ImporterDef } from "./import/plan.ts";
 export type {
   Layout,
   TabPath,

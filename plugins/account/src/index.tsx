@@ -1,5 +1,6 @@
-import { definePlugin, useAccount, useApp, useObservable } from "@lydie/plugin-api";
-import type { HostedWorkspaceSummary } from "@lydie/plugin-api";
+import { definePlugin, useApp, useObservable } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
+import type { HostedWorkspaceSummary } from "@lydie/plugin-api/hosted";
 import {
   AddRegular,
   Button,

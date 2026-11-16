@@ -11,7 +11,8 @@ import {
 import { gettingStartedId, LYDIE_VERSION } from "@lydie/contract";
 import type { Operations } from "@lydie/contract";
 import type { Platform } from "@lydie/platform";
-import type { HostServices, WorkspaceScope } from "@lydie/plugin-api";
+import type { HostServices } from "@lydie/plugin-api";
+import type { WorkspaceScope } from "@lydie/plugin-api/hosted";
 import { createGettingStarted, createRuntime, uuid } from "@lydie/runtime";
 import type { Blob as BlobPort } from "@lydie/runtime";
 import { createMemoryPorts } from "@lydie/runtime/memory";

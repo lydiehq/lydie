@@ -1,15 +1,16 @@
-// `runImport` (@lydie/plugin-api) against a real local backend: pages, links, collections with
+// `runImport` (@lydie/plugin-api/import) against a real local backend: pages, links, collections with
 // typed properties, relations, files and their names.
 import { afterEach, expect, test } from "bun:test";
 
+import type { Backend } from "@lydie/plugin-api";
 import {
   importDatabaseEmbed,
   importFileRef,
   importLink,
   newImportId,
   runImport,
-} from "@lydie/plugin-api";
-import type { Backend, ImportPlan } from "@lydie/plugin-api";
+} from "@lydie/plugin-api/import";
+import type { ImportPlan } from "@lydie/plugin-api/import";
 import { createRuntime } from "@lydie/runtime";
 import { createMemoryPorts } from "@lydie/runtime/memory";
 import { openNodeStore } from "@lydie/store/node";

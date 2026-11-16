@@ -1,5 +1,5 @@
 import { useApp } from "@lydie/plugin-api";
-import type { FolderSettings, VaultApi } from "@lydie/plugin-api";
+import type { FolderSettings, VaultApi } from "@lydie/plugin-api/hosted";
 import { Select, SelectItem, SettingsRow, SettingsTextInput } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
 

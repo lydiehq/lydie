@@ -2,7 +2,11 @@
 // plan. Folders with notes in them are pages (a folder of only images is not); a note named like its folder (beside it, "Projects.md", or inside it,
 // "Projects/Projects.md") is that page's content. Frontmatter becomes properties. Other files
 // are attachments, and embeds and images that point at them are pointed at what is uploaded.
-import { importEntries, importFileRef, newImportId } from "@lydie/plugin-api";
+
+import type { JSONContent } from "@lydie/plugin-api";
+import { isUuid } from "@lydie/plugin-api/databases";
+import type { PropertyValue } from "@lydie/plugin-api/databases";
+import { importEntries, importFileRef, newImportId } from "@lydie/plugin-api/import";
 import type {
   ImportEntry,
   ImportFile,
@@ -10,10 +14,7 @@ import type {
   ImportPlan,
   ImportReadContext,
   ImportWarning,
-  JSONContent,
-} from "@lydie/plugin-api";
-import { isUuid } from "@lydie/plugin-api/databases";
-import type { PropertyValue } from "@lydie/plugin-api/databases";
+} from "@lydie/plugin-api/import";
 
 const NOTE = /\.(md|markdown)$/i;
 

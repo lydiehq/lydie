@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import type { Publication } from "@lydie/plugin-api";
+import type { Publication } from "@lydie/plugin-api/hosted";
 
 import { folderMarks, pageMarks } from "./folder-marks.ts";
 

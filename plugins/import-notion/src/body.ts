@@ -3,7 +3,7 @@
 // equations math, column lists columns, links to pages wiki links, images and files embeds of
 // attachments, inline databases embeds of the imported database. Notion's export quirks are
 // undone on the way (one list per item, stray line breaks, wrappers).
-import { importDatabaseEmbed, importFileRef, importLink } from "@lydie/plugin-api";
+import { importDatabaseEmbed, importFileRef, importLink } from "@lydie/plugin-api/import";
 
 import { notionIdOf, resolveHref } from "./names.ts";
 

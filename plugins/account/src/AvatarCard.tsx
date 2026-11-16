@@ -1,5 +1,5 @@
 import { useApp } from "@lydie/plugin-api";
-import type { AccountApi, AccountUser, HostedInput } from "@lydie/plugin-api";
+import type { AccountApi, AccountUser, HostedInput } from "@lydie/plugin-api/hosted";
 import { AvatarEditor, SettingsCard, SettingsCardBlock } from "@lydie/plugin-api/ui";
 
 import { errorMessage } from "./format.ts";

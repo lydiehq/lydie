@@ -1,5 +1,6 @@
-import { useApp, useContributions, useHostedQuery } from "@lydie/plugin-api";
+import { useApp, useContributions } from "@lydie/plugin-api";
 import type { AppApi, ImporterDef } from "@lydie/plugin-api";
+import { useHostedQuery } from "@lydie/plugin-api/hosted";
 import {
   Button,
   Select,

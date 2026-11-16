@@ -2,6 +2,7 @@ import { appUrl, belowBase, parseAppUrl } from "@lydie/app/url";
 // The web app's side of hosted mode: the account service plugins see (`app.services.account`), the
 // collab adapter for the editor, and the local → hosted hand-off. `compose.ts` decides the scope.
 import { LYDIE_VERSION } from "@lydie/contract";
+import type { Observable } from "@lydie/plugin-api";
 import type {
   AccountApi,
   AccountState,
@@ -11,11 +12,10 @@ import type {
   HandoffPlanHandle,
   HostedApiError,
   LocalWorkspaceSummary,
-  Observable,
   SignInFollowUp,
   SyncDetails,
   WorkspaceScope,
-} from "@lydie/plugin-api";
+} from "@lydie/plugin-api/hosted";
 import { createApiCaller } from "@lydie/sdk";
 import type { Store } from "@lydie/store";
 import { isApiError, readProviderReturn, withoutProviderReturn } from "@lydie/sync";

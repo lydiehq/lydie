@@ -1,5 +1,6 @@
-import { docPath, PageLink, useAccount, useApp, useQuery, useWorkspace } from "@lydie/plugin-api";
+import { docPath, PageLink, useApp, useQuery, useWorkspace } from "@lydie/plugin-api";
 import type { Activity, Actor } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
 import {
   AriaDialog,
   Avatar,

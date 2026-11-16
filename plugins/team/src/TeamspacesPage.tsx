@@ -1,5 +1,6 @@
-import { useApp, useHostedQuery } from "@lydie/plugin-api";
-import type { Teamspace, TeamspaceRole, TeamspaceVisibility } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
+import { useHostedQuery } from "@lydie/plugin-api/hosted";
+import type { Teamspace, TeamspaceRole, TeamspaceVisibility } from "@lydie/plugin-api/hosted";
 import {
   Button,
   Dialog,

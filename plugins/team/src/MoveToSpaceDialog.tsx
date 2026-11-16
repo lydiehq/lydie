@@ -1,5 +1,6 @@
-import { useAccount, useApp, useHostedQuery, useQuery } from "@lydie/plugin-api";
+import { useApp, useQuery } from "@lydie/plugin-api";
 import type { DocumentRef } from "@lydie/plugin-api";
+import { useAccount, useHostedQuery } from "@lydie/plugin-api/hosted";
 import {
   Button,
   Dialog,

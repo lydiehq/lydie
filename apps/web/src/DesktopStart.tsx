@@ -2,7 +2,7 @@
 // (a folder or a synced one), open another folder of Markdown files, or sign in.
 import { toPlatformError } from "@lydie/platform";
 import type { FolderRef, RecentFolder } from "@lydie/platform";
-import type { HostedWorkspaceSummary } from "@lydie/plugin-api";
+import type { HostedWorkspaceSummary } from "@lydie/plugin-api/hosted";
 import type { AccountWireState } from "@lydie/sync";
 import { Button, CloseRegular, focusRing, Heading, TextField } from "@lydie/ui";
 import { useEffect, useState } from "react";

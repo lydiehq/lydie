@@ -2,15 +2,16 @@
 // them, reading them into a plan (with a summary of what comes in), writing it with `runImport`,
 // and what did not carry over. Rendered by the settings page, not opened as an overlay, which
 // would close Settings.
-import { runImport, useApp } from "@lydie/plugin-api";
+import { useApp } from "@lydie/plugin-api";
+import type { ImporterDef } from "@lydie/plugin-api";
+import { runImport } from "@lydie/plugin-api/import";
 import type {
-  ImporterDef,
   ImportPlan,
   ImportProgress,
   ImportResult,
   ImportRunProgress,
   ImportWarning,
-} from "@lydie/plugin-api";
+} from "@lydie/plugin-api/import";
 import { Button, Dialog, Heading, Modal, ProgressBar } from "@lydie/plugin-api/ui";
 import { useRef, useState } from "react";
 import type { DragEvent } from "react";

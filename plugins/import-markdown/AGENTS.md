@@ -12,7 +12,7 @@ Licence: AGPL-3.0-only.
 
 ## Rules
 
-- It only reads files into an `ImportPlan`; `runImport` (plugin API) writes it. Never write
+- It only reads files into an `ImportPlan`; `runImport` (`@lydie/plugin-api/import`) writes it. Never write
   documents here.
 - Bodies are changed only where they embed an imported file, through `app.editor.fromMarkdown` /
   `toMarkdown`, so everything else keeps its bytes.

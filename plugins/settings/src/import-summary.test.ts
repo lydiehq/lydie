@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import type { ImportPage, ImportPlan } from "@lydie/plugin-api";
+import type { ImportPage, ImportPlan } from "@lydie/plugin-api/import";
 
 import { describePlan } from "./import-summary.ts";
 

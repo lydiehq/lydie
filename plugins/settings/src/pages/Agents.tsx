@@ -1,5 +1,6 @@
-import { useAccount, useApp, useHostedQuery, useObservable } from "@lydie/plugin-api";
-import type { AccountApi, VaultApi } from "@lydie/plugin-api";
+import { useApp, useObservable } from "@lydie/plugin-api";
+import { useAccount, useHostedQuery } from "@lydie/plugin-api/hosted";
+import type { AccountApi, VaultApi } from "@lydie/plugin-api/hosted";
 import {
   Button,
   Radio,

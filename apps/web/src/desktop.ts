@@ -9,18 +9,17 @@ import type {
   ServiceClient,
   ServiceDefinition,
 } from "@lydie/platform";
+import type { Backend, Observable } from "@lydie/plugin-api";
 import type {
   AccountApi,
   AccountState,
-  Backend,
   HandoffApi,
   HandoffPlanHandle,
   HostedApiError,
   LocalWorkspaceSummary,
-  Observable,
   SyncDetails,
   WorkspaceScope,
-} from "@lydie/plugin-api";
+} from "@lydie/plugin-api/hosted";
 import { createApiCaller } from "@lydie/sdk";
 import { accountService, hostedDatabaseName } from "@lydie/sync";
 import type {

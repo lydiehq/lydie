@@ -1,7 +1,8 @@
 // Where a local window goes once the person has signed in. Signing in is mostly "take me to my
 // notes": someone whose notes are in Lydie Cloud lands there. When pages were written or changed
 // here meanwhile, they are asked, in those words, whether to move them along.
-import type { AccountApi, AppApi, HostedWorkspaceSummary } from "@lydie/plugin-api";
+import type { AppApi } from "@lydie/plugin-api";
+import type { AccountApi, HostedWorkspaceSummary } from "@lydie/plugin-api/hosted";
 
 import type { HandoffProps } from "./HandoffDialog.tsx";
 import { readCloud, readCopied } from "./local-notice.ts";

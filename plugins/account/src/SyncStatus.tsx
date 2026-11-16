@@ -1,5 +1,7 @@
-import { useAccount, useApp, useObservable, useStatus } from "@lydie/plugin-api";
-import type { RejectedChange, SyncDetails } from "@lydie/plugin-api";
+import { useApp, useObservable, useStatus } from "@lydie/plugin-api";
+import type { RejectedChange } from "@lydie/plugin-api";
+import { useAccount } from "@lydie/plugin-api/hosted";
+import type { SyncDetails } from "@lydie/plugin-api/hosted";
 import { Button, CloseRegular, Dialog, Popover } from "@lydie/plugin-api/ui";
 import { useEffect, useRef, useState } from "react";
 

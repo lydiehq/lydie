@@ -4,7 +4,8 @@ import { vaultService } from "@lydie/bridge-fs/service";
 import type { McpStatus, VaultServiceContract } from "@lydie/bridge-fs/service";
 import { serviceClient, toPlatformError } from "@lydie/platform";
 import type { ServiceChannel, ServiceDefinition } from "@lydie/platform";
-import type { FolderSettings, McpServerStatus, Observable, VaultApi } from "@lydie/plugin-api";
+import type { Observable } from "@lydie/plugin-api";
+import type { FolderSettings, McpServerStatus, VaultApi } from "@lydie/plugin-api/hosted";
 
 const OFF: McpServerStatus = { running: false, url: null, tokenPath: null, error: null };
 
