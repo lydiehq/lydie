@@ -580,7 +580,8 @@ function DocEditor({
     if (!editor || editor.isDestroyed || !dirty.current || !parsed.current) return;
     dirty.current = false;
     if (file.active) {
-      void file.save(editor.getJSON()).catch((error: unknown) => {
+      // Main has the document through the session's block patches: nothing to serialise here.
+      void file.save().catch((error: unknown) => {
         app.notify({
           title: "Could not save",
           description: (error as Error).message,
