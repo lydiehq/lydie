@@ -10,6 +10,8 @@ export type IconProps = SVGProps<SVGSVGElement>;
 export type Icon = (props: IconProps) => React.JSX.Element;
 type IconElement = readonly [tag: "path" | "circle", attributes: Record<string, string>];
 
+// Pure, so a bundler drops the icons nothing uses.
+/* @__NO_SIDE_EFFECTS__ */
 function createIcon(name: string, elements: readonly IconElement[]): Icon {
   function MingcuteIcon(props: IconProps) {
     return (

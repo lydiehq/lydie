@@ -4,6 +4,7 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
