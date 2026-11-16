@@ -1,7 +1,6 @@
 // Workspace export (`workspace.export`, backups): the workspace as the folder format
 // (@lydie/contract's `planFolder`), read through the ports, and zipped as a stream. The hosted core
 // runs the same code over its Postgres ports, so a hosted export and a local one are the same files.
-import { planFolder } from "@lydie/contract";
 import type { DatabaseDefinition, Document, FolderSections } from "@lydie/contract";
 import { Zip, ZipDeflate, ZipPassThrough } from "fflate";
 
@@ -66,6 +65,8 @@ export async function* exportWorkspace(
     return { documents, databases, attachments };
   });
   const updatedAt = new Map(snapshot.documents.map((d) => [d.id, new Date(d.updatedAt)]));
+  // On first use: the planner loads `yaml`, which the runtime does not need to start.
+  const { planFolder } = await import("@lydie/contract/files");
   const plan = planFolder({
     workspaceId,
     ...snapshot,

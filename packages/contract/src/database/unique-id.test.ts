@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { fromBase, toBase } from "./base.ts";
+import { fromBase, toBase } from "./base-file.ts";
 import { DatabaseConfig, PropertyConfig, ViewConfig } from "./entities.ts";
 import type { PropertyInput } from "./entities.ts";
 import { conditionExpr, exprCondition } from "./filters.ts";

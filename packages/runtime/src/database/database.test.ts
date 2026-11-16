@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
 
-import { fromBase, parseExpression, toBase } from "@lydie/contract";
+import { parseExpression } from "@lydie/contract";
 import type { PropertyValue } from "@lydie/contract";
+import { fromBase, toBase } from "@lydie/contract/files";
 
 import { createMemoryPorts } from "../memory/index.ts";
 import { createRuntime } from "../runtime.ts";

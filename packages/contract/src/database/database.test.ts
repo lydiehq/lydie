@@ -8,7 +8,8 @@ import {
   databaseQuery,
   databaseUpdateView,
 } from "../operations/database.ts";
-import { fromBase, toBase, toBaseObject } from "./base.ts";
+import { fromBase, toBase } from "./base-file.ts";
+import { toBaseObject } from "./base.ts";
 import type { BaseDefinition } from "./base.ts";
 import { DatabaseConfig, ViewConfig, ViewConfigPatch, viewTypeOf } from "./entities.ts";
 import type { FilterNode, PropertyInput, ViewInput } from "./entities.ts";

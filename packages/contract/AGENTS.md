@@ -9,7 +9,8 @@ Licence: MIT.
 
 ## May depend on
 
-nothing internal (external: `zod`, and `yaml` for `.base` files). `client/scripts/check-boundaries.ts` is
+nothing internal (external: `zod`, and `yaml` for `.base` files and frontmatter, only from
+`src/files.ts`'s modules). `client/scripts/check-boundaries.ts` is
 authoritative and runs in CI.
 
 ## Rules
@@ -77,9 +78,8 @@ InverseStep { op, input }, HistoryEntry, HistorySession, Warning, BodyEdit
 // FilterNode (condition | expression | group and/or/not, 3 levels), FilterOp, FilterValue, RelativeDate,
 // MeValue, DatabaseDefinition, DefinitionInput, PropertyInput, ViewInput, ViewWindow, ViewResult,
 // ViewRow, ViewGroup, RelatedRow, STORED_TYPES, LIST_TYPES, isStoredType
-// .base files: toBase(def, { folder?, linkFor?, resolveProperty? }): string, toBaseObject,
-//   fromBase(text, { newId, existing?, types?, idFor? }): { id, folder, definition, warnings }, fromBaseObject,
-//   effectiveColumns, BASE_FORMAT_VERSION
+// .base files: toBaseObject, fromBaseObject, effectiveColumns, BASE_FORMAT_VERSION; the text
+//   (toBase / fromBase) is in `@lydie/contract/files`, below
 // Bases expressions: parseExpression, tryParseExpression, printExpression, refOf, refsIn, refExpr,
 //   refString, parseRefString, quote, ExpressionError, type Expr (+ node types), PropertyRef
 // Filters ⇄ Bases statements: toBaseFilter(Root), fromBaseFilter, conditionExpr, exprCondition,
@@ -100,6 +100,20 @@ AppliedOperation   // { id, operation, input, actor, sessionId?, workspaceId, cr
 toOpenApi(registry) (adds x-lydie-undoable on mutations), toMcpTools, toMcpTool, toCliCommands,
 toCliCommand, toJsonSchema, generatedFiles
 ```
+
+`@lydie/contract/files` (`src/files.ts`): what reads or writes YAML, kept out of the main entry
+point so that loading the contract does not load `yaml` (~100 KB, which every app and server would
+otherwise evaluate at startup). `files.test.ts` checks that `index.ts` never reaches it.
+
+```ts
+toBase(def, { folder?, linkFor?, resolveProperty? }): string
+fromBase(text, { newId, existing?, types?, idFor? }): { id, folder, definition, warnings }
+frontmatterBlock(properties, eol?): string
+planFolder(snapshot): FolderPlan
+```
+
+Import it statically where files are read or written (the file bridge), or `await import()` it on
+first use from code that is on a startup path (`@lydie/runtime`'s `exportWorkspace`).
 
 `Document` mirrors the synced `documents` table: `id` (a UUID, minted client-side), `workspaceId`,
 `parentId` (nullable), `title`, `sortKey` (fractional index, siblings sort by `(sortKey, id)` in byte
@@ -179,6 +193,7 @@ rewrites the rows that use it in one undoable step. Deleting a property keeps th
   `database.create({ documentId })` for the folder's document first. `warnings` lists what was skipped.
 - Row frontmatter ⇄ `properties`: `toFileValue`/`fromFileValue` map relation/files ids ⇄ `[[links]]`
   (unresolved links stay as written). Write row values on `doc.propertiesChanged`.
+- `toBase`/`fromBase`/`frontmatterBlock`/`planFolder` come from `@lydie/contract/files`.
 - Native Bases keys hold what Obsidian understands; Lydie-only settings live under `lydie:` (top level:
   `version`, `id`, `templates`, `filter`, `properties` with ids, types, options, relations, rollups,
   number formats; per view: `id`, `type: calendar`, `filter`, `columns` (hidden/all), `groupBy` extras,
@@ -219,7 +234,8 @@ rewrites the rows that use it in one undoable step. Deleting a property keeps th
 
 ## The folder format (`src/folder/`, plan "export guarantee")
 
-The one writer of the local folder layout, shared by the file bridge and every export:
+The one writer of the local folder layout, shared by the file bridge and every export
+(`planFolder` and `frontmatterBlock` are in `@lydie/contract/files`; the rest in the main entry):
 `planFolder({ workspaceId, documents, databases, attachments, attachmentsFolder? })` → `{ entries,
 keyOf(id), attachmentLink(documentId, link), meta(written?) }`. Entries are notes (`<key>.md`, `head` = frontmatter with `id:`; a
 database's own note is `optional`), `.base` files, attachments (once per SHA-256) and empty database

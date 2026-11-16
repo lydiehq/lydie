@@ -10,9 +10,8 @@
 // Precedence when reading: native keys win. Lydie-only details are used where they still agree
 // with the native data (a filter written by Lydie is read back from `lydie.filter` only if the
 // native statements are unchanged), so edits made in Obsidian are never lost.
-import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-
-import { uuidsForUlids } from "../ids.ts";
+//
+// This module works on the parsed object; `./base-file.ts` reads and writes the YAML text.
 import type {
   DatabaseConfig,
   DefinitionInput,
@@ -263,10 +262,6 @@ export function effectiveColumns(
   ];
 }
 
-export function toBase(def: BaseDefinition, options: ToBaseOptions = {}): string {
-  return stringifyYaml(toBaseObject(def, options), { lineWidth: 0, aliasDuplicateObjects: false });
-}
-
 // ---- Reading
 
 const OBSIDIAN_TYPES: Record<string, PropertyType> = {
@@ -279,20 +274,6 @@ const OBSIDIAN_TYPES: Record<string, PropertyType> = {
   date: "date",
   datetime: "date",
 };
-
-export function fromBase(text: string, options: FromBaseOptions): FromBaseResult {
-  let parsed: unknown;
-  const warnings: string[] = [];
-  try {
-    // A file written before ids were UUIDs names them as ULIDs: read as the same ids.
-    parsed = parseYaml(uuidsForUlids(text)) ?? {};
-  } catch (error) {
-    warnings.push(`Invalid YAML: ${error instanceof Error ? error.message : String(error)}`);
-    parsed = {};
-  }
-  const result = fromBaseObject(isObj(parsed) ? parsed : {}, options);
-  return { ...result, warnings: [...warnings, ...result.warnings] };
-}
 
 export function fromBaseObject(base: Obj, options: FromBaseOptions): FromBaseResult {
   const warnings: string[] = [];

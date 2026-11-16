@@ -1,12 +1,6 @@
 export * from "./entities.ts";
-export {
-  BASE_FORMAT_VERSION,
-  effectiveColumns,
-  fromBase,
-  fromBaseObject,
-  toBase,
-  toBaseObject,
-} from "./base.ts";
+// `toBase` / `fromBase` (the file's text) are in `@lydie/contract/files`.
+export { BASE_FORMAT_VERSION, effectiveColumns, fromBaseObject, toBaseObject } from "./base.ts";
 export type { BaseDefinition, FromBaseOptions, FromBaseResult, ToBaseOptions } from "./base.ts";
 export {
   ExpressionError,

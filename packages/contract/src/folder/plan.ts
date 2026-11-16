@@ -13,25 +13,24 @@
 //   .lydie/attachments.json     the attachment rows, so their ids survive
 //
 // Pure: no I/O. Bodies and bytes are read by the caller, one at a time, while it writes.
+// It loads `yaml`, so it is reached through the `@lydie/contract/files` entry point; the names and
+// helpers that do not need it are in `./format.ts`.
 import { stringify } from "yaml";
 
-import { toBase } from "../database/base.ts";
-import type { BaseDefinition } from "../database/base.ts";
-import type {
-  DatabaseDefinition,
-  DatabaseProperty,
-  PropertyInput,
-  ViewInput,
-} from "../database/entities.ts";
+import { toBase } from "../database/base-file.ts";
+import type { DatabaseDefinition, DatabaseProperty } from "../database/entities.ts";
 import { toFileValue } from "../database/values.ts";
 import type { Attachment, Document, Properties } from "../entities.ts";
-import { normalizeId, ULID_SOURCE, UUID_SOURCE } from "../ids.ts";
+import {
+  attachmentIdIn,
+  baseDefinitionOf,
+  baseFileFor,
+  DEFAULT_ATTACHMENTS_FOLDER,
+  FOLDER_FORMAT_VERSION,
+  META_DIR,
+} from "./format.ts";
+import type { AttachmentRecord } from "./format.ts";
 import { compareNames, fileNameFor, uniqueName } from "./names.ts";
-
-export const FOLDER_FORMAT_VERSION = 1;
-export const DEFAULT_ATTACHMENTS_FOLDER = "attachments";
-export const BASE_EXT = ".base";
-export const META_DIR = ".lydie";
 
 export type FolderSnapshot = {
   workspaceId: string;
@@ -66,21 +65,6 @@ export type FolderEntry =
   // An empty folder (a database without rows).
   | { kind: "folder"; path: string };
 
-export type AttachmentRecord = {
-  path: string;
-  workspaceId: string;
-  documentId: string | null;
-  filename: string;
-  contentType: string;
-  size: number;
-  sha256: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  createdBy: string | null;
-  updatedBy: string | null;
-};
-
 export type FolderPlan = {
   // Notes and folders depth-first in tree order, then .base files, then attachments.
   entries: FolderEntry[];
@@ -105,41 +89,6 @@ export function frontmatterBlock(properties: Record<string, unknown>, eol = "\n"
       .join(eol),
   );
   return `---${eol}${lines.map((l) => l + eol).join("")}---${eol}`;
-}
-
-// The .base file's view of a database definition.
-export function baseDefinitionOf(def: DatabaseDefinition): BaseDefinition {
-  return {
-    id: def.database.id,
-    config: def.database.config,
-    properties: def.properties.map(propertyInput),
-    views: def.views.map(viewInput),
-  };
-}
-
-function propertyInput({ id, name, type, key, config }: PropertyInput): PropertyInput {
-  return { id, name, type, key, config };
-}
-
-function viewInput({ id, name, type, config }: ViewInput): ViewInput {
-  return { id, name, type, config };
-}
-
-// The canonical .base file name of a database folder.
-export function baseFileFor(folderKey: string): string {
-  return `${folderKey.slice(folderKey.lastIndexOf("/") + 1)}${BASE_EXT}`;
-}
-
-// Hosted bodies can point at an attachment by id besides `![[file.png]]` by name:
-// `attachment:<id>`, or the API's attachment URLs (`…/attachments/<id>/content?…`).
-// A body written before ids were UUIDs spells the id as a ULID.
-const ATTACHMENT_REF = new RegExp(
-  `(?:^attachment:|/attachments/)(${UUID_SOURCE}|${ULID_SOURCE})(?:[/?#]|$)`,
-);
-
-export function attachmentIdIn(ref: string): string | null {
-  const id = ATTACHMENT_REF.exec(ref)?.[1];
-  return id ? normalizeId(id) : null;
 }
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
