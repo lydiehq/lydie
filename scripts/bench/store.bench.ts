@@ -670,7 +670,7 @@ describe(`store with ${NOTES} notes, ${ROWS} database rows, ${PROJECTS} related 
     const open = [
       ...[edited, ...seed.notes.slice(1000, 1007)].flatMap((id) => [
         queries.getDoc(id, { includeBody: true }),
-        queries.outgoingLinks(id, { icons: true }),
+        queries.outgoingLinks(id),
         queries.myAccess(id),
       ]),
       queries.children(ws, null),
