@@ -14,7 +14,9 @@ import {
 } from "@lydie/plugin-api/ui";
 import { useEffect, useSyncExternalStore } from "react";
 
-export type OutlineHeading = { pos: number; level: number; text: string };
+// No position: typing above a heading moves it, and the panel need not draw again for that. The
+// position is looked up when it is needed (headingPositions).
+export type OutlineHeading = { level: number; text: string };
 type Entry = { editor: Editor; headings: OutlineHeading[]; current: number };
 
 const entries = new Map<string, Entry>();
@@ -32,10 +34,9 @@ const subscribe = (l: () => void) => {
 
 export function headingsOf(editor: Editor): OutlineHeading[] {
   const out: OutlineHeading[] = [];
-  editor.state.doc.forEach((node, offset) => {
+  editor.state.doc.forEach((node) => {
     if (node.type.name === "heading") {
       out.push({
-        pos: offset,
         level: Number(node.attrs.level ?? 1),
         text: node.textContent.replace(/\s\^[A-Za-z0-9-]+$/, ""),
       });
@@ -44,10 +45,18 @@ export function headingsOf(editor: Editor): OutlineHeading[] {
   return out;
 }
 
+// Where each heading is now, in the same order as headingsOf.
+function headingPositions(editor: Editor): number[] {
+  const out: number[] = [];
+  editor.state.doc.forEach((node, offset) => {
+    if (node.type.name === "heading") out.push(offset);
+  });
+  return out;
+}
+
 function sameHeadings(a: OutlineHeading[], b: OutlineHeading[]) {
   return (
-    a.length === b.length &&
-    a.every((h, i) => h.pos === b[i]!.pos && h.text === b[i]!.text && h.level === b[i]!.level)
+    a.length === b.length && a.every((h, i) => h.text === b[i]!.text && h.level === b[i]!.level)
   );
 }
 
@@ -63,16 +72,17 @@ function scrollerOf(el: HTMLElement): HTMLElement | null {
 }
 
 // The last heading whose top is above the upper third of the view.
-function currentIndex(editor: Editor, headings: OutlineHeading[], scroller: HTMLElement | null) {
+function currentIndex(editor: Editor, scroller: HTMLElement | null) {
+  const positions = headingPositions(editor);
   const top = (scroller?.getBoundingClientRect().top ?? 0) + 80;
   let current = -1;
-  for (let i = 0; i < headings.length; i++) {
-    const dom = editor.view.nodeDOM(headings[i]!.pos) as HTMLElement | null;
+  for (let i = 0; i < positions.length; i++) {
+    const dom = editor.view.nodeDOM(positions[i]!) as HTMLElement | null;
     if (!dom || dom.nodeType !== 1) continue;
     if (dom.getBoundingClientRect().top <= top) current = i;
     else break;
   }
-  return current === -1 && headings.length ? 0 : current;
+  return current === -1 && positions.length ? 0 : current;
 }
 
 function OutlineTracker({ editor, tabId }: EditorOverlayProps) {
@@ -97,7 +107,7 @@ function OutlineTracker({ editor, tabId }: EditorOverlayProps) {
       const next =
         previous && sameHeadings(previous.headings, headings) ? previous.headings : headings;
       const current =
-        listeners.size > 0 ? currentIndex(editor, next, scroller) : (previous?.current ?? -1);
+        listeners.size > 0 ? currentIndex(editor, scroller) : (previous?.current ?? -1);
       if (
         previous &&
         previous.headings === next &&
@@ -155,14 +165,17 @@ function OutlinePanel({ activeTab }: { activeTab: TabInfo | null }) {
     <nav aria-label="Outline" className="px-2 py-2" data-testid="outline">
       <ul>
         {entry.headings.map((h, i) => (
-          <li key={`${h.pos}:${i}`}>
+          // By index, as the headings carry no position: typing above one changes no row.
+          <li key={i}>
             <button
               type="button"
               aria-current={i === entry.current ? "location" : undefined}
               onClick={() => {
-                const dom = entry.editor.view.nodeDOM(h.pos) as HTMLElement | null;
+                const pos = headingPositions(entry.editor)[i];
+                if (pos === undefined) return;
+                const dom = entry.editor.view.nodeDOM(pos) as HTMLElement | null;
                 dom?.scrollIntoView({ block: "start", behavior: "smooth" });
-                entry.editor.commands.setTextSelection(h.pos + 1);
+                entry.editor.commands.setTextSelection(pos + 1);
               }}
               className={sidebarItemStyles({
                 isCurrent: i === entry.current,
