@@ -101,7 +101,12 @@ e2e/                          Playwright-on-Electron tests against the built app
   extractor are `src/main/hosted-lazy.ts`, imported when a hosted workspace opens or the hand-off
   runs, so the main process does not evaluate them before its first window. With the file bridge
   and the MCP SDK also loaded on first use, `out/main/index.js` went from 1,286 KB to 537 KB
-  (Nov 2026).
+  (Nov 2026). The entry imports nothing from node_modules but `electron`: the database driver
+  (`@lydie/store/node`: PowerSync with undici, better-sqlite3's addon) loads with the first
+  folder (`vaults.ts`) or hosted workspace (`hosted-lazy.ts`), `@parcel/watcher` with the first
+  watch (`watcher.ts`). Before that, those were about 230 files read before the entry ran;
+  the packaged app's main script now starts 32 ms sooner and a folder's first sidebar row
+  appears about 30 ms sooner.
 - `HostedManager` holds the session (token in `SecretStore`, i.e. the OS keychain), decides each
   window's scope once (a folder window shows its folder; one without opens the remembered hosted
   workspace when signed in, else the web app shows a start screen), and opens one synced database

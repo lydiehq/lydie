@@ -21,7 +21,6 @@ import { LYDIE_VERSION, uuidsForUlids } from "@lydie/contract";
 import type { Operations } from "@lydie/contract";
 import type { ServiceHandlers, WorkspaceScope as PlatformScope } from "@lydie/platform";
 import { createRuntime } from "@lydie/runtime";
-import { createDirectoryBlob, openNodeStore, unpackedAsar } from "@lydie/store/node";
 import {
   accountService,
   createScopePreference,
@@ -335,8 +334,14 @@ export class HostedManager {
 
   private async open(scope: WindowScope & { kind: "hosted" }): Promise<HostedHost> {
     const hub = createEventHub();
+    const {
+      createDirectoryBlob,
+      createHostedBackendParts,
+      markdownExtract,
+      openNodeStore,
+      unpackedAsar,
+    } = await import("./hosted-lazy.ts");
     const blob = createDirectoryBlob(join(this.options.dataDir, "attachments"));
-    const { createHostedBackendParts, markdownExtract } = await import("./hosted-lazy.ts");
     const parts = await createHostedBackendParts({
       scope,
       baseUrl: this.options.apiUrl,

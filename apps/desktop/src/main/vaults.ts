@@ -18,7 +18,6 @@ import { operations } from "@lydie/contract";
 import { PlatformError } from "@lydie/platform";
 import type { ServiceContract, ServiceHandlers, Unsubscribe } from "@lydie/platform";
 import type { Exports } from "@lydie/runtime";
-import { unpackedAsar } from "@lydie/store/node";
 import { z } from "zod";
 
 import type { ServiceCaller, ServiceImplementation, ServiceRegistry } from "./services.ts";
@@ -126,9 +125,12 @@ export class VaultManager {
   private openSlot(folder: string): Slot {
     const onError = this.options.onError ?? ((error: unknown) => console.error("[vault]", error));
     const ready = (async (): Promise<VaultHost> => {
-      // The file bridge (with the Markdown parser) loads when the first folder opens, not before
-      // the app is ready.
-      const { openVault, serveVault } = await import("@lydie/bridge-fs");
+      // The file bridge (with the Markdown parser) and the database driver (PowerSync, undici,
+      // better-sqlite3) load when the first folder opens, not before the app is ready.
+      const [{ openVault, serveVault }, { unpackedAsar }] = await Promise.all([
+        import("@lydie/bridge-fs"),
+        import("@lydie/store/node"),
+      ]);
       const vault = await (this.options.open ?? openVault)({
         folder,
         dataDir: this.options.dataDir,

@@ -1,9 +1,8 @@
 import type { FileChange } from "@lydie/platform";
+
 // Folder watching with @parcel/watcher: one native recursive subscription per folder (FSEvents on
 // macOS, inotify on Linux, ReadDirectoryChangesW on Windows), the same library VS Code uses. Events
 // are coalesced into short batches before they cross IPC.
-import watcher from "@parcel/watcher";
-
 import { TEMP_MARKER } from "./workspace-fs.ts";
 import type { WorkspaceFs } from "./workspace-fs.ts";
 
@@ -29,6 +28,8 @@ export async function watchFolder(
     timer ??= setTimeout(flush, BATCH_MS);
   };
 
+  // The native addon loads with the first watched folder, not at launch.
+  const { default: watcher } = await import("@parcel/watcher");
   const subscription = await watcher.subscribe(
     fs.root,
     (error, events) => {
