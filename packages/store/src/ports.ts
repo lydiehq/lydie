@@ -900,8 +900,10 @@ function activity(tx: LockContext): ActivityRead & ActivityWrite {
       return rows.map(toActivity);
     },
     async latest({ workspaceId, actor, sessionId, type, targetId }) {
+      // Without statistics SQLite prefers activity_recent, which satisfies the ORDER BY but walks
+      // the workspace's whole log for a target with no rows yet (every new document).
       const row = await tx.getOptional<Row>(
-        `SELECT ${ACTIVITY_COLUMNS} FROM activity
+        `SELECT ${ACTIVITY_COLUMNS} FROM activity INDEXED BY activity_key
          WHERE workspace_id = ? AND target_id = ? AND type = ? AND actor_ref = ? AND session_id IS ?
          ORDER BY last_at DESC, id DESC
          LIMIT 1`,
