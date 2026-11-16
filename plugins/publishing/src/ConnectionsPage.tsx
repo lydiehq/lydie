@@ -37,6 +37,16 @@ export function errorText(error: unknown): string {
 
 type AuthChoice = ConnectorInfo["auth"][number];
 
+// Value blocks are kept out of the handlers' try statements, which the React Compiler cannot
+// compile with them.
+const savedText = (warnings: readonly string[]) => warnings.join(" ") || "Saved";
+
+// What "Test" says about the connection.
+function testText({ ok, connection }: { ok: boolean; connection: Connection }): string {
+  if (!ok) return connection.lastError ?? "The connection does not work";
+  return connection.account ? `Connected as ${connection.account}` : "Connected";
+}
+
 function ConnectDialog({
   connector,
   close,
@@ -70,12 +80,17 @@ function ConnectDialog({
     if (Object.keys(problems).length) return;
     setBusy(true);
     setError(null);
+    const label = name.trim() || connector.name;
+    const secrets =
+      method.type === "token"
+        ? { credentials: toValue(credentialFields, credentials) as Record<string, string> }
+        : {};
     try {
       if (method.type === "oauth2") {
         const { authorizeUrl } = await api.call("connection.authorize", {
           workspaceId: app.workspace.workspaceId,
           connector: connector.id,
-          name: name.trim() || connector.name,
+          name: label,
           settings: toValue(settingFields, settings),
         });
         // The provider sends the browser back to /settings/connections.
@@ -85,14 +100,12 @@ function ConnectDialog({
       const result = await api.call("connection.create", {
         workspaceId: app.workspace.workspaceId,
         connector: connector.id,
-        name: name.trim() || connector.name,
+        name: label,
         authMethod: method.type,
         settings: toValue(settingFields, settings),
-        ...(method.type === "token"
-          ? { credentials: toValue(credentialFields, credentials) as Record<string, string> }
-          : {}),
+        ...secrets,
       });
-      for (const warning of result.warnings) app.notify({ title: warning });
+      result.warnings.forEach((warning) => app.notify({ title: warning }));
       connected(result.connection, result.revealed);
       close();
     } catch (e) {
@@ -201,30 +214,23 @@ function ConnectionDetails({
         id: connection.id,
         settings: toValue(settingFields, settings),
       });
-      setMessage({ ok: true, text: result.warnings.join(" ") || "Saved" });
+      setMessage({ ok: true, text: savedText(result.warnings) });
       await reload();
     } catch (e) {
       setMessage({ ok: false, text: errorText(e) });
-    } finally {
-      setBusy(null);
     }
+    setBusy(null);
   };
   const test = async () => {
     setBusy("test");
     try {
       const result = await api.call("connection.test", { id: connection.id });
-      setMessage({
-        ok: result.ok,
-        text: result.ok
-          ? `Connected${result.connection.account ? ` as ${result.connection.account}` : ""}`
-          : (result.connection.lastError ?? "The connection does not work"),
-      });
+      setMessage({ ok: result.ok, text: testText(result) });
       await reload();
     } catch (e) {
       setMessage({ ok: false, text: errorText(e) });
-    } finally {
-      setBusy(null);
     }
+    setBusy(null);
   };
 
   return (

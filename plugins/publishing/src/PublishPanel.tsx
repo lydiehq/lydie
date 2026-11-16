@@ -33,6 +33,9 @@ const STATES: Record<PublicationItem["state"], string> = {
 const textOf = (value: unknown) =>
   typeof value === "string" ? value : JSON.stringify(value, null, 2);
 
+// The run an action started, if it started one.
+const runOf = (result: unknown) => (result as { run?: PublicationRun } | undefined)?.run ?? null;
+
 const FINISHED = new Set<PublicationRun["status"]>(["succeeded", "partial", "failed", "cancelled"]);
 
 const RUN_STATES: Record<PublicationRun["status"], string> = {
@@ -309,8 +312,7 @@ function PublicationCard({
   const act = async (label: string, fn: () => Promise<unknown>) => {
     setError(null);
     try {
-      const result = (await fn()) as { run?: PublicationRun } | undefined;
-      watch(result?.run ?? null);
+      watch(runOf(await fn()));
       await reload();
     } catch (e) {
       setError(`Could not ${label}: ${errorText(e)}`);

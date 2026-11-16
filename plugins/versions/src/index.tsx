@@ -108,9 +108,8 @@ function VersionsPanel({ activeTab }: { activeTab: TabInfo | null }) {
       app.notify({ title: "Version restored", kind: "success" });
     } catch (error) {
       app.notify({ title: "Could not restore", description: message(error), kind: "error" });
-    } finally {
-      setBusy(false);
     }
+    setBusy(false);
   };
 
   return (
