@@ -2,6 +2,7 @@
 // isolation, global undo and layout restore.
 import { afterEach, describe, expect, spyOn, test } from "bun:test";
 
+import { operations } from "@lydie/contract";
 import { createTestPlatform } from "@lydie/platform/testing";
 import {
   createAndOpen,
@@ -218,6 +219,40 @@ describe("shell", () => {
     await act(async () => fireEvent.click(first));
     await settle();
     expect(counts.mounts.get(docs[0]!.id)).toBe(2);
+  });
+
+  test("keys reuse the command list until a plugin's commands change", async () => {
+    const { host } = await setup();
+    // Zod's `safeParse` is an accessor, which `spyOn` does not take: count through a property.
+    const input = operations["doc.delete"].input;
+    const own = Object.getOwnPropertyDescriptor(input, "safeParse");
+    const safeParse = input.safeParse.bind(input);
+    let parses = 0;
+    Object.defineProperty(input, "safeParse", {
+      configurable: true,
+      value: (...args: Parameters<typeof safeParse>) => (parses++, safeParse(...args)),
+    });
+    const press = () => host.handleKey(new KeyboardEvent("keydown", { key: "q" }));
+    press();
+    parses = 0;
+    for (let i = 0; i < 5; i++) press();
+    expect(parses).toBe(0);
+    expect(host.app.commands().some((c) => c.id === "op.doc.delete")).toBe(true);
+
+    // A plugin's command for the operation takes its place.
+    const off = host.contributions.add("command", "test", {
+      id: "test.delete",
+      title: "Delete it",
+      operation: "doc.delete",
+      run() {},
+    });
+    const ids = host.app.commands().map((c) => c.id);
+    expect(ids).toContain("test.delete");
+    expect(ids).not.toContain("op.doc.delete");
+    off();
+    expect(host.app.commands().some((c) => c.id === "op.doc.delete")).toBe(true);
+    if (own) Object.defineProperty(input, "safeParse", own);
+    else delete (input as { safeParse?: unknown }).safeParse;
   });
 
   test("palette operations get the open document only where they require an id", async () => {

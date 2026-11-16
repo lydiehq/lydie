@@ -464,7 +464,21 @@ export function createHost(options: HostOptions): Host {
     return out;
   };
 
-  const allCommands = () => [...pluginCommands(), ...operationCommands()];
+  // Every keydown reads the commands, and building the operations' parses inputs: built again only
+  // when the plugins' commands change (the registry's list is a new array then).
+  let commandCache: {
+    plugins: readonly (CommandDef & { pluginId: string })[];
+    workspaceId: string;
+    all: readonly (CommandDef & { pluginId: string })[];
+  } | null = null;
+  const allCommands = () => {
+    const plugins = pluginCommands();
+    const workspaceId = backend.info.workspaceId;
+    if (commandCache?.plugins !== plugins || commandCache.workspaceId !== workspaceId) {
+      commandCache = { plugins, workspaceId, all: [...plugins, ...operationCommands()] };
+    }
+    return commandCache.all;
+  };
 
   // In a browser tab the browser's own shortcuts (new tab, reload, developer tools…) stay the
   // browser's: such a binding never fires there, so it is not shown either.
@@ -537,8 +551,7 @@ export function createHost(options: HostOptions): Host {
     formatKeybinding: (binding) => formatKeybinding(binding, mac),
     keyCaps: (binding) => keyCaps(binding, mac),
     keybindings: (id) => {
-      const command =
-        pluginCommands().find((c) => c.id === id) ?? operationCommands().find((c) => c.id === id);
+      const command = allCommands().find((c) => c.id === id);
       return command ? activeBindings(keymap.bindings(command.id, command.keybinding)) : [];
     },
     keymap: {
