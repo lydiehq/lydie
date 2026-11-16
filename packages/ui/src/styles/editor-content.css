@@ -62,8 +62,9 @@
     overflow-x: auto;
   }
 
-  /* A collection embed spans the editor's whole width: it starts at the text column and its view runs on towards the right edge when it has the width for it. Its header
-     and bar of views keep to the text column (`[data-embed-column]`). */
+  /* A collection embed spans the editor's whole width: it starts at the text column and its view
+     runs on towards the right edge when it has the width for it. Its header and bar of views keep
+     to the text column (`[data-embed-column]`). */
   &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]):has([data-embed-bare]) {
     width: 100%;
     max-width: none;
