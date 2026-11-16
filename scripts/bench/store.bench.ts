@@ -623,11 +623,12 @@ describe(`store with ${NOTES} notes, ${ROWS} database rows, ${PROJECTS} related 
     );
     record(
       "two-way relation change (both sides)",
+      // Warm-up runs count down from -1: shifted, every run has a row and a project of its own.
       await measure((i) =>
         runtime.ops.database.setValues({
           databaseId: seed.databaseId,
-          rowIds: [seed.rows[i + 100]!],
-          set: { [p.project!]: [seed.projects[i + 3]!] },
+          rowIds: [seed.rows[100 + WARMUP + i]!],
+          set: { [p.project!]: [seed.projects[WARMUP + i]!] },
         }),
       ),
       FRAME_MS,
