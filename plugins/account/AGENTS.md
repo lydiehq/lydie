@@ -16,6 +16,16 @@ Licence: AGPL-3.0-only.
 - Every user-visible action is an operation (contract or hosted API).
 - Select elements in tests by role, label or test id, never by styling classes.
 
+## Loading
+
+The dialogs (sign-in, hand-off, new workspace) and the Account page are `src/lazy.tsx`: each is its
+own chunk with its own Suspense (an overlay or a settings page has none around it), all fetched once
+the app is idle after activation (`preloadAccountUi`). What a window shows at once (the status item,
+the workspace menu sections, the notices, `HostedBanner`) stays in the plugin's main chunk.
+
+Components use `failureOf` (`format.ts`) instead of `try`: the React Compiler skips a component
+whose `try` has a `finally`, a `throw` or a condition in it.
+
 ## What it does
 
 Only active when the composition offers `app.services.account`. Sign in / create account dialog

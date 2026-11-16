@@ -11,10 +11,14 @@ import {
 } from "@lydie/plugin-api/ui";
 import { useEffect, useState } from "react";
 
-import { AccountPage } from "./AccountPage.tsx";
 import { continueAfterSignIn } from "./after-sign-in.ts";
-import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog.tsx";
-import { HandoffDialog } from "./HandoffDialog.tsx";
+import {
+  AccountPage,
+  CreateWorkspaceDialog,
+  HandoffDialog,
+  preloadAccountUi,
+  SignInDialog,
+} from "./lazy.tsx";
 import {
   DISMISSED_KEY,
   localNotice,
@@ -23,7 +27,6 @@ import {
   rememberCloud,
 } from "./local-notice.ts";
 import { toCloud } from "./sign-up.ts";
-import { SignInDialog } from "./SignInDialog.tsx";
 import type { SignInProps } from "./SignInDialog.tsx";
 import { AccountStatusItem } from "./SyncStatus.tsx";
 import { AccountSection, WorkspaceSection } from "./WorkspaceSection.tsx";
@@ -194,6 +197,7 @@ export const accountPlugin = definePlugin({
     const { app } = ctx;
     const api = app.services?.account;
     if (!api) return;
+    preloadAccountUi();
     ctx.overlays.register({ id: "account.signIn", component: SignInDialog });
     ctx.overlays.register({ id: "account.handoff", component: HandoffDialog });
     ctx.overlays.register({ id: "account.createWorkspace", component: CreateWorkspaceDialog });
