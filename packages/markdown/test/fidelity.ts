@@ -3,8 +3,9 @@ import { Fragment } from "prosemirror-model";
 import type { Node } from "prosemirror-model";
 
 import { fingerprint, normalizeForMarkdown } from "../src/normalize";
-import { parse } from "../src/parse";
-import { save } from "../src/save";
+import { clearParseCache, parse } from "../src/parse";
+import type { ParseResult } from "../src/parse";
+import { save, saveVerifiedInFull } from "../src/save";
 import { schema } from "../src/schema";
 import { serializeBody } from "../src/serialize";
 
@@ -45,6 +46,38 @@ export function editBlock(block: Node): Node | null {
   const out = visit(block);
   if (done) return out;
   return schema.nodes.paragraph.create(null, schema.text("zq edit"));
+}
+
+// What a parse says, to compare a save's parse with a fresh parse of its output.
+export function parseView(r: ParseResult) {
+  return {
+    source: r.source,
+    doc: r.doc.toJSON(),
+    properties: r.properties,
+    frontmatter: r.frontmatter,
+    body: r.body,
+    eol: r.eol,
+    fallbacks: r.fallbacks,
+  };
+}
+
+// A save verified only where it changed must say what one verified in full says, and its parse
+// must be the output's.
+export function checkSave(
+  original: ParseResult,
+  doc: Node,
+): { result: ReturnType<typeof save>; mismatch: string | null } {
+  const result = save({ original, doc });
+  const full = saveVerifiedInFull({ original, doc });
+  if (result.source !== full.source || result.verified !== full.verified) {
+    return { result, mismatch: "region verification disagrees with the full one" };
+  }
+  clearParseCache();
+  const fresh = parseView(parse(result.source));
+  if (!Bun.deepEquals(parseView(result.parse), fresh)) {
+    return { result, mismatch: "the save's parse is not the output's" };
+  }
+  return { result, mismatch: null };
 }
 
 export function checkFile(
@@ -89,7 +122,12 @@ export function checkFile(
     const doc = parsed.doc.type.create(null, Fragment.fromArray(children));
     let result;
     try {
-      result = save({ original: parsed, doc });
+      const checked = checkSave(parsed, doc);
+      result = checked.result;
+      if (checked.mismatch) {
+        report.failures.push({ block: i, reason: checked.mismatch });
+        continue;
+      }
     } catch (e) {
       report.failures.push({ block: i, reason: "throws", detail: String(e) });
       continue;

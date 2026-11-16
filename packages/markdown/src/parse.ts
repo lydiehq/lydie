@@ -80,10 +80,14 @@ export function detectEol(source: string): "\n" | "\r\n" | "\r" {
 
 // Results are shared (see `parseWithTree`): never mutate one.
 export function parse(source: string): ParseResult {
-  return parseWithTree(source).result;
+  const hit = cached(source);
+  return hit ? hit.result : parseWithTree(source).result;
 }
 
 type Parsed = { result: ParseResult; tree: M.Root; bodyStart: number };
+// A save's output is verified block by block and its parse built from the original's, so it
+// comes without an mdast tree; `parseWithTree` parses such a text again when it needs one.
+type Entry = Omit<Parsed, "tree"> & { tree: M.Root | null };
 
 // Recent parses by text. A save parses its output to verify it, and that text is parsed again
 // right after: the index's `extract`, the next save's `original`, the file bridge's last agreed
@@ -92,7 +96,7 @@ type Parsed = { result: ParseResult; tree: M.Root; bodyStart: number };
 const CACHE_MIN_LENGTH = 1024;
 const CACHE_SIZE = 6;
 // A body is converted from the file's tree only when it is asked for.
-const recent = new Map<string, Parsed | (() => Parsed)>();
+const recent = new Map<string, Entry | (() => Parsed)>();
 
 // For benchmarks, which time parsing itself.
 export function clearParseCache(): void {
@@ -102,13 +106,8 @@ export function clearParseCache(): void {
 // The parse plus the mdast tree of the body (positions relative to `bodyStart`), for helpers that
 // need inline source positions.
 export function parseWithTree(source: string): Parsed {
-  const hit = recent.get(source);
-  if (hit) {
-    const parsed = typeof hit === "function" ? hit() : hit;
-    recent.delete(source);
-    recent.set(source, parsed);
-    return parsed;
-  }
+  const hit = cached(source);
+  if (hit?.tree) return hit as Parsed;
   const frontmatter = splitFrontmatter(source);
   const bodyStart = frontmatter ? frontmatter.to : source.startsWith("\uFEFF") ? 1 : 0;
   const body = source.slice(bodyStart);
@@ -128,7 +127,30 @@ export function parseWithTree(source: string): Parsed {
   return parsed;
 }
 
-function remember(source: string, parsed: Parsed | (() => Parsed)) {
+// A cache entry, made the most recent.
+function cached(source: string): Entry | null {
+  const hit = recent.get(source);
+  if (!hit) return null;
+  const entry = typeof hit === "function" ? hit() : hit;
+  recent.delete(source);
+  recent.set(source, entry);
+  return entry;
+}
+
+// Keeps a parse that was not made by parsing its source (a verified save's), for later reads.
+export function rememberParse(result: ParseResult): void {
+  if (result.source.length >= CACHE_MIN_LENGTH && !recent.has(result.source)) {
+    remember(result.source, { result, tree: null, bodyStart: result.body.from });
+  }
+}
+
+// A body on its own, as `parse` would read it after frontmatter: nothing at its start is taken
+// for a BOM or frontmatter. Not cached (a part of a document, to verify it).
+export function parseFragment(text: string): ParseResult {
+  return fromTree(text, null, 0, parseMdast(text)).result;
+}
+
+function remember(source: string, parsed: Entry | (() => Parsed)) {
   recent.set(source, parsed);
   while (recent.size > CACHE_SIZE) recent.delete(recent.keys().next().value!);
 }

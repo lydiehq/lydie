@@ -1,8 +1,16 @@
 import { describe, expect, test } from "bun:test";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
+import { Fragment } from "prosemirror-model";
+import type { Node } from "prosemirror-model";
+
+import { checkSave, editBlock, parseView } from "../test/fidelity";
 import { serialize } from "./index";
 import { parse } from "./parse";
-import { save } from "./save";
+import { save, verifyRegions } from "./save";
+import type { Layout } from "./save";
+import { schema } from "./schema";
 
 type Json = {
   type: string;
@@ -229,5 +237,147 @@ describe("save", () => {
     expect(serialize(doc, { title: "T" })).toBe(
       "---\ntitle: T\n---\n# Setext\n\n- a\n- b\n\n**x** *y*\n",
     );
+  });
+});
+
+describe("save: verifying only what changed", () => {
+  // Random edits of several blocks at once, with content that reads differently next to its
+  // neighbours if written carelessly: the save verified block by block must agree with one
+  // verified in full, and its parse must be a fresh parse of its output.
+  const tricky = [
+    "===",
+    "---",
+    "- item",
+    "1. one",
+    "    indented",
+    "```",
+    "<div>",
+    "%% open",
+    "$$",
+    "> quote",
+    "| a | b |",
+    ":::note",
+    "[x]: y",
+    "![[embed]]",
+    "plain words",
+  ];
+  const fixtures = join(import.meta.dir, "..", "fixtures", "ofm");
+  const sources = [
+    ...readdirSync(fixtures).map((f) => readFileSync(join(fixtures, f), "utf8")),
+    Array.from({ length: 120 }, (_, i) =>
+      i % 6 === 0
+        ? `## H ${i}`
+        : i % 6 === 1
+          ? `- a ${i}\n- b ${i}`
+          : i % 6 === 2
+            ? "```js\nx()\n```"
+            : i % 6 === 3
+              ? `> [!note] T\n> body ${i}`
+              : i % 6 === 4
+                ? `![[a${i}]] ![[b${i}]]`
+                : `Text *${i}* [[L${i}]]`,
+    ).join("\n\n"),
+  ];
+
+  // First attempts that read differently next to an unchanged neighbour: only parsing the
+  // neighbour too shows it (then the save tries again with blank lines around the block).
+  const paragraph = (text: string) => schema.nodes.paragraph.create(null, schema.text(text));
+  const cases: Array<[string, string, (blocks: Node[]) => void]> = [
+    // "x" over "---" is a setext heading.
+    ["a\n\n***\n---\n", "a\n\nx\n\n---\n", (b) => b.splice(1, 1, paragraph("x"))],
+    // "p" right under a quote continues it lazily.
+    ["> q\n***\nend\n", "> q\n\np\n\nend\n", (b) => b.splice(1, 1, paragraph("p"))],
+    // Embeds on one line are blocks of their own that do not start a line.
+    [
+      "![[a]] ![[b]]\n\nafter\n",
+      null!,
+      (b) => b.splice(1, 1, schema.nodes.embed.create({ target: "c" })),
+    ],
+  ];
+  for (const [source, expected, edit] of cases) {
+    test(`a changed block is parsed with its neighbours: ${JSON.stringify(source)}`, () => {
+      const filler = Array.from({ length: 30 }, (_, i) => `Filler ${i}.`).join("\n\n");
+      const original = parse(`${source}\n${filler}\n`);
+      const blocks: Node[] = [];
+      original.doc.forEach((c) => blocks.push(c));
+      edit(blocks);
+      const { result, mismatch } = checkSave(
+        original,
+        schema.nodes.doc.create(null, Fragment.fromArray(blocks)),
+      );
+      expect(mismatch).toBeNull();
+      expect(result.verified).toBe(true);
+      if (expected) expect(result.source).toBe(`${expected}\n${filler}\n`);
+    });
+  }
+
+  test("a block that reads alone as written but swallows its neighbour fails", () => {
+    // As a serializer bug would write it: the changed code block's fence is left open, so the
+    // paragraph after it is code too. The block alone reads as the edited one.
+    const filler = Array.from({ length: 30 }, (_, i) => `Filler ${i}.`).join("\n\n");
+    const original = parse(`a\n\n\`\`\`\nb\n\`\`\`\n\nc\n\n${filler}\n`);
+    const written = `a\n\n\`\`\`\nB\n\nc\n\n${filler}\n`;
+    const blocks: Node[] = [];
+    original.doc.forEach((c) => blocks.push(c));
+    blocks[1] = schema.nodes.codeBlock.create(null, schema.text("B"));
+    const edited = schema.nodes.doc.create(null, Fragment.fromArray(blocks));
+    const kids = original.body.children!;
+    const layout: Layout = { pieces: [], seams: [] };
+    let at = 0;
+    for (let i = 0; i < kids.length; i++) {
+      const text = i === 1 ? "```\nB" : original.source.slice(kids[i]!.from, kids[i]!.to);
+      if (i > 0) at += original.source.slice(kids[i - 1]!.to, kids[i]!.from).length;
+      layout.pieces.push({ orig: i, from: at, to: at + text.length, clean: i !== 1 });
+      layout.seams.push(i > 0);
+      at += text.length;
+    }
+    expect(written.slice(layout.pieces[2]!.from, layout.pieces[2]!.to)).toBe("c");
+    expect(verifyRegions(original, written, 0, layout, edited, null)).toBeNull();
+    // The same layout over the correct text passes, with the output's parse.
+    const fixed = written.replace("```\nB\n", "```\nB\n```\n");
+    const fixedLayout: Layout = {
+      seams: layout.seams,
+      pieces: layout.pieces.map((p, i) =>
+        i < 1 ? p : { ...p, from: p.from + (i === 1 ? 0 : 4), to: p.to + 4 },
+      ),
+    };
+    const good = verifyRegions(original, fixed, 0, fixedLayout, edited, null);
+    expect(good && parseView(good)).toEqual(parseView(parse(fixed)));
+  });
+
+  test("agrees with verifying in full, over random multi-block edits", () => {
+    let seed = 11;
+    const random = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    const failures: string[] = [];
+    let runs = 0;
+    for (const [f, source] of sources.entries()) {
+      const original = parse(source);
+      for (let round = 0; round < 40; round++) {
+        const blocks: Node[] = [];
+        original.doc.forEach((c) => blocks.push(c));
+        for (let k = 1 + random(3); k > 0 && blocks.length > 0; k--) {
+          const at = random(blocks.length);
+          const text = tricky[random(tricky.length)]!;
+          const op = random(5);
+          if (op === 0) blocks.splice(at, 1);
+          else if (op === 1) blocks.splice(at, 0, blocks[at]!);
+          else if (op === 2) blocks.splice(at, 1, editBlock(blocks[at]!) ?? blocks[at]!);
+          else if (op === 3)
+            blocks.splice(at, 0, schema.nodes.paragraph.create(null, schema.text(text)));
+          else if (at + 1 < blocks.length)
+            [blocks[at], blocks[at + 1]] = [blocks[at + 1]!, blocks[at]!];
+        }
+        if (blocks.length === 0) continue;
+        const doc = schema.nodes.doc.create(null, Fragment.fromArray(blocks));
+        runs++;
+        const { mismatch } = checkSave(original, doc);
+        if (mismatch) failures.push(`source ${f} round ${round}: ${mismatch}`);
+      }
+    }
+    expect(failures).toEqual([]);
+    expect(runs).toBeGreaterThan(200);
   });
 });

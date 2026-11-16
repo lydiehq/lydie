@@ -29,7 +29,7 @@ parse(source): ParseResult                       // { source, doc, properties, f
                                                  // shared with later parses of the same text: never mutate it
 serialize(doc, properties?, { eol? }): string    // canonical Markdown for a new file
 save({ original: ParseResult | string, doc, properties? }): { source, verified, parse }
-                                                 // parse: of `source` (the verification's), the next save's original
+                                                 // parse: of `source`, the next save's original
 reconcile({ base: ParseResult | string, disk, doc, properties? }):
   | { status: "clean", source, parse, steps: ReplaceStepJSON[], properties }
   | { status: "conflict", conflicts: TextConflict[], marked, ours }
@@ -77,16 +77,30 @@ bun --filter=@lydie/markdown run bench         # parse/save/reconcile timings
     any `&#` keeps all of them. Without any of the three, the mdast autolink transform is skipped too.
   - **GFM tables:** need "|", or ":-"/"-:" for a one-column table.
 - Both are tried at nearly every word or line start, which is what made prose slow to parse.
-- **Parse cache** (`parseWithTree`): the last 6 texts of 1 KB or more, with their mdast trees. A
-  save's verification parses its output, and that text is parsed again right after (the index's
-  `extract`, the next save's `original`, the bridge's LCA): those are hits. A file with frontmatter
+- **Verifying only what changed** (`verifyRegions` in `save.ts`, LYD-440): a save parses only
+  the runs of top-level blocks it changed (or whose gap it changed), each with an unchanged
+  neighbour on both sides, and checks them against the edited blocks; its `parse` is the
+  original's other blocks, moved, plus those runs (`rememberParse` keeps it, without an mdast
+  tree). The reasoning is in the function's comment. It falls back to parsing the whole output
+  when the output has any `]:` (link reference and footnote definitions are document-wide), when
+  a run does not start and end at a line start (embeds sharing a line), or when a run reads
+  differently; the fallback then decides, as before. `saveVerifiedInFull` is the old check:
+  `test/fidelity.ts` (`checkSave`) asserts on every corpus edit (help vault too) and in a fuzz
+  test that both agree and that the save's `parse` equals a fresh parse of its output. A test
+  feeds `verifyRegions` a block that swallows its neighbour. Collab's store page (2,000 blocks
+  with links, 194 KB), one edit: save 105 → 14 ms. The client's save is 54 → 3 ms, but its
+  index `extract` of the saved text now parses it (no tree is kept), so save + extract stays
+  ~52 ms there.
+- **Parse cache** (`parseWithTree`): the last 6 texts of 1 KB or more, with their mdast trees
+  (a verified save's parse without one: `parseWithTree` parses such a text again). The text a
+  save writes is parsed again right after (the index's `extract`, the next save's `original`,
+  the bridge's LCA): those are hits. A file with frontmatter
   (or a BOM) also leaves its body, `source.slice(body.from)`, which is what a document stores and
   the index extracts: the same tree, converted when first asked for (not when the body itself
   starts with a BOM or frontmatter; `parse.test.ts` checks it against a fresh parse). Note with
   frontmatter, save + extract of the body: 105 → 52 ms. `save` keeps the
   normalised original per parsed document (a `WeakMap`), and verifies block by block, so the next
   save from the result fingerprints only the edited document. Seed document, one edit: save +
-  extract 99 → 57 ms, no-op save 4.9 → 0.5 ms. The save itself is one full parse; verifying only
-  the changed blocks would not save it, since the same text is parsed in full right after anyway.
+  extract 99 → 57 ms, no-op save 4.9 → 0.5 ms.
 - Seed document (2,000 blocks, 205 KB): parse 77 → 46 ms, first (cold) parse 102 → 67 ms. Help vault:
   parse all 13.0 → 9.0 s. `bun run bench` (package) or `bun run bench:markdown` (client root).

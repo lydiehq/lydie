@@ -4,6 +4,9 @@
 //   - the app's save path on it: editor JSON in, save, then the index's extract of the saved text;
 //     a session of saves with the last save as the original and with the opened text (stale), and
 //     with the original as a string (a folder session, `toMarkdown(string)`)
+//   - collab's store (services/collab codec): a 2,000-block page with links and inline code from a
+//     Y.Doc, the previous Markdown as a string, the document as JSON, one edit per store; verified
+//     only where it changed and, for comparison, in full
 //   - parse + no-op save for every file of the Obsidian help vault (if downloaded)
 //   - a ~5k-line file: parse, no-op save, one-block edit save, extract, reconcile
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -15,6 +18,7 @@ import type { Node } from "prosemirror-model";
 import { longMarkdown } from "../../../scripts/seed/text.ts";
 import { extract, parse, reconcile, save, schema, serialize } from "../src/index";
 import { clearParseCache } from "../src/parse";
+import { saveVerifiedInFull } from "../src/save";
 
 const root = join(dirname(new URL(import.meta.url).pathname), "..");
 
@@ -82,7 +86,7 @@ const edit1 = typed(1);
 median("app: save editor JSON (one edit)", () => save({ original: seedParse, doc: edit1 }));
 const saved = save({ original: seedParse, doc: edit1 });
 median(
-  "app: extract of the saved text (cached parse)",
+  "app: extract of a text parsed before",
   () => extract(saved.source),
   15,
   () => {},
@@ -115,6 +119,63 @@ const withFrontmatter = parse(`---\ntitle: Long document\ntags: [bench]\n---\n${
 const bodyOf = (source: string) => source.slice(parse(source).body.from);
 median("app: save + extract of the body (frontmatter)", () =>
   extract(bodyOf(save({ original: withFrontmatter, doc: edit1 }).source)),
+);
+console.log();
+
+// What collab stores (its store.bench page): links switch on the literal-autolink constructs,
+// so a full parse of it takes about twice the seed's.
+function collabPage(blocks: number): string {
+  const out: string[] = [];
+  for (let i = 0; i < blocks; i++) {
+    if (i % 4 === 0) out.push(`## Section ${i}`);
+    else if (i % 4 === 1) out.push(`- item ${i} with \`code\`\n- item ${i}b`);
+    else
+      out.push(
+        `Paragraph ${i} with **bold**, *italic* and a [link](https://lydie.co/${i}). Lorem ipsum ` +
+          `dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.`,
+      );
+  }
+  return `${out.join("\n\n")}\n`;
+}
+const collab = collabPage(2000);
+const collabJson = parse(collab).doc.toJSON() as Json;
+// A Y.Doc's document as the codec hands it over: JSON, a paragraph's text edited at the front.
+function stored(n: number): Json {
+  const doc = structuredClone(collabJson);
+  const block = doc.content![2 + 4 * (n % 400)]!;
+  block.content![0]!.text = `x${block.content![0]!.text}`;
+  return doc;
+}
+console.log(`collab page: 2000 blocks, ${(collab.length / 1e3).toFixed(0)} KB`);
+median("collab: parse (cold)", () => parse(collab));
+const collabEdit = stored(0);
+const collabSaved = save({ original: collab, doc: collabEdit }).source;
+median(
+  "collab: store, previous as string",
+  () => save({ original: collab, doc: collabEdit }),
+  15,
+  () => {
+    clearParseCache();
+    parse(collab);
+  },
+);
+median(
+  "collab: store, verified in full",
+  () => saveVerifiedInFull({ original: collab, doc: collabEdit }),
+  15,
+  () => {
+    clearParseCache();
+    parse(collab);
+  },
+);
+median(
+  "collab: next store onto that output",
+  () => save({ original: collabSaved, doc: stored(1) }),
+  15,
+  () => {
+    clearParseCache();
+    save({ original: collab, doc: collabEdit });
+  },
 );
 console.log();
 
