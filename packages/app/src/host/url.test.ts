@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { docPath } from "@lydie/contract";
+import { docPath, webDocUrl } from "@lydie/contract";
 
 import { appUrl, belowBase, parseAppUrl } from "./url.ts";
 
@@ -20,6 +20,12 @@ describe("pages as URLs", () => {
       `/d/${id}?embed=1#To%20do`,
     );
     expect(appUrl("/", docPath(id, { blockId: "b1" }))).toBe(`/d/${id}#^b1`);
+  });
+
+  test("the core's links to a document open it", () => {
+    const url = new URL(webDocUrl("https://app.lydie.co", "acme", { id, title: "Q1 plan" }));
+    expect(url.pathname).toBe(appUrl("/", docPath(id), "acme", "", "Q1 plan"));
+    expect(parseAppUrl(url.pathname.slice(1))).toEqual({ workspace: "acme", path: docPath(id) });
   });
 
   test("a hosted workspace's pages are under w/<its slug or id>", () => {

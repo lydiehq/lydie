@@ -288,8 +288,15 @@ each link as written, with `target` (the live document it resolves to, with its 
   those can be called), `whoami`, and result and error envelopes. Unexpected errors are hidden by
   default; set `"expose"` when the server's user is its operator. Also exported: `mcpResult`,
   `mcpErrorResult`, `unknownKey`. Servers only supply `execute(op, input)` and the connection
-  (`call(name, args, execute, connection)`: `{ workspaceId?, workspaces?, sessionId?, whoami? }`).
-  Don't copy this logic into a server.
+  (`call(name, args, execute, connection)`: `{ workspaceId?, workspaces?, sessionId?, whoami?,
+  docUrl? }`). Don't copy this logic into a server.
+- Document links (LYD-446): with `connection.docUrl(workspaceId, { id, title })`, the dispatcher
+  adds `url` to every object in a result with a UUID `id` and a string `title` (`withDocUrls`;
+  never inside a document's `properties`), in the object's own `workspaceId`, else the call's.
+  Output schemas declare `url` on the same objects. Hosted passes it; locally there is no link.
+- `webDocUrl(webUrl, workspace, { id, title })` (`src/web-url.ts`): a hosted document's link,
+  `<webUrl>/w/<slug or id>/d/<title>-<id as 32 hex digits>`; `docUrlSegment(id, title)` is the
+  `d/…` part, which @lydie/app's `appUrl` uses too. Build document links with these, never by hand.
 - Strict inputs (LYD-289): an argument key the tool's JSON Schema has no place for fails with
   `invalid_input` and a hint naming where it belongs ("limit belongs under window"); records and
   discriminated unions are followed. A `workspaceId` outside `connection.workspaces` is `not_found`

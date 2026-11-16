@@ -105,7 +105,7 @@ export function toMcpTool(op: AnyOperation, options: { outputSchema?: boolean } 
     title: tool.title,
     description: op.description ? `${op.summary}. ${op.description}` : `${op.summary}.`,
     inputSchema: withConnectionDefaults(selfContained(op.input, "input")),
-    ...(withOutput ? { outputSchema: selfContained(op.output, "output") } : {}),
+    ...(withOutput ? { outputSchema: withUrlProperty(selfContained(op.output, "output")) } : {}),
     annotations: {
       readOnlyHint: op.readOnly,
       destructiveHint: op.destructive,
@@ -128,6 +128,27 @@ function selfContained(schema: AnyOperation["input"], io: "input" | "output"): J
     if (!JSON.stringify([json, otherDefs(defs, name)]).includes(`"${ref}"`)) delete defs[name];
   }
   return dropSafeIntegerBounds(Object.keys(defs).length > 0 ? { ...json, $defs: defs } : json);
+}
+
+// A server whose documents have links adds `url` to every document in a result (`withDocUrls`
+// in mcp-dispatch.ts): an object with `id` and `title`. Output schemas are closed, so they say so.
+function withUrlProperty<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(withUrlProperty) as T;
+  if (!value || typeof value !== "object") return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, v] of Object.entries(value)) out[key] = withUrlProperty(v);
+  const properties = out.properties as Record<string, unknown> | undefined;
+  if (properties?.id && properties.title && !properties.url) {
+    out.properties = {
+      ...properties,
+      url: {
+        type: "string",
+        format: "uri",
+        description: "The document in the Lydie web app, to link to (hosted only).",
+      },
+    };
+  }
+  return out as T;
 }
 
 // `z.number().int()` adds ±(2^53 - 1) bounds: noise in every tool list an agent reads.
@@ -171,6 +192,12 @@ export function mcpInstructions(options: McpInstructionsOptions): string {
       ? `Workspace "${workspace.name}" (${workspace.id}): tools default to it, so leave out workspaceId.`
       : "This connection reaches several workspaces: pass workspaceId (whoami lists them).",
     "whoami says who you are, the workspaces and teamspaces you can reach, and your session.",
+    ...(options.mode === "hosted"
+      ? [
+          "Documents in results have a url, the page in the Lydie web app: use it to link the " +
+            "user to a document. Don't build links yourself.",
+        ]
+      : []),
     "Find documents with search or list_docs, read one with fetch_doc. update_doc changes a " +
       "document's title, properties and body in one call (markdown replaces the body; edits are " +
       "{ type, oldStr, newStr }: replace, insertBefore, insertAfter, prepend or append, all or " +

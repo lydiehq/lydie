@@ -10,6 +10,7 @@ export * from "./ids.ts";
 export * from "./layout.ts";
 export * from "./quote.ts";
 export * from "./slug.ts";
+export * from "./web-url.ts";
 export * from "./thread.ts";
 export * from "./version.ts";
 export { SCOPES, defineOperation, defineQuery, hasScope, mcpToolOf } from "./define.ts";

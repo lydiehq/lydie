@@ -1,4 +1,4 @@
-import { docPath, parseDocPath, slugify, uuidFromBits } from "@lydie/contract";
+import { docPath, docUrlSegment, parseDocPath, uuidFromBits } from "@lydie/contract";
 import type { TabPath } from "@lydie/contract";
 
 // A tab's path is its URL below the app's base: `/trash` is `<base>trash`. Everything in a hosted
@@ -25,8 +25,7 @@ export function appUrl(
 ): string {
   const [plain = "/", hash] = path.split("#");
   const doc = parseDocPath(plain);
-  const pathname =
-    doc && title?.trim() ? `/d/${slugify(title)}-${doc.id.replaceAll("-", "")}` : plain;
+  const pathname = doc && title?.trim() ? `/${docUrlSegment(doc.id, title)}` : plain;
   const prefix = workspace ? `w/${encodeURIComponent(workspace)}` : "";
   const below = prefix ? prefix + (pathname === "/" ? "" : pathname) : pathname.slice(1);
   return base + below + search + (hash === undefined ? "" : `#${hash}`);

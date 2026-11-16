@@ -587,6 +587,11 @@
               "score": {
                 "type": "number",
                 "description": "Lower is better (bm25)."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "The document in the Lydie web app, to link to (hosted only)."
               }
             },
             "required": [
@@ -2376,6 +2381,11 @@
                     "updated",
                     "deleted"
                   ]
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "The document in the Lydie web app, to link to (hosted only)."
                 }
               },
               "required": [

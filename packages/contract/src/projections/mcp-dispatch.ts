@@ -2,6 +2,7 @@ import { mcpToolOf } from "../define.ts";
 import type { AnyOperation } from "../define.ts";
 import type { Actor } from "../entities.ts";
 import { isLydieError, LydieError } from "../errors.ts";
+import { isUuid } from "../ids.ts";
 import type { Registry } from "../registry.ts";
 import { toJsonSchema } from "./json-schema.ts";
 import type { JsonSchema } from "./json-schema.ts";
@@ -52,6 +53,9 @@ export type McpConnection = {
   // The connection's history session, the default for `sessionId` inputs.
   sessionId?: string;
   whoami?: () => McpWhoami | Promise<McpWhoami>;
+  // A document's link that the user can open (hosted: the web app). Given it, every document in
+  // a result gets a `url`, so agents link to what they made instead of guessing. Null: no link.
+  docUrl?: (workspaceId: string, doc: { id: string; title: string }) => string | null;
 };
 
 // What a tools/call resolves to: an operation to run with an input, or a result to send as is.
@@ -160,12 +164,39 @@ export function createMcpDispatcher(
           if (!connection.whoami) throw new LydieError("internal", "whoami is not available here");
           return mcpResult(await connection.whoami());
         }
-        return mcpResult(await execute(resolved.op, resolved.input));
+        const output = await execute(resolved.op, resolved.input);
+        if (!connection.docUrl) return mcpResult(output);
+        const inputWorkspace = (resolved.input as Record<string, unknown>).workspaceId;
+        const workspaceId =
+          typeof inputWorkspace === "string" ? inputWorkspace : (connection.workspaceId ?? null);
+        return mcpResult(withDocUrls(output, workspaceId, connection.docUrl));
       } catch (error) {
         return mcpErrorResult(error, { internalErrors: internal });
       }
     },
   };
+}
+
+// Adds `url` to every document in `value`: an object with a UUID `id` and a string `title`
+// (output schemas declare it the same way: `withUrlProperty` in mcp.ts). Its workspace is its own `workspaceId`, else
+// the call's. A document's `properties` are the user's own keys, so they are left as they are.
+export function withDocUrls(
+  value: unknown,
+  workspaceId: string | null,
+  docUrl: NonNullable<McpConnection["docUrl"]>,
+): unknown {
+  if (Array.isArray(value)) return value.map((item) => withDocUrls(item, workspaceId, docUrl));
+  if (!isRecord(value)) return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    out[key] = key === "properties" ? item : withDocUrls(item, workspaceId, docUrl);
+  }
+  if (typeof value.id === "string" && isUuid(value.id) && typeof value.title === "string") {
+    const workspace = typeof value.workspaceId === "string" ? value.workspaceId : workspaceId;
+    const url = workspace ? docUrl(workspace, { id: value.id, title: value.title }) : null;
+    if (url) out.url = url;
+  }
+  return out;
 }
 
 export function mcpResult(value: unknown): McpCallResult {

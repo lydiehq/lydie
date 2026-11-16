@@ -193,3 +193,67 @@ describe("MCP connection defaults and strict inputs", () => {
     }
   });
 });
+
+describe("document links", () => {
+  const d = createMcpDispatcher(operations);
+  const A = "01a1d739-c692-22f5-eb34-f86b647e6e9d";
+  const B = "01a1e58a-2fc4-73f6-b6b7-9453b4540bb8";
+  const slugs: Record<string, string> = { ws1: "acme", ws2: "other" };
+  const connection: McpConnection = {
+    workspaceId: "ws1",
+    workspaces: ["ws1", "ws2"],
+    docUrl: (workspaceId, doc) =>
+      slugs[workspaceId] ? `https://app.test/w/${slugs[workspaceId]}/${doc.title}` : null,
+  };
+  const returning = (output: unknown) => async () => output;
+
+  it("adds a url to every document in a result, in its own workspace", async () => {
+    const output = {
+      document: { id: A, workspaceId: "ws2", title: "Plan", properties: { id: B, title: "x" } },
+      hits: [{ id: B, title: "Notes", snippet: "" }],
+      thread: { id: B, body: "no title" },
+      version: { id: "v1", title: "not a uuid" },
+    };
+    const result = await d.call("fetch_doc", { id: A }, returning(output), connection);
+    expect(result.structuredContent).toEqual({
+      document: {
+        ...output.document,
+        // A document's properties are the user's keys, even when they say id and title.
+        url: "https://app.test/w/other/Plan",
+      },
+      hits: [{ id: B, title: "Notes", snippet: "", url: "https://app.test/w/acme/Notes" }],
+      thread: output.thread,
+      version: output.version,
+    });
+  });
+
+  it("takes the workspace from the call's input, and leaves links out without one", async () => {
+    const hit = { hits: [{ id: B, title: "Notes", snippet: "", score: 0 }] };
+    const named = await d.call("search", { workspaceId: "ws2", query: "n" }, returning(hit), {
+      ...connection,
+    });
+    expect(named.structuredContent).toEqual({
+      hits: [{ ...hit.hits[0], url: "https://app.test/w/other/Notes" }],
+    });
+    const unknown = await d.call("search", { workspaceId: "ws3", query: "n" }, returning(hit), {
+      ...connection,
+      workspaces: undefined,
+    });
+    expect(unknown.structuredContent).toEqual(hit);
+    // No docUrl (a local server): results are as the operation returned them.
+    const local = await d.call("search", { workspaceId: "ws1", query: "n" }, returning(hit), {
+      workspaceId: "ws1",
+    });
+    expect(local.structuredContent).toEqual(hit);
+  });
+
+  it("declares url in the output schemas of documents", () => {
+    const search = d.tools.find((t) => t.name === "search")!;
+    const hit = (search.outputSchema!.$defs as Record<string, { properties: object }>).SearchHit!;
+    expect(hit.properties).toHaveProperty("url");
+    const rows = d.tools.find((t) => t.name === "write_database_rows")!.outputSchema!;
+    expect(JSON.stringify(rows)).toContain('"url"');
+    const deleted = d.tools.find((t) => t.name === "delete_doc")!.outputSchema!;
+    expect(JSON.stringify(deleted)).not.toContain('"url"');
+  });
+});
