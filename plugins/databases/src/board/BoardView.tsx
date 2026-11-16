@@ -30,6 +30,7 @@ import {
   BOARD_LANE,
   BOARD_LIST,
   BOARD_LIST_TOP,
+  BOARD_SCROLL,
   BoardSkeleton,
   CardSkeleton,
 } from "../skeleton.tsx";
@@ -136,7 +137,7 @@ export function BoardView({ maxHeight }: { maxHeight?: number | undefined }) {
 
   return (
     <div
-      className="min-h-0 grow overflow-auto p-2"
+      className={`min-h-0 grow overflow-auto ${BOARD_SCROLL}`}
       style={maxHeight ? { maxHeight } : undefined}
       data-testid="board-view"
     >
@@ -144,7 +145,8 @@ export function BoardView({ maxHeight }: { maxHeight?: number | undefined }) {
         <section
           key={JSON.stringify(sub)}
           aria-label={subProperty ? groupLabel(sub, subProperty) : "Board"}
-          className="mb-6 last:mb-0"
+          // As wide as its columns, so the scroller's right padding follows the last one.
+          className="mb-6 w-max min-w-full last:mb-0"
         >
           {subProperty && (
             <h3 className="mb-1.5 flex h-7 items-center gap-2 px-2 text-sm font-medium text-gray-800">

@@ -112,13 +112,16 @@ export function DatabaseScreen({
 // is wider (its selection column, 3rem), so the names in it line up with the title.
 const VIEW_INSET = "pr-2 pl-[max(0.5rem,calc(50%-332px))]";
 const VIEW_INSET_FULL = "pr-2 pl-18";
-// The table spans the whole width and takes this as a margin inside its own scrolling (it bleeds
-// left into it when scrolled sideways); it measures the length itself.
+// The table and the board span the whole width and take this as a margin inside their own
+// scrolling (they bleed left into it when scrolled sideways); the table measures the length itself.
 const TABLE_INSET = "[--table-inset:max(0.5rem,calc(50%-372px))]";
 const TABLE_INSET_FULL = "[--table-inset:2rem]";
+const BOARD_INSET = "[--view-inset:max(0.5rem,calc(50%-332px))]";
+const BOARD_INSET_FULL = "[--view-inset:4.5rem]";
 
 function viewInset(type: string, fullWidth: boolean): string {
   if (type === "table") return fullWidth ? TABLE_INSET_FULL : TABLE_INSET;
+  if (type === "board") return fullWidth ? BOARD_INSET_FULL : BOARD_INSET;
   return `${fullWidth ? VIEW_INSET_FULL : VIEW_INSET} ${PAGE_WIDTH_TRANSITION}`;
 }
 

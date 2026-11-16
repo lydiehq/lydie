@@ -84,6 +84,10 @@ export function CardSkeleton({ index, coverHeight = 0 }: { index: number; coverH
 
 // The board's look, here so that its skeleton (outside the lazy chunk) has the same sizes and
 // nothing moves when the pages arrive.
+// The board scrolls the whole width and starts at the page's inset (`--view-inset`, set on a
+// collection's own page; none in an embed) inside its scrolling, so columns scrolled past it run on
+// to the left edge instead of being cut there.
+export const BOARD_SCROLL = `py-2 pr-2 pl-[calc(var(--view-inset,0px)+0.5rem)] ${PAGE_WIDTH_TRANSITION}`;
 export const BOARD_LANE = "flex items-start gap-2";
 export const BOARD_COLUMN = "flex w-68 shrink-0 flex-col rounded-xl py-1.5";
 export const BOARD_COLUMN_BG = "bg-gray-950/[0.035]";
@@ -104,7 +108,7 @@ export function BoardSkeleton() {
     <div
       role="status"
       aria-label="Loading board"
-      className={`${BOARD_LANE} min-h-0 grow overflow-hidden p-2`}
+      className={`${BOARD_LANE} ${BOARD_SCROLL} min-h-0 grow overflow-hidden`}
     >
       {[3, 2, 4, 1].map((cards, column) => (
         <div key={column} className={`${BOARD_COLUMN} ${BOARD_COLUMN_BG}`}>

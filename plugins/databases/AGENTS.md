@@ -44,7 +44,10 @@ Licence: AGPL-3.0-only.
   stretches past the title; the views start at the column's left edge and run to the right edge
   of the window (the views' own insets in `DatabaseScreen.tsx`, `pageInset` for the skeleton's
   rows in `skeleton.tsx`; they mirror the title column for normal and full-width pages
-  (`full-width: true`, read by `CollectionPage.tsx`): change them together).
+  (`full-width: true`, read by `CollectionPage.tsx`): change them together). Views that scroll
+  sideways (table, board) span the whole width and take the inset inside their own scrolling
+  (`--table-inset`, `--view-inset` with `BOARD_SCROLL`), so they bleed left instead of being cut
+  at the column's edge; list and calendar never scroll sideways and are padded.
 - Loading shows skeletons, never a spinner (`skeleton.tsx`, outside the lazy chunk; bars are the
   shared `Skeleton`, hidden for the first 150 ms so a quick load shows none). Before the
   collection or the views' code is there: `ScreenSkeleton` (the page shows it as soon as
