@@ -11,6 +11,7 @@ import { uuidFloor } from "@lydie/contract";
 import type { Db, Search } from "@lydie/runtime";
 import type { CommonPowerSyncDatabase, DifferentialWatchedQuery } from "@powersync/common";
 
+import { createChanges } from "./changes.ts";
 import { coalescedRerun, DEFAULT_COALESCE_MS } from "./coalesce.ts";
 import { rebuildDerived } from "./derived.ts";
 import { createViews } from "./live-view.ts";
@@ -21,6 +22,7 @@ import { queries } from "./queries.ts";
 import type { StoreQuery, TreeOptions } from "./queries.ts";
 import { toAppliedOperation } from "./rows.ts";
 import type { DocWithBody } from "./rows.ts";
+import { PLAIN_TABLES } from "./schema.ts";
 import type { StoreMode } from "./schema.ts";
 import { createStatus } from "./status.ts";
 import type { StatusSource, StoreStatus } from "./status.ts";
@@ -170,6 +172,11 @@ export type Store = {
   // blocks, file index, Yjs cache) so the file bridge can re-index it. Local mode only.
   rebuild(options?: { scope?: "search" | "index" }): Promise<void>;
 
+  // Housekeeping kept off the open path (pruning the history journal and the activity log;
+  // emptying a local store's upload queue), started `maintenanceDelayMs` after open. Settles
+  // when it is done, or at `close()` if it never started. Never rejects.
+  readonly maintenance: Promise<void>;
+
   close(): Promise<void>;
 };
 
@@ -215,12 +222,17 @@ function toUpload(row: Record<string, unknown>): AttachmentUpload {
 export type CreateStoreOptions = {
   // Applied to `watch`/`live`/`liveView` when not given per query (see WatchOptions).
   watchThrottleMs?: number;
-  // The history journal (agent sessions, session undo) keeps this much; pruned at open.
-  // Default: 30 days and at most 50,000 entries.
+  // The history journal (agent sessions, session undo) keeps this much; pruned after open
+  // (`maintenance`). Default: 30 days and at most 50,000 entries.
   historyRetention?: { days?: number; maxEntries?: number };
-  // The activity log keeps rows whose last change is this recent; pruned at open. Default 180.
+  // The activity log keeps rows whose last change is this recent; pruned after open. Default 180.
   activityRetentionDays?: number;
+  // How long after open `Store.maintenance` starts, so the first paint does not wait for it (in
+  // the browser every read shares the one connection). Default 2000.
+  maintenanceDelayMs?: number;
 };
+
+const MAINTENANCE_DELAY_MS = 2000;
 
 async function pruneHistory(
   db: CommonPowerSyncDatabase,
@@ -239,10 +251,30 @@ async function pruneHistory(
   });
 }
 
+// Per workspace through `activity_recent` (workspace_id, last_at), not by reading every row: the
+// workspaces are found by skipping along that index (the smallest id after the previous one).
 async function pruneActivity(db: CommonPowerSyncDatabase, days = 180): Promise<void> {
-  await db.execute("DELETE FROM activity WHERE last_at < ?", [
-    new Date(Date.now() - days * 86_400_000).toISOString(),
-  ]);
+  await db.execute(
+    `WITH RECURSIVE ws(id) AS (
+       SELECT min(workspace_id) FROM activity
+       UNION ALL
+       SELECT (SELECT min(workspace_id) FROM activity WHERE workspace_id > ws.id) FROM ws
+       WHERE ws.id IS NOT NULL
+     )
+     DELETE FROM activity WHERE workspace_id IN (SELECT id FROM ws) AND last_at < ?`,
+    [new Date(Date.now() - days * 86_400_000).toISOString()],
+  );
+}
+
+async function maintain(
+  db: CommonPowerSyncDatabase,
+  mode: StoreMode,
+  options: CreateStoreOptions,
+): Promise<void> {
+  await pruneHistory(db, options.historyRetention);
+  await pruneActivity(db, options.activityRetentionDays);
+  // Local-only: nothing uploads, so the queue is not kept (older databases may still hold rows).
+  if (mode === "local") await db.execute("DELETE FROM operation_log");
 }
 
 // Wraps an opened PowerSync database (from `@lydie/store/node` or `@lydie/store/web`) whose schema
@@ -254,15 +286,26 @@ export async function createStore(
 ): Promise<Store> {
   await db.init();
   await migrate(db);
-  await pruneHistory(db, options.historyRetention);
-  await pruneActivity(db, options.activityRetentionDays);
-  // Local-only: nothing uploads, so the queue is not kept (older databases may still hold rows).
-  if (db.schema.tables.find((t) => t.name === "documents")?.localOnly) {
-    await db.execute("DELETE FROM operation_log");
-  }
   const mode: StoreMode = db.schema.tables.find((t) => t.name === "documents")?.localOnly
     ? "local"
     : "synced";
+
+  let maintenanceTimer: ReturnType<typeof setTimeout> | null = null;
+  let skipMaintenance = () => {};
+  const maintenance = new Promise<void>((resolve) => {
+    skipMaintenance = resolve;
+    maintenanceTimer = setTimeout(() => {
+      maintenanceTimer = null;
+      maintain(db, mode, options)
+        // Closing, or the disk is full: the next open tries again.
+        .catch(() => {})
+        .finally(resolve);
+    }, options.maintenanceDelayMs ?? MAINTENANCE_DELAY_MS);
+    // Node: a CLI that is done does not wait for it.
+    (maintenanceTimer as { unref?: () => void }).unref?.();
+  });
+
+  const changes = createChanges(db, [...db.schema.tables.map((t) => t.name), ...PLAIN_TABLES]);
 
   const run = async <T>(q: StoreQuery<T>) =>
     (await db.getAll<Record<string, unknown>>(q.sql, [...q.parameters])).map(q.map);
@@ -291,27 +334,53 @@ export async function createStore(
     watchOptions?.throttleMs ?? options.watchThrottleMs ?? DEFAULT_COALESCE_MS;
 
   // A live query: re-runs on changes to the tables it reads (coalesced, see coalesce.ts) and keeps
-  // unchanged rows (same key, same JSON) as the same objects.
+  // unchanged rows (same key, same content) as the same objects. With a guard, a change to only
+  // its tables re-runs the query only if the guard's value moved (see changes.ts).
   const live = <T>(q: StoreQuery<T>, watchOptions?: WatchOptions): LiveQuery<T> => {
     const listeners = new Set<() => void>();
     let state: LiveState<T> = { data: [], isLoading: true, error: undefined };
-    let previous = new Map<string, { row: T; json: string }>();
+    let previous = new Map<string, { row: T; content: string }>();
     let closed = false;
     let offChange: (() => void) | null = null;
+    // A change the guard does not answer for came in since the last run started.
+    let unguarded = true;
+    // The guard's value read just before the rows were; null when not read (it is not read
+    // before a full run, so the first guarded change after one runs the query once more).
+    let mark: string | null = null;
+    const content = q.content ?? ((row: T) => JSON.stringify(row));
     const emit = () => {
       for (const listener of listeners) listener();
     };
+    const onChange = (changed: readonly string[]) => {
+      if (!q.guard || changed.some((t) => !q.guard!.tables.includes(t))) unguarded = true;
+      rerun.changed();
+    };
     const rerun = coalescedRerun(async () => {
+      const full = unguarded || !q.guard || state.isLoading || state.error !== undefined;
+      unguarded = false;
       try {
+        if (full) {
+          mark = null;
+        } else {
+          let now: string | null = null;
+          try {
+            now = await changes.read(q.guard!);
+          } catch {
+            // Fall back to running the query.
+          }
+          if (closed) return;
+          if (now !== null && now === mark) return;
+          mark = now;
+        }
         const rows = await run(q);
         if (closed) return;
-        const seen = new Map<string, { row: T; json: string }>();
+        const seen = new Map<string, { row: T; content: string }>();
         const data = rows.map((row) => {
           const key = q.key(row);
-          const json = JSON.stringify(row);
+          const text = content(row);
           const old = previous.get(key);
-          const kept = old && old.json === json ? old.row : row;
-          seen.set(key, { row: kept, json });
+          const kept = old && old.content === text ? old.row : row;
+          seen.set(key, { row: kept, content: text });
           return kept;
         });
         previous = seen;
@@ -336,7 +405,7 @@ export async function createStore(
       try {
         const tables = [...(await tablesOf(q)), ...(q.tables ?? [])];
         if (closed) return;
-        offChange = db.onChange({ onChange: () => rerun.changed() }, { tables, throttleMs: 0 });
+        offChange = changes.watch(tables, onChange);
       } catch {
         // Unresolvable SQL: the first run reports the error.
       }
@@ -596,7 +665,16 @@ export async function createStore(
       await rebuildDerived(db);
     },
 
+    maintenance,
+
     async close() {
+      if (maintenanceTimer) {
+        clearTimeout(maintenanceTimer);
+        maintenanceTimer = null;
+        skipMaintenance();
+      }
+      await maintenance;
+      changes.close();
       status.close();
       await db.close();
     },

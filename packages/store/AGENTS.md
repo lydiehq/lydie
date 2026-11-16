@@ -32,7 +32,7 @@ Licence: AGPL-3.0-only.
 ```ts
 // "@lydie/store/node" — Electron main, CLI, MCP, tests
 openNodeStore({ path, mode?: "local" | "synced", watchThrottleMs?, historyRetention?,
-  activityRetentionDays? }): Promise<Store>
+  activityRetentionDays?, maintenanceDelayMs? }): Promise<Store>
 readSchemaVersion(path): number                 // read without PowerSync (pre-open check)
 createDirectoryBlob(dir): Blob                  // content-addressed files <dir>/<ab>/<sha256>
 // "@lydie/store/web" — OPFS via wa-sqlite
@@ -69,6 +69,9 @@ type Store = {
   yjs: { load(docId), append(docId, update), replace(docId, state), clear(docId),
          setDirty(docId, dirty), dirty() };   // = @lydie/sync's YjsPersistence, over yjs_* tables
   rebuild({ scope?: "search" | "index" });
+  maintenance: Promise<void>;   // pruning the journal and the activity log, emptying a local
+                                // upload queue: started `maintenanceDelayMs` (2000) after open,
+                                // off the first paint; settles when done or at close, never rejects
   close();
 }
 StoreStatus = { sync: "local-only" | "offline" | "connecting" | "syncing" | "synced" | "error",
@@ -82,8 +85,11 @@ queries.listTree(ws, { rootId?, includeDeleted?, expanded? }) | children(ws, par
   databaseViews(id, { includeDeleted? }) | workspace(ws) (0/1 WorkspaceRow) | workspaceMembers(ws) | teamspaces(ws) |
   teamspaceMembers(teamspaceId) | grants(docId) | myAccess(docId) (DocumentAccess) |
   publicPages(ws) (pages with a live public link) | publicAccess(docId) (0/1: the nearest page
-  whose link reaches it, through live, unrestricted pages; expiry checked when the query runs)
-  : StoreQuery<T> { name, sql, parameters, map, key, tables? }
+  whose link reaches it, through live, unrestricted pages; expiry checked when the query runs) |
+  outgoingLinks(sourceId, { icons? }) (icons: each target also has `icon`, its `icon` property)
+  : StoreQuery<T> { name, sql, parameters, map, key, tables?, guard?: Guard, content?(row) }
+  // guard { sql, parameters, tables }: see "Live queries: guards"; content: what a row holds for
+  // keeping identity (default its JSON; getDoc uses the body version, not the Markdown)
 ViewParams = { databaseId, viewId?, view?: { type?, config? }, window?: ViewWindow, me?, today? }
 ViewItem = { kind: "row", key, row: ViewRow } | { kind: "group", key, group: ViewGroup }
          | { kind: "meta", key: "meta", total, offset, viewType }   // rows in order, groups, meta
@@ -141,11 +147,12 @@ mtime, size, hash, lca, indexed_at)`.
 
 Plain SQLite tables owned by the migrations (`PLAIN_TABLES`), device-only, never synced:
 `op_history` (the history journal: every applied operation with inverse, touches, actor, session,
-group; pruned at open after 30 days / 50k rows), `activity` (the activity log, migration 9: id,
+group; pruned after open, by `maintenance`, after 30 days / 50k rows), `activity` (the activity log, migration 9: id,
 workspace_id, actor JSON, actor_ref, session_id, type, target_id, target_title, data JSON, count,
 first_at, last_at; indexes `activity_key` for the coalescing lookup and `activity_recent`
 (workspace_id, last_at, id) for the newest-first list; rows whose last change is older than
-`activityRetentionDays` (default 180) are deleted at open; the runtime decides what is written,
+`activityRetentionDays` (default 180) are deleted by `maintenance`, per workspace through
+`activity_recent` (the workspaces found by skipping along it); the runtime decides what is written,
 see @lydie/runtime "Activity"), `blocks(doc_id, block_id, workspace_id, type, text,
 ord)`, `attachment_uploads(id, state, error, attempts, updated_at)`, `doc_conflicts(id, workspace_id,
 kind, details, detected_at)`, `device_layouts(id, state, updated_at)`.
@@ -154,8 +161,12 @@ Derived (rebuildable, maintained by triggers on PowerSync's internal tables): `s
 doc_id)`, `search_fts` (FTS5: title, body; `unicode61 remove_diacritics 2`), `doc_keys(doc_id,
 workspace_id, key = lower(trim(title)))` for indexed link resolution, `doc_props(id, workspace_id,
 parent_id, title, sort_key, props JSONB, created_at, updated_at, created_by, updated_by, deleted_at,
-gram_text)` indexed by parent, which database views query. Plus `lydie_meta` (schema_version,
-derived_version, derived_for).
+gram_text)` indexed by parent (database views), by (workspace_id, updated_at) (`recent`, no sort)
+and, partially, trashed rows by workspace (`unresolvedLinks`); `doc_parent_versions(parent_id,
+version)` and `doc_versions(id, version, body)`, change counters per parent and per document (row
+and body apart; a delete bumps too, so they only grow). Plus `lydie_meta` (schema_version,
+derived_version, derived_for). PowerSync reports no changes for tables that triggers write: a
+query that reads one names `documents` in `tables`.
 
 ## Search
 
@@ -199,7 +210,9 @@ How PowerSync treats schema changes (docs read 2026-11-12: client schema, local-
   `newer_database`, "update Lydie"). `migrate` checks again inside its transaction.
 
 `createStore` runs `migrate(db)` after `db.init()`: every pending migration, then the derived objects,
-then `schema_version`, in **one write transaction**; any failure leaves the file as it was.
+then `schema_version`, in **one write transaction**; any failure leaves the file as it was. An
+up-to-date database is two reads (`readMeta`: the store's tables and triggers, and the recorded
+versions); the derived objects are created only when missing or from another version.
 
 Migration 8 rewrote every stored ULID as a UUID (ids changed spelling in November 2026): it walks
 the PowerSync data tables and the plain tables row by row in JavaScript, leaves bodies alone and
@@ -296,6 +309,24 @@ property links, each in document order, with `target` resolved to a live documen
   `links.resolveDanglingMany`, `blocks.replaceForMany`, `fileIndex.putMany`/`removeMany` (one or
   two statements each; `bulk.test.ts` checks them against the per-row versions).
 - `openWebStore` accepts `CreateStoreOptions`.
+
+## Live queries: guards
+
+- Every live query of a store listens through one table listener (`changes.ts`), so a commit
+  reaches them all in the same task.
+- `StoreQuery.guard` is a scalar subquery over the change counters (`doc_versions`,
+  `doc_parent_versions`) that moves whenever the query's rows may have. When only `guard.tables`
+  changed, the live query reads its guard and re-runs only if the value moved; the guards of
+  every query a commit touched are read in one statement. Any other table it reads re-runs it as
+  before. The guard is not read before a full run, so the first guarded change after one runs it
+  once more.
+- Guarded: `getDoc` (the document, and its body when included), `children` (the parent and each
+  child, for childCount), `listTree` with `expanded` (the root and the expanded documents),
+  `outgoingLinks` (the targets), `backlinks`/`blockBacklinks` (the sources), `myAccess`,
+  `databases` (the database documents). Typing in one note re-runs its `getDoc` and the queries
+  that read every body (unlinked mentions, search), not every open tab and tree level
+  (`live-guards.test.ts`; benchmark "updateBody + … live queries settle").
+- A query with a guard must not depend on documents outside it: say why in the guard's comment.
 
 ## Threads
 

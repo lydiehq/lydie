@@ -68,7 +68,52 @@ export type StoreQuery<T> = {
   readonly key: (row: T) => string;
   // Tables whose changes re-run the query, when SQLite cannot tell (full-text search).
   readonly tables?: readonly string[];
+  // When only `guard.tables` changed, a live query reads this first and re-runs only if its value
+  // moved: per-document and per-parent change counters (doc_versions, doc_parent_versions), so
+  // typing in one note does not re-run every open query that reads `documents`.
+  readonly guard?: Guard;
+  // What a row holds, for keeping unchanged rows as the same object. Default: its JSON.
+  readonly content?: (row: T) => string;
 };
+
+// One scalar subquery (`sql` gives one value) that changes whenever the query's rows may have.
+// The guards of every live query a commit touches are read in one statement.
+export type Guard = {
+  readonly sql: string;
+  readonly parameters: readonly (string | number | null)[];
+  readonly tables: readonly string[];
+};
+
+// Counters only grow (a delete bumps too), so a count and a sum over a set move with any change.
+// The documents at the other end of a document's links (targets of its links, or sources of the
+// links to it); a change to the links themselves re-runs the query anyway.
+const linkedVersions = (end: "source_id" | "target_id", id: string): Guard => ({
+  sql: `SELECT count(*) || ':' || total(v.version) FROM links l JOIN doc_versions v ON v.id = l.${end}
+        WHERE l.${end === "source_id" ? "target_id" : "source_id"} = ?`,
+  parameters: [id],
+  tables: ["documents"],
+});
+
+const parentVersions = (where: string, parameters: Guard["parameters"]): Guard => ({
+  sql: `SELECT count(*) || ':' || total(version) FROM doc_parent_versions WHERE ${where}`,
+  parameters,
+  tables: ["documents"],
+});
+
+// A document's row, and its body when `body`.
+function docGuard(id: string, body: boolean): Guard {
+  return body
+    ? {
+        sql: "SELECT version || ':' || body FROM doc_versions WHERE id = ?",
+        parameters: [id],
+        tables: ["documents", "document_bodies"],
+      }
+    : {
+        sql: "SELECT version FROM doc_versions WHERE id = ?",
+        parameters: [id],
+        tables: ["documents"],
+      };
+}
 
 export type TreeOptions = {
   rootId?: string;
@@ -106,7 +151,7 @@ export function treeSql(
       }
     )
     SELECT ${documentColumns("d")}, t.depth AS depth, ${SPACE_COLUMNS}
-    FROM tree t JOIN documents d ON d.id = t.id
+    FROM tree t CROSS JOIN documents d ON d.id = t.id
     ORDER BY t.path`;
 }
 
@@ -134,6 +179,15 @@ export function listTree(workspaceId: string, options: TreeOptions = {}): StoreQ
     parameters: treeParameters(workspaceId, options),
     map: toTreeEntry,
     key: (e) => e.id,
+    // With `expanded`, every row is a child of the root or of an expanded document.
+    ...(options.expanded
+      ? {
+          guard: parentVersions(
+            "parent_id = coalesce(?, '') OR parent_id IN (SELECT value FROM json_each(?))",
+            [options.rootId ?? null, JSON.stringify(options.expanded)],
+          ),
+        }
+      : {}),
   };
 }
 
@@ -175,6 +229,11 @@ export function children(
     ],
     map: toChildEntry,
     key: (e) => e.id,
+    // The children, and theirs (childCount).
+    guard: parentVersions(
+      "parent_id = coalesce(?, '') OR parent_id IN (SELECT id FROM documents WHERE parent_id IS ?)",
+      [parentId, parentId],
+    ),
   };
 }
 
@@ -192,24 +251,33 @@ export function getDoc(
     parameters: [id],
     map: toDocWithBody,
     key: (r) => r.document.id,
+    guard: docGuard(id, withBody),
+    // The body by its version (a hash of the Markdown), not by serialising the whole text.
+    content: (r) => `${JSON.stringify(r.document)}\u0000${r.body?.version ?? ""}`,
   };
 }
 
 // Live documents, most recently changed first (title, properties, place or body). Hosted: a
 // collaborative edit does not touch `updated_at` until something else on the row changes.
+// Read from doc_props: its index gives this order without a sort (the id ends every entry of a
+// WITHOUT ROWID index), and documents needs no other index for it.
 export function recent(
   workspaceId: string,
   options: { limit?: number } = {},
 ): StoreQuery<Document> {
   return {
     name: "recent",
-    sql: `SELECT ${DOCUMENT_COLUMNS} FROM documents
+    sql: `SELECT id, workspace_id, parent_id, title, sort_key, json(props) AS properties, created_at,
+                 updated_at, deleted_at, created_by, updated_by
+          FROM doc_props
           WHERE workspace_id = ? AND deleted_at IS NULL
           ORDER BY updated_at DESC, id DESC
           LIMIT ?`,
     parameters: [workspaceId, options.limit ?? 20],
     map: toDocument,
     key: (d) => d.id,
+    // doc_props is written by triggers, which report no changes of their own.
+    tables: ["documents"],
   };
 }
 
@@ -240,6 +308,7 @@ export function backlinks(id: string): StoreQuery<Backlink> {
     parameters: [id],
     map: toBacklink,
     key: backlinkKey,
+    guard: linkedVersions("source_id", id),
   };
 }
 
@@ -253,44 +322,75 @@ export function blockBacklinks(id: string, blockId: string): StoreQuery<Backlink
     parameters: [id, blockId],
     map: toBacklink,
     key: backlinkKey,
+    guard: linkedVersions("source_id", id),
   };
 }
 
 // The links in one document as written, each with the live document it resolves to (null when
 // it resolves to nothing or to the trash). Body links first, then property links; ids are minted in
-// document order.
-export function outgoingLinks(sourceId: string): StoreQuery<OutgoingLink> {
+// document order. `icons`: each target also carries its page icon (`target.icon`, the `icon`
+// property as written, or null), so an editor draws them without a query per target.
+export function outgoingLinks(
+  sourceId: string,
+  options: { icons?: boolean } = {},
+): StoreQuery<OutgoingLink> {
   return {
     name: "outgoingLinks",
     sql: `SELECT l.id AS link_id, l.kind AS kind, l.syntax AS syntax, l.target_ref AS target_ref,
                  l.target_heading AS target_heading, l.target_block_id AS target_block_id,
                  l.source_block_id AS source_block_id, l.source_property AS source_property,
                  t.id AS target_id, t.title AS target_title, t.parent_id AS target_parent_id,
-                 t.workspace_id AS target_workspace_id
+                 t.workspace_id AS target_workspace_id${
+                   options.icons ? ", json_extract(t.properties, '$.icon') AS target_icon" : ""
+                 }
           FROM links l
           LEFT JOIN documents t ON t.id = l.target_id AND t.deleted_at IS NULL
           WHERE l.source_id = ?
           ORDER BY l.source_property IS NOT NULL, l.id`,
     parameters: [sourceId],
-    map: toOutgoingLink,
+    map: options.icons ? withTargetIcon : toOutgoingLink,
     key: (l) => l.id,
+    guard: linkedVersions("target_id", sourceId),
   };
 }
 
-// Links in live documents whose target does not exist or is in the trash.
+function withTargetIcon(row: Record<string, unknown>): OutgoingLink {
+  const link = toOutgoingLink(row);
+  if (link.target) {
+    Object.assign(link.target, {
+      icon: typeof row.target_icon === "string" ? row.target_icon : null,
+    });
+  }
+  return link;
+}
+
+// Links in live documents whose target does not exist or is in the trash. Three disjoint sets,
+// each read through an index rather than every link: unresolved (the `target` index; `+` keeps
+// SQLite off the workspace index), to a trashed document (doc_props_trashed), and to an id no
+// document has (the distinct targets, from the same index).
 export function unresolvedLinks(workspaceId: string): StoreQuery<UnresolvedLink> {
   return {
     name: "unresolvedLinks",
     sql: `SELECT s.id AS source_id, s.title AS source_title, s.parent_id AS source_parent_id,
                  s.workspace_id AS workspace_id, l.kind AS kind, l.syntax AS syntax,
                  l.target_ref AS target_ref
-          FROM links l
+          FROM (
+            SELECT id FROM links WHERE target_id IS NULL AND +workspace_id = ?
+            UNION ALL
+            SELECT l.id FROM doc_props t CROSS JOIN links l ON l.target_id = t.id
+            WHERE t.workspace_id = ? AND t.deleted_at IS NOT NULL
+            UNION ALL
+            SELECT l.id FROM (SELECT DISTINCT target_id AS id FROM links WHERE target_id IS NOT NULL) g
+            CROSS JOIN links l ON l.target_id = g.id
+            WHERE NOT EXISTS (SELECT 1 FROM doc_keys k WHERE k.doc_id = g.id)
+          ) u
+          CROSS JOIN links l ON l.id = u.id
           JOIN documents s ON s.id = l.source_id
-          LEFT JOIN documents t ON t.id = l.target_id
           WHERE l.workspace_id = ? AND s.deleted_at IS NULL
-            AND (l.target_id IS NULL OR t.id IS NULL OR t.deleted_at IS NOT NULL)
           ORDER BY l.target_ref, s.title, s.id`,
-    parameters: [workspaceId],
+    parameters: [workspaceId, workspaceId, workspaceId],
+    // doc_props and doc_keys are written by triggers, which report no changes of their own.
+    tables: ["documents", "links"],
     map: toUnresolvedLink,
     key: (l) => `${l.source.id}\u0000${l.kind}\u0000${l.syntax}\u0000${l.targetRef}`,
   };
@@ -382,6 +482,8 @@ export function search(
   // When nothing matches, titles sharing enough trigrams with the query (doc_props.gram_text),
   // scored after any real match would be: as `@lydie/runtime`'s memory search and the hosted
   // core. The hits run twice (NOT EXISTS stops at the first one): a CTE used twice was 4× slower.
+  // The check is the outer loop of a CROSS JOIN, so with hits doc_props is not read at all;
+  // without, it is scanned (`+`: through the workspace index it is one lookup per row).
   const grams = queryTrigrams(text);
   const found = grams.map(() => "(instr(d.gram_text, ?) > 0)").join(" + ");
   return {
@@ -394,8 +496,9 @@ export function search(
              SELECT id, title, snippet, score, 0 AS len FROM (${hits}) ORDER BY score, id LIMIT ?)
            UNION ALL
            SELECT id, title, title, 1.0 - found * 1.0 / ?, length(title) FROM (
-             SELECT d.id, d.title, ${found} AS found FROM doc_props d
-             WHERE NOT EXISTS (${hits}) AND d.workspace_id = ? AND d.deleted_at IS NULL)
+             SELECT d.id, d.title, ${found} AS found
+             FROM (SELECT 1 WHERE NOT EXISTS (${hits})) CROSS JOIN doc_props d
+             WHERE +d.workspace_id = ? AND d.deleted_at IS NULL)
            WHERE found * 1.0 / ? >= ?)
          ORDER BY score, len, id
          LIMIT ?`,
@@ -564,6 +667,13 @@ export function databases(workspaceId: string): StoreQuery<DatabaseSummary> {
       parentId: (row.parent_id as string | null) ?? null,
     }),
     key: (d) => d.id,
+    // The databases' own documents (their rows change `databases`, which re-runs it anyway).
+    guard: {
+      sql: `SELECT count(*) || ':' || total(v.version) FROM databases x JOIN doc_versions v ON v.id = x.id
+            WHERE x.workspace_id = ?`,
+      parameters: [workspaceId],
+      tables: ["documents"],
+    },
   };
 }
 
@@ -690,6 +800,7 @@ export function myAccess(documentId: string): StoreQuery<DocumentAccess> {
     parameters: [documentId],
     map: toDocumentAccess,
     key: (a) => a.documentId,
+    guard: docGuard(documentId, false),
   };
 }
 

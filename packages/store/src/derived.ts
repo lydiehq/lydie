@@ -11,10 +11,12 @@ import type { CommonPowerSyncDatabase, LockContext } from "@powersync/common";
 // doc_props mirrors every document's columns with its properties as JSONB, indexed by parent: the
 // table database views query (2–3× faster than parsing the JSON text through PowerSync's views).
 // Its gram_text is the title prepared for search's typo fallback (see gramText).
+// doc_versions and doc_parent_versions count changes per document (row and body) and per parent,
+// so a live query can tell that a write elsewhere left its rows alone (StoreQuery.guard).
 
 // Bump when the derived objects change shape; the next open rebuilds them (inside the migration
 // transaction, see migrations.ts).
-const DERIVED_VERSION = 5;
+const DERIVED_VERSION = 6;
 
 // The title as @lydie/runtime's `trigrams` sees it, as one string: ASCII lower-case (lower()),
 // separators as spaces, and every word padded "  word " with a "|" between words. A query trigram
@@ -34,6 +36,7 @@ export const DERIVED_TABLES = [
   "doc_keys",
   "doc_props",
   "doc_parent_versions",
+  "doc_versions",
 ] as const;
 
 export type InternalNames = { documents: string; bodies: string };
@@ -100,6 +103,22 @@ function triggerStatements({ documents, bodies }: InternalNames): string[] {
      BEGIN ${bumpParent("OLD")} ${bumpParent("NEW")} END`,
     `CREATE TRIGGER IF NOT EXISTS lydie_parent_doc_delete AFTER DELETE ON ${documents}
      BEGIN ${bumpParent("OLD")} END`,
+    // The same per document, for its row and its body apart. A delete bumps too (the row stays),
+    // so a sum over a set of documents only ever grows.
+    `CREATE TRIGGER IF NOT EXISTS lydie_version_doc_insert AFTER INSERT ON ${documents}
+     BEGIN ${bumpDoc("NEW", "version")} END`,
+    `CREATE TRIGGER IF NOT EXISTS lydie_version_doc_update AFTER UPDATE ON ${documents}
+     WHEN OLD.data IS NOT NEW.data
+     BEGIN ${bumpDoc("NEW", "version")} END`,
+    `CREATE TRIGGER IF NOT EXISTS lydie_version_doc_delete AFTER DELETE ON ${documents}
+     BEGIN ${bumpDoc("OLD", "version")} END`,
+    `CREATE TRIGGER IF NOT EXISTS lydie_version_body_insert AFTER INSERT ON ${bodies}
+     BEGIN ${bumpDoc("NEW", "body")} END`,
+    `CREATE TRIGGER IF NOT EXISTS lydie_version_body_update AFTER UPDATE ON ${bodies}
+     WHEN OLD.data IS NOT NEW.data
+     BEGIN ${bumpDoc("NEW", "body")} END`,
+    `CREATE TRIGGER IF NOT EXISTS lydie_version_body_delete AFTER DELETE ON ${bodies}
+     BEGIN ${bumpDoc("OLD", "body")} END`,
     `CREATE TRIGGER IF NOT EXISTS lydie_search_body_insert AFTER INSERT ON ${bodies}
      BEGIN ${setBody("coalesce(json_extract(NEW.data, '$.markdown'), '')", "NEW.id")} END`,
     `CREATE TRIGGER IF NOT EXISTS lydie_search_body_update AFTER UPDATE ON ${bodies}
@@ -114,10 +133,20 @@ const bumpParent = (row: "NEW" | "OLD") => `
       VALUES (coalesce(json_extract(${row}.data, '$.parent_id'), ''), 1)
       ON CONFLICT(parent_id) DO UPDATE SET version = version + 1;`;
 
+const bumpDoc = (row: "NEW" | "OLD", column: "version" | "body") => `
+    INSERT INTO doc_versions(id, ${column}) VALUES (${row}.id, 1)
+      ON CONFLICT(id) DO UPDATE SET ${column} = ${column} + 1;`;
+
 const TRIGGERS = [
   "lydie_parent_doc_insert",
   "lydie_parent_doc_update",
   "lydie_parent_doc_delete",
+  "lydie_version_doc_insert",
+  "lydie_version_doc_update",
+  "lydie_version_doc_delete",
+  "lydie_version_body_insert",
+  "lydie_version_body_update",
+  "lydie_version_body_delete",
   "lydie_search_doc_insert",
   "lydie_search_doc_update",
   "lydie_search_doc_delete",
@@ -131,6 +160,9 @@ const TRIGGERS = [
 async function create(tx: LockContext, names: InternalNames): Promise<void> {
   await tx.execute(
     "CREATE TABLE IF NOT EXISTS doc_parent_versions (parent_id TEXT PRIMARY KEY, version INTEGER NOT NULL) WITHOUT ROWID",
+  );
+  await tx.execute(
+    "CREATE TABLE IF NOT EXISTS doc_versions (id TEXT PRIMARY KEY, version INTEGER NOT NULL DEFAULT 0, body INTEGER NOT NULL DEFAULT 0) WITHOUT ROWID",
   );
   await tx.execute(
     "CREATE TABLE IF NOT EXISTS search_map (rowid INTEGER PRIMARY KEY, doc_id TEXT NOT NULL UNIQUE)",
@@ -150,6 +182,14 @@ async function create(tx: LockContext, names: InternalNames): Promise<void> {
        created_by TEXT, updated_by TEXT, deleted_at TEXT, gram_text TEXT NOT NULL) WITHOUT ROWID`,
   );
   await tx.execute("CREATE INDEX IF NOT EXISTS doc_props_parent ON doc_props (parent_id)");
+  // `recent`, newest first without a sort: the key (id) ends every entry of a WITHOUT ROWID index.
+  await tx.execute(
+    "CREATE INDEX IF NOT EXISTS doc_props_recent ON doc_props (workspace_id, updated_at)",
+  );
+  // Links to the trash (`unresolvedLinks`): a few rows, so it costs writes almost nothing.
+  await tx.execute(
+    "CREATE INDEX IF NOT EXISTS doc_props_trashed ON doc_props (workspace_id) WHERE deleted_at IS NOT NULL",
+  );
   for (const sql of triggerStatements(names)) await tx.execute(sql);
 }
 
@@ -191,24 +231,54 @@ async function rebuildIn(tx: LockContext, names: InternalNames): Promise<void> {
   );
 }
 
+// What opening needs to know, in two reads (each statement is a round trip to the database
+// worker): which of the store's tables and triggers exist, and the versions it recorded.
+export type StoreMeta = {
+  tables: ReadonlySet<string>;
+  triggers: ReadonlySet<string>;
+  values: Readonly<Record<string, string>>;
+};
+
+export async function readMeta(tx: LockContext): Promise<StoreMeta> {
+  const objects = await tx.getAll<{ type: string; name: string }>(
+    `SELECT type, name FROM sqlite_master
+     WHERE (type = 'table' AND name IN ('lydie_meta', 'search_fts'))
+        OR (type = 'trigger' AND name LIKE 'lydie\\_%' ESCAPE '\\')`,
+  );
+  const of = (type: string) => new Set(objects.filter((o) => o.type === type).map((o) => o.name));
+  const tables = of("table");
+  const rows = tables.has("lydie_meta")
+    ? await tx.getAll<{ key: string; value: string }>(
+        "SELECT key, value FROM lydie_meta WHERE key IN ('schema_version', 'derived_version', 'derived_for')",
+      )
+    : [];
+  return {
+    tables,
+    triggers: of("trigger"),
+    values: Object.fromEntries(rows.map((r) => [r.key, r.value])),
+  };
+}
+
 // Creates the derived objects, and rebuilds them if they are missing, from an older version, or were
-// built for the other mode's internal tables. Runs inside the migration transaction.
-export async function ensureDerivedIn(tx: LockContext, names: InternalNames): Promise<void> {
-  await tx.execute("CREATE TABLE IF NOT EXISTS lydie_meta (key TEXT PRIMARY KEY, value TEXT)");
-  const rows = await tx.getAll<{ key: string; value: string }>(
-    "SELECT key, value FROM lydie_meta WHERE key IN ('derived_version', 'derived_for')",
-  );
-  const meta = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-  const exists = await tx.getOptional(
-    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'search_fts'",
-  );
+// built for the other mode's internal tables. Runs inside the migration transaction. `meta` is
+// what the open read before any migration ran.
+export async function ensureDerivedIn(
+  tx: LockContext,
+  names: InternalNames,
+  meta?: StoreMeta,
+): Promise<void> {
+  const current = meta ?? (await readMeta(tx));
+  if (!current.tables.has("lydie_meta")) {
+    await tx.execute("CREATE TABLE IF NOT EXISTS lydie_meta (key TEXT PRIMARY KEY, value TEXT)");
+  }
   if (
-    !exists ||
-    meta.derived_version !== String(DERIVED_VERSION) ||
-    meta.derived_for !== names.documents
+    !current.tables.has("search_fts") ||
+    current.values.derived_version !== String(DERIVED_VERSION) ||
+    current.values.derived_for !== names.documents
   ) {
     await rebuildIn(tx, names);
-  } else {
+  } else if (TRIGGERS.some((name) => !current.triggers.has(name))) {
+    // Current, but a trigger is missing: create whatever is.
     await create(tx, names);
   }
 }

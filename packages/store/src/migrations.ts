@@ -1,7 +1,8 @@
 import { uuidsForUlids } from "@lydie/contract";
 import type { CommonPowerSyncDatabase, LockContext } from "@powersync/common";
 
-import { ensureDerivedIn, internalNames } from "./derived.ts";
+import { ensureDerivedIn, internalNames, readMeta } from "./derived.ts";
+import type { StoreMeta } from "./derived.ts";
 import type { StoreMode } from "./schema.ts";
 
 // Versioned migrations for the local database. PowerSync owns the views over its JSON tables and
@@ -250,14 +251,11 @@ const REWRITTEN_PLAIN = [
 export const SCHEMA_VERSION = MIGRATIONS.at(-1)!.version;
 
 export async function storedVersion(tx: LockContext): Promise<number> {
-  const meta = await tx.getOptional(
-    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'lydie_meta'",
-  );
-  if (!meta) return 0;
-  const rows = await tx.getAll<{ key: string; value: string }>(
-    "SELECT key, value FROM lydie_meta WHERE key IN ('schema_version', 'derived_version')",
-  );
-  const values = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  return versionOf(await readMeta(tx));
+}
+
+function versionOf(meta: StoreMeta): number {
+  const { values } = meta;
   if (values.schema_version !== undefined) return Number(values.schema_version);
   // Databases from before versioning have only the derived search tables: that is version 1.
   return values.derived_version !== undefined ? 1 : 0;
@@ -286,25 +284,25 @@ export async function migrate(
   };
   const latest = migrations.at(-1)?.version ?? 0;
   return db.writeTransaction(async (tx) => {
-    const from = await storedVersion(tx);
+    // An up-to-date database is two reads: this and nothing else.
+    const meta = await readMeta(tx);
+    const from = versionOf(meta);
     assertOpenable(from, latest);
-    for (const migration of migrations) {
-      if (migration.version <= from) continue;
-      await migration.up(tx, ctx);
+    const pending = migrations.filter((m) => m.version > from);
+    for (const migration of pending) await migration.up(tx, ctx);
+    if (!meta.tables.has("lydie_meta")) {
+      await tx.execute("CREATE TABLE IF NOT EXISTS lydie_meta (key TEXT PRIMARY KEY, value TEXT)");
     }
-    await tx.execute("CREATE TABLE IF NOT EXISTS lydie_meta (key TEXT PRIMARY KEY, value TEXT)");
     // Written only when it changes: opening an up-to-date database writes nothing, so it still
     // opens (read-only in effect) when the disk is full (LYD-279).
-    const recorded = await tx.getOptional<{ value: string }>(
-      "SELECT value FROM lydie_meta WHERE key = 'schema_version'",
-    );
-    if (recorded?.value !== String(latest)) {
+    if (meta.values.schema_version !== String(latest)) {
       await tx.execute(
         "INSERT OR REPLACE INTO lydie_meta(key, value) VALUES ('schema_version', ?)",
         [String(latest)],
       );
     }
-    await ensureDerivedIn(tx, names);
+    // Migrations may have changed what `meta` says (migration 8 drops derived_version).
+    await ensureDerivedIn(tx, names, pending.length === 0 ? meta : undefined);
     return { from, to: latest };
   });
 }

@@ -100,7 +100,7 @@ describe("activity log on SQLite", () => {
     ).toEqual([["database.changed", "Tasks", 2]]);
   });
 
-  it("prunes rows older than the retention at open", async () => {
+  it("prunes rows older than the retention after open", async () => {
     const { ops, store, path } = await setup();
     await ops.doc.create({ workspaceId: WS, title: "Recent" });
     await store.db.execute(
@@ -112,8 +112,9 @@ describe("activity log on SQLite", () => {
       [WS],
     );
     await store.close();
-    const reopened = await openNodeStore({ path });
+    const reopened = await openNodeStore({ path, maintenanceDelayMs: 0 });
     try {
+      await reopened.maintenance;
       const rows = await reopened.db.getAll<{ target_title: string }>(
         "SELECT target_title FROM activity",
       );

@@ -239,7 +239,7 @@ describe("layouts", () => {
 });
 
 describe("history retention", () => {
-  it("prunes old and excess journal entries at open", async () => {
+  it("prunes old and excess journal entries after open", async () => {
     const { store, runtime, path } = await openTestStore();
     for (let i = 0; i < 5; i++) await runtime.ops.doc.create({ workspaceId: WS, title: `D${i}` });
     // An entry from 2020 (an id minted in 2020).
@@ -248,8 +248,13 @@ describe("history retention", () => {
        VALUES ('016f5e66-e800-0000-0000-000000000000', 'doc.rename', '{}', NULL, '[]', '{}', 'g', '2020-01-01T00:00:00.000Z')`,
     );
     await store.close();
-    const reopened = await openNodeStore({ path, historyRetention: { maxEntries: 3 } });
+    const reopened = await openNodeStore({
+      path,
+      historyRetention: { maxEntries: 3 },
+      maintenanceDelayMs: 0,
+    });
     try {
+      await reopened.maintenance;
       const ids = await reopened.db.getAll<{ id: string }>("SELECT id FROM op_history ORDER BY id");
       expect(ids).toHaveLength(3);
       expect(ids.some((r) => r.id.startsWith("01DXF"))).toBe(false);

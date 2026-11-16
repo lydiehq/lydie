@@ -52,6 +52,7 @@ export {
 } from "./queries.ts";
 export type {
   DatabaseSummary,
+  Guard,
   PropertyFilter,
   PropertySort,
   RowsOptions,
