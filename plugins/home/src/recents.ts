@@ -1,6 +1,6 @@
 // What the home page knows besides the database: the documents opened on this device, per
 // workspace, newest first. Recorded whenever a document becomes the focused tab.
-import { fuzzyScore } from "@lydie/plugin-api";
+import { fuzzyScoreLower } from "@lydie/plugin-api";
 
 export type Opened = { id: string; at: number };
 
@@ -36,7 +36,23 @@ export function jumpList(
   return ids;
 }
 
-export type Candidate = { id: string; title: string; path: string; icon?: string | null };
+export type Candidate = {
+  id: string;
+  title: string;
+  path: string;
+  icon?: string | null;
+  // Lowercased once (`withKeys`) rather than on every keystroke.
+  keys?: MatchKeys;
+};
+
+type MatchKeys = { title: string; full: string | null };
+
+const keysOf = (c: Candidate): MatchKeys => ({
+  title: c.title.toLowerCase(),
+  full: c.path ? `${c.path} / ${c.title}`.toLowerCase() : null,
+});
+
+export const withKeys = (c: Candidate): Candidate => ({ ...c, keys: keysOf(c) });
 
 // Title matches for the find box: fuzzy on the title (or on the path and title, counting less),
 // lifted by how recently the document was opened here.
@@ -46,13 +62,16 @@ export function rankTitles(
   opened: readonly Opened[],
   limit: number,
 ): Candidate[] {
-  const q = query.trim();
+  const q = query.trim().toLowerCase();
   if (!q) return [];
   const recency = new Map(opened.map((o, i) => [o.id, i]));
   const scored: { c: Candidate; score: number }[] = [];
   for (const c of candidates) {
-    const title = fuzzyScore(q, c.title);
-    const full = c.path ? fuzzyScore(q, `${c.path} / ${c.title}`) : null;
+    const keys = c.keys ?? keysOf(c);
+    // The title ends the full text: what does not match that does not match the title either.
+    const full = keys.full === null ? null : fuzzyScoreLower(q, keys.full);
+    if (keys.full !== null && full === null) continue;
+    const title = fuzzyScoreLower(q, keys.title);
     const match =
       title === null ? (full === null ? null : full - 150) : Math.max(title, (full ?? 0) - 150);
     if (match === null) continue;

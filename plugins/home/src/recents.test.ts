@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 
-import { ago, jumpList, rankTitles, recordOpen, snippetParts } from "./recents.ts";
+import { ago, jumpList, rankTitles, recordOpen, snippetParts, withKeys } from "./recents.ts";
 
 test("recordOpen moves a document to the front and keeps the list bounded", () => {
   let list = recordOpen([], "a", 1);
@@ -37,6 +37,11 @@ test("rankTitles: fuzzy on titles and paths, lifted by recent opens", () => {
   ]);
   expect(rankTitles(candidates, "work/road", [], 5).map((c) => c.id)).toEqual(["1"]);
   expect(rankTitles(candidates, "  ", [], 5)).toEqual([]);
+  // Keys lowercased ahead rank the same.
+  for (const q of ["road", "ROAD", "work/road", "groc", "zz"])
+    expect(rankTitles(candidates.map(withKeys), q, [], 5).map((c) => c.id)).toEqual(
+      rankTitles(candidates, q, [], 5).map((c) => c.id),
+    );
 });
 
 test("snippetParts splits marks without reading HTML", () => {

@@ -18,7 +18,7 @@ import {
   useOps,
   useQuery,
 } from "@lydie/plugin-api";
-import type { AppApi, DocumentRef, OpenOptions, ViewProps } from "@lydie/plugin-api";
+import type { AppApi, DocumentRef, LiveRow, OpenOptions, ViewProps } from "@lydie/plugin-api";
 import {
   Button,
   ContextMenu,
@@ -27,10 +27,10 @@ import {
   Search2Regular,
   sidebarSectionTitleClass,
 } from "@lydie/plugin-api/ui";
-import { useEffect, useId, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode, Ref } from "react";
 
-import { ago, forget, jumpList, rankTitles, recentKey, snippetParts } from "./recents.ts";
+import { ago, forget, jumpList, rankTitles, recentKey, snippetParts, withKeys } from "./recents.ts";
 import type { Candidate, Opened } from "./recents.ts";
 
 const JUMP_LIMIT = 8;
@@ -97,8 +97,40 @@ async function loadCandidates(app: AppApi): Promise<Candidate[]> {
     const path: string[] = [];
     for (let p = e.parentId; p && path.length < 4; p = parents.get(p) ?? null)
       path.unshift(titles.get(p) ?? "");
-    return { id: e.id, title: e.title, path: path.join(" / "), icon: pageIconOf(e.properties) };
+    return withKeys({
+      id: e.id,
+      title: e.title,
+      path: path.join(" / "),
+      icon: pageIconOf(e.properties),
+    });
   });
+}
+
+// Text hits for the find box: one query per search, not a live one per prefix typed (each would
+// linger and re-run on every write). The last hits stay up while the next load.
+function useTextHits(app: AppApi, text: string): readonly LiveRow<"doc.search">[] {
+  const [state, setState] = useState<{ text: string; hits: readonly LiveRow<"doc.search">[] }>({
+    text: "",
+    hits: [],
+  });
+  useEffect(() => {
+    if (!text) return;
+    let live = true;
+    app.backend
+      .query("doc.search", { workspaceId: app.workspace.workspaceId, text, limit: TEXT_LIMIT * 2 })
+      .then(
+        (hits) => {
+          if (live) setState({ text, hits });
+        },
+        () => {
+          if (live) setState({ text, hits: [] });
+        },
+      );
+    return () => {
+      live = false;
+    };
+  }, [app, text]);
+  return text ? state.hits : [];
 }
 
 function FindBox({
@@ -117,7 +149,8 @@ function FindBox({
   const app = useApp();
   const backend = useBackend();
   const listId = useId();
-  const text = query.trim();
+  // The box shows each key at once; ranking and searching may lag a keystroke behind.
+  const text = useDeferredValue(query).trim();
   const searching = text.length > 0;
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [active, setActive] = useState(0);
@@ -133,10 +166,7 @@ function FindBox({
     };
   }, [app, searching]);
 
-  const hits = useQuery(
-    "doc.search",
-    searching ? { workspaceId: app.workspace.workspaceId, text, limit: TEXT_LIMIT * 2 } : null,
-  );
+  const hits = useTextHits(app, text);
 
   const items: Item[] = [];
   if (searching) {
@@ -151,7 +181,7 @@ function FindBox({
       });
     }
     const shown = new Set(titled.map((c) => c.id));
-    for (const hit of hits.data.filter((h) => !shown.has(h.id)).slice(0, TEXT_LIMIT)) {
+    for (const hit of hits.filter((h) => !shown.has(h.id)).slice(0, TEXT_LIMIT)) {
       items.push({
         kind: "doc",
         id: hit.id,
