@@ -27,7 +27,8 @@ export {
   moveBlocks,
 } from "./extensions/columns";
 export type { BlockRange, ColumnAttrs, SideTarget } from "./extensions/columns";
-export { CodeBlock, Image, Link, lowlight, OrderedList } from "./extensions/core-overrides";
+export { lowlight } from "./extensions/code-highlight";
+export { CodeBlock, Image, Link, OrderedList } from "./extensions/core-overrides";
 export { isDiagramLanguage, mountDiagram } from "./diagram";
 export type { DiagramOutcome } from "./diagram";
 export { Directive, directiveLabel } from "./extensions/directive";

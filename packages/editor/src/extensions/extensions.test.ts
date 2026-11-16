@@ -5,7 +5,7 @@ import type { JSONContent } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 
 import { defaultSlashItems } from "../slash-items";
-import { grammarsReady } from "./core-overrides";
+import { loadGrammars } from "./code-highlight";
 import { createLydieExtensions } from "./index";
 import { filterSlashItems } from "./slash-commands";
 import { parseWikiLink } from "./wiki-link";
@@ -280,7 +280,7 @@ describe("helpers", () => {
 
 describe("code highlighting", () => {
   it("highlights once the grammars load, and keeps it while other blocks change", async () => {
-    await grammarsReady;
+    await loadGrammars();
     const doc = createEditor({
       type: "doc",
       content: [

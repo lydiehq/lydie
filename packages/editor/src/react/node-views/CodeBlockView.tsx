@@ -4,7 +4,7 @@ import { ReactRenderer } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import { useMemo, useSyncExternalStore } from "react";
 
-import { grammarsVersion, lowlight, subscribeGrammars } from "../../extensions/core-overrides";
+import { grammarsVersion, lowlight, subscribeGrammars } from "../../extensions/code-highlight";
 import { useLydieEditorSlots } from "../context";
 import type { CodeLanguagePickerProps } from "../context";
 

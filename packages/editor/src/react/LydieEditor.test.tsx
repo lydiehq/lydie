@@ -4,7 +4,7 @@ import { act, cleanup, render, waitFor } from "@testing-library/react";
 import type { Editor, JSONContent } from "@tiptap/core";
 import * as Y from "yjs";
 
-import { grammarsReady } from "../extensions/core-overrides";
+import { loadGrammars } from "../extensions/code-highlight";
 import { LydieEditor } from "./LydieEditor";
 
 afterEach(() => cleanup());
@@ -145,7 +145,7 @@ describe("<LydieEditor>", () => {
   });
 
   it("code blocks: highlighted, with a language picker that sets the language", async () => {
-    await grammarsReady;
+    await loadGrammars();
     let editor: Editor | undefined;
     const { container } = render(<LydieEditor content={content} onCreate={(e) => (editor = e)} />);
     await waitFor(() => expect(editor).toBeDefined());

@@ -71,8 +71,12 @@ Headless:
 - Extensions: Callout, WikiLink, WikiLinkSuggestions, Embed, MathInline, MathBlock,
   FootnoteReference, FootnoteDefinition, Directive, ColumnList, Column, RawBlock, RawInline,
   OrderedList, Image, Link,
-  CodeBlock (lowlight `common` grammars loaded in their own chunk, `grammarsReady`; blocks are
-  highlighted again when they arrive; only transactions that touch a code block re-highlight),
+  CodeBlock (lowlight `common` grammars in their own chunk, `loadGrammars()`, fetched when an
+  editor first shows a code block or at idle; blocks are highlighted again when they arrive;
+  `code-highlight.ts` in place of TipTap's lowlight plugin: only the code blocks a transaction
+  touches are highlighted again, results are cached by language and text, and an unlabelled
+  block's language is guessed (highlightAuto) when it is first seen and again `GUESS_DELAY` after
+  typing in it pauses, never per key; `code-highlight.test.ts` checks it against a full rebuild),
   IndentHandler, KeyboardShortcuts, NotionShortcuts, EscapeSelectsBlock, SlashCommands,
   DragFeedback (`drag-feedback.ts`, in place of StarterKit's dropcursor: the drop line,
   `.lydie-drop-indicator` with `data-kind="block" | "inline"`, spans the block's content box,

@@ -1,5 +1,5 @@
 // lowlight's `common` grammars (~37 of highlight.js's ~190), in a chunk of their own: the editor
-// loads them after start instead of with the app (see core-overrides.ts).
+// loads them after start instead of with the app (see code-highlight.ts).
 
 import arduino from "highlight.js/lib/languages/arduino";
 import bash from "highlight.js/lib/languages/bash";
