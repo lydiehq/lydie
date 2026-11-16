@@ -13,12 +13,7 @@ import {
   Plugin,
   PluginKey,
 } from "@lydie/plugin-api/editor";
-import type {
-  Editor,
-  EditorView,
-  ProseMirrorNode,
-  Transaction,
-} from "@lydie/plugin-api/editor";
+import type { Editor, EditorView, ProseMirrorNode, Transaction } from "@lydie/plugin-api/editor";
 
 import { hrefToTarget, isExternalHref, linkKey } from "./targets.ts";
 import type { WikiTarget } from "./targets.ts";

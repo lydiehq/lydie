@@ -32,13 +32,14 @@ function drawn(set: DecorationSet, doc: ProseMirrorNode) {
 }
 
 function randomEdit(state: EditorState, next: () => number): Transaction {
-  const pick = <T,>(items: readonly T[]) => items[Math.floor(next() * items.length)]!;
+  const pick = <T>(items: readonly T[]) => items[Math.floor(next() * items.length)]!;
   const tr = state.tr;
   const size = state.doc.content.size;
   const textPositions: number[] = [];
   const wikiLinks: number[] = [];
   state.doc.descendants((node, pos) => {
-    if (node.isTextblock) for (let i = 0; i <= node.content.size; i++) textPositions.push(pos + 1 + i);
+    if (node.isTextblock)
+      for (let i = 0; i <= node.content.size; i++) textPositions.push(pos + 1 + i);
     if (node.type.name === "wikiLink") wikiLinks.push(pos);
     return true;
   });
@@ -101,7 +102,9 @@ describe("link decorations", () => {
         const tr = randomEdit(state, next);
         state = state.apply(tr);
         set = updateLinkDecorations(tr, set, targets);
-        expect(drawn(set, state.doc)).toEqual(drawn(linkDecorations(state.doc, targets), state.doc));
+        expect(drawn(set, state.doc)).toEqual(
+          drawn(linkDecorations(state.doc, targets), state.doc),
+        );
       }
     }
   });

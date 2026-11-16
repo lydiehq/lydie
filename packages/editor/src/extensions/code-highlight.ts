@@ -256,7 +256,8 @@ export function codeHighlightPlugin(name: string) {
       const off = grammarsLoaded
         ? undefined
         : subscribeGrammars(() => {
-            if (!view.isDestroyed) view.dispatch(view.state.tr.setMeta(codeHighlightKey, "grammars"));
+            if (!view.isDestroyed)
+              view.dispatch(view.state.tr.setMeta(codeHighlightKey, "grammars"));
           });
       const hasCode = (state: EditorState) =>
         codeHighlightKey.getState(state)!.blocks.find().length > 0;

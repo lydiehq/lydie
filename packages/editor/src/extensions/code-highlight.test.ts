@@ -23,7 +23,7 @@ const SAMPLES = [
   "def f(x):\n    return x + 1  # one",
   "SELECT id, name FROM users WHERE id = 42;",
   '{ "a": [1, 2, true], "b": null }',
-  "<div class=\"x\">hi</div>",
+  '<div class="x">hi</div>',
 ];
 const LANGUAGES = [null, "javascript", "python", "sql", "json", "xml", "nonsense"];
 
@@ -39,7 +39,10 @@ function random(seed: number) {
 function render(set: DecorationSet, doc: ProseMirrorNode) {
   return set
     .find(0, doc.content.size)
-    .map((d) => `${d.from}-${d.to}:${(d as unknown as { type: { attrs: { class: string } } }).type.attrs.class}`)
+    .map(
+      (d) =>
+        `${d.from}-${d.to}:${(d as unknown as { type: { attrs: { class: string } } }).type.attrs.class}`,
+    )
     .sort();
 }
 
@@ -53,17 +56,21 @@ function codeBlocks(doc: ProseMirrorNode) {
 }
 
 function randomEdit(state: EditorState, next: () => number): Transaction {
-  const pick = <T,>(items: readonly T[]) => items[Math.floor(next() * items.length)]!;
+  const pick = <T>(items: readonly T[]) => items[Math.floor(next() * items.length)]!;
   const tr = state.tr;
   const blocks = codeBlocks(state.doc);
   const kind = Math.floor(next() * 8);
   const block = blocks.length ? pick(blocks) : undefined;
   const inside = (b: { node: ProseMirrorNode; pos: number }) =>
     b.pos + 1 + Math.floor(next() * (b.node.content.size + 1));
-  if (kind === 0 && block) return tr.insertText(pick(["x", " ", "\n", "(", '"', "42"]), inside(block));
+  if (kind === 0 && block)
+    return tr.insertText(pick(["x", " ", "\n", "(", '"', "42"]), inside(block));
   if (kind === 1 && block && block.node.content.size > 1) {
     const from = inside(block);
-    return tr.delete(from, Math.min(from + 1 + Math.floor(next() * 5), block.pos + block.node.nodeSize - 1));
+    return tr.delete(
+      from,
+      Math.min(from + 1 + Math.floor(next() * 5), block.pos + block.node.nodeSize - 1),
+    );
   }
   if (kind === 2 && block) return tr.setNodeAttribute(block.pos, "language", pick(LANGUAGES));
   if (kind === 3) {
@@ -155,8 +162,8 @@ describe("code highlighting, incrementally", () => {
     const after = codeHighlightKey.getState(state)!.decorations;
     const moved = codeBlocks(state.doc)[1]!;
     // The same Decoration objects' specs, mapped one position on: not highlighted again.
-    expect(
-      after.find(moved.pos, moved.pos + moved.node.nodeSize).map((d) => d.from - 1),
-    ).toEqual(secondDecos.map((d) => d.from));
+    expect(after.find(moved.pos, moved.pos + moved.node.nodeSize).map((d) => d.from - 1)).toEqual(
+      secondDecos.map((d) => d.from),
+    );
   });
 });
