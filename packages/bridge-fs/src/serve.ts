@@ -73,7 +73,11 @@ export function serveVault(
         await vault.bridge.rescan(paths?.length ? paths : [""]);
         return null;
       },
-      pathOf: ({ id }) => vault.bridge.pathOf(id),
+      // The bridge knows paths once the folder is indexed.
+      pathOf: async ({ id }) => {
+        await vault.indexed;
+        return vault.bridge.pathOf(id);
+      },
       openDocument: async ({ id }) => {
         const key = randomUUID();
         const session: Session = {
@@ -151,8 +155,12 @@ export function serveVault(
       settings: () => vault.settings(),
       setSettings: (patch) => vault.setSettings(patch),
       mcpStatus: () => options.mcp?.status() ?? NO_MCP,
-      mcpSetEnabled: async ({ enabled }) =>
-        options.mcp ? options.mcp.setEnabled(enabled) : NO_MCP,
+      // Agents' operations, like the windows', wait for the index.
+      mcpSetEnabled: async ({ enabled }) => {
+        if (!options.mcp) return NO_MCP;
+        if (enabled) await vault.indexed;
+        return options.mcp.setEnabled(enabled);
+      },
     },
     streams: {
       status: (_params, emit) => {

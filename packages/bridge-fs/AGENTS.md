@@ -15,10 +15,18 @@ linkKey, targetKey, uuid). External: `yaml` (reads `lydie.id` of .base files). `
 
 ```ts
 openVault({ folder, databasePath?, dataDir?, actor?, watch?: boolean | WatchOptions, hooks?, onError?,
-            gettingStarted? })
+            gettingStarted?, indexInBackground? })
   : Promise<Vault>
 Vault = { folder, workspaceId, databasePath, store, runtime, bridge, blob, index: IndexReport,
-          gettingStartedId, status(): VaultStatus, subscribe(events => …), close() }
+          indexed: Promise<IndexReport>, gettingStartedId, status(): VaultStatus,
+          subscribe(events => …), close() }
+// indexInBackground (desktop only): resolve once the database is open and `.lydie/` read; the
+// folder is indexed after (`indexed`; `index` is all zero until then, status "indexing"). The
+// bridge's queue starts with the index, so operations' file writes, open documents, rescans and
+// settings wait for it; `pathOf` and turning MCP on (vault service) wait too. Callers hold back
+// their own writes until `indexed` (the desktop's VaultManager does for windows): indexing
+// compares the database with the folder, and a change committed meanwhile could be undone. A
+// folder opened for the first time while empty is indexed before resolving either way.
 // gettingStarted (desktop only; not the CLI or MCP): when this open writes `.lydie/workspace.json`
 // into a folder that held nothing but system files (.DS_Store, Thumbs.db, …), write the Getting
 // started page (LYD-313) in one transaction off the undo stack; `gettingStartedId` is its id, else
@@ -113,7 +121,8 @@ runtime does not stop vaults from opening.
 
 ## How it runs
 
-- **Open**: scan, compare with `file_index` (mtime+size, then sha256), read what changed, pair
+- **Open** (`bridge.load()` reads `.lydie/`, `bridge.open()` indexes then watches): scan, compare
+  with `file_index` (mtime+size, then sha256), read what changed, pair
   vanished and new files by hash (renames while closed keep their ids), write the database directly
   in a few transactions, resolving links in memory with the runtime's own `resolveLink`.
 - **Watch** (@parcel/watcher, debounced; delete-only batches wait `renameWindowMs` for the other half

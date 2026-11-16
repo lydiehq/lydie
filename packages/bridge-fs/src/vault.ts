@@ -64,6 +64,21 @@ export type OpenVaultOptions = {
   gettingStarted?: boolean;
   // Where workspace.export saves the zip (the desktop app: a save dialog).
   exports?: Exports;
+  // Resolve once the database is open and `.lydie/` read, and index the folder after that
+  // (`vault.indexed`); the desktop app serves windows from the database meanwhile. Operations'
+  // file writes, open documents and rescans wait for the index (the bridge's queue). A folder
+  // opened for the first time while empty is indexed before resolving either way.
+  indexInBackground?: boolean;
+};
+
+const NOT_INDEXED: IndexReport = {
+  ms: 0,
+  documents: 0,
+  read: 0,
+  created: 0,
+  updated: 0,
+  moved: 0,
+  removed: 0,
 };
 
 export type Vault = {
@@ -74,8 +89,11 @@ export type Vault = {
   readonly runtime: Runtime;
   readonly bridge: Bridge;
   readonly blob: Blob;
-  // What opening indexed.
+  // What opening indexed (all zero until `indexed` resolves).
   readonly index: IndexReport;
+  // Resolves when the folder is indexed (at once unless `indexInBackground`), version history is
+  // set up and the Getting started page written; rejects when indexing failed.
+  readonly indexed: Promise<IndexReport>;
   // The Getting started page this open created (`gettingStarted`), else null.
   readonly gettingStartedId: string | null;
   status(): VaultStatus;
@@ -213,15 +231,6 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
   });
   bridge.attach(runtime);
 
-  let index: IndexReport;
-  try {
-    index = await bridge.open({ watch: options.watch !== false });
-  } catch (error) {
-    await bridge.close();
-    await store.close();
-    throw error;
-  }
-
   // `init`: make the folder a repository if it is not one. Only when someone turns git on, never
   // on open (a folder copied to a device without its `.git`).
   async function useVersionHistory(wanted: VersionHistory, init: boolean): Promise<void> {
@@ -249,32 +258,59 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
       await previous.close();
     }
   }
-  try {
-    await useVersionHistory(settings.versionHistory, false);
-  } catch (error) {
-    report(error);
-    versionHistory = "snapshots";
+
+  let index: IndexReport | null = null;
+  let gettingStartedId: string | null = null;
+  let closing = false;
+  // The index, then version history and the Getting started page, which need it.
+  async function finishOpening(): Promise<IndexReport> {
+    const done = await bridge.open({ watch: options.watch !== false });
+    index = done;
+    if (closing) return done;
+    try {
+      await useVersionHistory(settings.versionHistory, false);
+    } catch (error) {
+      report(error);
+      versionHistory = "snapshots";
+    }
+    if (fresh && options.gettingStarted) {
+      const workspaceId = config!.workspaceId;
+      try {
+        // One transaction, off the undo stack and out of the activity log: the page is there from
+        // the start, not an action.
+        const created = await runtime.transaction(
+          "Getting started",
+          (ops) => createGettingStarted(ops, { workspaceId, mode: "folder" }),
+          { history: false, activity: false },
+        );
+        gettingStartedId = created?.id ?? null;
+      } catch (error) {
+        (options.onError ?? console.error)(error);
+      }
+    }
+    return done;
   }
 
-  let gettingStartedId: string | null = null;
-  if (fresh && options.gettingStarted) {
-    const workspaceId = config.workspaceId;
+  let indexed: Promise<IndexReport>;
+  // A fresh folder is indexed at once, and its Getting started page must be known.
+  if (options.indexInBackground && !fresh) {
+    await bridge.load();
+    indexed = finishOpening();
+    // Seen by whoever waits for it; not an unhandled rejection meanwhile.
+    indexed.catch(() => {});
+  } else {
     try {
-      // One transaction, off the undo stack and out of the activity log: the page is there from
-      // the start, not an action.
-      const created = await runtime.transaction(
-        "Getting started",
-        (ops) => createGettingStarted(ops, { workspaceId, mode: "folder" }),
-        { history: false, activity: false },
-      );
-      gettingStartedId = created?.id ?? null;
+      indexed = Promise.resolve(await finishOpening());
     } catch (error) {
-      (options.onError ?? console.error)(error);
+      await bridge.close();
+      await store.close();
+      throw error;
     }
   }
 
   const settingsListeners = new Set<(settings: FolderSettings) => void>();
-  let settingsQueue: Promise<unknown> = Promise.resolve();
+  // Settings wait for the index (a rescan, version history).
+  let settingsQueue: Promise<unknown> = indexed.catch(() => {});
   const setSettings = (raw: FolderSettingsPatch) => {
     const run = settingsQueue.then(async () => {
       const patch = checkPatch(raw);
@@ -314,7 +350,10 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
     runtime,
     bridge,
     blob: bridge.blob,
-    index,
+    get index() {
+      return index ?? NOT_INDEXED;
+    },
+    indexed,
     gettingStartedId,
     status: () => bridge.status,
     settings: () => settings,
@@ -330,6 +369,8 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
     },
     close() {
       closed ??= (async () => {
+        closing = true;
+        await indexed.catch(() => {});
         await bridge.close();
         await versionStore.flush();
         // A last checkpoint of what this session changed.

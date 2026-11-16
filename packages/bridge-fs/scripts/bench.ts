@@ -200,6 +200,25 @@ async function indexing(): Promise<void> {
   console.log("  ", vault.index);
   await vault.close();
 
+  // As the desktop app opens folders: the database serves windows while the folder is indexed.
+  for (const [label, fresh] of [
+    ["cold open", true],
+    ["reopen, 1% changed", false],
+  ] as const) {
+    if (fresh) rmSync(databasePath, { force: true });
+    else {
+      for (let i = 50; i < notes; i += 100) {
+        writeFileSync(join(folder, `Folder ${i % 100}`, `Note ${i}.md`), `${note(i)}\nagain\n`);
+      }
+    }
+    const t0 = performance.now();
+    vault = await openVault({ folder, databasePath, watch: false, indexInBackground: true });
+    line(`${label}, background: served`, performance.now() - t0);
+    await vault.indexed;
+    line(`${label}, background: indexed`, performance.now() - t0);
+    await vault.close();
+  }
+
   const help = join(import.meta.dirname, "../../markdown/.cache/obsidian-help");
   if (existsSync(help)) {
     for (const [label, source] of [

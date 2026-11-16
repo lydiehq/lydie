@@ -218,6 +218,7 @@ export class Bridge {
   // Ids by lower-case file name (`[[Title]]` links); may hold ids whose entry moved on.
   private readonly byName = new Map<string, Set<string>>();
   private meta!: VaultMeta;
+  private loaded = false;
   private excluded: (key: string) => boolean;
   private attachmentsFolder: string;
   private _linkFormat: LinkFormat;
@@ -466,10 +467,29 @@ export class Bridge {
 
   // ---- Opening
 
-  async open(options: { watch: boolean }): Promise<IndexReport> {
+  // Reads `.lydie/` and Obsidian's property types: enough for the blob port and requests that do
+  // not need the index. `open` does it first if it was not done.
+  async load(): Promise<void> {
+    if (this.loaded) return;
     this.meta = await VaultMeta.load(this.root, this.options.hooks);
     this.types = await obsidianTypes(this.root);
-    const report = await this.queue.run(() => this.index());
+    this.loaded = true;
+  }
+
+  // Indexes the folder, then watches it. Indexing is the first task on the queue, so everything
+  // queued meanwhile (operations' writes, open documents, rescans) waits for it.
+  async open(options: { watch: boolean }): Promise<IndexReport> {
+    if (!this.loaded) await this.load();
+    let report: IndexReport;
+    try {
+      report = await this.queue.run(() => this.index());
+    } catch (error) {
+      this.fail(error);
+      this.setStatus({ state: "error" });
+      throw error;
+    }
+    // Closed while indexing (a window that went away at once).
+    if (this.closed) return report;
     if (options.watch) {
       this.watcher = await watchFolder(
         this.root,

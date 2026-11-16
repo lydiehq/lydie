@@ -14,6 +14,7 @@ import type {
   VaultHandlers,
   VaultServiceContract,
 } from "@lydie/bridge-fs";
+import { operations } from "@lydie/contract";
 import { PlatformError } from "@lydie/platform";
 import type { ServiceContract, ServiceHandlers, Unsubscribe } from "@lydie/platform";
 import type { Exports } from "@lydie/runtime";
@@ -25,6 +26,8 @@ import type { ServiceCaller, ServiceImplementation, ServiceRegistry } from "./se
 export type VaultHost = {
   readonly folder: string;
   readonly vault: Vault;
+  // Resolves when the folder is indexed (`vault.indexed`), also when indexing failed.
+  readonly indexed: Promise<void>;
   readonly backend: LocalBackend;
   readonly backendHandlers: ServiceHandlers<BackendContract>;
   readonly vaultHandlers: VaultHandlers & { close(): void };
@@ -46,7 +49,10 @@ export type VaultManagerOptions = {
 
 type Slot = {
   holders: Set<string>;
+  // The database is open: windows are served (writes wait for the index).
   ready: Promise<VaultHost>;
+  // The folder is indexed too.
+  indexed: Promise<VaultHost>;
   close: () => Promise<void>;
 };
 
@@ -58,8 +64,20 @@ export class VaultManager {
 
   constructor(private readonly options: VaultManagerOptions) {}
 
-  // The vault of `folder`, opened on first use; `holder` (a window id) keeps it open until released.
-  acquire(folder: string, holder: string): Promise<VaultHost> {
+  // The vault of `folder`, opened on first use and indexed; `holder` (a window id) keeps it open
+  // until released.
+  async acquire(folder: string, holder: string): Promise<VaultHost> {
+    return this.slotFor(folder, holder).indexed;
+  }
+
+  // The same once its database is open, which can be long before the folder is indexed (a first
+  // open, notes changed while the app was closed): windows are served from the database while
+  // indexing runs, and their writes wait for it.
+  acquireServing(folder: string, holder: string): Promise<VaultHost> {
+    return this.slotFor(folder, holder).ready;
+  }
+
+  private slotFor(folder: string, holder: string): Slot {
     const previous = this.holderFolder.get(holder);
     if (previous && previous !== folder) void this.release(holder);
     let slot = this.slots.get(folder);
@@ -69,7 +87,7 @@ export class VaultManager {
     }
     slot.holders.add(holder);
     this.holderFolder.set(holder, folder);
-    return slot.ready;
+    return slot;
   }
 
   async release(holder: string): Promise<void> {
@@ -116,8 +134,13 @@ export class VaultManager {
         store: { workerUrl: unpackedAsar },
         onError,
         gettingStarted: true,
+        indexInBackground: true,
         ...(this.options.exports ? { exports: this.options.exports(folder) } : {}),
       });
+      const indexed = vault.indexed.then(
+        () => {},
+        () => {},
+      );
       const backend = createLocalBackend({
         store: vault.store,
         runtime: vault.runtime,
@@ -134,8 +157,9 @@ export class VaultManager {
       return {
         folder,
         vault,
+        indexed,
         backend,
-        backendHandlers: serveBackend(backend),
+        backendHandlers: afterIndex(serveBackend(backend), indexed),
         vaultHandlers: serveVault(vault, mcp ? { mcp } : {}),
         mcp,
       };
@@ -143,6 +167,10 @@ export class VaultManager {
     return {
       holders: new Set(),
       ready,
+      indexed: ready.then(async (host) => {
+        await host.indexed;
+        return host;
+      }),
       close: async () => {
         try {
           const host = await ready;
@@ -159,6 +187,34 @@ export class VaultManager {
 }
 
 // ---- Serving to windows
+
+// Writes from windows wait for the folder's index: indexing compares the database with the folder,
+// and a change committed meanwhile could read as out of date and be undone. Reads (queries, live
+// queries, read-only operations) are answered from the database at once.
+function afterIndex(
+  handlers: ServiceHandlers<BackendContract>,
+  indexed: Promise<void>,
+): ServiceHandlers<BackendContract> {
+  const r = handlers.requests;
+  const writes =
+    <I, O>(handle: (input: I) => O, when: (input: I) => boolean = () => true) =>
+    async (input: I): Promise<Awaited<O>> => {
+      if (when(input)) await indexed;
+      return await handle(input);
+    };
+  const kinds = operations as Record<string, { kind: string } | undefined>;
+  return {
+    ...handlers,
+    requests: {
+      ...r,
+      execute: writes(r.execute, ({ id }) => kinds[id]?.kind !== "query"),
+      txBegin: writes(r.txBegin),
+      undo: writes(r.undo),
+      redo: writes(r.redo),
+      attachmentAdd: writes(r.attachmentAdd),
+    },
+  };
+}
 
 type AnyHandlers = {
   requests: Record<string, (input: unknown) => unknown>;

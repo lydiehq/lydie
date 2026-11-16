@@ -191,3 +191,52 @@ describe("no-op round trip", () => {
     30_000,
   );
 });
+
+describe("indexing in the background", () => {
+  test("the database is there at once; writes and open documents wait for the index", async () => {
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 300; i++)
+      files[`Folder ${i % 10}/Note ${i}.md`] = `Note ${i} [[Note ${i + 1}]]\n`;
+    const folder = fixtureVault(files);
+    const databasePath = join(tempDir("lydie-db-"), "workspace.sqlite");
+    const first = await openTestVault(folder, { databasePath });
+    await first.close();
+    writeFileSync(join(folder, "Folder 0/Note 0.md"), "Changed while closed\n");
+
+    const vault = await openTestVault(folder, { databasePath, indexInBackground: true });
+    // Nothing indexed yet; what the database had is readable.
+    expect(vault.index).toMatchObject({ read: 0, documents: 0 });
+    expect(["opening", "indexing"]).toContain(vault.status().state);
+    expect((await vault.store.listTree(vault.workspaceId)).length).toBe(310);
+    // An operation's file waits for the index, and lands.
+    const created = await vault.runtime.ops.doc.create({
+      workspaceId: vault.workspaceId,
+      title: "During",
+      markdown: "x\n",
+    });
+    const report = await vault.indexed;
+    expect(report.read).toBe(1);
+    expect(vault.index).toBe(report);
+    expect(vault.status().state).toBe("ready");
+    expect(vault.bridge.pathOf(created.id)).toBe("During.md");
+    expect(existsSync(join(folder, "During.md"))).toBe(true);
+    const changed = await vault.store.getDoc(await idOf(vault, "Note 0"), { includeBody: true });
+    expect(changed?.body?.markdown).toBe("Changed while closed\n");
+  });
+
+  test("an empty folder is indexed before it opens, with its Getting started page", async () => {
+    const folder = fixtureVault({});
+    const vault = await openTestVault(folder, { indexInBackground: true, gettingStarted: true });
+    expect(vault.status().state).toBe("ready");
+    expect(vault.gettingStartedId).not.toBeNull();
+  });
+
+  test("closing while indexing waits for it and stops", async () => {
+    const files: Record<string, string> = {};
+    for (let i = 0; i < 200; i++) files[`Note ${i}.md`] = `Note ${i}\n`;
+    const folder = fixtureVault(files);
+    const vault = await openTestVault(folder, { indexInBackground: true, watch: true });
+    await vault.close();
+    expect(vault.status()).toMatchObject({ state: "closed", watching: false });
+  });
+});
