@@ -31,21 +31,41 @@ import type { Contributor, People, Who } from "./contributors.ts";
 
 // After an edit, the list is read again once changes pause for this long, not on every save.
 const RELOAD_DELAY_MS = 2000;
+// Activity rows are coalesced (per person, session and kind of change), so a page rarely has
+// more than one page of them; a very busy one is read this far back.
+const MAX_PAGES = 5;
 // Faces on the button; the rest are a count.
 const FACES = 3;
 
 // The page's activity, where the workspace keeps it: a synced window asks the hosted API (its
 // replica only has what this device wrote), as the activity log does; other windows their runtime.
-function readActivity(app: AppApi, query: { workspaceId: string; targetId: string }) {
+export async function readActivity(
+  app: AppApi,
+  query: { workspaceId: string; targetId: string },
+): Promise<Activity[]> {
   const account = app.services?.account;
-  const input = { ...query, limit: 100 };
   const remote = app.workspace.mode === "synced" ? account?.callContract?.bind(account) : undefined;
-  return remote ? remote("activity.list", input) : app.backend.execute("activity.list", input);
+  const items: Activity[] = [];
+  let cursor: string | undefined;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const input = { ...query, limit: 100, ...(cursor ? { cursor } : {}) };
+    const result = remote
+      ? await remote("activity.list", input)
+      : await app.backend.execute("activity.list", input);
+    items.push(...result.items);
+    if (!result.nextCursor) break;
+    cursor = result.nextCursor;
+  }
+  return items;
 }
 
 type Loaded = { docId: string; items: Activity[]; at: number };
 
-function useContributors(docId: string): { contributors: Contributor[]; at: number } | null {
+// `me`: read again when it changes, so signing in fills a list read while signed out.
+function useContributors(
+  docId: string,
+  me: string | null,
+): { contributors: Contributor[]; at: number } | null {
   const app = useApp();
   const { workspaceId } = useWorkspace();
   // Every save moves `updatedAt`, so the list follows the page.
@@ -60,7 +80,7 @@ function useContributors(docId: string): { contributors: Contributor[]; at: numb
     let live = true;
     const load = () =>
       readActivity(app, { workspaceId, targetId: docId })
-        .then(({ items }) => live && setLoaded({ docId, items, at: Date.now() }))
+        .then((items) => live && setLoaded({ docId, items, at: Date.now() }))
         // Not kept here (an older core): the button stays away.
         .catch(() => live && setLoaded({ docId, items: [], at: Date.now() }));
     // A page just opened at once; the same page after an edit, once the edits pause.
@@ -70,7 +90,7 @@ function useContributors(docId: string): { contributors: Contributor[]; at: numb
       live = false;
       clearTimeout(timer);
     };
-  }, [app, workspaceId, docId, updatedAt]);
+  }, [app, workspaceId, docId, updatedAt, me]);
   const contributors = useMemo(
     () => (loaded?.docId === docId ? contributorsOf(loaded.items) : null),
     [loaded, docId],
@@ -112,9 +132,9 @@ function useWriting(contributors: readonly Contributor[], loadedAt: number): boo
 
 export function WhoWorkedButton({ docId }: DocumentSlotProps) {
   const app = useApp();
-  const loaded = useContributors(docId);
-  const people = usePeople();
   const me = useMe();
+  const loaded = useContributors(docId, me);
+  const people = usePeople();
   const writing = useWriting(loaded?.contributors ?? [], loaded?.at ?? 0);
   if (!loaded || !othersWorkedOn(loaded.contributors, me)) return null;
   const versions = app.services?.vault ? () => app.panels.show("versions") : null;
