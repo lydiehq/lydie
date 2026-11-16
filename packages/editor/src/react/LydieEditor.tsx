@@ -5,17 +5,8 @@ import type { EditorState } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Doc as YDoc } from "yjs";
 
 import { contentLineStart } from "../content-layout";
@@ -151,9 +142,34 @@ type BuildOptions = {
   extensions: AnyExtension[] | undefined;
 };
 
-// Callbacks read the latest props through the ref when they run, never during render.
+// The latest props, for callbacks that read them when they run (the extensions are built once per
+// binding). A plain store rather than a ref: it is handed to them while rendering, which the React
+// Compiler refuses for a ref.
+type Latest<T> = { get: () => T; set: (value: T) => void };
+
+function createLatest<T>(value: T): Latest<T> {
+  let current = value;
+  return {
+    get: () => current,
+    set: (next) => {
+      current = next;
+    },
+  };
+}
+
+// The value last made for a key: the editor's extensions are rebuilt only with the binding (as the
+// editor is) and read the other props once, which useMemo's dependencies, checked by the React
+// Compiler, cannot say.
+function lastByKey<T>() {
+  let last: { key: readonly unknown[]; value: T } | undefined;
+  return (key: readonly unknown[], make: () => T) => {
+    if (!last || last.key.some((k, i) => k !== key[i])) last = { key, value: make() };
+    return last.value;
+  };
+}
+
 function buildExtensions(
-  latest: RefObject<LydieEditorProps>,
+  latest: Latest<LydieEditorProps>,
   slashStore: SuggestionStore<SlashCommandItem>,
   wikiStore: SuggestionStore<WikiLinkSuggestion>,
   pageStore: SuggestionStore<WikiLinkSuggestion>,
@@ -173,20 +189,20 @@ function buildExtensions(
       : options.ydoc
         ? { document: options.ydoc, field: options.ydocField }
         : undefined,
-    slashItems: () => latest.current.slashItems ?? [],
+    slashItems: () => latest.get().slashItems ?? [],
     slashFilter: (items, query) =>
-      latest.current.filterSlashItems?.(items, query) ?? filterSlashItems(items, query),
+      latest.get().filterSlashItems?.(items, query) ?? filterSlashItems(items, query),
     slashRender: options.hasSlashItems ? slashStore.render : undefined,
     searchDocuments: options.hasSearch
-      ? (query) => latest.current.searchDocuments?.(query) ?? Promise.resolve([])
+      ? (query) => latest.get().searchDocuments?.(query) ?? Promise.resolve([])
       : undefined,
     wikiLinkRender: wikiStore.render,
     createSubPage: options.hasCreatePage
-      ? (title) => latest.current.createSubPage?.(title) ?? Promise.resolve(null)
+      ? (title) => latest.get().createSubPage?.(title) ?? Promise.resolve(null)
       : undefined,
     pageRender: pageStore.render,
-    onOpenWikiLink: (attrs) => latest.current.onOpenWikiLink?.(attrs),
-    onOpenLink: options.hasOpenLink ? (editor) => latest.current.onOpenLink?.(editor) : undefined,
+    onOpenWikiLink: (attrs) => latest.get().onOpenWikiLink?.(attrs),
+    onOpenLink: options.hasOpenLink ? (editor) => latest.get().onOpenLink?.(editor) : undefined,
     nodeViews: {
       callout: calloutView,
       codeBlock: codeBlockView,
@@ -215,15 +231,15 @@ if (typeof window !== "undefined") {
 
 type HandleState = { block: DragHandleBlock; lineHeight: number | undefined };
 
-function describeBlock(editor: Editor, node: ProseMirrorNode, pos: number): HandleState {
-  const label = node.type.name === "heading" ? `H${String(node.attrs.level)}` : undefined;
-  const dom = editor.view.nodeDOM(pos);
+const blockOf = (node: ProseMirrorNode): DragHandleBlock =>
+  node.type.name === "heading"
+    ? { type: node.type.name, label: `H${String(node.attrs.level)}` }
+    : { type: node.type.name };
+
+function lineHeightOf(dom: Element | null) {
   const lineHeight =
     dom instanceof HTMLElement ? Number.parseFloat(getComputedStyle(dom).lineHeight) : Number.NaN;
-  return {
-    block: label ? { type: node.type.name, label } : { type: node.type.name },
-    lineHeight: Number.isFinite(lineHeight) ? lineHeight : undefined,
-  };
+  return Number.isFinite(lineHeight) ? lineHeight : undefined;
 }
 
 // A bulleted or numbered item's marker is drawn outside the <li>, in the list's padding. As in
@@ -271,6 +287,10 @@ function BlockDragHandle({
   const [state, setState] = useState<HandleState | null>(null);
   // Set in onNodeChange, which TipTap calls right before it positions the handle.
   const target = useRef<Element | null>(null);
+  // The block last measured: TipTap calls onNodeChange again on every change to the document
+  // while the handle is on a block (a collaborator typing), and reading its style forces a style
+  // recalculation each time.
+  const measured = useRef<{ dom: Element; state: HandleState } | null>(null);
   // On the document, so it runs after TipTap's listener on the handle (see startBlockDrag). The
   // handle lives beside the ProseMirror root, not inside it.
   useEffect(() => {
@@ -299,9 +319,18 @@ function BlockDragHandle({
         // Called on every edit while the handle shows. A null node (pointer left) keeps the last
         // block, so the handle does not change while it hides.
         if (!node) return;
-        const dom = editor.view.nodeDOM(pos);
-        target.current = dom instanceof Element ? dom : null;
-        const next = describeBlock(editor, node, pos);
+        const nodeDom = editor.view.nodeDOM(pos);
+        const dom = nodeDom instanceof Element ? nodeDom : null;
+        target.current = dom;
+        const block = blockOf(node);
+        const last = measured.current;
+        // The same element as the same kind of block: its line height has not changed.
+        const same = last?.state.block;
+        if (dom && last?.dom === dom && same?.type === block.type && same.label === block.label) {
+          return;
+        }
+        const next = { block, lineHeight: lineHeightOf(dom) };
+        measured.current = dom ? { dom, state: next } : null;
         setState((prev) =>
           prev &&
           prev.block.type === next.block.type &&
@@ -359,11 +388,11 @@ function EditorWithContent(props: LydieEditorProps) {
     [],
   );
 
-  // Callbacks change on every render; the extensions read the latest ones through this ref, so the
+  // Callbacks change on every render; the extensions read the latest ones through this, so the
   // editor is only rebuilt when the Yjs document changes.
-  const latest = useRef(props);
+  const [latest] = useState(() => createLatest(props));
   useLayoutEffect(() => {
-    latest.current = props;
+    latest.set(props);
   });
 
   const [slashStore] = useState(() => createSuggestionStore<SlashCommandItem>());
@@ -375,25 +404,20 @@ function EditorWithContent(props: LydieEditorProps) {
   const awareness = props.collab?.awareness;
   const editable = (props.editable ?? true) && !props.collab?.readOnly;
 
-  // Rebuilt only when the collaborative binding changes (as the editor is).
-  // The ref object is handed to callbacks that read `.current` when they run, not during render.
-  // oxlint-disable-next-line react/refs
-  const extensions = useMemo(
-    () =>
-      buildExtensions(latest, slashStore, wikiStore, pageStore, {
-        ydoc,
-        ydocField,
-        collab: props.collab,
-        placeholder: props.placeholder,
-        hasSlashItems: props.slashItems !== undefined,
-        hasSearch: props.searchDocuments !== undefined,
-        hasCreatePage: props.createSubPage !== undefined,
-        hasOpenLink: props.onOpenLink !== undefined,
-        hasEmbed: props.renderEmbed !== undefined,
-        extensions: props.extensions,
-      }),
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- rebuilt with the editor, on the binding
-    [ydoc, awareness],
+  const [extensionsFor] = useState(() => lastByKey<AnyExtension[]>());
+  const extensions = extensionsFor([ydoc, awareness], () =>
+    buildExtensions(latest, slashStore, wikiStore, pageStore, {
+      ydoc,
+      ydocField,
+      collab: props.collab,
+      placeholder: props.placeholder,
+      hasSlashItems: props.slashItems !== undefined,
+      hasSearch: props.searchDocuments !== undefined,
+      hasCreatePage: props.createSubPage !== undefined,
+      hasOpenLink: props.onOpenLink !== undefined,
+      hasEmbed: props.renderEmbed !== undefined,
+      extensions: props.extensions,
+    }),
   );
 
   // The view starts empty and gets the content once TipTap has installed the node views (its
@@ -412,15 +436,15 @@ function EditorWithContent(props: LydieEditorProps) {
           class: "editor-content w-full grow pb-8 outline-none",
           "data-doc-content": "",
           ...(props["aria-label"] ? { "aria-label": props["aria-label"] } : {}),
-          ...(typeof latest.current.dragHandle === "function" ? { "data-block-labels": "" } : {}),
+          ...(typeof latest.get().dragHandle === "function" ? { "data-block-labels": "" } : {}),
         }),
       },
       onUpdate: ({ editor }) => {
         // Serialising a long document on every keystroke is costly; skip it when nobody listens.
-        if (!latest.current.onUpdate) return;
+        if (!latest.get().onUpdate) return;
         const json = editor.getJSON();
         lastContent.current = json;
-        latest.current.onUpdate?.(json, editor);
+        latest.get().onUpdate?.(json, editor);
       },
     },
     [ydoc, awareness],
@@ -449,8 +473,8 @@ function EditorWithContent(props: LydieEditorProps) {
   // From an effect rather than TipTap's onCreate, so StrictMode's discarded instance is never
   // handed out.
   useEffect(() => {
-    if (editor && !editor.isDestroyed) latest.current.onCreate?.(editor);
-  }, [editor]);
+    if (editor && !editor.isDestroyed) latest.get().onCreate?.(editor);
+  }, [editor, latest]);
 
   useEffect(() => {
     if (!editor || ydoc || content === undefined || content === lastContent.current) return;
