@@ -14,6 +14,7 @@ export type { NodeDescription } from "./schema-description";
 export { contentLineStart } from "./content-layout";
 
 export { Callout, calloutLabel, parseFold } from "./extensions/callout";
+export { changedRanges, changedTextblocks } from "./extensions/changed-ranges";
 export type { CalloutAttrs, CalloutFold } from "./extensions/callout";
 export { columnShares, resizeColumns, sideHit } from "./extensions/column-layout";
 export type { Box, LayoutBlock, Side, SideHit } from "./extensions/column-layout";
@@ -96,8 +97,8 @@ export { SuggestionPopup } from "./react/SuggestionPopup";
 
 // Building blocks for plugin extensions: plugins reach TipTap and ProseMirror only through here.
 export { Extension, getMarkRange } from "@tiptap/core";
-export { NodeSelection, Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
-export type { EditorState, Transaction } from "@tiptap/pm/state";
+export { EditorState, NodeSelection, Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
+export type { Transaction } from "@tiptap/pm/state";
 export { Decoration, DecorationSet } from "@tiptap/pm/view";
 export type { EditorView } from "@tiptap/pm/view";
 export { Mapping, Step, StepMap } from "@tiptap/pm/transform";

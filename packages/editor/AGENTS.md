@@ -148,8 +148,13 @@ React:
   query)` (replaces the default `/` filter). Renderers get `SuggestionMenuProps`
   (`items, query, selectedIndex, onSelect, onHighlight`); keys and positioning are handled here.
 - Building blocks for plugin extensions (plugins reach TipTap/ProseMirror only through here):
-  `Extension`, `getMarkRange`, `Plugin`, `PluginKey`, `NodeSelection`, `TextSelection`, `Decoration`,
-  `DecorationSet`, `Step`, `StepMap`, `Mapping`, `Fragment`, `Slice`, `Suggestion`, `SuggestionPopup`.
+  `Extension`, `getMarkRange`, `EditorState` (for headless tests), `Plugin`, `PluginKey`,
+  `NodeSelection`, `TextSelection`, `Decoration`, `DecorationSet`, `Step`, `StepMap`, `Mapping`,
+  `Fragment`, `Slice`, `Suggestion`, `SuggestionPopup`; `changedRanges(tr)` and
+  `changedTextblocks(tr)` (`changed-ranges.ts`: where a transaction changed the document, in its
+  final positions, also for mark and attribute steps, which map nothing; the textblocks that
+  touches, one position either side): a decoration plugin maps its set and redraws only those,
+  instead of walking the whole document per keystroke.
 - `createSuggestionStore`, `useEditorState` (re-exported from `@tiptap/react`), types `Editor`,
   `JSONContent`, `AnyExtension`.
 - `@lydie/editor/styles.css`: only an `@source` so Tailwind scans the editor's components.

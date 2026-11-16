@@ -7,9 +7,10 @@
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
-import { AttrStep } from "@tiptap/pm/transform";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { createLowlight } from "lowlight";
+
+import { changedTextblocks } from "./changed-ranges";
 
 // v1 loaded every highlight.js grammar (`all`, ~190 languages); `common` (~37) covers what people
 // write in notes at a fraction of the weight. Unknown languages keep their name and stay plain.
@@ -168,26 +169,11 @@ export function buildCodeHighlight(doc: ProseMirrorNode, name: string): CodeHigh
   };
 }
 
-// Where a transaction changed the document, in its final positions. AttrStep (a language picked)
-// maps nothing, so its node is added by hand.
-function changedRanges(tr: Transaction) {
-  const ranges: [number, number][] = [];
-  tr.steps.forEach((step, i) => {
-    const rest = tr.mapping.slice(i + 1);
-    if (step instanceof AttrStep) ranges.push([rest.map(step.pos, -1), rest.map(step.pos, 1) + 1]);
-    step.getMap().forEach((_oldStart, _oldEnd, from, to) => {
-      ranges.push([rest.map(from, -1), rest.map(to, 1)]);
-    });
-  });
-  return ranges;
-}
-
 function blockEntries(blocks: DecorationSet, from: number, to: number) {
   return blocks.find(from, to).filter((d) => d.from >= from && d.to <= to);
 }
 
-// The textblocks a transaction touched (one position either side, so a block joined to or split
-// from its neighbour counts) lose their highlighting, and the code blocks among them are
+// The textblocks a transaction touched lose their highlighting, and the code blocks among them are
 // highlighted again. Everything else is only mapped.
 export function applyCodeHighlight(
   tr: Transaction,
@@ -201,34 +187,25 @@ export function applyCodeHighlight(
   const removeBlocks: Decoration[] = [];
   const addDecorations: Decoration[] = [];
   const addBlocks: Decoration[] = [];
-  const seen = new Set<number>();
-  const size = doc.content.size;
-  for (const [from, to] of changedRanges(tr)) {
-    doc.nodesBetween(Math.max(0, from - 1), Math.min(size, to + 1), (node, pos) => {
-      if (!node.isTextblock) return true;
-      if (seen.has(pos)) return false;
-      seen.add(pos);
-      const end = pos + node.nodeSize;
-      removeDecorations.push(...decorations.find(pos + 1, end - 1));
-      const entries = blockEntries(blocks, pos, end);
-      removeBlocks.push(...entries);
-      if (node.type.name === name) {
-        const previous = (entries.find((d) => d.from === pos) ?? entries[0])?.spec as
-          | BlockSpec
-          | undefined;
-        const built = buildBlock(node, pos, previous);
-        addDecorations.push(...built.decorations);
-        addBlocks.push(built.block);
-      }
-      return false;
-    });
+  for (const { node, pos } of changedTextblocks(tr)) {
+    const end = pos + node.nodeSize;
+    removeDecorations.push(...decorations.find(pos + 1, end - 1));
+    const entries = blockEntries(blocks, pos, end);
+    removeBlocks.push(...entries);
+    if (node.type.name !== name) continue;
+    const previous = (entries.find((d) => d.from === pos) ?? entries[0])?.spec as
+      | BlockSpec
+      | undefined;
+    const built = buildBlock(node, pos, previous);
+    addDecorations.push(...built.decorations);
+    addBlocks.push(built.block);
   }
-  // DecorationSet#add drops node decorations given out of order (it walks the document once).
-  const byPos = (a: Decoration, b: Decoration) => a.from - b.from || a.to - b.to;
+  // In document order, as changedTextblocks gives them: DecorationSet#add walks the document once
+  // and drops node decorations that come out of order.
   if (removeDecorations.length) decorations = decorations.remove(removeDecorations);
-  if (addDecorations.length) decorations = decorations.add(doc, addDecorations.sort(byPos));
+  if (addDecorations.length) decorations = decorations.add(doc, addDecorations);
   if (removeBlocks.length) blocks = blocks.remove(removeBlocks);
-  if (addBlocks.length) blocks = blocks.add(doc, addBlocks.sort(byPos));
+  if (addBlocks.length) blocks = blocks.add(doc, addBlocks);
   const stale = value.stale || addBlocks.some((d) => (d.spec as BlockSpec).guess?.stale === true);
   return { decorations, blocks, stale };
 }
