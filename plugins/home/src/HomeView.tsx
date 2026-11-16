@@ -195,6 +195,18 @@ function FindBox({
   }
   const current = Math.min(active, Math.max(items.length - 1, 0));
 
+  // Enter before the list caught up with the box: the best title match for what is typed, else
+  // "Create" (full-text hits come later, so they are not waited for).
+  const firstFor = (typed: string): Item | undefined => {
+    if (!typed || !candidates) return undefined;
+    const top = rankTitles(candidates, typed, opened, 1)[0];
+    if (top)
+      return { kind: "doc", id: top.id, title: top.title || "Untitled", icon: null, detail: null };
+    if (candidates.some((c) => c.title.trim().toLowerCase() === typed.toLowerCase()))
+      return undefined;
+    return { kind: "create", title: typed };
+  };
+
   const run = (item: Item, mode: OpenOptions["mode"]) => {
     onQueryChange("");
     setActive(0);
@@ -215,7 +227,7 @@ function FindBox({
       const step = event.key === "ArrowDown" ? 1 : -1;
       setActive((current + step + items.length) % items.length);
     } else if (event.key === "Enter") {
-      const item = items[current];
+      const item = query.trim() === text ? items[current] : firstFor(query.trim());
       if (!item || event.nativeEvent.isComposing) return;
       event.preventDefault();
       run(item, keyMode(app, event));
