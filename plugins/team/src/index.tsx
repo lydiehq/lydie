@@ -12,18 +12,20 @@ export const teamPlugin = definePlugin({
   description: "Members and invitations of a cloud workspace, and its sections in the sidebar.",
   activate(ctx) {
     const { app } = ctx;
-    const hosted = () => app.services?.account?.scope.kind === "hosted";
+    // The window's scope is fixed for its lifetime.
+    const hosted = app.services?.account?.scope.kind === "hosted";
     // Whether teamspaces show (`teamspacesShown`), for the menus and the settings navigation, which
-    // ask synchronously: the workspace's teamspaces, kept loaded while the plugin is active.
-    const teamspaces = app.backend.live("workspace.teamspaces", {
-      workspaceId: app.workspace.workspaceId,
-    });
-    const shown = () => teamspacesShown(teamspaces.getSnapshot().data);
+    // ask synchronously: the workspace's teamspaces, kept loaded while the plugin is active in a
+    // hosted window. A local workspace has none.
+    const teamspaces = hosted
+      ? app.backend.live("workspace.teamspaces", { workspaceId: app.workspace.workspaceId })
+      : null;
+    const shown = () => teamspacesShown(teamspaces?.getSnapshot().data ?? []);
     // The hosted workspace's pages grouped by space, in place of the flat tree, only while
     // teamspaces show: hidden, the workspace is one tree, as a folder is.
     let unregisterSpaces: (() => void) | null = null;
     const syncSpaces = () => {
-      const want = hosted() && shown();
+      const want = hosted && shown();
       if (want && !unregisterSpaces) {
         unregisterSpaces = ctx.sidebar.register({
           id: "spaces",
@@ -37,7 +39,7 @@ export const teamPlugin = definePlugin({
         unregisterSpaces = null;
       }
     };
-    const unwatch = teamspaces.subscribe(syncSpaces);
+    const unwatch = teamspaces?.subscribe(syncSpaces);
     syncSpaces();
     ctx.settings.register({
       id: "members",
@@ -65,7 +67,7 @@ export const teamPlugin = definePlugin({
       icon: <ArrowRightUpRegular />,
       group: "move",
       order: 50,
-      when: (doc) => hosted() && doc.parentId === null && shown(),
+      when: (doc) => hosted && doc.parentId === null && shown(),
       run: (doc) => app.overlays.open("team.moveToSpace", doc),
     });
     ctx.commands.register({
@@ -74,7 +76,7 @@ export const teamPlugin = definePlugin({
       icon: <UserAddRegular />,
       group: "Team",
       bindable: false,
-      when: () => hosted(),
+      when: () => hosted,
       run: () => app.overlays.open("settings", { page: "members" }),
     });
     return unwatch;
