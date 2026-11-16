@@ -412,7 +412,11 @@ function BoardColumn({
             setLimit((l) => Math.min(1000, l + PAGE));
         }}
       >
-        {room.before > 0 && <div aria-hidden style={{ height: room.before }} />}
+        {/* Spacers keep their height: the list is a flex column with a max height, where an
+            empty item would shrink to take up the overflow and the scroll position would jump. */}
+        {room.before > 0 && (
+          <div aria-hidden className="shrink-0" style={{ height: room.before }} />
+        )}
         {rows.slice(start, end).map((row, j) => (
           // Reaches 4px past the card, for the drop line.
           <div key={row.id} className="relative -m-1 p-1">
@@ -466,7 +470,7 @@ function BoardColumn({
             )}
           </div>
         ))}
-        {room.after > 0 && <div aria-hidden style={{ height: room.after }} />}
+        {room.after > 0 && <div aria-hidden className="shrink-0" style={{ height: room.after }} />}
         {dropAt !== null && rows.length === 0 && <div className={`${line} top-0`} />}
         {win.isLoading &&
           rows.length === 0 &&
