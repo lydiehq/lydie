@@ -27,7 +27,6 @@ import type {
   TabTint,
   ToastOptions,
 } from "@lydie/plugin-api";
-import { coreHandlers } from "@lydie/runtime";
 import { activeGroup, findTab, groupsOf } from "@lydie/runtime/layout";
 import type { LayoutAction, LayoutController } from "@lydie/runtime/layout";
 import type { ConfirmOptions } from "@lydie/ui";
@@ -432,9 +431,9 @@ export function createHost(options: HostOptions): Host {
     const out: (CommandDef & { pluginId: string })[] = [];
     for (const op of Object.values(operations) as AnyOperation[]) {
       const meta = op.ui?.commandPalette;
+      // Every one has a runtime handler (`palette-operations.test.ts`): asking the runtime here
+      // would put all its handlers in a window's startup code, and a window may not run them.
       if (!meta || bound.has(op.id as OperationId) || op.kind !== "mutation") continue;
-      // The contract can be ahead of the runtime while a feature is being built.
-      if (!(op.id in coreHandlers)) continue;
       const needsDoc = !op.input.safeParse({ workspaceId: backend.info.workspaceId }).success;
       out.push({
         pluginId: "core",

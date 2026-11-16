@@ -110,7 +110,9 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
   applies shows "Could not undo" with the runtime's cause (`details.cause`) after its message.
 - **Command palette** (Mod+K, `shell/Overlays.tsx`): every
   command with an icon (`CommandDef.icon`; the host's own and the operations' in
-  `host/command-icons.tsx`). Empty: grouped (`GROUP_ORDER`), registration order within a group.
+  `host/command-icons.tsx`). Every mutation with `ui.commandPalette` is a command; the host does
+  not import the runtime's handlers to check (a desktop window never runs them), so
+  `host/palette-operations.test.ts` checks that each has one. Empty: grouped (`GROUP_ORDER`), registration order within a group.
   Typing: up to 4 commands whose title contains the query lead without a heading (group as a
   breadcrumb), then full-text document hits (`doc.search`, 8), then the other matches by group. A
   document opens like the quick switcher (Mod+Enter: new tab). A command with `choices` ("Set
