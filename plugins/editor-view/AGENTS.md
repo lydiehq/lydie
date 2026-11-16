@@ -14,6 +14,7 @@ Licence: AGPL-3.0-only.
 - Data only through the plugin API (`useQuery`, `useOps`, `backend.query`); no SQL, no filesystem.
 - Every user-visible action is an operation defined with `defineOperation` in `@lydie/contract`.
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `vault` (a folder's link format, for the links it writes: `linkStyleOf`).
 
 ## What it does
 
@@ -40,7 +41,7 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   (Mod+G) and `find-previous` (Mod+Shift+G, enabled while the bar is open) step with wraparound;
   Escape closes, clears and selects the current match in the editor. Bars register per tab id in
   a module map that the commands read for `app.activeTab()`.
-- **Slash menu**: the editor's blocks plus every plugin's items, ranked by `slash-ranking.ts` (fuzzy title > keyword, recently used first, registry commands (the slash-menu plugin's document commands) only when typing); uses are stored per device (`editor-view:slash-recents`).
+- **Slash menu**: the editor's blocks plus every plugin's items, ranked by `slash-ranking.ts` (fuzzy title > keyword, recently used first, registry commands (the slash-menu plugin's document commands) only when typing); uses are stored per device (`slash-recents`).
 - **Preload**: the view's `preload` is `prefetchDoc`, so the host opens a page once its queries
   have results; breadcrumbs prefetch their page on hover (`useDocPrefetch`). While a hosted
   window's first download is on its way (`awaitingFirstSync`), a page that is not here shows as

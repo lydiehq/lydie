@@ -12,7 +12,7 @@ import { freeKey } from "./infer.ts";
 import { PropertyForm } from "./PropertyForm.tsx";
 import type { PropertyChoice } from "./PropertyForm.tsx";
 
-export const TYPES_KEY = "properties:types";
+export const TYPES_KEY = "types";
 
 export const EXPLANATION = "Properties are shared by the pages of a collection.";
 

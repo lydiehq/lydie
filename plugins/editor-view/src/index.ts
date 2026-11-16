@@ -8,6 +8,8 @@ export const editorViewPlugin = definePlugin({
   id: "editor-view",
   name: "Editor",
   description: "Shows a document in a tab: its title and the editor.",
+  // A folder's link format for links it writes (`linkStyleOf`).
+  permissions: ["vault"],
   activate(ctx) {
     ctx.views.register({
       path: "/d/:id",

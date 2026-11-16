@@ -66,7 +66,7 @@ import {
   TypeGrid,
 } from "./ui.tsx";
 
-const COLLAPSED_KEY = "properties:collapsed";
+const COLLAPSED_KEY = "collapsed";
 // Linked pages shown in a row before the rest collapse into "+N" (the editor lists them all).
 const MAX_RELATED = 3;
 

@@ -17,11 +17,12 @@ function seeded() {
     { id: GS_FROM, at: 2 },
     { id: "a", at: 1 },
   ]);
-  storage.set(`plugin:workspace:${FROM}:newNote`, "child");
-  storage.set(`plugin:team.spaces.expanded:${FROM}:private`, ["a"]);
+  storage.set(`plugin:team:spaces.collapsed:${FROM}`, ["child"]);
+  storage.set(`plugin:document-tree:team.spaces.expanded:${FROM}:private`, ["a"]);
+  storage.set(`plugin:shared:last:${FROM}`, "a");
   // Another workspace's, a setting for every workspace, and the host's own keys stay as they are.
   storage.set(`plugin:document-tree:favorites:01JOTHER000000000000000000`, ["z"]);
-  storage.set("plugin:editor.fontSize", 16);
+  storage.set("plugin:settings:editor.fontSize", 16);
   storage.set(`window-of:${FROM}`, "host's own");
   return storage;
 }
@@ -35,11 +36,12 @@ describe("per-workspace device settings follow a hand-off", () => {
       { id: GS_TO, at: 2 },
       { id: "a", at: 1 },
     ]);
-    expect(storage.get(`plugin:workspace:${TO}:newNote`)).toBe("child");
-    expect(storage.get(`plugin:team.spaces.expanded:${TO}:private`)).toEqual(["a"]);
+    expect(storage.get(`plugin:team:spaces.collapsed:${TO}`)).toEqual(["child"]);
+    expect(storage.get(`plugin:document-tree:team.spaces.expanded:${TO}:private`)).toEqual(["a"]);
+    expect(storage.get(`plugin:shared:last:${TO}`)).toBe("a");
     // The local workspace keeps its own.
     expect(storage.get(`plugin:document-tree:favorites:${FROM}`)).toEqual(["a", GS_FROM]);
-    expect(storage.keys!().filter((k) => k.includes(TO))).toHaveLength(4);
+    expect(storage.keys!().filter((k) => k.includes(TO))).toHaveLength(5);
   });
 
   test("keep what the target workspace already has on this device", () => {
@@ -47,7 +49,7 @@ describe("per-workspace device settings follow a hand-off", () => {
     storage.set(`plugin:document-tree:favorites:${TO}`, ["mine"]);
     carryWorkspaceStorage(storage, FROM, TO, {});
     expect(storage.get(`plugin:document-tree:favorites:${TO}`)).toEqual(["mine"]);
-    expect(storage.get(`plugin:workspace:${TO}:newNote`)).toBe("child");
+    expect(storage.get(`plugin:team:spaces.collapsed:${TO}`)).toEqual(["child"]);
   });
 
   test("are copied once the account's hand-off succeeds", async () => {

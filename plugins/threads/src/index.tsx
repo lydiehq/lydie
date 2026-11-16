@@ -87,6 +87,8 @@ export const threadsPlugin = definePlugin({
   id: "threads",
   name: "Comments",
   description: "Comments beside a document, from people and agents, never in its body.",
+  // Whether the window is a folder's, where comments are not offered yet.
+  permissions: ["vault"],
   activate(ctx) {
     // Not in a folder yet: threads there need their sidecar files (LYD-400), or a rebuilt index
     // would lose them.

@@ -1,5 +1,6 @@
 import {
   atTop,
+  ContributionBoundary,
   DocIcon,
   docIdOf,
   docPath,
@@ -396,7 +397,7 @@ function useWidthTransition(
   return root;
 }
 
-const SLASH_RECENTS = "editor-view:slash-recents";
+const SLASH_RECENTS = "slash-recents";
 
 // The `/` menu: the editor's blocks and every plugin's items, each recording its use.
 function slashItems(app: AppApi): SlashCommandItem[] {
@@ -405,7 +406,16 @@ function slashItems(app: AppApi): SlashCommandItem[] {
     run: (editor: Editor) => {
       const recents = app.storage.get<SlashRecents>(SLASH_RECENTS) ?? {};
       app.storage.set(SLASH_RECENTS, recordSlashUse(recents, item.id, Date.now()));
-      item.run(editor);
+      // A plugin's item that throws would escape the editor's key handler: say so instead.
+      try {
+        item.run(editor);
+      } catch (error) {
+        app.notify({
+          title: `${item.title} failed`,
+          description: error instanceof Error ? error.message : String(error),
+          kind: "error",
+        });
+      }
     },
   }));
 }
@@ -418,10 +428,16 @@ function EmbedSlot({ target, sourceId }: { target: string; sourceId: string }) {
   const renderers = useContributions("link");
   const renderer = renderers.find((r) => r.kind === "embed" && r.match(target));
   if (!renderer) return <span className="text-gray-500">{`![[${target}]]`}</span>;
-  return <renderer.component target={target} sourceId={sourceId} />;
+  return (
+    <ContributionBoundary pluginId={renderer.pluginId} label="Embed" compact>
+      <renderer.component target={target} sourceId={sourceId} />
+    </ContributionBoundary>
+  );
 }
 
-// Mounted once per editor: what plugins draw beside it (link popovers, mention menus).
+// Mounted once per editor: what plugins draw beside it (link popovers, mention menus). They float,
+// so one that crashes leaves nothing in the page (the console has the error) rather than an error
+// box wherever the overlay happens to sit.
 function EditorOverlays({
   editor,
   docId,
@@ -436,7 +452,9 @@ function EditorOverlays({
     <>
       {contributions.map((c, i) =>
         c.overlay ? (
-          <c.overlay key={`${c.pluginId}:${i}`} editor={editor} docId={docId} tabId={tabId} />
+          <ContributionBoundary key={`${c.pluginId}:${i}`} pluginId={c.pluginId} fallback={null}>
+            <c.overlay editor={editor} docId={docId} tabId={tabId} />
+          </ContributionBoundary>
         ) : null,
       )}
     </>

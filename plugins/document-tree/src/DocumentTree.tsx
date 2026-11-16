@@ -66,7 +66,7 @@ function useTreeModel(props: DocumentTreeProps): TreeModel {
   const backend = useBackend();
   const app = useApp();
   const workspaceId = backend.info.workspaceId;
-  const key = props.expandedKey ?? `document-tree:expanded:${workspaceId}`;
+  const key = props.expandedKey ?? `expanded:${workspaceId}`;
   const [model] = useState(() =>
     createTreeModel(
       backend,

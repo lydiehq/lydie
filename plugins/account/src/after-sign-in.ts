@@ -7,7 +7,7 @@ import type { HandoffProps } from "./HandoffDialog.tsx";
 import { readCloud, readCopied } from "./local-notice.ts";
 
 // "Don't ask again" on the question below (per device).
-export const NEVER_ASK_KEY = "account.bring.never";
+export const NEVER_ASK_KEY = "bring.never";
 
 export type AfterSignIn =
   // Reopen the window on this cloud workspace.

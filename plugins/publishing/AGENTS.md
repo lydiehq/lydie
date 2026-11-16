@@ -15,6 +15,7 @@ Licence: AGPL-3.0-only.
   filesystem.
 - Every user-visible action is an operation (contract or hosted API).
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `account` (connections and publications are hosted operations).
 
 ## What it does
 

@@ -15,7 +15,7 @@ const stores = new WeakMap<AppApi, Favorites>();
 export function favoritesOf(app: AppApi): Favorites {
   const known = stores.get(app);
   if (known) return known;
-  const key = `document-tree:favorites:${app.backend.info.workspaceId}`;
+  const key = `favorites:${app.backend.info.workspaceId}`;
   const read = (): readonly string[] => {
     const stored = app.storage.get<unknown>(key);
     return Array.isArray(stored) ? stored.filter((id): id is string => typeof id === "string") : [];

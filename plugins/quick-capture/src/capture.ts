@@ -4,7 +4,7 @@ import { formatDate } from "@lydie/plugin-api";
 import type { AppApi } from "@lydie/plugin-api";
 
 // Per-device name of the inbox page (default "Inbox").
-export const INBOX_KEY = "quick-capture:inbox";
+export const INBOX_KEY = "inbox";
 
 export async function capture(app: AppApi, text: string, now = new Date()) {
   if (!text.trim()) return null;

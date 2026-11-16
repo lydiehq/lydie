@@ -1,6 +1,7 @@
 import { docIdOf, docPath, HOME_PATH } from "@lydie/contract";
 import type { Layout, LayoutNode, Tab, TabGroup, TabPath } from "@lydie/contract";
 import {
+  ContributionBoundary,
   DRAG_TYPES,
   TabProvider,
   useContributions,
@@ -37,7 +38,6 @@ import { flushSync } from "react-dom";
 
 import { findView } from "../host/views.ts";
 import { jsonEqual, useHostInternal, useSelector } from "./context.ts";
-import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { NavigationButtons } from "./NavigationButtons.tsx";
 import { panelToggleRoom } from "./PanelToggle.tsx";
 import { ResizeHandle } from "./ResizeHandle.tsx";
@@ -479,13 +479,13 @@ const TabSlot = memo(function TabSlot({
       style={active ? undefined : { visibility: "hidden", contentVisibility: "hidden" }}
     >
       <TabProvider tab={tab}>
-        <ErrorBoundary label={view ? `View (${view.pluginId})` : "View"} resetKey={key}>
-          {view ? (
+        {view ? (
+          <ContributionBoundary pluginId={view.pluginId} label="View" resetKey={key}>
             <view.component key={key} tab={tab} />
-          ) : (
-            <EmptyState className="h-full" title="Nothing can show this page" description={key} />
-          )}
-        </ErrorBoundary>
+          </ContributionBoundary>
+        ) : (
+          <EmptyState className="h-full" title="Nothing can show this page" description={key} />
+        )}
       </TabProvider>
     </div>
   );
@@ -886,13 +886,14 @@ function OfflineStatus() {
     <div className="flex shrink-0 items-center" style={noDragStyle} data-testid="tab-bar-offline">
       {items.length > 0 ? (
         items.map((item) => (
-          <ErrorBoundary
+          <ContributionBoundary
             key={`${item.pluginId}:${item.id}`}
-            label={`Status (${item.pluginId})`}
+            pluginId={item.pluginId}
+            label="Status"
             compact
           >
             <item.component />
-          </ErrorBoundary>
+          </ContributionBoundary>
         ))
       ) : (
         <SyncIndicator
@@ -1116,8 +1117,10 @@ const TabButton = memo(function TabButton({
             !pinned && (active ? "[--tab-fade-end:12px]" : "group-hover/tab:[--tab-fade-end:12px]"),
           )}
         >
-          {Title ? (
-            <Title path={path} />
+          {Title && view ? (
+            <ContributionBoundary pluginId={view.pluginId} label="Tab title" fallback="Untitled">
+              <Title path={path} />
+            </ContributionBoundary>
           ) : (
             <>
               {/* The view's icon, as its row in the sidebar shows it. */}

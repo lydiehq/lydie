@@ -85,8 +85,11 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   (registers a global, starts a fetch) must be listed there instead. `createIcon` (`@lydie/ui`) is
   marked `/* @__NO_SIDE_EFFECTS__ */`, so icons nothing uses are dropped.
 - `src/plugins.ts`: settings, team, sharing and publishing are `lazyPlugin`s (`src/lazy-plugin.ts`):
-  id and name up front, code in their own chunks, loaded once the page is idle (or when activated,
-  if that is first), activated when in.
+  id, name and permissions up front (the entry is what the host sees: the plugin gets the app its
+  entry's permissions allow, and a loaded plugin that declares others is warned about), code in
+  their own chunks, loaded once the page is idle (or when activated, if that is first), activated
+  when in. A chunk that fails to load or an activate that throws is the plugin's failure
+  (`ctx.fail`): its registrations are removed and Settings → Plugins shows it.
 - Initial JS (entry + modulepreloads, Nov 2026, measured with gzip -9): 2,959 KB / 928 KB gzip in
   11 files before the startup round; after it, 2,457 KB / 791 KB in 28 files for every window, plus
   271 KB / 82 KB of browser-only chunks (the in-page database) in a browser window.
@@ -107,7 +110,9 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   SQLite build and WASM. `early.ts` turns the block into `<link rel=preload>`s (low priority for the
   worker files) only where there is no desktop shell, so an Electron window does not fetch them.
 - Measures: `lydie:open-store`, `lydie:compose`, `lydie:start-app`, and the `lydie:ready` mark.
-- `public/theme.js` (head) applies the saved theme before the first paint; light by default.
+- `public/theme.js` (head) applies the saved theme before the first paint; light by default. It
+  reads the settings plugin's key (`lydie:plugin:settings:appearance.theme`), then its name before
+  plugins had storage of their own.
 - `public/boot-shell.js` (after `#root`) paints the shell's frame (window background and content
   card, at the saved sidebar width) before any module loads, so a reload never shows a blank page.
   It mirrors `LydieApp`'s geometry: keep them in step. `src/boot-shell.ts` removes it once the app,

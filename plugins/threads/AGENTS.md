@@ -17,6 +17,7 @@ Licence: AGPL-3.0-only.
 - A thread never changes the body. In the editor it is a decoration, not a mark: nothing about
   it is saved in the document.
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `vault` (only to tell a folder window, where comments are not offered yet).
 
 ## What it does
 
@@ -57,7 +58,7 @@ and people always create `comment`.
   text, `thread.setAnchor` saves it (`history: false`). Changes from collaboration are not saved
   from here.
 - **The top bar** (`documents` "actions" slot): a Comments button with the count of open
-  threads, and a menu: "Comment on this page", "Show comments" (device setting `threads.shown`:
+  threads, and a menu: "Comment on this page", "Show comments" (device setting `shown`:
   highlights and margin) and "Show resolved (n)" (per tab, `store.ts`).
 - Commands: "Add a comment" (Mod+Alt+M), "Show or hide comments".
 

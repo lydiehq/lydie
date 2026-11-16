@@ -13,8 +13,13 @@ is authoritative and runs in CI.
 ## Rules
 
 - If a plugin needs something missing, extend this API rather than letting the plugin reach around it.
-- No host internals here: `PluginContext` and `AppApi` are interfaces the host implements, so a
-  sandboxed implementation can be handed to untrusted plugins later.
+- No host internals here: `PluginContext` and `AppApi` are interfaces the host implements. Plugins
+  run in the app's own JavaScript context and only built-in ones are loaded. Each gets its own
+  `AppApi` (its storage, the capabilities its `permissions` allow), and its contributions' callbacks
+  and components see that one: least privilege among built-ins and the seam a future loader builds
+  on (it would ask the person to grant the declared permissions), not a security boundary. Untrusted
+  code would need a different mechanism for UI contributions (React components, editor
+  extensions), which run in the page itself.
 - `backend.ts` is types only (the Electron main process and the renderer both build against it).
 - Every user-visible action is an operation defined with `defineOperation` in `@lydie/contract`.
 - Types that back `useSyncExternalStore` use property (arrow) members, not methods.
@@ -66,9 +71,23 @@ BackendStatus = { sync: "local-only" | "signed-out" | "auth-expired" | "offline"
     have arrived yet */ }
 
 // Plugins (src/plugin.ts)
-definePlugin({ id, name, description?, activate(ctx) → void | cleanup })
-ctx: { plugin, app, commands, views, sidebar, panels, statusBar, settings, overlays,
-  documentMenu, links, editor, documents }    // each .register(def) → disposer
+definePlugin({ id, name, description?, essential?, permissions?, activate(ctx) → void | cleanup })
+//   id: kebab-case, unique ("core" is the shell's, "shared" is taken). A second plugin with an id
+//   already started is not started. activate throwing removes everything it registered.
+PluginPermission = "account" | "vault" | "device" | "plugins"   // what the plugin's app may reach:
+//   account → services.account, services.renameWorkspace; vault → services.vault; device →
+//   appLock, screenCapture, shortcuts; plugins → plugins.setEnabled (throws without). Without the
+//   permission the member is absent. services.collab and services.about are everyone's.
+ctx: { plugin, app /* this plugin's */, fail(error) /* a lazily loaded plugin could not start:
+  its registrations are removed, Settings → Plugins shows the error */, commands, views, sidebar,
+  panels, statusBar, settings, overlays, documentMenu, links, editor, documents, workspaceMenu,
+  documentTree, importers }    // each .register(def) → disposer
+//   Ids are unique per kind: a second registration of an id is refused (a no-op disposer, recorded
+//   in the plugin's errors), the first stays. Command ids start with "<plugin id>.".
+//   Every callback that takes an `app` (CommandDef.run/when/paletteTitle/choices.list,
+//   ViewDef.preload, SidebarSectionAction.run, DocumentMenuItemDef.run, SettingsPageDef.when,
+//   ImporterDef.read) gets the contributing plugin's app, whoever calls it. Document menu items,
+//   sidebar actions and selection actions that throw become an error toast.
 CommandDef { id, title, group?, icon? (ReactNode, shown in the palette), keybinding? ("Mod+O"), inText?, hidden?,
   bindable? (false: not in Settings → Keyboard shortcuts; sign out, export, What's new),
   operation?, when?, choices?, paletteTitle?(app), run({ app, source, args }) }
@@ -126,7 +145,9 @@ AppApi { backend, workspace, open(path, { mode: replace|tab|background|split, si
   editor: { fromMarkdown(md) → { content, source }, toMarkdown(original, content), extensions(), slashItems(),
     fromHtml(html) → Lydie Markdown (the editor's parse rules; for importers),
     splitFrontmatter(md) → { properties | null, body } },
-  storage: { get, set },   // per device
+  storage: { get, set, subscribe?, shared? },   // per device, the plugin's own (stored as
+  //   `plugin:<plugin id>:<key>`); `shared` { get, set, subscribe? } is one area every plugin
+  //   reads and writes (`plugin:shared:<key>`), for a setting one plugin writes for another
   shortcuts?: { quickCapture(), setQuickCapture(accelerator | null) },   // desktop only
   appLock?: AppLock   // @lydie/platform's; the lock screen is the shell's, desktop only
   screenCapture?: { state() → { blocked, supported }, setBlocked(blocked) } }   // privacy mode, desktop only
@@ -144,7 +165,15 @@ useSetTabTint() → (TabTint { color, tone?: "light" | "dark" } | null) => void 
 //   cheap enough to call per frame, no render; without `tone` the tab keeps its own ink; not
 //   kept, cleared on unmount; host side `HostBridge.tabs.setTint?`
 useShortcut(commandId) → key caps | null   // for the tooltip of a button that runs the command
-Providers (host only): BackendProvider, HostProvider (HostBridge), TabProvider ({ tab, state? }:
+<ContributionBoundary pluginId label? compact? resetKey? fallback?>   // where a contribution's
+//   component renders: `useApp()` below is that plugin's app (outside any, the shell's), and a
+//   crash stays inside (an error with "Try again", or `fallback`: a node, or (error, retry) =>
+//   node). The host wraps views, panels, overlays, sidebar sections, status items, tab titles and
+//   workspace menu items; a plugin that renders other plugins' components wraps each
+//   (DocumentSlots, DocumentTreeView, hover previews, embeds, settings pages, editor overlays,
+//   a collection's page panel). A crashed body slot shows its error above the rest of the chain.
+Providers (host only): BackendProvider, HostProvider (HostBridge { app, appFor?(pluginId) /* the
+  plugin's app, one object per plugin */, contributions, tabs }), TabProvider ({ tab, state? }:
   `state` is the state bag of a tab outside the layout, such as the collections' page panel,
   which `useTabStateSnapshot` reads when the host keeps none for it)
 
@@ -169,12 +198,15 @@ AccountApi { apiUrl, scope, wanted, state: Observable<AccountState>, signIn /* r
   forgets the local workspace after a complete run; browser workspaces only */ } | null,
   sync: { details: Observable<SyncDetails>, retry() } | null, webUrl(path) }
 CollabApi { open(docId) → CollabSession { ydoc, awareness, user, state, loaded, release() } }
-app.plugins?: { list() → PluginInfo[], setEnabled(id, on) }      // per device, applied on reload
+app.plugins?: { list() → PluginInfo[], subscribe?(fn), setEnabled(id, on) }   // per device,
+//   applied on reload. PluginInfo { id, name, description, enabled, essential, permissions,
+//   error? /* why it, or part of it, did not start in this window */ }; subscribe: the list
+//   changed (a plugin that loads late failed)
 app.storage.subscribe?(key, listener)
 ctx.workspaceMenu.register({ id, order?, component({ close }) })   // the workspace switcher's menu
 SettingsPageDef += { group?, description?, keywords?, icon?, when?(app) };
   component gets { path, navigate(path) } (`/settings/<id>/<path>`)
-StatusItemDef += { replacesSyncIndicator? }   PluginDef += { essential? }
+StatusItemDef += { replacesSyncIndicator? }   PluginDef += { essential?, permissions? }
 Live queries += "workspace.teamspaces" | "teamspace.members" | "doc.access" | "doc.grants" |
   "workspace.publicPages" ({ workspaceId } → PublicPageRow { documentId, includeSubpages }: pages
   with a live public link of their own) | "doc.publicAccess" ({ id } → 0/1 PublicAccess
@@ -184,7 +216,9 @@ TEAMSPACES_UI (false: hidden for the alpha; the one switch), teamspacesShown(tea
   switch, or `workspace.teamspaces` rows other than one default teamspace */,
   useTeamspacesShown(), spaceName(teamspace, shown) /* "Workspace" for the default one while
   hidden */, WORKSPACE_SECTION (src/teamspaces.ts)
-useAccount(), useObservable(obs), useDeviceSetting(key, initial), useHostedQuery(id, input | null)
+useAccount() /* the calling plugin's account: null without "account" */, useObservable(obs),
+useDeviceSetting(key, initial) /* in the calling plugin's storage */, useHostedQuery(id, input | null)
+/* needs "account" */
   → { data, error, isLoading, reload, setData }, useCollabDocument(docId)
   → { session, readOnly, unavailable, level } | "loading" | null (re-renders only when access
   changes; read session.state for the rest)

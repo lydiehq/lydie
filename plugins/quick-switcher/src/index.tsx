@@ -17,7 +17,7 @@ import { useDeferredValue, useEffect, useState } from "react";
 import { parseQuery, rank, recordOpen, withKeys } from "./ranking.ts";
 import type { Candidate, Usage } from "./ranking.ts";
 
-const USAGE_KEY = "quick-switcher:usage";
+const USAGE_KEY = "usage";
 
 // Titles with their folder path, read once per opening of the switcher (one query, no watch).
 async function loadCandidates(app: AppApi): Promise<Candidate[]> {

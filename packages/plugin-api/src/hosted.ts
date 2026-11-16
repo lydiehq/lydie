@@ -11,6 +11,7 @@ import type {
   HostedOutput,
   WorkspaceRole,
 } from "./hosted-operations.ts";
+import type { PluginPermission } from "./plugin.ts";
 
 // `get` returns the same object until it changes (fits useSyncExternalStore).
 export type Observable<T> = {
@@ -273,11 +274,17 @@ export type PluginInfo = {
   enabled: boolean;
   // Cannot be turned off (the settings themselves).
   essential: boolean;
+  // What it declared (`PluginDef.permissions`).
+  permissions: readonly PluginPermission[];
+  // Why it, or part of it, did not start in this window.
+  error?: string;
 };
 
 export type PluginsApi = {
   list(): readonly PluginInfo[];
-  // Takes effect when the window reopens.
+  // Called when what `list` returns changes in this window (a plugin that loads late fails).
+  subscribe?(listener: () => void): () => void;
+  // Takes effect when the window reopens. Needs the "plugins" permission: throws without it.
   setEnabled(id: string, enabled: boolean): void;
 };
 
@@ -337,12 +344,18 @@ export type VaultApi = {
   } | null;
 };
 
-// Everything the composition root offers; each part optional.
+// Everything the composition root offers; each part optional. A plugin's app has the parts its
+// permissions reach (`PluginPermission`); the host's map of them is `host/scope.ts`.
 export type HostServices = {
+  // "account": acts as the signed-in person (sign-in, workspaces, hosted operations).
   account?: AccountApi;
+  // Every plugin: a document's collaborative body, which it can read and write through the
+  // backend anyway.
   collab?: CollabApi;
+  // "vault": the folder's settings and its local MCP server.
   vault?: VaultApi;
+  // Every plugin.
   about?: AboutInfo;
-  // Renames this workspace (local browser workspaces keep the name on this device).
+  // "account": renames this workspace (local browser workspaces keep the name on this device).
   renameWorkspace?: (name: string) => Promise<void>;
 };

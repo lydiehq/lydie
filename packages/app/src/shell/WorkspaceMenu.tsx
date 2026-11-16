@@ -1,10 +1,9 @@
-import { useContributions, useWorkspaceImage } from "@lydie/plugin-api";
+import { ContributionBoundary, useContributions, useWorkspaceImage } from "@lydie/plugin-api";
 import { Button, Dialog, Popover, SpaceIcon } from "@lydie/ui";
 import { useRef, useState } from "react";
 import type { CSSProperties } from "react";
 
 import { useHostInternal } from "./context.ts";
-import { ErrorBoundary } from "./ErrorBoundary.tsx";
 
 // The sidebar's top-left workspace button. Its menu is made of plugin sections (workspaces,
 // account, settings); without any it opens the settings.
@@ -50,9 +49,9 @@ export function WorkspaceMenu({ style }: { style?: CSSProperties }) {
               key={`${section.pluginId}:${section.id}`}
               className={index > 0 ? "border-t border-gray-950/5" : undefined}
             >
-              <ErrorBoundary label={`Workspace menu (${section.pluginId})`} compact>
+              <ContributionBoundary pluginId={section.pluginId} label="Workspace menu" compact>
                 <section.component close={() => setOpen(false)} />
-              </ErrorBoundary>
+              </ContributionBoundary>
             </div>
           ))}
         </Dialog>

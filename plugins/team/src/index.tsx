@@ -10,6 +10,7 @@ export const teamPlugin = definePlugin({
   id: "team",
   name: "Team",
   description: "Members and invitations of a cloud workspace, and its sections in the sidebar.",
+  permissions: ["account"],
   activate(ctx) {
     const { app } = ctx;
     // The window's scope is fixed for its lifetime.

@@ -37,7 +37,7 @@ home page; click opens here, Mod-click in a new tab). It answers "where was I" a
   hovered or focused) open the sidebar tree's menu (`documentMenuItems` from the plugin API, with
   `documentMenu` contributions such as favorites); rename is inline in the row.
 
-Opens are recorded per device and workspace (`home:recent:<workspaceId>`, at most 50) whenever a
+Opens are recorded per device and workspace (its storage key `recent:<workspaceId>`, at most 50) whenever a
 document becomes the focused tab. The quick switcher keeps its own frecency stats.
 
 Hosted caveat: collaborative edits do not bump a document's `updatedAt` yet, so "changed" times in

@@ -22,6 +22,6 @@ Licence: AGPL-3.0-only.
 A "?" status item that starts the sidebar footer's row (`align: "left"`, before the sync state):
 a popover with the latest three entries on a short timeline, each opening its entry, and "See all
 changes". A blue dot shows while the newest entry is newer than the one this device saw last
-(`changelog.seen` in device storage, `seen.ts`, unit-tested); opening the popover or the page
+(`seen` in its device storage, `seen.ts`, unit-tested); opening the popover or the page
 marks it seen. `view:/changelog` (and `/changelog/:id`, scrolled to that entry) shows every entry
 down a timeline. Command `changelog.open` ("What's new").

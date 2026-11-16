@@ -15,6 +15,9 @@ Licence: AGPL-3.0-only.
   filesystem.
 - Every user-visible action is an operation (contract or hosted API).
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `account`, `vault`, `device` and `plugins` (account and workspace pages, the
+  folder's settings and MCP server, the app lock, privacy mode and quick-capture shortcut, turning
+  plugins on and off). Settings → Plugins lists what every plugin declares and why one did not start.
 
 ## What it does
 

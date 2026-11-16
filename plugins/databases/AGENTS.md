@@ -79,8 +79,8 @@ Licence: AGPL-3.0-only.
 ## Personal view changes (`overlay.ts`, `context.tsx`)
 
 - `updateView` writes filter, sorts, groupBy, subGroupBy, columns, summaries, limit and layout to a
-  per-device overlay in `app.storage`: key `databases.overlay:<viewId>` on the collection's page,
-  `databases.overlay:<viewId>:embed:<sourceDocId>:<target>` in an embed. Only keys that differ
+  per-device overlay in `app.storage`: key `overlay:<viewId>` on the collection's page,
+  `overlay:<viewId>:embed:<sourceDocId>:<target>` in an embed (the plugin's own storage). Only keys that differ
   from the saved view are kept; the view shown is `{ ...saved.config, ...overlay }`, so a view
   saved underneath shows through wherever the overlay has no opinion.
 - `ctx.view` is the merged view; `ctx.savedView`, `ctx.overlay`, `ctx.edited`. The query gets
@@ -153,7 +153,7 @@ Licence: AGPL-3.0-only.
   and keeps its button showing, reading "Close" (`ctx.closePeek`, which slides the panel out like
   its ×).
   The panel's left edge resizes it with the sidebar's elastic handle (`useElasticPanel` /
-  `ElasticHandle` from the UI package): width per device in `databases.peekWidth`, half the tab
+  `ElasticHandle` from the UI package): width per device in `peekWidth`, half the tab
   by default; dragged shut it closes.
 - View types: table, board, list, calendar. There is no gallery (removed Nov 2026): a stored
   view of a type Lydie no longer has opens as a table (`viewTypeOf` in the contract).

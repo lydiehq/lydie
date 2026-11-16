@@ -63,6 +63,9 @@ export const settingsPlugin = definePlugin({
   name: "Settings",
   description: "The settings window and its general pages.",
   essential: true,
+  // Account and workspace pages, the folder's settings, the app lock and privacy mode, the
+  // quick-capture shortcut, and turning plugins on and off.
+  permissions: ["account", "vault", "device", "plugins"],
   activate(ctx) {
     const { app } = ctx;
     ctx.overlays.register({

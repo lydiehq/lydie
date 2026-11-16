@@ -22,7 +22,8 @@ export function useObservable<T>(observable: Observable<T> | null | undefined): 
 
 const SIGNED_OUT: AccountState = { status: "signed-out" };
 
-// The account service and its state; `api` is null where the app has no hosted mode.
+// The account service and its state; `api` is null where the app has no hosted mode, and for a
+// plugin without the "account" permission.
 export function useAccount(): { api: AccountApi | null; state: AccountState } {
   const api = useApp().services?.account ?? null;
   const state = useObservable(api?.state) ?? SIGNED_OUT;
@@ -99,6 +100,7 @@ export type HostedQueryState<T> = {
 const hostedCache = new Map<string, unknown>();
 
 // A hosted query operation (`member.list`, `share.get`, …) run while mounted; `input` null skips it.
+// Needs the "account" permission (without it nothing runs and `data` stays undefined).
 export function useHostedQuery<K extends HostedOperationId>(
   id: K,
   input: HostedInput<K> | null,
@@ -156,7 +158,8 @@ export function useHostedQuery<K extends HostedOperationId>(
   };
 }
 
-// A per-device setting (`app.storage`) that re-renders when it changes in this window.
+// A per-device setting in the calling plugin's storage (`app.storage`), re-rendering when it changes
+// in this window.
 export function useDeviceSetting<T>(key: string, initial: T): [T, (value: T) => void] {
   const app = useApp();
   const subscribe = useCallback(

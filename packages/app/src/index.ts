@@ -11,4 +11,3 @@ export { appUrl, belowBase, parseAppUrl } from "./host/url.ts";
 export { LydieApp } from "./shell/LydieApp.tsx";
 export { useTitleBarInset, titleBarInset } from "./shell/title-bar.ts";
 export type { TitleBarInset } from "./shell/title-bar.ts";
-export { ErrorBoundary } from "./shell/ErrorBoundary.tsx";

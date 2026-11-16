@@ -57,12 +57,46 @@ syncUrl(host, { base, workspaceId?, history? }): () => void   // see "URLs"; bro
 appUrl(base, path, workspace?, search?, title?) → string, parseAppUrl(below, hash?) → { workspace, path },
 belowBase(base, pathname)   // also at `@lydie/app/url`, without the shell
 createHost(options), Host, ShellState, createDeviceStorage(), createMemoryStorage(),
-  // DeviceStorage { get, set, keys? }; app.storage keeps plugins' keys under "plugin:"
-useTitleBarInset(platform), titleBarInset, ErrorBoundary
+  // DeviceStorage { get, set, keys? }; a plugin's app.storage keeps its keys under
+  // "plugin:<plugin id>:", the shared area under "plugin:shared:" (see "Plugin scope")
+  // Host.app: the shell's own app (plugin "core"); Host.bridge.appFor(pluginId): a plugin's;
+  // Host.pluginErrors: { pluginId, error }[] (also PluginInfo.error in app.plugins.list())
+useTitleBarInset(platform), titleBarInset
+// The error boundary around contributions is @lydie/plugin-api's ContributionBoundary.
 ```
 
 ## Design notes
 
+- **Plugin scope** (`host/scope.ts`, `host/plugin-storage.ts`, the plugins loop in `host/host.ts`):
+  every plugin gets an app of its own (`appFor`, one object per plugin, made once; "core", the
+  shell's, is `host.app`). It shares the host's members and has its own `storage` (keys under
+  `plugin:<id>:`; `storage.shared` under `plugin:shared:`; listeners keyed by the stored key), and
+  only what its `permissions` reach: `SERVICE_PERMISSIONS` maps every `HostServices` member
+  (account and renameWorkspace: "account"; vault: "vault"; collab and about: everyone), "device"
+  adds appLock, screenCapture and shortcuts, and `plugins.setEnabled` throws without "plugins".
+  The shell has everything. Contributions are stored scoped (`scopeContribution`): every callback
+  that takes the app gets its plugin's, whoever calls it, and document menu items, sidebar actions
+  and selection actions that throw become an error toast (commands already did, in `runCommand`).
+  `<ContributionBoundary>` (plugin-api) gives components their plugin's app through `useApp()`
+  and contains a crash; it reads the bridge from context and adds no state, so pooled views and
+  render isolation are as before. This is least privilege among built-ins in one JavaScript realm,
+  not a security boundary.
+- **Plugin lifecycle**: plugins activate in order, each with its own list of disposers. A second
+  plugin with an id already started (or the reserved "shared") is not started. A registration
+  whose id is already taken in its kind (the first stays), or a command not named
+  `<plugin id>.…`, is refused with a no-op disposer. `activate` throwing, or `ctx.fail(error)`
+  later (`lazyPlugin` in the web app, when its chunk or its activate fails), disposes everything
+  the plugin registered. All of these land in `host.pluginErrors` and in Settings → Plugins
+  (`PluginInfo.error`, live through `plugins.subscribe`); an essential plugin that fails also
+  shows an error toast. Test: `shell/plugin-scope.test.tsx`.
+- **Plugin storage keys**: before areas, plugins' keys sat directly under `plugin:` by convention.
+  `migratePluginStorage` runs at every start and moves the ones that changed name
+  (`LEGACY_STORAGE_PREFIXES`: `plugin:editor.*` and `plugin:appearance.*` to settings',
+  `plugin:shell.*` to core's, `plugin:team.spaces.expanded:*` to the document tree's, and
+  `plugin:<id>.*` to `plugin:<id>:*` for account, changelog, databases, threads, team and the
+  playground), keeping a value already at the new name. Keys that were `plugin:<id>:…` already did
+  not move. `apps/web/public/theme.js` reads the theme at its new name, then its old one. Test:
+  `host/plugin-storage.test.ts`.
 - **Live queries** are deduped by key and keep running 10 s after the last subscriber leaves, so a
   tab that comes back paints at once. The remote backend streams row diffs (`[start, count]` runs of
   previous rows or new rows), so unchanged rows keep identity in the renderer, and delivers once per
@@ -277,5 +311,7 @@ useTitleBarInset(platform), titleBarInset, ErrorBoundary
 
 `bun test`: `src/backend/backend.test.ts` runs one suite against the local and the remote backend
 (over `createLocalServiceChannel`); `src/shell/shell.test.tsx` checks pooling (no remount on
-switch), render isolation, global undo, keyboard tab commands and layout restore. End-to-end and
+switch), render isolation, global undo, keyboard tab commands and layout restore;
+`src/shell/plugin-scope.test.tsx` the plugin scope (storage, permissions, callbacks, `useApp()`),
+failing plugins and contained crashes. End-to-end and
 performance tests are in `apps/web/e2e`.

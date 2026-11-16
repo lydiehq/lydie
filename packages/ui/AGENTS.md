@@ -184,7 +184,7 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   with `uqr`, dark on white in both themes.
 - **Settings** (`src/layout/Settings.tsx`): SettingsSections, SettingsSection, SettingsCard,
   SettingsRow, SettingsCardHeader, SettingsCardBlock, SettingsCardEmpty, SettingsListItem (whole
-  item is one button with `onPress`), SettingsDetailsPanel (non-modal, right of the settings
+  item is one button with `onPress`; `meta` facts on one line, a `note` under them that wraps), SettingsDetailsPanel (non-modal, right of the settings
   content; registers with `SettingsEscapeContext`/`createEscapeStack` so Escape closes it first),
   SettingsDetailsList, useSettingsSave + SettingsSaveStatus, SettingsTextInput (saves on blur or
   Enter, Escape reverts). `Modal` has a `size="screen"` for the settings window. Section titles

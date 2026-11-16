@@ -8,7 +8,7 @@ import { MacIconPlayground } from "./mac-icon/MacIconPlayground.tsx";
 import { DrawPlayground } from "./scribbles/DrawPlayground.tsx";
 import { ScribblesPlayground } from "./scribbles/ScribblesPlayground.tsx";
 
-const STORAGE_KEY = "playground.exploration";
+const STORAGE_KEY = "exploration";
 
 const EXPLORATIONS = [
   { id: "scribbles", name: "Scribbles", component: ScribblesPlayground },

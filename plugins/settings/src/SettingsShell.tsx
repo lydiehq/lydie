@@ -1,4 +1,4 @@
-import { useApp, useContributions } from "@lydie/plugin-api";
+import { ContributionBoundary, useApp, useContributions } from "@lydie/plugin-api";
 import type { Contributed } from "@lydie/plugin-api";
 import {
   Button,
@@ -6,14 +6,13 @@ import {
   createEscapeStack,
   Dialog,
   EmptyState,
-  ErrorState,
   Heading,
   Modal,
   SearchField,
   SettingsEscapeContext,
   sidebarItemStyles,
 } from "@lydie/plugin-api/ui";
-import { Component, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
 import clsx from "./clsx.ts";
@@ -236,27 +235,11 @@ function PageFrame({ page, children }: { page: Page; children: ReactNode }) {
       <h1 className="text-xl font-medium text-gray-900">{page.title}</h1>
       {page.description && <p className="mt-1 text-sm text-gray-500">{page.description}</p>}
       <div className="mt-8">
-        <PageBoundary label={page.title}>{children}</PageBoundary>
+        {/* A failing page shows its error in place; the navigation keeps working. */}
+        <ContributionBoundary pluginId={page.pluginId} label={`${page.title} settings`}>
+          {children}
+        </ContributionBoundary>
       </div>
     </div>
   );
-}
-
-// A failing page shows its error in place; the navigation keeps working.
-class PageBoundary extends Component<{ label: string; children: ReactNode }, { error: unknown }> {
-  override state = { error: null as unknown };
-  static getDerivedStateFromError(error: unknown) {
-    return { error };
-  }
-  override render() {
-    if (this.state.error) {
-      return (
-        <ErrorState
-          title={`The ${this.props.label} settings could not be shown`}
-          error={this.state.error}
-        />
-      );
-    }
-    return this.props.children;
-  }
 }

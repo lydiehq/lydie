@@ -31,6 +31,7 @@ const settingsPlugin = lazyPlugin(
     name: "Settings",
     description: "The settings window and its general pages.",
     essential: true,
+    permissions: ["account", "vault", "device", "plugins"],
   },
   () => import("@lydie/plugin-settings").then((m) => m.settingsPlugin),
 );
@@ -39,6 +40,7 @@ const teamPlugin = lazyPlugin(
     id: "team",
     name: "Team",
     description: "Members and invitations of a cloud workspace, and its sections in the sidebar.",
+    permissions: ["account"],
   },
   () => import("@lydie/plugin-team").then((m) => m.teamPlugin),
 );
@@ -47,6 +49,7 @@ const sharingPlugin = lazyPlugin(
     id: "sharing",
     name: "Sharing",
     description: "Share pages with people and guests, and publish them to the web.",
+    permissions: ["account"],
   },
   () => import("@lydie/plugin-sharing").then((m) => m.sharingPlugin),
 );
@@ -55,6 +58,7 @@ const publishingPlugin = lazyPlugin(
     id: "publishing",
     name: "Publishing",
     description: "Publish documents to GitHub, WordPress and webhooks.",
+    permissions: ["account"],
   },
   () => import("@lydie/plugin-publishing").then((m) => m.publishingPlugin),
 );

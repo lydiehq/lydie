@@ -12,11 +12,11 @@ export type CloudWorkspace = { workspaceId: string; name: string };
 export type SeenCloudWorkspace = CloudWorkspace & { at: string | null };
 
 // The cloud workspace opened last on this device.
-const CLOUD_KEY = "account.cloud";
+const CLOUD_KEY = "cloud";
 // Local workspace id → the cloud workspace it was copied to. One value, not a key per workspace:
 // keys with a workspace id in them are carried to the cloud workspace by a hand-off.
-const COPIED_KEY = "account.copied";
-export const DISMISSED_KEY = "account.localNotice.dismissed";
+const COPIED_KEY = "copied";
+export const DISMISSED_KEY = "localNotice.dismissed";
 
 export function readCloud(app: Storage): SeenCloudWorkspace | null {
   const cloud = app.storage.get<CloudWorkspace & { at?: string | null }>(CLOUD_KEY);

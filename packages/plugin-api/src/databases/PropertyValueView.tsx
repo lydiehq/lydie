@@ -6,6 +6,7 @@ import { Avatar, CheckboxMark, FileFilled, focusRingClass } from "@lydie/ui";
 import { memo, useLayoutEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
+import { ContributionBoundary } from "../contribution-boundary.tsx";
 import { PageLink } from "../page-link.tsx";
 import { useContributions } from "../react.tsx";
 import { useMembers } from "./members.ts";
@@ -320,7 +321,13 @@ function RelationChip({ row, shrink = false }: { row: RelatedRow; shrink?: boole
           role="tooltip"
           className="absolute top-full left-0 z-50 mt-1 w-72 rounded-lg bg-elevated p-2 text-sm shadow-popover"
         >
-          {preview ? <preview.component target={target} /> : row.title || "Untitled"}
+          {preview ? (
+            <ContributionBoundary pluginId={preview.pluginId} label="Link preview" compact>
+              <preview.component target={target} />
+            </ContributionBoundary>
+          ) : (
+            row.title || "Untitled"
+          )}
         </span>
       )}
     </span>

@@ -1,4 +1,5 @@
 import {
+  ContributionBoundary,
   DocIcon,
   docIdOf,
   docPickerItem,
@@ -23,7 +24,6 @@ import type { PickerItem } from "@lydie/ui";
 import { useDeferredValue, useEffect, useState, useSyncExternalStore } from "react";
 
 import { useHostInternal } from "./context.ts";
-import { ErrorBoundary } from "./ErrorBoundary.tsx";
 
 // The open overlay: the command palette (host) or one a plugin registered.
 export function Overlays() {
@@ -36,9 +36,9 @@ export function Overlays() {
   const def = defs.find((d) => d.id === overlay.id);
   if (!def) return null;
   return (
-    <ErrorBoundary label={`Overlay (${def.pluginId})`}>
+    <ContributionBoundary pluginId={def.pluginId} label="Overlay">
       <def.component close={close} props={overlay.props} />
-    </ErrorBoundary>
+    </ContributionBoundary>
   );
 }
 

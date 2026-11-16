@@ -1,10 +1,9 @@
-import { useContributions } from "@lydie/plugin-api";
+import { ContributionBoundary, useContributions } from "@lydie/plugin-api";
 import type { TabInfo } from "@lydie/plugin-api";
 import { buttonStyles, EmptyState } from "@lydie/ui";
 import { useSyncExternalStore } from "react";
 
 import { useHostInternal, useSelector } from "./context.ts";
-import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { windowOf } from "./LayoutView.tsx";
 import { panelToggleRoom } from "./PanelToggle.tsx";
 import { dragStyle, noDragStyle, useTitleBarInset } from "./title-bar.ts";
@@ -73,9 +72,9 @@ export function RightPanel() {
         className="surface-depth min-h-0 grow overflow-y-auto rounded-lg bg-surface"
       >
         {current && (
-          <ErrorBoundary label={`Panel (${current.pluginId})`} resetKey={current.id}>
+          <ContributionBoundary pluginId={current.pluginId} label="Panel" resetKey={current.id}>
             <current.component activeTab={activeTab} />
-          </ErrorBoundary>
+          </ContributionBoundary>
         )}
       </div>
     </aside>

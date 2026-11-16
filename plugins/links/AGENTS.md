@@ -14,6 +14,7 @@ Licence: AGPL-3.0-only.
 - Data only through the plugin API (`useQuery`, `useOps`, `backend.query`); no SQL, no filesystem.
 - Every user-visible action is an operation defined with `defineOperation` in `@lydie/contract`.
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `vault` (a folder's link format, for the links it writes: `linkStyleOf`).
 
 ## What it does
 

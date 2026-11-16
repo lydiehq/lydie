@@ -16,7 +16,7 @@ import type { Concept, MascotState } from "./mascot.tsx";
 import { VARIANTS } from "./variants.tsx";
 import type { Kind, Variant } from "./variants.tsx";
 
-const STORAGE_KEY = "playground.avatars";
+const STORAGE_KEY = "avatars";
 
 const NAMES: Record<Kind, string[]> = {
   person: [

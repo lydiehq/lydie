@@ -140,12 +140,14 @@ export function SettingsCardEmpty({ className, ...props }: HTMLAttributes<HTMLDi
   );
 }
 
-// One item of a card list: an icon, a name and facts joined by "·". With `onPress` the whole item
-// is one button (it opens the details panel); buttons in `trailing` keep their own clicks.
+// One item of a card list: an icon, a name and facts joined by "·", and a `note` under them that
+// may wrap. With `onPress` the whole item is one button (it opens the details panel); buttons in
+// `trailing` keep their own clicks.
 export function SettingsListItem({
   icon,
   title,
   meta,
+  note,
   onPress,
   selected,
   trailing,
@@ -155,6 +157,7 @@ export function SettingsListItem({
   icon?: ReactNode;
   title: ReactNode;
   meta?: ReactNode | ReactNode[];
+  note?: ReactNode;
   onPress?: () => void;
   selected?: boolean;
   trailing?: ReactNode;
@@ -205,6 +208,7 @@ export function SettingsListItem({
             ))}
           </p>
         )}
+        {note && <div className="mt-0.5 text-xs leading-5 text-gray-500">{note}</div>}
       </div>
       {trailing && <div className="relative flex shrink-0 items-center gap-2">{trailing}</div>}
     </div>

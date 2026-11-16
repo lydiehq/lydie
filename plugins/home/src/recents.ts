@@ -6,7 +6,7 @@ export type Opened = { id: string; at: number };
 
 export const RECENT_LIMIT = 50;
 
-export const recentKey = (workspaceId: string) => `home:recent:${workspaceId}`;
+export const recentKey = (workspaceId: string) => `recent:${workspaceId}`;
 
 export function recordOpen(
   list: readonly Opened[],

@@ -51,4 +51,4 @@ export function setResolvedShown(tabId: string, shown: boolean): void {
 export const resolvedShownIn = (tabId: string | null) => !!tabId && resolvedShown.has(tabId);
 
 // Device setting: whether comments are shown, in the text and beside it.
-export const SHOWN_KEY = "threads.shown";
+export const SHOWN_KEY = "shown";

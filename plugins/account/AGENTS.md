@@ -15,6 +15,7 @@ Licence: AGPL-3.0-only.
   filesystem.
 - Every user-visible action is an operation (contract or hosted API).
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `account` (the hosted account: sign-in, workspaces, the hand-off).
 
 ## Loading
 
@@ -71,8 +72,8 @@ workspace dialog and under Plan on the Account page.
 
 Local notice (`local-notice.ts`, `LocalNotice` in `index.tsx`, a `SidebarNotice` card registered as
 the last sidebar section, not a banner over the content): so nobody writes in this browser's workspace believing it is their cloud one. The device
-remembers the cloud workspace opened last and when (`account.cloud`, set when a hosted window opens) and
-where each local workspace was copied to (`account.copied`, set when a hand-off succeeds). With
+remembers the cloud workspace opened last and when (`cloud`, set when a hosted window opens) and
+where each local workspace was copied to (`copied`, set when a hand-off succeeds). With
 either, this browser's workspace (not a folder) shows the card: signed out, "Signed out… What you
 write here stays in this browser" with Sign in; signed in, "In this browser only" with "Open X" and
 "Move to cloud…". Dismiss hides that kind (`localNotice`,
@@ -90,7 +91,7 @@ person's own. With pages changed the hand-off dialog opens on a question (`Hando
 "You edited 2 documents in this browser while signed out. Move…?", with Move (plans and runs
 straight away, then opens the workspace; a plan with something to read shows the review step
 first), Not now (opens the workspace; the pages stay in this browser) and "Don't ask again"
-(`account.bring.never`: later sign-ins just open the workspace). The steps that choose a workspace
+(`bring.never`: later sign-ins just open the workspace). The steps that choose a workspace
 open by themselves only for an account with no cloud workspace yet. A folder window stays as it
 is. The browser copy is forgotten only when the plan left nothing behind, which excludes pages the
 target already had (LYD-423).

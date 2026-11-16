@@ -193,6 +193,7 @@ export const accountPlugin = definePlugin({
   id: "account",
   name: "Account and sync",
   description: "Sign in, switch workspaces and copy this device's notes to Lydie Cloud.",
+  permissions: ["account"],
   activate(ctx) {
     const { app } = ctx;
     const api = app.services?.account;

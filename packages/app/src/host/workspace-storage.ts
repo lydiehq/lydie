@@ -1,5 +1,6 @@
 // Plugins keep some device settings per workspace, with the workspace id as one `:`-separated part
-// of the key: favorites, Home's recent pages, expanded folders. A hand-off
+// of the key: favorites, Home's recent pages, expanded folders (in every plugin's area,
+// `plugin:<plugin id>:…`, and the shared one, `plugin:shared:…`). A hand-off
 // copies the workspace under a new id, so these are copied to that id too, and the document ids the
 // hand-off changed (the Getting started page) are changed in them. What the target workspace
 // already has on this device is kept.

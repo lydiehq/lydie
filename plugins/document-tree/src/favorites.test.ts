@@ -43,7 +43,7 @@ describe("favorites", () => {
       expect(favorites.has("a")).toBe(true);
       expect(favorites.toggle("a")).toBe(false);
       expect(favorites.ids()).toEqual(["b"]);
-      expect(values.get("document-tree:favorites:ws")).toEqual(["b"]);
+      expect(values.get("favorites:ws")).toEqual(["b"]);
       expect(calls).toBe(3);
       expect(favoritesOf(app)).toBe(favorites);
       off();
@@ -52,7 +52,7 @@ describe("favorites", () => {
 
   test("reads what was stored, ignoring anything that is not an id", () => {
     const { app, values } = fakeApp(true);
-    values.set("document-tree:favorites:ws", ["a", 3, null, "b"]);
+    values.set("favorites:ws", ["a", 3, null, "b"]);
     expect(favoritesOf(app).ids()).toEqual(["a", "b"]);
   });
 

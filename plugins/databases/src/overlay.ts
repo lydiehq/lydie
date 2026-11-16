@@ -23,7 +23,7 @@ const KEYS = new Set<string>(OVERLAY_KEYS);
 // One overlay per view on a collection's page, and one per embed (so tweaks in an embed do not
 // leak into the page or another embed).
 export function overlayStorageKey(viewId: string, embed?: string | null): string {
-  return embed ? `databases.overlay:${viewId}:embed:${embed}` : `databases.overlay:${viewId}`;
+  return embed ? `overlay:${viewId}:embed:${embed}` : `overlay:${viewId}`;
 }
 
 // Structural equality of JSON values; a missing key equals `undefined`.

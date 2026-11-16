@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { CANVAS, MacIcon, serialize, VARIANTS } from "./mac-icon.tsx";
 import type { Variant } from "./mac-icon.tsx";
 
-const STORAGE_KEY = "playground.macIcon";
+const STORAGE_KEY = "macIcon";
 
 const PRESETS = [
   { name: "Dusty pink", color: "#c9959b" },

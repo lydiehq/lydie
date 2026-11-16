@@ -64,6 +64,7 @@ export const sharingPlugin = definePlugin({
   id: "sharing",
   name: "Sharing",
   description: "Share pages with people and guests, and publish them to the web.",
+  permissions: ["account"],
   activate(ctx) {
     const { app } = ctx;
     const hosted = () => app.services?.account?.scope.kind === "hosted";

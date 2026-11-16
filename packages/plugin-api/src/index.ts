@@ -1,6 +1,7 @@
 export type * from "./backend.ts";
 export * from "./plugin.ts";
 export * from "./react.tsx";
+export { ContributionBoundary } from "./contribution-boundary.tsx";
 export * from "./document-slots.tsx";
 export * from "./link-preview.tsx";
 export * from "./doc-card.tsx";

@@ -1,6 +1,6 @@
-// Per-device preferences (the host's device storage, as the keymap and layout already are) and how
-// the window applies them. Keys are shared with the views that read them (the editor reads the
-// `editor.*` keys through `useDeviceSetting`).
+// Per-device preferences (this plugin's `app.storage`) and how the window applies them: the editor
+// reads them as CSS variables on <html>, not from storage. apps/web/public/theme.js reads the theme
+// before the app loads, under its stored name (`plugin:settings:appearance.theme`).
 import type { AppApi } from "@lydie/plugin-api";
 
 export const PREFS = {

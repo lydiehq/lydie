@@ -15,6 +15,7 @@ Licence: AGPL-3.0-only.
   (snapshots, git, the hosted core) is the backend's business: the plugin calls `doc.listVersions`,
   `doc.getVersion` and `doc.restoreVersion` and never asks which.
 - Select elements in tests by role, label or test id, never by styling classes.
+- Permissions: `vault` (only folder windows keep versions).
 
 ## What it does
 

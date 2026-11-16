@@ -155,6 +155,8 @@ export const versionsPlugin = definePlugin({
   id: "versions",
   name: "Version history",
   description: "Earlier versions of a document, and restoring one.",
+  // Only folder windows keep versions.
+  permissions: ["vault"],
   activate(ctx) {
     // Folder workspaces keep versions (snapshots or git). Hosted and browser workspaces get the
     // panel when their backends can answer the same operations.

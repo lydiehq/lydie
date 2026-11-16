@@ -1,4 +1,10 @@
-import { useContributions, useDeviceSetting, useShortcut, useStatus } from "@lydie/plugin-api";
+import {
+  ContributionBoundary,
+  useContributions,
+  useDeviceSetting,
+  useShortcut,
+  useStatus,
+} from "@lydie/plugin-api";
 import {
   AddRegular,
   Button,
@@ -13,7 +19,6 @@ import {
 import type { ReactNode } from "react";
 
 import { useHostInternal } from "./context.ts";
-import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { dragStyle, useTitleBarInset } from "./title-bar.ts";
 import { WorkspaceMenu } from "./WorkspaceMenu.tsx";
 
@@ -110,9 +115,14 @@ export function Sidebar({ footer }: Props) {
     </div>
   );
   const renderStatus = (item: (typeof statusItems)[number]) => (
-    <ErrorBoundary key={`${item.pluginId}:${item.id}`} label={`Status (${item.pluginId})`} compact>
+    <ContributionBoundary
+      key={`${item.pluginId}:${item.id}`}
+      pluginId={item.pluginId}
+      label="Status"
+      compact
+    >
       <item.component />
-    </ErrorBoundary>
+    </ContributionBoundary>
   );
   const renderSection = (section: (typeof sections)[number]) => (
     <section
@@ -142,9 +152,9 @@ export function Sidebar({ footer }: Props) {
         </div>
       )}
       <div data-section-body className="contents">
-        <ErrorBoundary label={`Sidebar (${section.pluginId})`} compact>
+        <ContributionBoundary pluginId={section.pluginId} label="Sidebar" compact>
           <section.component />
-        </ErrorBoundary>
+        </ContributionBoundary>
       </div>
     </section>
   );

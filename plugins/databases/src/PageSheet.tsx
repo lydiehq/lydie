@@ -5,6 +5,7 @@
 // page is open is tab state, so it comes back with the tab. Escape (in the panel or in the
 // collection beside it) or the × closes it; the page can also move to the tab itself or to the side.
 import {
+  ContributionBoundary,
   docPath,
   matchesPath,
   Portal,
@@ -146,7 +147,7 @@ function PageSheet({
     return Math.max(0, (Number.isFinite(radius) ? radius : 0) - INSET);
   }, [container]);
   const half = Math.min(Math.max(Math.round(room / 2), minWidth), maxWidth);
-  const [savedWidth, setSavedWidth] = useDeviceSetting<number | null>("databases.peekWidth", null);
+  const [savedWidth, setSavedWidth] = useDeviceSetting<number | null>("peekWidth", null);
   const elastic = useElasticPanel({
     side: "right",
     collapsed: false,
@@ -462,6 +463,7 @@ function PageSheet({
                 tab={tab}
                 docId={id}
                 View={view.component}
+                pluginId={view.pluginId}
                 leaving={id !== docId}
                 swapped={pages.length > 1}
               />
@@ -479,12 +481,15 @@ function SheetPage({
   tab,
   docId,
   View,
+  pluginId,
   leaving,
   swapped,
 }: {
   tab: TabInfo;
   docId: string;
   View: ComponentType<{ tab: TabInfo }>;
+  // The plugin whose view it is.
+  pluginId: string;
   leaving: boolean;
   // Mounted in place of another page (not with the panel itself): it fades in.
   swapped: boolean;
@@ -527,7 +532,9 @@ function SheetPage({
       className={`absolute inset-0 flex flex-col bg-surface ${leaving ? "pointer-events-none" : "z-[1]"}`}
     >
       <TabProvider tab={sheetTab} state={state}>
-        <View tab={sheetTab} />
+        <ContributionBoundary pluginId={pluginId} label="View">
+          <View tab={sheetTab} />
+        </ContributionBoundary>
       </TabProvider>
     </div>
   );

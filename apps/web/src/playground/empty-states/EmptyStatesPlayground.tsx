@@ -193,7 +193,7 @@ const ILLUSTRATIONS: Illustration[] = [
   },
 ];
 
-const STORAGE_KEY = "playground.emptyStates";
+const STORAGE_KEY = "emptyStates";
 
 const SIZES = [
   { id: "auto", name: "Auto" },

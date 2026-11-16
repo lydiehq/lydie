@@ -470,7 +470,7 @@ describe("shell", () => {
       name: "Test choices",
       activate(ctx) {
         ctx.commands.register({
-          id: "test.pickFruit",
+          id: "test-choices.pickFruit",
           title: "Pick fruit",
           choices: {
             placeholder: "Search fruit",
@@ -533,7 +533,7 @@ describe("shell", () => {
       name: "Test lamp",
       activate(ctx) {
         ctx.commands.register({
-          id: "test.toggleLamp",
+          id: "test-lamp.toggleLamp",
           title: "Toggle lamp",
           paletteTitle: () => (on ? "Turn off lamp" : "Turn on lamp"),
           run: () => {
@@ -558,7 +558,9 @@ describe("shell", () => {
     await search("toggle lamp");
     expect(screen.getAllByRole("option")[0]!.textContent).toBe("Turn off lamp");
     // Settings → Keyboard shortcuts lists it by its own name.
-    expect(host.app.commands().find((c) => c.id === "test.toggleLamp")?.title).toBe("Toggle lamp");
+    expect(host.app.commands().find((c) => c.id === "test-lamp.toggleLamp")?.title).toBe(
+      "Toggle lamp",
+    );
   });
 
   test("Cmd+Z outside the editor undoes the active tab's operations", async () => {

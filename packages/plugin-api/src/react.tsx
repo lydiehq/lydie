@@ -16,6 +16,8 @@ import type {
   LiveState,
   OperationOptions,
 } from "./backend.ts";
+import { ContributionBoundary } from "./contribution-boundary.tsx";
+import { HostContext, ScopeContext } from "./host-context.ts";
 import type {
   AppApi,
   Contributed,
@@ -40,7 +42,11 @@ export function useBackend(): Backend {
 
 // What the host gives the hooks below. Plugins never construct it.
 export type HostBridge = {
+  // The host's own app (the shell's), for whatever renders outside a contribution.
   app: AppApi;
+  // A plugin's app, the same object every time (`<ContributionBoundary>` provides it). Absent in
+  // test doubles: everything then sees `app`.
+  appFor?(pluginId: string): AppApi;
   contributions: {
     list<K extends ContributionKind>(kind: K): readonly Contributed<K>[];
     subscribe(kind: ContributionKind, listener: () => void): () => void;
@@ -60,8 +66,6 @@ export type HostBridge = {
 // one the ink stays the tab's own (a colour on its way to the card's).
 export type TabTint = { color: string; tone?: "light" | "dark" };
 
-const HostContext = createContext<HostBridge | null>(null);
-
 export function HostProvider({ host, children }: { host: HostBridge; children: ReactNode }) {
   return <HostContext value={host}>{children}</HostContext>;
 }
@@ -72,8 +76,12 @@ function useHost(): HostBridge {
   return host;
 }
 
+// The app of the plugin whose contribution this renders in (its storage, its permissions); the
+// host's own outside any.
 export function useApp(): AppApi {
-  return useHost().app;
+  const scoped = use(ScopeContext);
+  const host = useHost();
+  return scoped ?? host.app;
 }
 
 const TabContext = createContext<TabInfo | null>(null);
@@ -204,7 +212,11 @@ export function DocumentTreeView(props: DocumentTreeProps) {
   const [tree] = useContributions("documentTree");
   if (!tree) return null;
   const Tree = tree.component;
-  return <Tree {...props} />;
+  return (
+    <ContributionBoundary pluginId={tree.pluginId} label="Document tree" compact>
+      <Tree {...props} />
+    </ContributionBoundary>
+  );
 }
 
 export function useStatus(): BackendStatus {

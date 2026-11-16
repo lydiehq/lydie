@@ -10,6 +10,7 @@ export const publishingPlugin = definePlugin({
   id: "publishing",
   name: "Publishing",
   description: "Publish documents to GitHub, WordPress and webhooks.",
+  permissions: ["account"],
   activate(ctx) {
     const { app } = ctx;
     const hosted = () => app.services?.account?.scope.kind === "hosted";

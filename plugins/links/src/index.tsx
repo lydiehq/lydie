@@ -10,6 +10,8 @@ export const linksPlugin = definePlugin({
   name: "Links",
   description:
     "Link popover (hover preview, follow, edit, unlink, convert), unresolved links and embeds.",
+  // A folder's link format for links it writes (`linkStyleOf`).
+  permissions: ["vault"],
   activate(ctx) {
     ctx.editor.register({ extensions: () => [LinkInteractions], overlay: LinkLayer });
     ctx.links.register({

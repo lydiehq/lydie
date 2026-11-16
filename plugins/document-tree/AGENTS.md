@@ -57,7 +57,7 @@ Favorites (`favorites.ts`, `Favorites.tsx`): "Add to favorites" / "Remove from f
 `documentMenu` contribution (label by state), so it shows in every document menu (the rows' menu,
 Home's, the page's •••), and the document-scoped command `document-tree.toggleFavorite` (same id,
 so the palette lists it once, titled by state through its `paletteTitle`). They are kept per device and
-workspace in `app.storage` (`document-tree:favorites:<workspaceId>`, in the order added), not
+workspace in `app.storage` (key `favorites:<workspaceId>`, in the order added), not
 synced, so there is no operation behind them. The "Favorites" sidebar section (order 9, above the
 documents; its title is the sidebar's) lists the ones that are live documents (a trashed one is left out and returns when
 restored) and renders nothing while there are none, which hides the title too. A row opens like a tree row, shows a star on

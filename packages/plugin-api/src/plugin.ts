@@ -1,6 +1,11 @@
 // What a plugin is and what it can contribute. The host (`@lydie/app`) implements `PluginContext`
-// and `AppApi`; plugins see nothing else of it, so third-party loading can later hand a sandboxed
-// implementation of the same types.
+// and `AppApi`. Plugins run in the app's own JavaScript context and only built-in ones are loaded:
+// each gets an `AppApi` of its own (`ctx.app`, and `useApp()` inside its contributions) with its
+// own storage and only the capabilities it declares (`PluginDef.permissions`). That is least
+// privilege among built-ins, not a security boundary; it is the seam a future loader of other
+// plugins builds on (asking the person to grant the declared permissions). Untrusted code would
+// need a different mechanism for UI contributions (React components, editor extensions), which
+// run in the page itself.
 import type { ChildEntry, OperationId, TabPath, TabState } from "@lydie/contract";
 import type { AnyExtension, Editor, JSONContent, SlashCommandItem } from "@lydie/editor";
 import type { AppLock, DownloadOptions, DownloadResult } from "@lydie/platform";
@@ -59,6 +64,8 @@ export type GestureContext = "read" | "edit";
 
 export type CommandSource = "palette" | "keybinding" | "menu" | "api";
 
+// Every callback below that takes an `app` gets the app of the plugin that contributed it, whoever
+// calls it (the host scopes them at registration).
 export type CommandContext = { app: AppApi; source: CommandSource; args?: unknown };
 
 // One of the things a command with `choices` can be run with (an icon, a colour).
@@ -81,7 +88,7 @@ export type CommandChoices = {
 };
 
 export type CommandDef = {
-  // Namespaced: "<plugin>.<name>", e.g. "quick-switcher.open".
+  // Namespaced: "<plugin id>.<name>", e.g. "quick-switcher.open"; unique.
   id: string;
   title: string;
   // For a command that switches something on or off: the palette's title for how things are now,
@@ -249,7 +256,8 @@ export type DocumentTreeProps = {
   onForeignDrop?: (id: string, target: DocumentTreeDropTarget) => Promise<void>;
   // Extra `doc.create` input for new top-level pages (e.g. `{ teamspaceId }`).
   createInput?: Record<string, unknown>;
-  // Device-storage key of the expanded folders (default: one per workspace).
+  // Where the expanded folders are kept: a key in the document tree plugin's own storage (default:
+  // one per workspace).
   expandedKey?: string;
   // "self": fills its container and scrolls (the sidebar section). "parent": as tall as its rows,
   // virtualised against the nearest scrolling ancestor (several trees in one list).
@@ -460,6 +468,7 @@ export type AppApi = {
   // disk: a save dialog on the desktop; in a browser its own download (LYD-380).
   download(options: DownloadOptions): Promise<DownloadResult>;
   editor: EditorFacilities;
+  // The next three need the "device" permission; without it they are absent.
   // System-wide shortcuts the shell owns (desktop only; absent elsewhere). The quick-capture
   // accelerator uses Electron's syntax ("CommandOrControl+Shift+Space"), null when off.
   shortcuts?: {
@@ -476,24 +485,38 @@ export type AppApi = {
     state(): Promise<{ blocked: boolean; supported: boolean }>;
     setBlocked(blocked: boolean): Promise<void>;
   };
-  // Per-device key/value storage for plugin preferences and usage stats (JSON values).
-  storage: {
-    get<T>(key: string): T | null;
-    set(key: string, value: unknown): void;
-    // Called after `set` changes `key` in this window.
-    subscribe?: (key: string, listener: () => void) => () => void;
+  // Per-device key/value storage for plugin preferences and usage stats (JSON values), the
+  // plugin's own: its keys cannot meet another plugin's (stored as `plugin:<plugin id>:<key>`).
+  storage: PluginStorage & {
+    // One area every plugin reads and writes (`plugin:shared:<key>`), for a setting one plugin
+    // writes and another reads. Prefer a plugin's own storage.
+    shared?: PluginStorage;
   };
-  // What the composition root offers besides the backend (account, collab, folder settings, …).
+  // What the composition root offers besides the backend (account, collab, folder settings, …),
+  // as far as the plugin's permissions reach (see `HostServices`).
   readonly services?: HostServices;
   // The built-in plugins and whether each is on (per device; changes apply on reopen).
+  // `setEnabled` needs the "plugins" permission and throws without it.
   readonly plugins?: PluginsApi;
+};
+
+export type PluginStorage = {
+  get<T>(key: string): T | null;
+  // null removes the key.
+  set(key: string, value: unknown): void;
+  // Called after `set` changes `key` in this window.
+  subscribe?: (key: string, listener: () => void) => () => void;
 };
 
 // ---- Plugins
 
 export type PluginContext = {
   readonly plugin: { id: string; name: string };
+  // This plugin's app: its own storage and the capabilities its permissions allow.
   readonly app: AppApi;
+  // For a plugin that finishes starting after `activate` returns (one whose code loads lazily):
+  // it could not. Everything it registered is removed and Settings → Plugins shows the error.
+  fail(error: unknown): void;
   commands: { register(def: CommandDef): Disposable };
   views: { register(def: ViewDef): Disposable };
   sidebar: { register(def: SidebarSectionDef): Disposable };
@@ -511,15 +534,26 @@ export type PluginContext = {
   importers: { register(def: ImporterDef): Disposable };
 };
 
+// What a plugin's app may reach beyond documents, views and its own storage. A plugin's app lacks
+// what it does not declare (Settings → Plugins lists what each declares).
+// "account": the hosted account (`services.account`: sign-in, workspaces, hosted operations) and
+//   renaming the workspace (`services.renameWorkspace`).
+// "vault": the open folder (`services.vault`: its settings, the local MCP server).
+// "device": the app lock, privacy mode and system-wide shortcuts (`appLock`, `screenCapture`,
+//   `shortcuts`).
+// "plugins": turning plugins on and off (`plugins.setEnabled`).
+export type PluginPermission = "account" | "vault" | "device" | "plugins";
+
 export type PluginDef = {
-  // Lower-case kebab-case, unique.
+  // Lower-case kebab-case, unique ("core" and "shared" are taken).
   id: string;
   name: string;
   description?: string;
   // Cannot be turned off in Settings → Plugins.
   essential?: boolean;
-  // Registers contributions. Everything registered through `ctx` is removed on deactivation; return
-  // a function to clean up anything else.
+  permissions?: readonly PluginPermission[];
+  // Registers contributions. Everything registered through `ctx` is removed on deactivation, and
+  // when `activate` throws; return a function to clean up anything else.
   activate(ctx: PluginContext): void | Disposable;
 };
 

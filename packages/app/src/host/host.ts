@@ -23,6 +23,8 @@ import type {
   OpenOptions,
   PluginContext,
   PluginDef,
+  PluginPermission,
+  PluginStorage,
   TabInfo,
   TabTint,
   ToastOptions,
@@ -38,7 +40,13 @@ import { download } from "./download.ts";
 import { createEditorFacilities } from "./editor-facilities.ts";
 import { createKeymap } from "./keymap.ts";
 import type { Keymap } from "./keymap.ts";
-import { createStore, DISABLED_PLUGINS_KEY, PLUGIN_STORAGE_PREFIX } from "./stores.ts";
+import {
+  migratePluginStorage,
+  pluginStoragePrefix,
+  SHARED_STORAGE_AREA,
+} from "./plugin-storage.ts";
+import { ALL_PERMISSIONS, scopeContribution, scopeServices } from "./scope.ts";
+import { createStore, DISABLED_PLUGINS_KEY } from "./stores.ts";
 import type { DeviceStorage, Store } from "./stores.ts";
 import { createTabPool } from "./tab-pool.ts";
 import type { TabPool } from "./tab-pool.ts";
@@ -185,6 +193,7 @@ type PressedKey = Pick<
 
 export function createHost(options: HostOptions): Host {
   const { backend, platform, layout, storage, windowId } = options;
+  migratePluginStorage(storage);
   const mac = platform.capabilities.os === "macos";
   const contributions = createContributionRegistry();
   const keymap = createKeymap(storage);
@@ -192,7 +201,6 @@ export function createHost(options: HostOptions): Host {
   const shell = createStore<ShellState>({ ...DEFAULT_SHELL, ...storage.get<ShellState>("shell") });
   shell.subscribe(() => storage.set("shell", shell.get()));
   const overlay = createStore<OverlayState>(null);
-  const storageListeners = new Map<string, Set<() => void>>();
   // A hand-off takes this workspace's device settings along.
   const services = carryOnHandoff(options.services, storage, backend.info.workspaceId);
   const toasts = createStore<readonly Toast[]>([]);
@@ -525,7 +533,91 @@ export function createHost(options: HostOptions): Host {
   // (the desktop app, the try-out, an embed) their href is the path and every click is the app's.
   let links: HostLinks | null = null;
 
-  const app: AppApi = {
+  // ---- The app, one per plugin
+  // Each plugin's app shares these members; storage, services and the permission-bound members
+  // are its own (`appFor`).
+
+  const storageListeners = new Map<string, Set<() => void>>();
+  // One area of device storage, by key prefix; listeners are keyed by the stored (full) key.
+  const storageArea = (prefix: string): PluginStorage => ({
+    get: <T>(key: string) => storage.get<T>(prefix + key),
+    set: (key, value) => {
+      storage.set(prefix + key, value);
+      for (const listener of [...(storageListeners.get(prefix + key) ?? [])]) listener();
+    },
+    subscribe: (key, listener) => {
+      let set = storageListeners.get(prefix + key);
+      if (!set) storageListeners.set(prefix + key, (set = new Set()));
+      set.add(listener);
+      return () => set.delete(listener);
+    },
+  });
+  const sharedStorage = storageArea(pluginStoragePrefix(SHARED_STORAGE_AREA));
+
+  const device: Pick<AppApi, "shortcuts" | "appLock" | "screenCapture"> = {
+    ...(platform.shortcuts
+      ? {
+          shortcuts: {
+            quickCapture: () => platform.shortcuts!.quickCapture(),
+            setQuickCapture: (accelerator: string | null) =>
+              platform.shortcuts!.setQuickCapture(accelerator),
+          },
+        }
+      : {}),
+    ...(platform.appLock ? { appLock: platform.appLock } : {}),
+    ...(platform.screenCapture
+      ? {
+          screenCapture: {
+            state: () => platform.screenCapture!.state(),
+            setBlocked: (blocked: boolean) => platform.screenCapture!.setBlocked(blocked),
+          },
+        }
+      : {}),
+  };
+
+  const available = options.available ?? options.plugins;
+  const declared = new Map<string, readonly PluginPermission[]>();
+  for (const plugin of [...available, ...options.plugins]) {
+    if (!declared.has(plugin.id)) declared.set(plugin.id, plugin.permissions ?? []);
+  }
+  const errorOf = (pluginId: string) => {
+    const messages = pluginErrors
+      .get()
+      .filter((e) => e.pluginId === pluginId)
+      .map((e) => e.error.message);
+    return messages.length ? messages.join(" ") : null;
+  };
+  const pluginsApi = {
+    list: () => {
+      const disabled = new Set(storage.get<string[]>(DISABLED_PLUGINS_KEY) ?? []);
+      return available
+        .filter((p) => p.id !== "core")
+        .map((p) => {
+          const error = errorOf(p.id);
+          return {
+            id: p.id,
+            name: p.name,
+            description: p.description ?? null,
+            enabled: Boolean(p.essential) || !disabled.has(p.id),
+            essential: Boolean(p.essential),
+            permissions: p.permissions ?? [],
+            ...(error ? { error } : {}),
+          };
+        });
+    },
+    subscribe: (listener: () => void) => pluginErrors.subscribe(listener),
+    setEnabled: (id: string, enabled: boolean) => {
+      const disabled = new Set(storage.get<string[]>(DISABLED_PLUGINS_KEY) ?? []);
+      if (enabled) disabled.delete(id);
+      else disabled.add(id);
+      storage.set(DISABLED_PLUGINS_KEY, [...disabled]);
+    },
+  };
+
+  const shared: Omit<
+    AppApi,
+    "linkClicks" | "storage" | "services" | "plugins" | "shortcuts" | "appLock" | "screenCapture"
+  > = {
     backend,
     workspace: backend.info,
     open,
@@ -539,9 +631,6 @@ export function createHost(options: HostOptions): Host {
       return "replace";
     },
     href: (path, title = null) => (links ? links.href(path, title) : path),
-    get linkClicks() {
-      return links ? "browser" : "app";
-    },
     activeTab: activeTabStable,
     subscribeActiveTab,
     setTabState: (tabId, state) => layout.dispatch({ type: "setTabState", tabId, state }),
@@ -582,62 +671,44 @@ export function createHost(options: HostOptions): Host {
     confirm,
     download: (options) => download(platform, options),
     editor: createEditorFacilities(contributions),
-    ...(platform.shortcuts
-      ? {
-          shortcuts: {
-            quickCapture: () => platform.shortcuts!.quickCapture(),
-            setQuickCapture: (accelerator: string | null) =>
-              platform.shortcuts!.setQuickCapture(accelerator),
-          },
-        }
-      : {}),
-    ...(platform.appLock ? { appLock: platform.appLock } : {}),
-    ...(platform.screenCapture
-      ? {
-          screenCapture: {
-            state: () => platform.screenCapture!.state(),
-            setBlocked: (blocked: boolean) => platform.screenCapture!.setBlocked(blocked),
-          },
-        }
-      : {}),
-    storage: {
-      get: <T>(key: string) => storage.get<T>(`${PLUGIN_STORAGE_PREFIX}${key}`),
-      set: (key, value) => {
-        storage.set(`${PLUGIN_STORAGE_PREFIX}${key}`, value);
-        for (const listener of [...(storageListeners.get(key) ?? [])]) listener();
-      },
-      subscribe: (key, listener) => {
-        let set = storageListeners.get(key);
-        if (!set) storageListeners.set(key, (set = new Set()));
-        set.add(listener);
-        return () => set.delete(listener);
-      },
-    },
-    ...(services ? { services } : {}),
-    plugins: {
-      list: () => {
-        const disabled = new Set(storage.get<string[]>(DISABLED_PLUGINS_KEY) ?? []);
-        return (options.available ?? options.plugins)
-          .filter((p) => p.id !== "core")
-          .map((p) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description ?? null,
-            enabled: Boolean(p.essential) || !disabled.has(p.id),
-            essential: Boolean(p.essential),
-          }));
-      },
-      setEnabled: (id, enabled) => {
-        const disabled = new Set(storage.get<string[]>(DISABLED_PLUGINS_KEY) ?? []);
-        if (enabled) disabled.delete(id);
-        else disabled.add(id);
-        storage.set(DISABLED_PLUGINS_KEY, [...disabled]);
-      },
-    },
   };
+
+  const apps = new Map<string, AppApi>();
+  const scopedApp = (pluginId: string): AppApi => {
+    const granted = new Set<PluginPermission>(
+      pluginId === "core" ? ALL_PERMISSIONS : (declared.get(pluginId) ?? []),
+    );
+    const scopedServices = scopeServices(services, granted);
+    return {
+      ...shared,
+      get linkClicks() {
+        return links ? "browser" : "app";
+      },
+      ...(granted.has("device") ? device : {}),
+      storage: { ...storageArea(pluginStoragePrefix(pluginId)), shared: sharedStorage },
+      ...(scopedServices ? { services: scopedServices } : {}),
+      plugins: granted.has("plugins")
+        ? pluginsApi
+        : {
+            ...pluginsApi,
+            setEnabled: () => {
+              throw new Error(`Plugin ${pluginId} has not declared the "plugins" permission`);
+            },
+          },
+    };
+  };
+  // One app per plugin, made when first asked for and the same object from then on.
+  const appFor = (pluginId: string): AppApi => {
+    let scoped = apps.get(pluginId);
+    if (!scoped) apps.set(pluginId, (scoped = scopedApp(pluginId)));
+    return scoped;
+  };
+  // The shell's own: every permission, storage under "core".
+  const app = appFor("core");
 
   const bridge: HostBridge = {
     app,
+    appFor,
     contributions: {
       list: (kind) => contributions.list(kind),
       subscribe: (kind, listener) => contributions.subscribe(kind, listener),
@@ -899,18 +970,82 @@ export function createHost(options: HostOptions): Host {
   for (const command of coreCommands) disposers.push(contributions.add("command", "core", command));
 
   // ---- Plugins
+  // Each plugin's registrations are its own list: removed together when the window closes, when
+  // `activate` throws and when a plugin that loads later reports that it could not (`ctx.fail`).
 
+  const recordError = (plugin: PluginDef, error: unknown, what: string) => {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`Plugin ${plugin.id} ${what}`, err);
+    pluginErrors.set((list) => [...list, { pluginId: plugin.id, error: err }]);
+  };
+
+  // Why a contribution cannot be registered, or null: ids are unique per kind (the first one
+  // stays), and commands are named after their plugin.
+  const refusal = (kind: ContributionKind, def: { id?: unknown }, pluginId: string) => {
+    const id = typeof def.id === "string" ? def.id : null;
+    if (id === null) return null;
+    if (kind === "command" && !id.startsWith(`${pluginId}.`)) {
+      return `Command ${id} is not named after its plugin (${pluginId}.…)`;
+    }
+    const taken = contributions.list(kind).find((c) => (c as { id?: unknown }).id === id);
+    return taken ? `Its ${kind} ${id} is already registered by ${taken.pluginId}` : null;
+  };
+
+  const activated = new Set<string>();
   for (const plugin of options.plugins) {
+    if (activated.has(plugin.id) || plugin.id === SHARED_STORAGE_AREA) {
+      recordError(
+        plugin,
+        new Error(`Another plugin already has the id ${plugin.id}`),
+        "was not started",
+      );
+      continue;
+    }
+    activated.add(plugin.id);
+    const scoped = appFor(plugin.id);
+    const own: (() => void)[] = [];
+    let failed = false;
+    const rollback = () => {
+      for (const off of own.splice(0).reverse()) {
+        try {
+          off();
+        } catch (error) {
+          console.error(`Plugin ${plugin.id} failed to clean up`, error);
+        }
+      }
+    };
+    const fail = (error: unknown) => {
+      if (failed) return;
+      failed = true;
+      rollback();
+      recordError(plugin, error, "failed to start");
+      // An essential plugin is part of the app the person relies on: say so. Others are quiet
+      // (Settings → Plugins shows it).
+      if (plugin.essential) {
+        notify({
+          title: `${plugin.name} could not start`,
+          description: error instanceof Error ? error.message : String(error),
+          kind: "error",
+        });
+      }
+    };
     const register =
       <K extends ContributionKind>(kind: K) =>
       (def: Contributions[K]) => {
-        const off = contributions.add(kind, plugin.id, def);
-        disposers.push(off);
+        if (failed) return () => {};
+        const problem = refusal(kind, def as { id?: unknown }, plugin.id);
+        if (problem) {
+          recordError(plugin, new Error(problem), "registered a contribution it may not");
+          return () => {};
+        }
+        const off = contributions.add(kind, plugin.id, scopeContribution(kind, def, scoped));
+        own.push(off);
         return off;
       };
     const ctx: PluginContext = {
       plugin: { id: plugin.id, name: plugin.name },
-      app,
+      app: scoped,
+      fail,
       commands: { register: register("command") },
       views: { register: register("view") },
       sidebar: { register: register("sidebar") },
@@ -928,12 +1063,14 @@ export function createHost(options: HostOptions): Host {
     };
     try {
       const cleanup = plugin.activate(ctx);
-      if (typeof cleanup === "function") disposers.push(cleanup);
+      if (typeof cleanup === "function") {
+        if (failed) cleanup();
+        else own.push(cleanup);
+      }
     } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error(`Plugin ${plugin.id} failed to activate`, err);
-      pluginErrors.set((list) => [...list, { pluginId: plugin.id, error: err }]);
+      fail(error);
     }
+    disposers.push(rollback);
   }
 
   // Seed the pool with what is visible.

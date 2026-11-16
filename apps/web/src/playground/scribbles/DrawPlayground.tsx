@@ -12,7 +12,7 @@ import {
 import { useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
-const STORAGE_KEY = "playground.doodle";
+const STORAGE_KEY = "doodle";
 const CANVAS = 280;
 
 type P = [number, number];

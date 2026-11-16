@@ -43,7 +43,7 @@ export function SpacesTree() {
   const shown = teamspacesShown(teamspaces);
   const [joined, setJoined] = useState<ReadonlySet<string>>(new Set());
   // Collapsed groups are remembered per device, like the folders inside them.
-  const collapsedKey = `team.spaces.collapsed:${workspaceId}`;
+  const collapsedKey = `spaces.collapsed:${workspaceId}`;
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
     () => new Set(app.storage.get<string[]>(collapsedKey) ?? []),
   );

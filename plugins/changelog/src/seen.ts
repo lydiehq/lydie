@@ -1,7 +1,7 @@
 import type { ChangelogEntry } from "./types.ts";
 
 // Per device: the date of the newest entry this person has seen.
-export const SEEN_KEY = "changelog.seen";
+export const SEEN_KEY = "seen";
 
 type Storage = {
   get<T>(key: string): T | null;

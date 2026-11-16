@@ -28,11 +28,9 @@ const sortByPoints = [{ propertyId: "P1", direction: "desc" as const }];
 
 describe("view overlays", () => {
   test("storage keys: one per view, one per embed of it", () => {
-    expect(overlayStorageKey("V1")).toBe("databases.overlay:V1");
-    expect(overlayStorageKey("V1", "D1:Tasks.base")).toBe(
-      "databases.overlay:V1:embed:D1:Tasks.base",
-    );
-    expect(overlayStorageKey("V1", null)).toBe("databases.overlay:V1");
+    expect(overlayStorageKey("V1")).toBe("overlay:V1");
+    expect(overlayStorageKey("V1", "D1:Tasks.base")).toBe("overlay:V1:embed:D1:Tasks.base");
+    expect(overlayStorageKey("V1", null)).toBe("overlay:V1");
   });
 
   test("a patch goes to the overlay; the saved view is untouched", () => {

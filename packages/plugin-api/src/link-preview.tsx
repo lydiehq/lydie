@@ -5,6 +5,7 @@ import { FloatingCard } from "@lydie/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent, PointerEvent, ReactNode } from "react";
 
+import { ContributionBoundary } from "./contribution-boundary.tsx";
 import { DOC_CARD_CLASS } from "./doc-card.tsx";
 import { useContributions } from "./react.tsx";
 
@@ -111,7 +112,9 @@ export function useHoverPreview(
           }
         }}
       >
-        <renderer.component target={target} sourceId={sourceId ?? null} />
+        <ContributionBoundary pluginId={renderer.pluginId} label="Link preview" compact>
+          <renderer.component target={target} sourceId={sourceId ?? null} />
+        </ContributionBoundary>
       </FloatingCard>
     ) : null;
 
