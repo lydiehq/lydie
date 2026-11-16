@@ -119,6 +119,7 @@ export function LydieAvatar({ size = 32, className }: Partial<GlyphProps>) {
       viewBox="0 0 100 100"
       width={size}
       height={size}
+      style={{ width: size, height: size }}
       aria-hidden
       data-lydie-avatar
       className={clsx("shrink-0", className)}
@@ -144,6 +145,7 @@ export function SpaceIcon({
         viewBox="0 0 100 100"
         width={size}
         height={size}
+        style={{ width: size, height: size }}
         aria-hidden
         className={clsx("shrink-0", className)}
       >

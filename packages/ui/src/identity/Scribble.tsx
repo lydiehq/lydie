@@ -46,6 +46,8 @@ export function ScribbleIcon({
       viewBox="0 0 100 100"
       width={size}
       height={size}
+      // Inline, so a Button's rule for the icons inside it does not shrink an avatar.
+      style={{ width: size, height: size }}
       aria-hidden
       className={clsx("shrink-0", className)}
     >
