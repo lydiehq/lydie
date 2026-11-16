@@ -2,9 +2,13 @@
 // `text`; higher scores are better matches. Rewards consecutive characters, word starts and an
 // early first match; an exact prefix wins over everything else.
 export function fuzzyScore(query: string, text: string): number | null {
-  const q = query.trim().toLowerCase();
+  return fuzzyScoreLower(query.trim().toLowerCase(), text.toLowerCase());
+}
+
+// `fuzzyScore` for a query already trimmed and lowercased and a text already lowercased: a picker
+// over thousands of titles prepares each once, not on every keystroke.
+export function fuzzyScoreLower(q: string, t: string): number | null {
   if (!q) return 0;
-  const t = text.toLowerCase();
   if (t === q) return 1000;
   if (t.startsWith(q)) return 900 - t.length / 100;
   const contains = t.indexOf(q);

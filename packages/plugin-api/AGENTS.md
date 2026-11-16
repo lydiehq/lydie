@@ -199,7 +199,8 @@ actorRef(actor), types Actor, ActorRef, Activity, HistorySession   // the contra
 ACTIVITY_TYPES, isWorkspaceActivityType(type)   // the contract's: every activity row type; the
 //   ones about the workspace itself (members, sharing, tokens, publishing: hosted workspaces)
 //   `FolderSettings.versionHistory`: "snapshots" | "git" | "off" (what keeps a folder's versions)
-parseKeybinding, matchesKeybinding, formatKeybinding, firesInText; fuzzyScore, fuzzyRanges
+parseKeybinding, matchesKeybinding, formatKeybinding, firesInText; fuzzyScore, fuzzyRanges,
+fuzzyScoreLower (query and text already lowercased: score many prepared texts per keystroke)
 keySequence("G H") → ["G", "H"], keyCaps(binding, mac), isBareKey(binding)   // sequences and bare
 //   characters ("?" matches whatever Shift the layout needs), as in Linear
 isBrowserShortcut(binding | keydown, mac)   // the browser's own shortcuts, which a browser tab

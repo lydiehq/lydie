@@ -1,4 +1,4 @@
-import { fuzzyScore } from "@lydie/plugin-api";
+import { fuzzyScoreLower } from "@lydie/plugin-api";
 
 export type Usage = Record<string, { count: number; last: number }>;
 
@@ -8,7 +8,18 @@ export type Candidate = {
   path: string;
   icon?: string | null;
   updatedAt?: string;
+  // Lowercased once (`withKeys`) rather than on every keystroke.
+  keys?: MatchKeys;
 };
+
+type MatchKeys = { title: string; full: string | null };
+
+const keysOf = (c: Candidate): MatchKeys => ({
+  title: c.title.toLowerCase(),
+  full: c.path ? `${c.path} / ${c.title}`.toLowerCase() : null,
+});
+
+export const withKeys = (c: Candidate): Candidate => ({ ...c, keys: keysOf(c) });
 
 // How many documents an empty query suggests.
 export const SUGGESTIONS = 8;
@@ -22,13 +33,15 @@ export function frecency(entry: { count: number; last: number } | undefined, now
   return Math.log2(1 + entry.count) * Math.pow(0.5, age / (7 * DAY));
 }
 
-// How well `query` matches a candidate: its title, or its path and title ("work/road" finds
-// Roadmap in Work), the path match counting less.
+// How well `query` (trimmed and lowercased) matches a candidate: its title, or its path and title
+// ("work/road" finds Roadmap in Work), the path match counting less. The title ends the full
+// text, so what does not match the full text does not match the title either.
 export function matchScore(query: string, c: Candidate): number | null {
-  const title = fuzzyScore(query, c.title);
-  if (!c.path) return title;
-  const full = fuzzyScore(query, `${c.path} / ${c.title}`);
-  if (full === null) return title;
+  const keys = c.keys ?? keysOf(c);
+  if (keys.full === null) return fuzzyScoreLower(query, keys.title);
+  const full = fuzzyScoreLower(query, keys.full);
+  if (full === null) return null;
+  const title = fuzzyScoreLower(query, keys.title);
   return title === null ? full - 150 : Math.max(title, full - 150);
 }
 
@@ -64,7 +77,7 @@ export function rank(
   now: number,
   limit = 50,
 ): Candidate[] {
-  const q = query.trim();
+  const q = query.trim().toLowerCase();
   if (!q) return suggest(candidates, usage, now, Math.min(limit, SUGGESTIONS));
   const scored: { c: Candidate; score: number }[] = [];
   for (const c of candidates) {

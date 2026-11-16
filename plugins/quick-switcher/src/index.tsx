@@ -12,9 +12,9 @@ import {
 import type { AppApi, OpenOptions } from "@lydie/plugin-api";
 import { FileSearchRegular, PickerDialog } from "@lydie/plugin-api/ui";
 import type { PickerItem, PickerSelectEvent } from "@lydie/plugin-api/ui";
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 
-import { parseQuery, rank, recordOpen } from "./ranking.ts";
+import { parseQuery, rank, recordOpen, withKeys } from "./ranking.ts";
 import type { Candidate, Usage } from "./ranking.ts";
 
 const USAGE_KEY = "quick-switcher:usage";
@@ -30,13 +30,13 @@ async function loadCandidates(app: AppApi): Promise<Candidate[]> {
     const path: string[] = [];
     for (let p = e.parentId; p && path.length < 4; p = parents.get(p) ?? null)
       path.unshift(titles.get(p) ?? "");
-    return {
+    return withKeys({
       id: e.id,
       title: e.title,
       path: path.join(" / "),
       icon: pageIconOf(e.properties),
       updatedAt: e.updatedAt,
-    };
+    });
   });
 }
 
@@ -81,10 +81,13 @@ function useHeadings(app: AppApi, docQuery: string | null, candidates: Candidate
 function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
   const app = useApp();
   const backend = useBackend();
-  const [query, setQuery] = useState("");
+  const [typed, setQuery] = useState("");
+  // The field shows each key at once; ranking thousands of titles may lag a keystroke behind.
+  const query = useDeferredValue(typed);
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [now] = useState(() => Date.now());
-  const usage = app.storage.get<Usage>(USAGE_KEY) ?? {};
+  // Read once: opens are recorded when a document becomes the focused tab, after this closes.
+  const [usage] = useState(() => app.storage.get<Usage>(USAGE_KEY) ?? {});
   const parsed = parseQuery(query);
   const headings = useHeadings(app, parsed.kind === "headings" ? parsed.doc : null, candidates);
 
@@ -146,7 +149,7 @@ function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
     <PickerDialog
       label="Quick switcher"
       placeholder="Find or create a document · # headings · > commands"
-      query={query}
+      query={typed}
       onQueryChange={setQuery}
       items={items}
       onHighlight={(item) => {

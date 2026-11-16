@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { frecency, parseQuery, rank, recordOpen, SUGGESTIONS } from "./ranking.ts";
+import { frecency, parseQuery, rank, recordOpen, SUGGESTIONS, withKeys } from "./ranking.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
 const docs = [
@@ -24,6 +24,14 @@ describe("quick switcher ranking", () => {
         .map((d) => d.id)
         .sort(),
     ).toEqual(["b", "d"]);
+  });
+
+  test("candidates with their keys prepared rank the same", () => {
+    const prepared = docs.map(withKeys);
+    for (const q of ["road", "Road", "qrtrly", "lydie ideas", "work", "zzz", " ideas "])
+      expect(rank(prepared, q, {}, 0).map((d) => d.id)).toEqual(
+        rank(docs, q, {}, 0).map((d) => d.id),
+      );
   });
 
   test("frequent and recent documents rank higher", () => {
