@@ -10,6 +10,7 @@ import {
   isImageTarget,
   linkKey,
   looksLikeUrl,
+  openableUrl,
   parsePreviewTarget,
   parseWikiTarget,
   sectionOf,
@@ -113,5 +114,55 @@ describe("linked sections", () => {
     expect(sectionOf(content, outline, { blockId: "nope" }).found).toBeFalse();
     expect(sectionOf(content, outline, { heading: "Nope" }).found).toBeFalse();
     expect(sectionOf(content, outline, {}).nodes).toHaveLength(7);
+  });
+});
+
+describe("openable URLs", () => {
+  test("http, https and mailto open", () => {
+    expect(openableUrl("https://example.com/a?b=1#c")).toBe("https://example.com/a?b=1#c");
+    expect(openableUrl("http://example.com")).toBe("http://example.com/");
+    expect(openableUrl("HTTPS://Example.com")).toBe("https://example.com/");
+    expect(openableUrl("mailto:someone@example.com")).toBe("mailto:someone@example.com");
+  });
+
+  test("other schemes do not", () => {
+    for (const href of [
+      "javascript:alert(1)",
+      "JaVaScRiPt:alert(1)",
+      "data:text/html,<script>alert(1)</script>",
+      "vbscript:msgbox(1)",
+      "file:///etc/passwd",
+      "slack://open",
+      "x-custom-app:do-something",
+      "lydie:user/abc",
+      "ftp://example.com",
+      "blob:https://example.com/uuid",
+    ]) {
+      expect(openableUrl(href)).toBeNull();
+    }
+  });
+
+  test("whitespace and control characters do not hide a scheme", () => {
+    for (const href of [
+      " javascript:alert(1)",
+      "\tjavascript:alert(1)",
+      "\njavascript:alert(1)",
+      "\u0000javascript:alert(1)",
+      "\u001fjavascript:alert(1)",
+      "java\tscript:alert(1)",
+      "java\nscript:alert(1)",
+      "java\rscript:alert(1)",
+      " \u0001data:text/html,x",
+    ]) {
+      expect(openableUrl(href)).toBeNull();
+    }
+    expect(openableUrl("  https://example.com  ")).toBe("https://example.com/");
+    expect(openableUrl("ht\ttps://example.com")).toBe("https://example.com/");
+  });
+
+  test("relative and malformed hrefs do not", () => {
+    for (const href of ["", "Note.md", "/d/abc", "//example.com", "https://", "http://[::1"]) {
+      expect(openableUrl(href)).toBeNull();
+    }
   });
 });

@@ -44,6 +44,21 @@ export function isExternalHref(href: string): boolean {
   return /^[a-z][a-z0-9+.-]*:/i.test(href) && !/^[a-z]:[\\/]/i.test(href);
 }
 
+const OPENABLE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
+
+// The URL to open for an external href, or null when its scheme is not one a link may open.
+// Documents come from collaborators and imports, so `javascript:`, `data:`, `file:` and other
+// apps' protocol handlers are refused. The URL parser drops the whitespace and control characters
+// a browser would ignore, so the scheme checked is the one that would run.
+export function openableUrl(href: string): string | null {
+  try {
+    const url = new URL(href);
+    return OPENABLE_PROTOCOLS.has(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function looksLikeUrl(text: string): boolean {
   const t = text.trim();
   if (/\s/.test(t) || !t) return false;

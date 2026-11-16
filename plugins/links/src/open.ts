@@ -2,14 +2,15 @@ import { docPath } from "@lydie/plugin-api";
 import type { AppApi, OpenOptions } from "@lydie/plugin-api";
 
 import { clearResolveCache, resolveTarget } from "./resolve.ts";
-import { isExternalHref, newNoteTitle } from "./targets.ts";
+import { isExternalHref, newNoteTitle, openableUrl } from "./targets.ts";
 
 export type FollowTarget = { target: string; heading: string | null; blockId: string | null };
 
+// Opens http, https and mailto links (as the desktop app's shell does); anything else, including
+// app-internal schemes such as a person mention's `lydie:`, does nothing.
 export function openExternal(href: string) {
-  // App-internal schemes (a person mention) have nothing to open.
-  if (href.startsWith("lydie:")) return;
-  window.open(href, "_blank", "noopener,noreferrer");
+  const url = openableUrl(href);
+  if (url) window.open(url, "_blank", "noopener,noreferrer");
 }
 
 // Creates the note an unresolved link names, beside the linking note (where resolution looks

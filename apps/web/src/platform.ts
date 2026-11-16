@@ -110,8 +110,16 @@ export function createWebPlatform(): Platform {
     },
     services: null,
     downloads: createWebDownloads(),
+    // Only http(s) and mailto, as the desktop shell's checkExternalUrl.
     async openExternal(url) {
-      window.open(url, "_blank", "noopener,noreferrer");
+      let parsed: URL;
+      try {
+        parsed = new URL(url);
+      } catch {
+        return;
+      }
+      if (!["http:", "https:", "mailto:"].includes(parsed.protocol)) return;
+      window.open(parsed.href, "_blank", "noopener,noreferrer");
     },
   };
 }
