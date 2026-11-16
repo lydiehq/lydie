@@ -78,17 +78,43 @@ export function detectEol(source: string): "\n" | "\r\n" | "\r" {
   return "\n";
 }
 
+// Results are shared (see `parseWithTree`): never mutate one.
 export function parse(source: string): ParseResult {
   return parseWithTree(source).result;
 }
 
+type Parsed = { result: ParseResult; tree: M.Root; bodyStart: number };
+
+// Recent parses by text. A save parses its output to verify it, and that text is parsed again
+// right after: the index's `extract`, the next save's `original`, the file bridge's last agreed
+// text. Small texts parse in well under a millisecond and are not kept.
+const CACHE_MIN_LENGTH = 1024;
+const CACHE_SIZE = 4;
+const recent = new Map<string, Parsed>();
+
+// For benchmarks, which time parsing itself.
+export function clearParseCache(): void {
+  recent.clear();
+}
+
 // The parse plus the mdast tree of the body (positions relative to `bodyStart`), for helpers that
 // need inline source positions.
-export function parseWithTree(source: string): {
-  result: ParseResult;
-  tree: M.Root;
-  bodyStart: number;
-} {
+export function parseWithTree(source: string): Parsed {
+  const hit = recent.get(source);
+  if (hit) {
+    recent.delete(source);
+    recent.set(source, hit);
+    return hit;
+  }
+  const parsed = parseSource(source);
+  if (source.length >= CACHE_MIN_LENGTH) {
+    recent.set(source, parsed);
+    while (recent.size > CACHE_SIZE) recent.delete(recent.keys().next().value!);
+  }
+  return parsed;
+}
+
+function parseSource(source: string): Parsed {
   const frontmatter = splitFrontmatter(source);
   const bodyStart = frontmatter ? frontmatter.to : source.startsWith("\uFEFF") ? 1 : 0;
   const tree = parseMdast(source.slice(bodyStart));

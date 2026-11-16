@@ -198,6 +198,32 @@ describe("save", () => {
     expect(save({ original: src, doc }).source).toBe(src);
   });
 
+  test("the result's parse reads the saved text and is the next save's original", () => {
+    // Long enough to be kept by the parse cache.
+    const src = Array.from({ length: 80 }, (_, i) => `Paragraph ${i} with some words.`).join(
+      "\n\n",
+    );
+    const doc = json(src);
+    doc.content![3]!.content![0]!.text = "Third, edited";
+    const first = save({ original: src, doc });
+    expect(first.verified).toBe(true);
+    expect(first.parse.source).toBe(first.source);
+    // The verification's parse is the one later reads of the same text get.
+    expect(parse(first.source)).toBe(first.parse);
+    doc.content![40]!.content![0]!.text = "Fortieth, edited";
+    const second = save({ original: first.parse, doc });
+    expect(second.source).toBe(save({ original: src, doc }).source);
+    expect(second.source).toBe(
+      src
+        .replace("Paragraph 3 with some words.", "Third, edited")
+        .replace("Paragraph 40 with some words.", "Fortieth, edited"),
+    );
+    // Nothing changed: the original's own parse.
+    const noop = save({ original: second.parse, doc });
+    expect(noop.source).toBe(second.source);
+    expect(noop.parse).toBe(second.parse);
+  });
+
   test("serialize: canonical output for a new document", () => {
     const doc = json("Setext\n===\n\n* a\n* b\n\n__x__ _y_\n");
     expect(serialize(doc, { title: "T" })).toBe(

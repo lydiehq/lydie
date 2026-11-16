@@ -1,6 +1,9 @@
 // Performance numbers: bun scripts/bench.ts
 //   - the seed's 2,000-block document (what the app opens in benchmarks): first and warm parse,
 //     serialize, no-op save
+//   - the app's save path on it: editor JSON in, save, then the index's extract of the saved text;
+//     a session of saves with the last save as the original and with the opened text (stale), and
+//     with the original as a string (a folder session, `toMarkdown(string)`)
 //   - parse + no-op save for every file of the Obsidian help vault (if downloaded)
 //   - a ~5k-line file: parse, no-op save, one-block edit save, extract, reconcile
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -11,6 +14,7 @@ import type { Node } from "prosemirror-model";
 
 import { longMarkdown } from "../../../scripts/seed/text.ts";
 import { extract, parse, reconcile, save, schema, serialize } from "../src/index";
+import { clearParseCache } from "../src/parse";
 
 const root = join(dirname(new URL(import.meta.url).pathname), "..");
 
@@ -26,17 +30,23 @@ function walk(dir: string, out: string[] = []): string[] {
 function time<T>(label: string, fn: () => T, runs = 1): T {
   let result!: T;
   const t0 = performance.now();
-  for (let i = 0; i < runs; i++) result = fn();
+  for (let i = 0; i < runs; i++) {
+    clearParseCache();
+    result = fn();
+  }
   const ms = (performance.now() - t0) / runs;
   console.log(`${label.padEnd(48)} ${ms.toFixed(1).padStart(8)} ms`);
   return result;
 }
 
-// Median of `runs` after one warm-up.
-function median(label: string, fn: () => unknown, runs = 15) {
+// Median of `runs` after one warm-up. `setup` runs untimed before each run; without one, the parse
+// cache is cleared.
+function median(label: string, fn: () => unknown, runs = 15, setup = clearParseCache) {
+  setup();
   fn();
   const times: number[] = [];
   for (let i = 0; i < runs; i++) {
+    setup();
     const t0 = performance.now();
     fn();
     times.push(performance.now() - t0);
@@ -51,6 +61,55 @@ const seedParse = time("first parse (cold)", () => parse(seedDoc));
 median("parse", () => parse(seedDoc));
 median("serialize", () => serialize(seedParse.doc, seedParse.properties));
 median("no-op save", () => save({ original: seedParse, doc: seedParse.doc }));
+console.log();
+
+// The app's save path: the editor hands over JSON (with its own attributes), the save's output is
+// extracted for the index, and the next save starts from that output.
+type Json = { type: string; attrs?: Record<string, unknown>; content?: Json[]; text?: string };
+const seedJson = seedParse.doc.toJSON() as Json;
+seedJson.content!.forEach((block, i) => (block.attrs = { ...block.attrs, id: `block-${i}` }));
+const paragraphs = seedJson.content!.flatMap((b, i) => (b.type === "paragraph" ? [i] : []));
+// The editor's document after typing `n` characters, spread over different paragraphs.
+function typed(n: number): Json {
+  const doc = structuredClone(seedJson);
+  for (let k = 0; k < n; k++) {
+    const block = doc.content![paragraphs[(k * 37) % paragraphs.length]!]!;
+    block.content![0]!.text += "x";
+  }
+  return doc;
+}
+const edit1 = typed(1);
+median("app: save editor JSON (one edit)", () => save({ original: seedParse, doc: edit1 }));
+const saved = save({ original: seedParse, doc: edit1 });
+median(
+  "app: extract of the saved text (cached parse)",
+  () => extract(saved.source),
+  15,
+  () => {},
+);
+median("app: extract of the saved text (cold)", () => extract(saved.source));
+median("app: save + extract", () => extract(save({ original: seedParse, doc: edit1 }).source));
+// 20 saves, each a few more characters typed; per save.
+const SESSION = 20;
+const docs = Array.from({ length: SESSION }, (_, k) => typed(k + 1));
+function session(
+  next: (result: ReturnType<typeof save>) => Parameters<typeof save>[0]["original"],
+) {
+  let original: Parameters<typeof save>[0]["original"] = seedParse;
+  for (const doc of docs) {
+    const result = save({ original, doc });
+    extract(result.source);
+    original = next(result);
+  }
+}
+median(`app: session, ${SESSION} saves (last save as original)`, () => session((r) => r.parse), 5);
+median(
+  `app: session, ${SESSION} saves (opened text as original)`,
+  () => session(() => seedParse),
+  5,
+);
+median(`app: session, ${SESSION} saves (original as string)`, () => session((r) => r.source), 5);
+console.log(`  (session times are for all ${SESSION} saves, each with its extract)`);
 console.log();
 
 const vault = join(root, ".cache/obsidian-help");

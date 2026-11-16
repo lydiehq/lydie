@@ -103,3 +103,18 @@ describe("extract", () => {
     expect(extract(assignBlockId("para\n", 0).source).blocks[0]!.id).toMatch(/^[a-z0-9]{6}$/);
   });
 });
+
+test("extract: links name the top-level block they are in", () => {
+  const blocks = Array.from({ length: 300 }, (_, i) =>
+    i % 3 === 0 ? `- item [[L${i}]]\n- more [md](M${i}.md)` : `Text ${i} [[L${i}]]`,
+  );
+  const x = extract(`---\nup: "[[Top]]"\n---\n${blocks.join("\n\n")}\n`);
+  expect(x.links[0]).toMatchObject({ target: "Top", block: -1 });
+  const body = x.links.slice(1);
+  expect(body.filter((l) => l.kind === "wikilink").map((l) => l.block)).toEqual(
+    blocks.map((_, i) => i),
+  );
+  expect(body.filter((l) => l.kind === "markdown").map((l) => l.block)).toEqual(
+    blocks.map((_, i) => i).filter((i) => i % 3 === 0),
+  );
+});

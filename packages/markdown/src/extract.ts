@@ -65,10 +65,16 @@ export function extract(source: string): Extracted {
   const { result, tree, bodyStart } = parseWithTree(source);
   const w: Walk = { tree, bodyStart, result };
   const spans = result.body.children ?? [];
+  // Top-level spans are in order and do not overlap: the last one starting at or before `pos`.
   const blockOf = (pos: number) => {
-    for (let i = 0; i < spans.length; i++)
-      if (pos >= spans[i]!.from && pos < spans[i]!.to) return i;
-    return -1;
+    let lo = 0;
+    let hi = spans.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (spans[mid]!.from <= pos) lo = mid + 1;
+      else hi = mid - 1;
+    }
+    return hi >= 0 && pos < spans[hi]!.to ? hi : -1;
   };
 
   const links: LinkRef[] = [...frontmatterLinks(result), ...bodyLinks(w, blockOf)];

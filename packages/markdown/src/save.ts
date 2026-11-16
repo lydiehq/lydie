@@ -33,6 +33,8 @@ export type SaveResult = {
   // True when re-parsing `source` gives back the edited document. False means a serializer bug:
   // the content is still all there, but some block will read back differently.
   verified: boolean;
+  // The parse of `source` (the verification's): the `original` for the next save of this text.
+  parse: ParseResult;
 };
 
 // recurse: splice inside changed containers too. blankGaps: put a blank line between a changed block
@@ -57,8 +59,8 @@ const CONTAINERS = new Set([
 
 export function save(input: SaveInput): SaveResult {
   const original = typeof input.original === "string" ? parse(input.original) : input.original;
-  const edited = normalizeForMarkdown(importDoc(input.doc));
-  const origDoc = normalizeForMarkdown(original.doc);
+  const edited = normalized(importDoc(input.doc));
+  const origDoc = normalized(original.doc);
   const head = frontmatterText(original, input.properties);
   const expectedProps = input.properties === undefined ? original.properties : input.properties;
 
@@ -68,20 +70,43 @@ export function save(input: SaveInput): SaveResult {
     { recurse: false, aggressive: false, blankGaps: true },
     { recurse: false, aggressive: true, blankGaps: true },
   ];
-  let first: string | null = null;
+  let first: ParseResult | null = null;
   for (const options of attempts) {
     const source = head + body(original, origDoc, edited, options);
-    if (first === null) first = source;
-    if (source === original.source) return { source, verified: true };
-    if (verify(source, edited, expectedProps)) return { source, verified: true };
+    if (source === original.source) return { source, verified: true, parse: original };
+    const reparsed = parse(source);
+    first ??= reparsed;
+    if (verify(reparsed, edited, expectedProps)) return { source, verified: true, parse: reparsed };
   }
-  return { source: first!, verified: false };
+  return { source: first!.source, verified: false, parse: first! };
 }
 
-function verify(source: string, edited: Node, properties: Properties | null | undefined): boolean {
-  const reparsed = parse(source);
-  if (fingerprint(normalizeForMarkdown(reparsed.doc)) !== fingerprint(edited)) return false;
+// Block by block, so the fingerprints of the reparsed blocks are there when this parse is the
+// next save's original.
+function verify(
+  reparsed: ParseResult,
+  edited: Node,
+  properties: Properties | null | undefined,
+): boolean {
+  const doc = normalized(reparsed.doc);
+  if (doc.childCount !== edited.childCount) return false;
+  for (let i = 0; i < doc.childCount; i++) {
+    if (fingerprint(doc.child(i)) !== fingerprint(edited.child(i))) return false;
+  }
   return deepEqual(reparsed.properties ?? {}, properties ?? {});
+}
+
+// The normalised form of a parsed document, kept with it: a parse is the original of every save
+// until the next one, and normalising builds new nodes, whose fingerprints would be taken again.
+const normalizedDocs = new WeakMap<Node, Node>();
+
+function normalized(doc: Node): Node {
+  let out = normalizedDocs.get(doc);
+  if (!out) {
+    out = normalizeForMarkdown(doc);
+    normalizedDocs.set(doc, out);
+  }
+  return out;
 }
 
 function frontmatterText(original: ParseResult, properties: Properties | null | undefined): string {
