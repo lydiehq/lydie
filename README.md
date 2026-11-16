@@ -4,7 +4,7 @@ A writing app that works on a folder of Markdown files, or against a hosted work
 (Electron) from one React app.
 
 **Lydie v2 is a ground-up rebuild, in alpha.** Expect rough edges and keep backups of your notes. The
-old app (v1) is on the `main` branch.
+old app (v1) is at the `v1` tag.
 
 ![An essay open in Lydie, with comments in the margin beside the text](.github/screenshot.png)
 

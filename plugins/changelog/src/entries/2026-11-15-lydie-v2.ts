@@ -53,6 +53,6 @@ export const lydieV2: ChangelogEntry = {
   links: [
     { label: "Create a free Lydie Cloud account", href: "https://app.lydie.co" },
     { label: "Read the developer docs", href: "https://developers.lydie.co" },
-    { label: "See the source on GitHub", href: "https://github.com/lydiehq/lydie/tree/v2" },
+    { label: "See the source on GitHub", href: "https://github.com/lydiehq/lydie" },
   ],
 };

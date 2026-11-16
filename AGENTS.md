@@ -57,7 +57,7 @@ bun run seed:demo --out <folder>   # a realistic workspace (someone's notes, jou
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes to `main`/`v2` and on pull requests, with Bun pinned to the
+`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests, with Bun pinned to the
 version used locally (`BUN_VERSION`; bump it with Bun). No secrets.
 
 - `checks`: `bun install --frozen-lockfile`, then lint, format:check, typecheck, test,
