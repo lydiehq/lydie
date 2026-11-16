@@ -69,7 +69,8 @@ export function SwipeNavigation() {
       if (!frame) return;
       if (frame.type === "commit") void host.app.runCommand(`core.${frame.direction}`);
       pending = frame;
-      raf ||= requestAnimationFrame(() => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
         raf = 0;
         if (pending) paint(pending);
         pending = null;

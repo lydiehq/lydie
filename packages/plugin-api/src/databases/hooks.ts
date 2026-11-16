@@ -81,32 +81,36 @@ function toWindow(state: LiveState<DatabaseViewItem>): ViewWindowState {
   };
 }
 
+// The snapshot `useDatabaseView` returns for a handle's state: the same object while the state is,
+// and while a new query loads the last result that had data.
+function createWindowCache() {
+  let key = "";
+  let state: LiveState<DatabaseViewItem> | null = null;
+  let result = EMPTY;
+  let ready: ViewWindowState | null = null;
+  return (handle: LiveHandle<DatabaseViewItem>): ViewWindowState => {
+    const next = handle.getSnapshot();
+    if (key === handle.key && state === next) return result;
+    key = handle.key;
+    state = next;
+    if (next.isLoading && ready) {
+      result = { ...ready, isFetching: true };
+    } else {
+      result = toWindow(next);
+      if (!next.isLoading && !next.error) ready = result;
+    }
+    return result;
+  };
+}
+
 // A live window of a database view. When the params change (scrolling to another window, a new
 // filter) the previous result stays until the new one arrives, so nothing flashes empty.
 // Unchanged rows keep their identity across emissions.
 export function useDatabaseView(params: DatabaseViewParams | null): ViewWindowState {
   const backend = useBackend();
   const handle = params ? backend.live("database.view", params) : IDLE_HANDLE;
-  const [cache] = useState(() => ({
-    key: "",
-    state: null as LiveState<DatabaseViewItem> | null,
-    result: EMPTY,
-    // The last result that had data, shown while a new query loads.
-    ready: null as ViewWindowState | null,
-  }));
-  const getSnapshot = () => {
-    const state = handle.getSnapshot();
-    if (cache.key === handle.key && cache.state === state) return cache.result;
-    cache.key = handle.key;
-    cache.state = state;
-    if (state.isLoading && cache.ready) {
-      cache.result = { ...cache.ready, isFetching: true };
-    } else {
-      cache.result = toWindow(state);
-      if (!state.isLoading && !state.error) cache.ready = cache.result;
-    }
-    return cache.result;
-  };
+  const [snapshotOf] = useState(createWindowCache);
+  const getSnapshot = () => snapshotOf(handle);
   return useSyncExternalStore(handle.subscribe, getSnapshot, getSnapshot);
 }
 
