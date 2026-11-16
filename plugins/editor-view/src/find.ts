@@ -2,6 +2,7 @@
 // Local view state only: setting the query or moving between matches dispatches meta-only
 // transactions (no doc change, not added to history), so nothing is saved and nothing syncs.
 import {
+  changedTextblocks,
   Decoration,
   DecorationSet,
   Extension,
@@ -60,42 +61,81 @@ export function findMatches(doc: ProseMirrorNode, query: string): Match[] {
   const matches: Match[] = [];
   doc.descendants((block, blockPos) => {
     if (!block.isTextblock) return true;
-    let text = "";
-    // Document positions of each character's start and end.
-    const starts: number[] = [];
-    const ends: number[] = [];
-    block.descendants((child, offset) => {
-      const pos = blockPos + 1 + offset;
-      if (child.isText) {
-        const value = child.text ?? "";
-        text += value;
-        for (let i = 0; i < value.length; i++) {
-          starts.push(pos + i);
-          ends.push(pos + i + 1);
-        }
-      } else if (child.isLeaf) {
-        const value = atomText(child) || "￼";
-        text += value;
-        for (let i = 0; i < value.length; i++) {
-          starts.push(pos);
-          ends.push(pos + child.nodeSize);
-        }
-      }
-      return true;
-    });
-    const haystack = fold(text);
-    for (
-      let i = haystack.indexOf(needle);
-      i !== -1;
-      i = haystack.indexOf(needle, i + needle.length)
-    ) {
-      const from = starts[i];
-      const to = ends[i + needle.length - 1];
-      if (from !== undefined && to !== undefined) matches.push({ from, to });
-    }
+    blockMatches(block, blockPos, needle, matches);
     return false;
   });
   return matches;
+}
+
+// The matches of `needle` (folded) in one textblock at `blockPos`, appended to `out`.
+function blockMatches(block: ProseMirrorNode, blockPos: number, needle: string, out: Match[]) {
+  let text = "";
+  // Document positions of each character's start and end.
+  const starts: number[] = [];
+  const ends: number[] = [];
+  block.descendants((child, offset) => {
+    const pos = blockPos + 1 + offset;
+    if (child.isText) {
+      const value = child.text ?? "";
+      text += value;
+      for (let i = 0; i < value.length; i++) {
+        starts.push(pos + i);
+        ends.push(pos + i + 1);
+      }
+    } else if (child.isLeaf) {
+      const value = atomText(child) || "￼";
+      text += value;
+      for (let i = 0; i < value.length; i++) {
+        starts.push(pos);
+        ends.push(pos + child.nodeSize);
+      }
+    }
+    return true;
+  });
+  const haystack = fold(text);
+  for (
+    let i = haystack.indexOf(needle);
+    i !== -1;
+    i = haystack.indexOf(needle, i + needle.length)
+  ) {
+    const from = starts[i];
+    const to = ends[i + needle.length - 1];
+    if (from !== undefined && to !== undefined) out.push({ from, to });
+  }
+}
+
+// The matches after an edit, from those before it: the textblocks the transaction touched are
+// searched again, the others' matches only move. The same as `findMatches(tr.doc, query)`, without
+// walking the whole document per keystroke.
+export function remapMatches(tr: Transaction, matches: readonly Match[], query: string): Match[] {
+  const changed = changedTextblocks(tr);
+  if (changed.length === 0 && matches.length === 0) return [];
+  const needle = fold(query);
+  const fresh: Match[] = [];
+  for (const { node, pos } of changed) blockMatches(node, pos, needle, fresh);
+  // Kept: matches outside the touched blocks, whose text is as it was (a block that was deleted
+  // whole leaves its matches collapsed).
+  const kept: Match[] = [];
+  let c = 0;
+  for (const m of matches) {
+    const from = tr.mapping.map(m.from, 1);
+    const to = tr.mapping.map(m.to, -1);
+    if (to <= from) continue;
+    while (c < changed.length && changed[c]!.pos + changed[c]!.node.nodeSize <= from) c++;
+    const block = changed[c];
+    if (block && block.pos < to && from < block.pos + block.node.nodeSize) continue;
+    kept.push({ from, to });
+  }
+  // Both are in document order and never overlap: merge.
+  const out: Match[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < kept.length || j < fresh.length) {
+    if (j >= fresh.length || (i < kept.length && kept[i]!.from < fresh[j]!.from))
+      out.push(kept[i++]!);
+    else out.push(fresh[j++]!);
+  }
+  return out;
 }
 
 // The next (or previous) match, wrapping around; -1 without matches.
@@ -156,7 +196,7 @@ export function findPlugin() {
         }
         if (!tr.docChanged || !prev.query) return prev;
         // Edited (here, by a collaborator or from disk): search again, staying on the same match.
-        const matches = findMatches(state.doc, prev.query);
+        const matches = remapMatches(tr, prev.matches, prev.query);
         const was = prev.matches[prev.current];
         const current = was ? matchAt(matches, tr.mapping.map(was.from, -1)) : matchAt(matches, 0);
         return next(prev.query, matches, current, state.doc);

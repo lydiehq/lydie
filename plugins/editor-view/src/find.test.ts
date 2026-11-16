@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { getLydieSchema } from "@lydie/plugin-api/editor";
-import type { EditorState, JSONContent, Transaction } from "@lydie/plugin-api/editor";
+import { EditorState, getLydieSchema } from "@lydie/plugin-api/editor";
+import type { JSONContent, Transaction } from "@lydie/plugin-api/editor";
 
-import { findKey, findMatches, findPlugin, matchAt, stepMatch } from "./find.ts";
+import { findKey, findMatches, findPlugin, matchAt, remapMatches, stepMatch } from "./find.ts";
 import type { FindMeta, FindState } from "./find.ts";
 
 const schema = getLydieSchema();
@@ -146,8 +146,71 @@ describe("findPlugin state", () => {
   test("unrelated transactions keep the state; edits search again", () => {
     const s = apply(initial, { query: "one" });
     expect(apply(s)).toBe(s);
-    const edited = apply(apply(s, { step: 1 }), undefined, true, 0);
-    expect(edited).not.toBe(s);
+    let live = EditorState.create({ doc: d, plugins: [plugin] });
+    live = live.apply(live.tr.setMeta(findKey, { query: "one" }));
+    live = live.apply(live.tr.setMeta(findKey, { step: 1 }));
+    // Typed before the second "one" of the first paragraph: still the current match.
+    live = live.apply(live.tr.insertText("x ", 9));
+    const edited = findKey.getState(live)!;
+    expect(edited.matches).toEqual(findMatches(live.doc, "one"));
     expect(edited.current).toBe(1);
+  });
+});
+
+describe("remapMatches", () => {
+  // Random edits to a document full of matches: searching only the touched blocks and moving
+  // the other matches gives what a full search gives.
+  test("equals a full search after any edit", () => {
+    let seed = 7;
+    const random = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    const words = ["cat", "Cat", "concat", "dog", "ca", "t", "the cat sat"];
+    const blocks: JSONContent[] = Array.from({ length: 40 }, (_, i) =>
+      i % 7 === 3
+        ? {
+            type: "bulletList",
+            content: [{ type: "listItem", content: [p(text(`item ${words[i % words.length]}`))] }],
+          }
+        : i % 5 === 0
+          ? { type: "heading", attrs: { level: 2 }, content: [text(`H cat ${i}`)] }
+          : p(text(`${words[i % words.length]} and ${words[(i * 3) % words.length]}`)),
+    );
+    let state = EditorState.create({ doc: doc(...blocks) });
+    let matches = findMatches(state.doc, "cat");
+    for (let round = 0; round < 400; round++) {
+      const size = state.doc.content.size;
+      const a = 1 + random(size - 1);
+      const b = Math.min(size - 1, a + random(12));
+      let tr = state.tr;
+      try {
+        switch (random(6)) {
+          case 0:
+            tr = tr.insertText(words[random(words.length)]!, a);
+            break;
+          case 1:
+            tr = tr.delete(a, b);
+            break;
+          case 2:
+            tr = tr.split(a);
+            break;
+          case 3:
+            tr = tr.join(a);
+            break;
+          case 4:
+            tr = tr.addMark(a, b, schema.marks.bold!.create());
+            break;
+          default:
+            tr = tr.insertText("c", a).insertText("at", a + 1);
+        }
+      } catch {
+        continue;
+      }
+      if (!tr.docChanged) continue;
+      matches = remapMatches(tr, matches, "cat");
+      state = state.apply(tr);
+      expect(matches).toEqual(findMatches(state.doc, "cat"));
+    }
   });
 });
