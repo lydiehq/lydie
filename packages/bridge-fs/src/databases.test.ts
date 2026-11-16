@@ -325,6 +325,33 @@ describe("rebuild rule with databases", () => {
     expect(read(folder, "Tasks/Read it.md")).toContain('Book:\n  - "[[Books/Dune]]"\n');
   });
 
+  test("relation values written as links resolve whenever the document they name arrives", async () => {
+    const folder = fixtureVault({});
+    const vault = await openTestVault(folder);
+    const s = await seed(vault);
+    const book = async (title: string) => {
+      const rows = await vault.runtime.ops.database.query({ databaseId: s.tasks.database.id });
+      return rows.rows.find((r) => r.title === title)!.properties.Book;
+    };
+    // Rows written by another program, naming books that are not there yet (by path, by title).
+    writeFileSync(join(folder, "Tasks/Later.md"), '---\nBook:\n  - "[[Books/Neuromancer]]"\n---\n');
+    writeFileSync(join(folder, "Tasks/Bare.md"), '---\nBook:\n  - "[[snow crash]]"\n---\n');
+    await vault.bridge.rescan(["Tasks/Later.md", "Tasks/Bare.md"]);
+    expect(await book("Later")).toEqual(["[[Books/Neuromancer]]"]);
+    // Something else arrives: nothing to resolve.
+    writeFileSync(join(folder, "Other.md"), "x\n");
+    await vault.bridge.rescan(["Other.md"]);
+    expect(await book("Later")).toEqual(["[[Books/Neuromancer]]"]);
+
+    writeFileSync(join(folder, "Books/Neuromancer.md"), "n\n");
+    await vault.bridge.rescan(["Books/Neuromancer.md"]);
+    expect(await book("Later")).toEqual([await idOf(vault, "Neuromancer")]);
+    expect(await book("Bare")).toEqual(["[[snow crash]]"]);
+    writeFileSync(join(folder, "Books/Snow Crash.md"), "s\n");
+    await vault.bridge.rescan(["Books/Snow Crash.md"]);
+    expect(await book("Bare")).toEqual([await idOf(vault, "Snow Crash")]);
+  });
+
   test("two-way relations meet again when one side's folder arrives later", async () => {
     const folder = fixtureVault({});
     const vault = await openTestVault(folder);

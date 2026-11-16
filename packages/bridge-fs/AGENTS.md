@@ -98,7 +98,10 @@ runtime does not stop vaults from opening.
   files properties (`"[[Path/Title]]"` ⇄ ids; unresolved links stay as written). Other types are the
   frontmatter values as they are (option names, numbers, dates, lists). After a rescan that adds
   or moves documents, `resolveRowLinks` resolves values that are still links (`doc.setProperties`
-  as the bridge), so a row read before its target existed catches up.
+  as the bridge), so a row read before its target existed catches up. Which rows hold such
+  values, and the file name each waits for, is kept from every operation's events (`rowLinks`,
+  built from the rows the first time; dropped on `database.changed`), so only rows naming an
+  arrived document are read. Bare titles resolve through an index of entries by file name.
 - **Relation targets:** a .base file names a relation's target database by id. A database folder
   can have another document id here than in the file: it was indexed while another Lydie process
   was still writing the folder, or the folder was copied without `.lydie/`. When the id names no

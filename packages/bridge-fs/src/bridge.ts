@@ -215,6 +215,8 @@ export class Bridge {
   private readonly queue = new SerialQueue();
   private readonly entries = new Map<string, Entry>();
   private readonly byKey = new Map<string, string>();
+  // Ids by lower-case file name (`[[Title]]` links); may hold ids whose entry moved on.
+  private readonly byName = new Map<string, Set<string>>();
   private meta!: VaultMeta;
   private excluded: (key: string) => boolean;
   private attachmentsFolder: string;
@@ -240,6 +242,11 @@ export class Bridge {
   private readonly unpersisted = new Set<Entry>();
   // Counts syncPaths runs: what was read before one may be out of date.
   private rescans = 0;
+  // Rows whose relation or file values still hold links to nothing (`[[…]]` as written), by the
+  // lower-case file name each names ("": check whatever arrives). Kept from every operation's
+  // events; null until a rescan first needs it, then built from the rows (see resolveRowLinks).
+  private rowLinks: { byName: Map<string, Set<string>>; ofRow: Map<string, string[]> } | null =
+    null;
   private readonly statusListeners = new Set<(status: VaultStatus) => void>();
   private readonly changeListeners = new Set<(change: ExternalChange) => void>();
   private readonly conflictListeners = new Set<(conflict: FileConflict) => void>();
@@ -337,14 +344,35 @@ export class Bridge {
     const previous = this.entries.get(entry.id);
     if (previous && this.byKey.get(previous.key) === entry.id) this.byKey.delete(previous.key);
     this.entries.set(entry.id, entry);
+    this.keyed(entry);
+  }
+
+  // Indexes an entry under its (new) key.
+  private keyed(entry: Entry): void {
     this.byKey.set(entry.key, entry.id);
+    const name = baseName(entry.key).toLowerCase();
+    let ids = this.byName.get(name);
+    if (!ids) this.byName.set(name, (ids = new Set()));
+    ids.add(entry.id);
   }
 
   private dropEntry(id: string): void {
     const entry = this.entries.get(id);
     if (!entry) return;
     if (this.byKey.get(entry.key) === id) this.byKey.delete(entry.key);
+    this.byName.get(baseName(entry.key).toLowerCase())?.delete(id);
     this.entries.delete(id);
+  }
+
+  // Live entries whose file name is `name` (any case).
+  private named(name: string): Entry[] {
+    const lower = name.toLowerCase();
+    const out: Entry[] = [];
+    for (const id of this.byName.get(lower) ?? []) {
+      const e = this.entries.get(id);
+      if (e && !e.trashed && baseName(e.key).toLowerCase() === lower) out.push(e);
+    }
+    return out;
   }
 
   private entryAt(key: string): Entry | undefined {
@@ -415,7 +443,7 @@ export class Bridge {
     for (const e of moved) {
       e.key = rebase(e.key, from, to);
       e.trashed = isTrashKey(e.key);
-      this.byKey.set(e.key, e.id);
+      this.keyed(e);
     }
     return moved;
   }
@@ -487,6 +515,7 @@ export class Bridge {
     const dbDocs = new Map<string, Document>(docs.map((d) => [d.id, d]));
     this.entries.clear();
     this.byKey.clear();
+    this.byName.clear();
     for (const row of rows) this.setEntry(this.fromRow(row));
 
     // Trash: only what Lydie put there (trash.json) is part of the workspace.
@@ -1296,14 +1325,8 @@ export class Bridge {
     }
     // A bare title, if it names one document.
     if (key.includes("/")) return null;
-    const lower = key.toLowerCase();
-    let found: string | null = null;
-    for (const e of this.entries.values()) {
-      if (e.trashed || baseName(e.key).toLowerCase() !== lower) continue;
-      if (found) return null;
-      found = e.id;
-    }
-    return found;
+    const found = this.named(key);
+    return found.length === 1 ? found[0]!.id : null;
   }
 
   private rowSchema(parentId: string | null): DatabaseProperty[] | null {
@@ -1339,31 +1362,102 @@ export class Bridge {
   }
 
   // Relation and file values that were links to nothing when their row was read stay as written;
-  // documents that arrived or moved since may be what they name. Rows are written as the bridge.
-  private async resolveRowLinks(): Promise<string[]> {
+  // documents that arrived or moved since may be what they name. Only rows naming one of their
+  // file names are read (all of them the first time). Rows are written as the bridge.
+  private async resolveRowLinks(arrived: readonly Entry[]): Promise<string[]> {
+    let rows: Document[] = [];
+    if (!this.rowLinks) {
+      this.rowLinks = { byName: new Map(), ofRow: new Map() };
+      for (const [dbId, props] of this.schemas) {
+        if (!props.some((p) => p.type === "relation" || p.type === "files")) continue;
+        rows.push(
+          ...(await this.store.ports.db.read((tx) => tx.docs.children(this.workspaceId, dbId))),
+        );
+      }
+    } else {
+      const ids = new Set(this.rowLinks.byName.get("") ?? []);
+      for (const e of arrived) {
+        for (const id of this.rowLinks.byName.get(baseName(e.key).toLowerCase()) ?? []) ids.add(id);
+      }
+      if (ids.size === 0) return [];
+      rows = [...(await this.readRows([...ids])).values()].map((r) => r.document);
+    }
     const changed: string[] = [];
-    for (const [dbId, props] of this.schemas) {
-      const linked = props.filter((p) => p.type === "relation" || p.type === "files");
-      if (!linked.length) continue;
-      const rows = await this.store.ports.db.read((tx) => tx.docs.children(this.workspaceId, dbId));
-      for (const row of rows) {
-        const set: Properties = {};
-        for (const p of linked) {
-          const value = row.properties[p.key];
-          if (!Array.isArray(value) || !value.some((x) => x.startsWith("[["))) continue;
-          const next = fromFileValue(p, value, { idFor: (t) => this.idForLink(t) });
-          if (JSON.stringify(next) !== JSON.stringify(value)) set[p.key] = next;
-        }
-        if (Object.keys(set).length === 0) continue;
-        try {
-          await this.exec("doc.setProperties", { id: row.id, set });
-          changed.push(row.id);
-        } catch (error) {
-          this.onError(error);
-        }
+    for (const row of rows) {
+      // As the row is now; writing it below notes it again (through its event).
+      this.noteRowLinks(row.id, row.parentId, row.deletedAt ? {} : row.properties);
+      const linked = row.deletedAt ? null : this.rowSchema(row.parentId);
+      if (!linked?.length) continue;
+      const set: Properties = {};
+      for (const p of linked) {
+        const value = row.properties[p.key];
+        if (!Array.isArray(value) || !value.some((x) => x.startsWith("[["))) continue;
+        const next = fromFileValue(p, value, { idFor: (t) => this.idForLink(t) });
+        if (JSON.stringify(next) !== JSON.stringify(value)) set[p.key] = next;
+      }
+      if (Object.keys(set).length === 0) continue;
+      try {
+        await this.exec("doc.setProperties", { id: row.id, set });
+        changed.push(row.id);
+      } catch (error) {
+        this.onError(error);
       }
     }
     return changed;
+  }
+
+  // Records which names a row's unresolved link values wait for (`parentId` undefined or
+  // `properties` null: unknown, check it whenever something arrives).
+  private noteRowLinks(
+    id: string,
+    parentId: string | null | undefined,
+    properties: Properties | null,
+  ): void {
+    const links = this.rowLinks;
+    if (!links) return;
+    for (const name of links.ofRow.get(id) ?? []) links.byName.get(name)?.delete(id);
+    links.ofRow.delete(id);
+    const names = new Set<string>();
+    if (parentId === undefined || properties === null) names.add("");
+    else {
+      for (const p of this.rowSchema(parentId) ?? []) {
+        const value = properties[p.key];
+        if (!Array.isArray(value)) continue;
+        for (const x of value) if (x.startsWith("[[")) names.add(linkedName(x));
+      }
+    }
+    if (names.size === 0) return;
+    links.ofRow.set(id, [...names]);
+    for (const name of names) {
+      let ids = links.byName.get(name);
+      if (!ids) links.byName.set(name, (ids = new Set()));
+      ids.add(id);
+    }
+  }
+
+  // Row values as every operation leaves them, the bridge's own included.
+  private trackRowLinks(events: readonly LydieEvent[]): void {
+    if (!this.rowLinks) return;
+    const moved: string[] = [];
+    for (const e of events) {
+      if (e.type === "database.changed") {
+        // Which properties hold links may have changed: built again when next needed.
+        this.rowLinks = null;
+        return;
+      }
+      if (e.type === "doc.created") {
+        const { id, parentId, properties } = e.data.document;
+        this.noteRowLinks(id, parentId, properties);
+      } else if (e.type === "doc.propertiesChanged") {
+        const entry = this.entries.get(e.data.id);
+        const parentId = entry ? (this.entryAt(parentKey(entry.key))?.id ?? null) : undefined;
+        this.noteRowLinks(e.data.id, parentId, e.data.properties);
+      } else if (e.type === "doc.moved") {
+        moved.push(e.data.id);
+      }
+    }
+    // Into another database, maybe: checked with whatever arrives next.
+    for (const id of moved) this.noteRowLinks(id, undefined, null);
   }
 
   // Rows whose relation or file values point at any of `ids`, so their links follow a move.
@@ -1469,8 +1563,12 @@ export class Bridge {
       }
     }
     changedIds.push(...(await this.syncBases(baseFolders)));
-    if (plan.created.length || plan.moved.length)
-      changedIds.push(...(await this.resolveRowLinks()));
+    if (plan.created.length || plan.moved.length) {
+      const arrived = [...plan.created.map((c) => c.id), ...plan.moved.map((m) => m.entry.id)]
+        .map((id) => this.entries.get(id))
+        .filter((e): e is Entry => e !== undefined);
+      changedIds.push(...(await this.resolveRowLinks(arrived)));
+    }
     await this.flushBases();
     await this.meta.flush();
     if (changedIds.length) {
@@ -1554,7 +1652,7 @@ export class Bridge {
       if (this.byKey.get(previous) === item.entry.id) this.byKey.delete(previous);
       item.entry.key = item.obs.key;
       item.entry.trashed = false;
-      this.byKey.set(item.entry.key, item.entry.id);
+      this.keyed(item.entry);
       this.noteId(item.entry, previous);
     }
     for (const item of items) {
@@ -1776,6 +1874,7 @@ export class Bridge {
   // renames (typing a title) renames the file and rewrites the links to it once.
   async handleEvents(events: readonly LydieEvent[]): Promise<void> {
     if (events.length === 0 || this.closed) return;
+    this.trackRowLinks(events);
     if (events.every((e) => e.actor.type === "system" && e.actor.id === BRIDGE_ACTOR.id)) return;
     const ids = idsOf(events);
     // Until their files are written, these documents are ahead of the folder: a watcher batch must
@@ -2673,6 +2772,13 @@ function idsOf(events: readonly LydieEvent[]): string[] {
     }
   }
   return [...new Set(ids)];
+}
+
+// The lower-case file name a `[[link]]` value names: its last path segment, without `.md`.
+function linkedName(value: string): string {
+  const inner = value.replace(/^\[\[/, "").replace(/\]\]$/, "");
+  const target = inner.split("|")[0]!.split("#")[0]!.trim().replace(/\.md$/i, "");
+  return (target.split("/").pop() ?? "").toLowerCase();
 }
 
 // Documents whose only change is to their properties: their files keep the body they have.
