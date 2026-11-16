@@ -7,6 +7,7 @@ import { basename } from "node:path";
 import { backendService, createLocalBackend, serveBackend } from "@lydie/app/backend";
 import type { BackendContract, LocalBackend } from "@lydie/app/backend";
 import type {
+  ExtractWorker,
   McpControl,
   OpenVaultOptions,
   Vault,
@@ -44,6 +45,10 @@ export type VaultManagerOptions = {
   // Where workspace.export saves a folder's zip.
   exports?: (folder: string) => Exports;
   onError?: (error: unknown) => void;
+  // A thread for extracting Markdown while a folder is indexed: the bundle's build of
+  // `@lydie/bridge-fs/extract-worker` (`?modulePath` in index.ts). Without it, extraction runs in
+  // the main process.
+  extractWorker?: ExtractWorker;
 };
 
 type Slot = {
@@ -140,6 +145,7 @@ export class VaultManager {
         onError,
         gettingStarted: true,
         indexInBackground: true,
+        extractWorker: this.options.extractWorker ?? null,
         ...(this.options.exports ? { exports: this.options.exports(folder) } : {}),
       });
       const indexed = vault.indexed.then(

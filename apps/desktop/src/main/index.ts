@@ -1,5 +1,9 @@
 import { basename, join, resolve } from "node:path";
+import { Worker } from "node:worker_threads";
 
+// electron-vite's `?modulePath`: the built file's path, a default export oxlint cannot see.
+// oxlint-disable-next-line import/default
+import extractWorkerPath from "@lydie/bridge-fs/extract-worker?modulePath";
 import { createMcpControl } from "@lydie/mcp-local";
 import { DEFAULT_QUICK_CAPTURE, QUICK_CAPTURE_ACTION } from "@lydie/platform";
 import type { AppInfo, Capabilities, OperatingSystem, WorkspaceScope } from "@lydie/platform";
@@ -178,6 +182,7 @@ async function start() {
     dataDir: app.getPath("userData"),
     mcp: (vault) => createMcpControl(vault, { dataDir: app.getPath("userData") }),
     exports: (folder) => saveExportDialog(basename(folder)),
+    extractWorker: () => new Worker(extractWorkerPath),
   });
 
   const updater = createUpdater((state) => windows?.broadcast("updater:state", state));

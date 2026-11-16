@@ -73,6 +73,9 @@ e2e/                          Playwright-on-Electron tests against the built app
   shared by all its windows (ref-counted by window id), opened when the window is created (indexing
   starts while the page loads) and closed when the last window on it closes, or on quit
   (`will-quit` waits for queued file writes).
+- The index parses Markdown on worker threads: `VaultManager`'s `extractWorker` starts the
+  bundle's build of `@lydie/bridge-fs/extract-worker` (`?modulePath` in `index.ts`, built into
+  `out/main/chunks/extract-worker-*.js`). Without it, extraction runs in the main process.
 - Windows are served as soon as the database is open (`VaultManager.acquireServing`), while the
   folder is still being indexed: reads are answered from the database, writes (mutations,
   transactions, undo/redo, attachments) wait for the index. `acquire` resolves once indexed (the
