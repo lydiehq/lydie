@@ -1,5 +1,5 @@
 import { isUuid, LydieError } from "@lydie/contract";
-import type { Attachment, Document, Operations, Properties } from "@lydie/contract";
+import type { Attachment, Document, Operations, Properties, Warning } from "@lydie/contract";
 
 import { isRelativeLink, resolveLinks, targetKey } from "../links.ts";
 import type { DbRead, DbTx, DocPatch, LinkRow } from "../ports.ts";
@@ -543,6 +543,38 @@ export const docHandlers: Handlers<Operations> = {
       if ("edits" in forward) ctx.journal?.(forward);
     }
     return { document: { ...doc, ...stamp }, version, warnings };
+  },
+
+  // Composite: title, properties, then the body. The body goes last because a hosted body write
+  // reaches collab before the transaction commits; whatever can still fail runs before it.
+  async "doc.update"(ctx, input) {
+    let doc = await requireLive(ctx.tx, input.id);
+    if (input.title !== undefined && input.title !== doc.title) {
+      doc = (await ctx.exec("doc.rename", { id: doc.id, title: input.title })) as Document;
+    }
+    const set = input.properties ?? {};
+    const unset = input.unset ?? [];
+    if (Object.keys(set).length > 0 || unset.length > 0) {
+      // A row's values are checked against its database, as write_database_rows does.
+      const database = doc.parentId ? await ctx.tx.databases?.get(doc.parentId) : null;
+      if (database && !database.deletedAt) {
+        await ctx.exec("database.writeRows", {
+          databaseId: database.id,
+          rows: [{ id: doc.id, values: set, unset }],
+        });
+        doc = await requireLive(ctx.tx, doc.id);
+      } else {
+        doc = (await ctx.exec("doc.setProperties", { id: doc.id, set, unset })) as Document;
+      }
+    }
+    if (input.markdown === undefined && input.edits === undefined) {
+      return { document: doc, version: null, warnings: [] };
+    }
+    return (await ctx.exec("doc.updateBody", {
+      id: doc.id,
+      ...(input.markdown !== undefined ? { markdown: input.markdown } : { edits: input.edits }),
+      ...(input.expectedVersion !== undefined ? { expectedVersion: input.expectedVersion } : {}),
+    })) as { document: Document; version: string; warnings: Warning[] };
   },
 
   async "doc.listVersions"(ctx, input) {

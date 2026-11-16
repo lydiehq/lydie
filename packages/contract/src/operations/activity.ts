@@ -45,6 +45,6 @@ export const activityList = defineQuery({
   scopes: ["docs:read"],
   // POST: `actors` and `types` are lists, and query parameters are primitives (database.query).
   rest: { method: "POST", path: "/workspaces/{workspaceId}/activity/query" },
-  mcp: { name: "list_activity", title: "List workspace activity", expose: "fine" },
+  mcp: { name: "list_activity", title: "List workspace activity" },
   cli: { command: ["activity", "list"], args: ["workspaceId"] },
 });

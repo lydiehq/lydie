@@ -12,13 +12,15 @@ export * from "./quote.ts";
 export * from "./slug.ts";
 export * from "./thread.ts";
 export * from "./version.ts";
-export { SCOPES, defineOperation, defineQuery, hasScope } from "./define.ts";
+export { SCOPES, defineOperation, defineQuery, hasScope, mcpToolOf } from "./define.ts";
 export type {
   AnyOperation,
   CliProjection,
   HttpMethod,
   InputOf,
+  McpNone,
   McpProjection,
+  McpToolSpec,
   OperationConfig,
   OperationDef,
   OperationKind,

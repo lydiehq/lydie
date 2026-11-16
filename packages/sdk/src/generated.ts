@@ -1547,6 +1547,18 @@ export type ApiOperations = {
     input: { workspaceId: WorkspaceId };
     output: { links: UnresolvedLink[] };
   };
+  // PATCH /documents/{id}: Update a document
+  "doc.update": {
+    input: { id: Uuid } & {
+      title?: string;
+      properties?: Properties;
+      unset?: string[];
+      markdown?: string;
+      edits?: BodyEditInput[];
+      expectedVersion?: string;
+    };
+    output: { document: Document; version: string | null; warnings: Warning[] };
+  };
   // PATCH /documents/{id}/body: Update a document body
   "doc.updateBody": {
     input: { id: Uuid } & { markdown?: string; edits?: BodyEditInput[]; expectedVersion?: string };
@@ -2044,6 +2056,7 @@ export const apiRoutes = {
     path: "/workspaces/{workspaceId}/unresolved-links",
     query: [],
   },
+  "doc.update": { method: "PATCH", path: "/documents/{id}", query: [] },
   "doc.updateBody": { method: "PATCH", path: "/documents/{id}/body", query: [] },
   "doodle.list": { method: "GET", path: "/doodles/wall", query: ["yours"] },
   "doodle.share": { method: "POST", path: "/doodles", query: [] },

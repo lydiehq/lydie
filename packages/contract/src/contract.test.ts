@@ -14,8 +14,8 @@ import {
   EVENT_TYPES,
   generatedFiles,
   LydieEvent,
+  mcpToolOf,
   operations,
-  RUN_OPERATION_TOOL,
   toCliCommand,
   toMcpTool,
   toMcpTools,
@@ -25,11 +25,12 @@ import {
 const generatedDir = join(import.meta.dirname, "..", "generated");
 
 describe("parity", () => {
-  // Plan §2: every operation reaches REST, MCP and the CLI, or says why not.
+  // Plan §2: every operation reaches REST and the CLI, or says why not. MCP tools are chosen:
+  // each operation is one, or says which tool covers it or why agents do not get it.
   const all = Object.values(operations);
   it.each(all.filter((op) => !op.internal))("$id has REST, MCP and CLI projections", (op) => {
     expect(op.rest, `${op.id} has no REST projection`).toBeDefined();
-    expect(op.mcp, `${op.id} has no MCP projection`).toBeDefined();
+    expect(op.mcp, `${op.id} is neither an MCP tool nor { none: reason }`).toBeDefined();
     expect(op.cli, `${op.id} has no CLI projection`).toBeDefined();
   });
 
@@ -53,27 +54,26 @@ describe("parity", () => {
       Object.values(item).map((o) => (o as { operationId: string }).operationId),
     );
     expect(restIds.sort()).toEqual(publicOps.map((op) => op.id).sort());
-    expect(toMcpTools(operations, { expose: "all" })).toHaveLength(publicOps.length);
+    const tools = toMcpTools(operations);
+    expect(tools.map((t) => t._meta["lydie/operation"]).filter(Boolean)).toEqual(
+      publicOps.filter((op) => mcpToolOf(op)).map((op) => op.id),
+    );
   });
 
-  // Everything the UI can do, an agent can do: each operation is a listed tool or reachable
-  // through run_operation (whose schema names every operation id).
-  it("makes every public operation reachable through MCP", () => {
-    const publicOps = Object.values(operations).filter((op) => !op.internal);
-    const tools = toMcpTools(operations);
-    const listed = new Set(tools.map((t) => t._meta["lydie/operation"]).filter(Boolean));
-    const run = tools.find((t) => t.name === RUN_OPERATION_TOOL)!;
-    const runnable = new Set(
-      (run.inputSchema.properties as { operation: { enum: string[] } }).operation.enum,
-    );
-    for (const op of publicOps) {
-      expect(listed.has(op.id) || runnable.has(op.id), `${op.id} is not reachable`).toBe(true);
+  // A reason that names a tool must name one that exists.
+  it("names only real tools in the reasons for not being one", () => {
+    const names = new Set(toMcpTools(operations).map((t) => t.name));
+    for (const op of all) {
+      if (!op.mcp || mcpToolOf(op)) continue;
+      const reason = (op.mcp as { none: string }).none;
+      for (const name of reason.match(/\b[a-z]+(?:_[a-z]+)+\b/g) ?? []) {
+        expect(names.has(name), `${op.id}: "${name}" is not a tool`).toBe(true);
+      }
     }
-    expect([...runnable].sort()).toEqual(publicOps.map((op) => op.id).sort());
   });
 
   it("keeps the agent tool list small", () => {
-    expect(JSON.stringify({ tools: toMcpTools(operations) }).length).toBeLessThan(61_000);
+    expect(JSON.stringify({ tools: toMcpTools(operations) }).length).toBeLessThan(55_000);
   });
 
   it("declares only known events", () => {
@@ -95,12 +95,12 @@ describe("generated files", () => {
 
 describe("MCP tools", () => {
   it("have object schemas at the root and correct hints", () => {
-    for (const tool of toMcpTools(operations, { expose: "all" })) {
+    for (const tool of toMcpTools(operations)) {
       expect(tool.inputSchema.type).toBe("object");
       if (tool.outputSchema) expect(tool.outputSchema.type).toBe("object");
     }
     for (const op of Object.values(operations)) {
-      if (!op.mcp || op.internal) continue;
+      if (!mcpToolOf(op) || op.internal) continue;
       expect(toMcpTool(op, { outputSchema: true }).outputSchema?.type).toBe("object");
     }
     const tools = Object.fromEntries(toMcpTools(operations).map((t) => [t.name, t]));
@@ -132,6 +132,10 @@ describe("registry", () => {
     output: z.object({}),
     scopes: [] as const,
   };
+
+  it("rejects an MCP opt-out without a reason", () => {
+    expect(() => defineQuery({ ...base, id: "a.three", mcp: { none: " " } })).toThrow(/reason/);
+  });
 
   it("rejects duplicate MCP names and routes", () => {
     const a = defineQuery({ ...base, id: "a.one", mcp: { name: "same", title: "A" } });

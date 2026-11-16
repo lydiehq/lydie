@@ -20,19 +20,29 @@ export type RestProjection = {
   path: string;
 };
 
-export type McpProjection = {
+// MCP tools are chosen, not generated one per operation (Linear's and Notion's servers, Anthropic's
+// "Writing effective tools for agents"): an operation is a tool when an agent does that task on its
+// own, and otherwise says which tool covers it or why agents should not have it.
+export type McpToolSpec = {
   // snake_case tool name, identical in local and hosted mode.
   name: string;
   title: string;
-  // "agent" (default): listed as its own tool. "fine": a building block an agent rarely needs on
-  // its own (an agent-level tool covers it); not listed, but reachable through the generic
-  // `run_operation` tool (`describe_operation` gives its schema), so every operation stays callable.
-  expose?: "agent" | "fine";
   // true: the tool lists an outputSchema. Off by default: an agent gets every result as JSON text
   // and structuredContent anyway, and most output schemas (documents, definitions, query results)
   // are large without telling it anything it needs. Turn it on for small results worth describing.
   outputSchema?: boolean;
 };
+
+// Not a tool. The reason names the tool that covers the operation ("update_doc sets the title"),
+// or why agents are not given it (permanent deletion, account administration).
+export type McpNone = { none: string };
+
+export type McpProjection = McpToolSpec | McpNone;
+
+// The operation's tool, or null when it has none.
+export function mcpToolOf(op: { mcp?: McpProjection }): McpToolSpec | null {
+  return op.mcp && "name" in op.mcp ? op.mcp : null;
+}
 
 export type CliProjection = {
   // Words after `lydie`, e.g. `["doc", "mv"]`.
@@ -119,8 +129,12 @@ function check<Id extends string>(def: CommonFields<Id, z.ZodType, z.ZodType>): 
   if (!OPERATION_ID.test(def.id)) {
     throw new Error(`Operation id "${def.id}" must look like "namespace.camelCaseName"`);
   }
-  if (def.mcp && !MCP_NAME.test(def.mcp.name)) {
-    throw new Error(`${def.id}: MCP tool name "${def.mcp.name}" must be snake_case`);
+  const tool = mcpToolOf(def);
+  if (tool && !MCP_NAME.test(tool.name)) {
+    throw new Error(`${def.id}: MCP tool name "${tool.name}" must be snake_case`);
+  }
+  if (def.mcp && !tool && !(def.mcp as McpNone).none.trim()) {
+    throw new Error(`${def.id}: mcp { none } needs a reason`);
   }
   if (def.internal && !def.internal.reason.trim()) {
     throw new Error(`${def.id}: internal operations need a reason`);

@@ -536,6 +536,25 @@ const scenarios: Record<string, Scenario> = {
       return () => ops.doc.updateBody({ id: a.id, markdown: "two [[Target]] ^b1" });
     },
   },
+  "doc.update": {
+    async arrange({ ops }) {
+      await ops.doc.create({ workspaceId: WS, title: "Target" });
+      const a = await ops.doc.create({
+        workspaceId: WS,
+        title: "A",
+        properties: { status: "todo", tags: ["x"] },
+        markdown: "one [[Missing]]",
+      });
+      return () =>
+        ops.doc.update({
+          id: a.id,
+          title: "B",
+          properties: { status: "done" },
+          unset: ["tags"],
+          edits: [{ type: "replace", oldStr: "one [[Missing]]", newStr: "two [[Target]]" }],
+        });
+    },
+  },
   "doc.restoreVersion": {
     async arrange({ ops, runtime }) {
       const a = await ops.doc.create({ workspaceId: WS, title: "A", markdown: "one [[Missing]]" });

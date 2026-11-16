@@ -1,9 +1,12 @@
+import { mcpToolOf } from "../define.ts";
 import type { AnyOperation } from "../define.ts";
 import type { Registry } from "../registry.ts";
 import { toJsonSchema } from "./json-schema.ts";
 import type { JsonSchema } from "./json-schema.ts";
 
 // An MCP tool definition (spec 2026-07-28). Identical in local and hosted mode; not versioned.
+// Every tool either reads (readOnlyHint) or writes: there are no generic tools that run other
+// operations by id, which directories reject and agents use badly.
 export type McpTool = {
   name: string;
   title: string;
@@ -16,17 +19,14 @@ export type McpTool = {
     idempotentHint: boolean;
     openWorldHint: boolean;
   };
-  // An operation's tool names it; the generic tools say which one they are.
+  // The operation behind the tool; whoami has none.
   _meta: {
     "lydie/operation"?: string;
     "lydie/scopes"?: readonly string[];
-    "lydie/generic"?: "run" | "describe" | "whoami";
+    "lydie/connection"?: "whoami";
   };
 };
 
-// Generic tools: every operation with an MCP projection, by id, including the ones not listed.
-export const RUN_OPERATION_TOOL = "run_operation";
-export const DESCRIBE_OPERATION_TOOL = "describe_operation";
 // Who the connection acts as and which workspace the tools default to (Linear's `whoami`,
 // Notion's `get-self`). Answered by the dispatcher from the server's connection, not an operation:
 // it describes the connection, not the workspace.
@@ -42,25 +42,14 @@ const DEFAULT_NOTE: Record<ConnectionDefault, string> = {
   sessionId: "Default: your own session.",
 };
 
-export type McpToolsOptions = {
-  // "agent" (default): the agent tool set (operations not marked `expose: "fine"`) plus
-  // run_operation and describe_operation. "all": one tool per operation (no generic tools).
-  expose?: "agent" | "all";
-};
-
-// Operations an MCP client can call, by id (listed or through run_operation).
+// The operations of a registry that are MCP tools, in registry order.
 export function mcpOperations(registry: Registry): AnyOperation[] {
-  return Object.values(registry).filter((op) => op.mcp && !op.internal);
+  return Object.values(registry).filter((op) => mcpToolOf(op) && !op.internal);
 }
 
-export function toMcpTools(registry: Registry, options: McpToolsOptions = {}): McpTool[] {
-  const ops = mcpOperations(registry);
-  if (options.expose === "all") return ops.map((op) => toMcpTool(op));
-  const tools = [whoamiTool()];
-  tools.push(...ops.filter((op) => op.mcp!.expose !== "fine").map((op) => toMcpTool(op)));
-  const fine = ops.filter((op) => op.mcp!.expose === "fine");
-  if (fine.length > 0) tools.push(...genericTools(ops, fine));
-  return tools;
+// whoami, then one tool per operation that is one.
+export function toMcpTools(registry: Registry): McpTool[] {
+  return [whoamiTool(), ...mcpOperations(registry).map((op) => toMcpTool(op))];
 }
 
 function withConnectionDefaults(schema: JsonSchema): JsonSchema {
@@ -88,15 +77,6 @@ function withConnectionDefaults(schema: JsonSchema): JsonSchema {
   return Object.keys(defs).length > 0 ? { ...out, $defs: defs } : out;
 }
 
-function annotations(readOnly: boolean): McpTool["annotations"] {
-  return {
-    readOnlyHint: readOnly,
-    destructiveHint: !readOnly,
-    idempotentHint: readOnly,
-    openWorldHint: false,
-  };
-}
-
 function whoamiTool(): McpTool {
   return {
     name: WHOAMI_TOOL,
@@ -106,17 +86,23 @@ function whoamiTool(): McpTool {
       "to (id, name), the other workspaces and the teamspaces you can reach, and your history " +
       "session (list_session_changes, undo_session).",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
-    annotations: annotations(true),
-    _meta: { "lydie/generic": "whoami" },
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+    _meta: { "lydie/connection": "whoami" },
   };
 }
 
 export function toMcpTool(op: AnyOperation, options: { outputSchema?: boolean } = {}): McpTool {
-  if (!op.mcp) throw new Error(`${op.id} has no MCP projection`);
-  const withOutput = options.outputSchema ?? op.mcp.outputSchema === true;
+  const tool = mcpToolOf(op);
+  if (!tool) throw new Error(`${op.id} is not an MCP tool`);
+  const withOutput = options.outputSchema ?? tool.outputSchema === true;
   return {
-    name: op.mcp.name,
-    title: op.mcp.title,
+    name: tool.name,
+    title: tool.title,
     description: op.description ? `${op.summary}. ${op.description}` : `${op.summary}.`,
     inputSchema: withConnectionDefaults(selfContained(op.input, "input")),
     ...(withOutput ? { outputSchema: selfContained(op.output, "output") } : {}),
@@ -128,47 +114,6 @@ export function toMcpTool(op: AnyOperation, options: { outputSchema?: boolean } 
     },
     _meta: { "lydie/operation": op.id, "lydie/scopes": op.scopes },
   };
-}
-
-function genericTools(all: AnyOperation[], fine: AnyOperation[]): McpTool[] {
-  const ids = all.map((op) => op.id);
-  const listing = fine.map((op) => `${op.id}: ${op.summary}`).join("; ");
-  const operation = { type: "string", enum: ids, description: "Operation id, e.g. doc.move." };
-  return [
-    {
-      name: RUN_OPERATION_TOOL,
-      title: "Run an operation",
-      description:
-        "Runs any Lydie operation by id with its input, including these not listed as tools: " +
-        `${listing}. Get an operation's input schema with ${DESCRIBE_OPERATION_TOOL}.`,
-      inputSchema: {
-        type: "object",
-        properties: {
-          operation,
-          input: { type: "object", description: "The operation's input." },
-        },
-        required: ["operation", "input"],
-        additionalProperties: false,
-      },
-      annotations: annotations(false),
-      _meta: { "lydie/generic": "run" },
-    },
-    {
-      name: DESCRIBE_OPERATION_TOOL,
-      title: "Describe an operation",
-      description: `Returns an operation's description and input and output JSON Schemas, for ${RUN_OPERATION_TOOL}.`,
-      inputSchema: {
-        type: "object",
-        properties: {
-          operation: { type: "string", description: `An operation id of ${RUN_OPERATION_TOOL}.` },
-        },
-        required: ["operation"],
-        additionalProperties: false,
-      },
-      annotations: annotations(true),
-      _meta: { "lydie/generic": "describe" },
-    },
-  ];
 }
 
 // MCP wants an object schema at the root, so a top-level `$ref` (e.g. an output that is exactly
@@ -226,9 +171,10 @@ export function mcpInstructions(options: McpInstructionsOptions): string {
       ? `Workspace "${workspace.name}" (${workspace.id}): tools default to it, so leave out workspaceId.`
       : "This connection reaches several workspaces: pass workspaceId (whoami lists them).",
     "whoami says who you are, the workspaces and teamspaces you can reach, and your session.",
-    "Find documents with search or list_docs, read one with fetch_doc, change it with update_doc " +
-      "(markdown replaces the body; edits are { type, oldStr, newStr }: replace, insertBefore, " +
-      "insertAfter, prepend or append, all or nothing; pass expectedVersion from fetch_doc).",
+    "Find documents with search or list_docs, read one with fetch_doc. update_doc changes a " +
+      "document's title, properties and body in one call (markdown replaces the body; edits are " +
+      "{ type, oldStr, newStr }: replace, insertBefore, insertAfter, prepend or append, all or " +
+      "nothing; pass expectedVersion from fetch_doc).",
     "What the next reader should know about a text but that is not part of it (why it says " +
       "this, what it was checked against, an open question) goes in a note beside the document, " +
       "not in its body: create_thread, with quote to attach it to a passage. fetch_doc returns " +
@@ -240,8 +186,8 @@ export function mcpInstructions(options: McpInstructionsOptions): string {
       "call; change_database_schema and change_database_views change properties and views.",
     "Name things by id or name: properties by id, key or name, views by id or name, rows by id " +
       'or unique id ("LYD-12"). Ambiguous names and unknown input keys are errors.',
-    "Other operations: run_operation (describe_operation shows the input). Your changes form a " +
-      "session per run of work: list_session_changes and undo_session review and revert the " +
-      "current one.",
+    "Your changes form a session per run of work: list_session_changes and undo_session review " +
+      "and revert the current one. list_activity shows what changed in the workspace, by whom " +
+      "and in which session.",
   ].join("\n");
 }

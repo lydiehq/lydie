@@ -1,6 +1,6 @@
 # AGENTS.md - @lydie/mcp-local
 
-The local MCP server: every contract operation with an MCP projection is a tool (`toMcpTools`, same
+The local MCP server: the contract's MCP tools (`toMcpTools`: the operations that are tools, same
 names and schemas as hosted mode), executed through a vault's runtime (`@lydie/bridge-fs`), so every
 write lands in the folder with no server. Node only. Licence: AGPL-3.0-only.
 
@@ -16,7 +16,6 @@ JSON schemas come from the contract).
 createMcpServer(runtime, { sessionId, onBehalfOf?, workspace? }): Server   // one MCP session
 // workspace: { id, name } of the vault; tools default to it, whoami and the instructions name it
 agentActor(clientName, session): Actor   // { type: "agent", app: <client name>, id: <session>, onBehalfOf }
-toolsOf(registry): { tools, byName }
 startHttpMcp({ runtime, token, port? (0 = free), allowedOrigins?, onBehalfOf?, workspace? })
   : Promise<{ url, port, sessions(), close() }>               // Streamable HTTP on 127.0.0.1, path /mcp
 createMcpControl(vault, { dataDir, port?, allowedOrigins? })   // the desktop toggle (McpControl of bridge-fs)
@@ -55,11 +54,11 @@ there.
 
 ## Size
 
-The server lists the agent tool set (`toMcpTools(registry, { expose: "agent" })`): 42 tools, ~56 KB.
-Operations marked `mcp.expose: "fine"` (the fine-grained database ones) are not listed but stay
-reachable through `run_operation` (`describe_operation` returns their input schema). Output schemas
-are opt-in per operation (`mcp.outputSchema: true`). Every operation as its own tool is ~104 KB; before
-LYD-200 it was ~294 KB / 59 tools. The contract test "keeps the agent tool list small" caps it at 58 KB.
+The server lists `whoami` and the contract's 31 tools, about 50 KB. MCP tools are chosen per
+operation (`mcp: { name, title }` or `mcp: { none: reason }`, LYD-443): no generic tools, every
+tool reads or writes. Output schemas are opt-in per operation (`mcp.outputSchema: true`). Before
+LYD-200 every operation was a tool: ~294 KB / 59 tools. The contract test "keeps the agent tool
+list small" caps the list at 55 KB.
 
 ## Tests
 

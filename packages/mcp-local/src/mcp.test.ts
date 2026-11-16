@@ -239,7 +239,7 @@ test("database tools work end to end and land in the folder", async () => {
   const written = (await call("write_database_rows", {
     databaseId: db.database.id,
     rows: [{ title: "Dune", values: { Rating: 5 }, markdown: "A desert planet.\n" }],
-  })) as { rows: { title: string; action: string }[] };
+  })) as { rows: { id: string; title: string; action: string }[] };
   expect(written.rows).toMatchObject([{ title: "Dune", action: "created", uniqueId: null }]);
   expect(readFileSync(join(folder, "Reading/Dune.md"), "utf8")).toContain("A desert planet.\n");
   const rows = (await call("query_database", { databaseId: db.database.id })) as {
@@ -249,19 +249,25 @@ test("database tools work end to end and land in the folder", async () => {
   expect(readFileSync(join(folder, "Reading/Dune.md"), "utf8")).toContain("Rating: 5\n");
   expect(readFileSync(join(folder, "Reading/Reading.base"), "utf8")).toContain("note.Rating");
 
-  // A fine-grained operation: not listed, described and run through the generic tools.
+  // Views through change_database_views; there are no generic tools to run operations by id.
   const { tools } = await client.listTools();
-  expect(tools.some((t) => t.name === "create_database_view")).toBe(false);
-  const described = await call("describe_operation", { operation: "database.createView" });
-  expect((described.inputSchema as { required: string[] }).required).toContain("databaseId");
-  await call("run_operation", {
-    operation: "database.createView",
-    input: { databaseId: db.database.id, name: "Shelf", type: "list" },
+  for (const name of ["create_database_view", "run_operation", "describe_operation"]) {
+    expect(tools.some((t) => t.name === name)).toBe(false);
+  }
+  await call("change_database_views", {
+    databaseId: db.database.id,
+    add: [{ name: "Shelf", type: "list" }],
   });
   expect(readFileSync(join(folder, "Reading/Reading.base"), "utf8")).toContain("name: Shelf");
-  const unknown = await client.callTool({
-    name: "run_operation",
-    arguments: { operation: "nope", input: {} },
+
+  // A row's title, values and body in one update_doc.
+  await call("update_doc", {
+    id: written.rows[0]!.id,
+    title: "Dune Messiah",
+    properties: { Rating: 4 },
+    markdown: "The sequel.\n",
   });
-  expect(unknown.isError).toBe(true);
+  const sequel = readFileSync(join(folder, "Reading/Dune Messiah.md"), "utf8");
+  expect(sequel).toContain("Rating: 4\n");
+  expect(sequel).toContain("The sequel.\n");
 });

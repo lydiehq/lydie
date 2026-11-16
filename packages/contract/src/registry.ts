@@ -1,3 +1,4 @@
+import { mcpToolOf } from "./define.ts";
 import type { AnyOperation } from "./define.ts";
 import { activityList } from "./operations/activity.ts";
 import {
@@ -66,6 +67,7 @@ import {
   docSetProperties,
   docUnlinkedMentions,
   docUnresolvedLinks,
+  docUpdate,
   docUpdateBody,
 } from "./operations/doc.ts";
 import {
@@ -108,7 +110,8 @@ export function createRegistry<const T extends readonly AnyOperation[]>(
   for (const op of operations) {
     claim(`operation ${op.id}`, op.id);
     if (op.rest) claim(`REST ${op.rest.method} ${op.rest.path}`, op.id);
-    if (op.mcp) claim(`MCP tool ${op.mcp.name}`, op.id);
+    const tool = mcpToolOf(op);
+    if (tool) claim(`MCP tool ${tool.name}`, op.id);
     if (op.cli) claim(`CLI command ${op.cli.command.join(" ")}`, op.id);
     registry[op.id] = op;
   }
@@ -124,6 +127,7 @@ export const operations = createRegistry(
   docRestore,
   docPurge,
   docSetProperties,
+  docUpdate,
   docUpdateBody,
   docGet,
   docListTree,

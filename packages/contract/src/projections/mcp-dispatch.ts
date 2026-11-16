@@ -1,24 +1,17 @@
+import { mcpToolOf } from "../define.ts";
 import type { AnyOperation } from "../define.ts";
 import type { Actor } from "../entities.ts";
 import { isLydieError, LydieError } from "../errors.ts";
 import type { Registry } from "../registry.ts";
 import { toJsonSchema } from "./json-schema.ts";
 import type { JsonSchema } from "./json-schema.ts";
-import {
-  CONNECTION_DEFAULTS,
-  DESCRIBE_OPERATION_TOOL,
-  mcpOperations,
-  RUN_OPERATION_TOOL,
-  toMcpTool,
-  toMcpTools,
-  WHOAMI_TOOL,
-} from "./mcp.ts";
-import type { McpTool, McpToolsOptions } from "./mcp.ts";
+import { CONNECTION_DEFAULTS, mcpOperations, toMcpTools, WHOAMI_TOOL } from "./mcp.ts";
+import type { McpTool } from "./mcp.ts";
 
 // The tools/list and tools/call handling every Lydie MCP server shares (the local server, the
-// hosted endpoint): which operation a call means, describe_operation and whoami, the connection's
-// defaults (workspaceId, sessionId), strict inputs, and the result and error envelopes. Pure: the
-// server supplies how to run an operation and what its connection is.
+// hosted endpoint): which operation a call means, whoami, the connection's defaults (workspaceId,
+// sessionId), strict inputs, and the result and error envelopes. Pure: the server supplies how to
+// run an operation and what its connection is.
 
 // A tools/call result (MCP CallToolResult with text content).
 export type McpCallResult = {
@@ -27,10 +20,7 @@ export type McpCallResult = {
   isError?: true;
 };
 
-export type McpDispatchOptions = McpToolsOptions & {
-  // Operations run_operation and describe_operation reach by id. Default: the listed registry.
-  // A server with operations of its own beyond the contract passes the larger registry here.
-  callable?: Registry;
+export type McpDispatchOptions = {
   // Errors that are not LydieErrors: "expose" their message (a local server, whose user is the
   // operator) or "hide" it behind "Internal error" (a server for other people). Default "hide".
   internalErrors?: "expose" | "hide";
@@ -86,76 +76,50 @@ export type McpDispatcher = {
   ): Promise<McpCallResult>;
 };
 
+// `registry`: every operation the server can run. Its MCP tools are listed, and only those can be
+// called (a server with operations beyond the contract, such as the hosted core, passes them all).
 export function createMcpDispatcher(
-  listed: Registry,
+  registry: Registry,
   options: McpDispatchOptions = {},
 ): McpDispatcher {
-  const tools = toMcpTools(listed, options.expose ? { expose: options.expose } : {});
-  const names = new Set(tools.map((t) => t.name));
-  const byName = new Map<string, AnyOperation>();
-  const byId = new Map<string, AnyOperation>();
-  for (const op of mcpOperations(listed)) if (names.has(op.mcp!.name)) byName.set(op.mcp!.name, op);
-  for (const op of mcpOperations(options.callable ?? listed)) byId.set(op.id, op);
+  const tools = toMcpTools(registry);
+  const byName = new Map<string, { op: AnyOperation; schema: JsonSchema; required: string[] }>();
+  for (const op of mcpOperations(registry)) {
+    byName.set(mcpToolOf(op)!.name, {
+      op,
+      schema: tools.find((t) => t._meta["lydie/operation"] === op.id)!.inputSchema,
+      required: (toJsonSchema(op.input, "input").schema.required as string[] | undefined) ?? [],
+    });
+  }
+  const whoamiSchema = tools.find((t) => t.name === WHOAMI_TOOL)!.inputSchema;
   const internal = options.internalErrors ?? "hide";
-  const toolSchemas = new Map(tools.map((t) => [t.name, t.inputSchema]));
-  const opSchemas = new Map<string, { schema: JsonSchema; required: string[] }>();
-  const opSchema = (op: AnyOperation) => {
-    let found = opSchemas.get(op.id);
-    if (!found) {
-      found = {
-        schema: toMcpTool(op).inputSchema,
-        required: (toJsonSchema(op.input, "input").schema.required as string[] | undefined) ?? [],
-      };
-      opSchemas.set(op.id, found);
-    }
-    return found;
-  };
 
   const fail = (error: LydieError): McpResolved => ({
     kind: "result",
     result: mcpErrorResult(error),
   });
 
+  // Strict keys, then the connection's defaults and its workspace check.
   const resolve = (
     name: string,
     args: Record<string, unknown> = {},
     connection: McpConnection = {},
   ): McpResolved => {
-    const generic = toolSchemas.get(name);
-    if (name === WHOAMI_TOOL || name === RUN_OPERATION_TOOL || name === DESCRIBE_OPERATION_TOOL) {
-      const unknown = generic ? unknownKey(args, generic) : null;
-      if (unknown) return fail(unknownKeyError(unknown, generic!));
+    if (name === WHOAMI_TOOL) {
+      const unknown = unknownKey(args, whoamiSchema);
+      return unknown ? fail(unknownKeyError(unknown, whoamiSchema)) : { kind: "whoami" };
     }
-    if (name === WHOAMI_TOOL) return { kind: "whoami" };
-    if (name === RUN_OPERATION_TOOL || name === DESCRIBE_OPERATION_TOOL) {
-      const op = typeof args.operation === "string" ? byId.get(args.operation) : undefined;
-      if (!op) {
-        return fail(
-          new LydieError("unknown_operation", `Unknown operation "${String(args.operation)}"`),
-        );
-      }
-      if (name === DESCRIBE_OPERATION_TOOL) {
-        return { kind: "result", result: mcpResult(describeOperation(op)) };
-      }
-      const input = args.input ?? {};
-      if (!isRecord(input)) return { kind: "run", op, input };
-      return prepare(op, input, connection, "input.");
+    const tool = byName.get(name);
+    if (!tool) {
+      return fail(
+        new LydieError("unknown_operation", `Unknown tool "${name}"`, {
+          hint: "tools/list names every tool this server has.",
+        }),
+      );
     }
-    const op = byName.get(name);
-    if (!op) return fail(new LydieError("unknown_operation", `Unknown tool "${name}"`));
-    return prepare(op, args, connection, "");
-  };
-
-  // Strict keys, then the connection's defaults and its workspace check.
-  const prepare = (
-    op: AnyOperation,
-    args: Record<string, unknown>,
-    connection: McpConnection,
-    prefix: string,
-  ): McpResolved => {
-    const { schema, required } = opSchema(op);
+    const { op, schema, required } = tool;
     const unknown = unknownKey(args, schema);
-    if (unknown) return fail(unknownKeyError(unknown, schema, prefix));
+    if (unknown) return fail(unknownKeyError(unknown, schema));
     const properties = (schema.properties ?? {}) as Record<string, unknown>;
     const input = { ...args };
     for (const key of CONNECTION_DEFAULTS) {
@@ -201,19 +165,6 @@ export function createMcpDispatcher(
         return mcpErrorResult(error, { internalErrors: internal });
       }
     },
-  };
-}
-
-// What describe_operation returns: the operation's full tool definition, output schema included.
-export function describeOperation(op: AnyOperation) {
-  const tool = toMcpTool(op, { outputSchema: true });
-  return {
-    operation: op.id,
-    tool: tool.name,
-    description: tool.description,
-    inputSchema: tool.inputSchema,
-    outputSchema: tool.outputSchema,
-    annotations: tool.annotations,
   };
 }
 
@@ -331,16 +282,16 @@ function walk(
   return null;
 }
 
-function unknownKeyError(unknown: UnknownKey, root: JsonSchema, prefix = ""): LydieError {
+function unknownKeyError(unknown: UnknownKey, root: JsonSchema): LydieError {
   const defs = (root.$defs ?? {}) as Record<string, JsonSchema>;
   const places = placesOf(unknown.key, root, defs, "", 0).filter((p) => p !== unknown.path);
   const hint =
     places.length > 0
       ? `${unknown.key} belongs under ${places.map((p) => p.slice(0, -unknown.key.length - 1) || "the top level").join(" or ")}.`
-      : "Check the tool's input schema (describe_operation shows it).";
-  return new LydieError("invalid_input", `Unknown input key "${prefix}${unknown.path}"`, {
+      : "Check the tool's input schema in tools/list.";
+  return new LydieError("invalid_input", `Unknown input key "${unknown.path}"`, {
     hint,
-    details: { path: `${prefix}${unknown.path}` },
+    details: { path: unknown.path },
   });
 }
 

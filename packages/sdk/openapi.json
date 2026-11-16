@@ -4854,6 +4854,112 @@
         "x-lydie-idempotent": true,
         "x-lydie-undoable": true
       },
+      "patch": {
+        "operationId": "doc.update",
+        "summary": "Update a document",
+        "description": "Changes a document's title, properties and body in one step, all or nothing; pass any of them. properties is merged into the document's properties and unset removes keys; on a database row they are its values, keyed by property id, key or name and checked like write_database_rows. markdown replaces the body, or edits are applied in order: replace swaps oldStr for newStr, insertBefore/insertAfter put newStr next to oldStr, prepend/append add newStr as a block at the start/end. oldStr is matched against the Markdown from fetch_doc and must occur exactly once unless replaceAll. expectedVersion (from fetch_doc) makes a stale body write a conflict.",
+        "tags": ["doc"],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/LydieVersion"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "properties": {
+                    "$ref": "#/components/schemas/Properties"
+                  },
+                  "unset": {
+                    "description": "Property keys to remove.",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "markdown": {
+                    "description": "The new body as Lydie Markdown.",
+                    "type": "string"
+                  },
+                  "edits": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/BodyEditInput"
+                    }
+                  },
+                  "expectedVersion": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "document": {
+                      "$ref": "#/components/schemas/Document"
+                    },
+                    "version": {
+                      "description": "The body's version after the update (for expectedVersion); null when not written.",
+                      "type": ["string", "null"]
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Warning"
+                      }
+                    }
+                  },
+                  "required": ["document", "version", "warnings"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-lydie-kind": "mutation",
+        "x-lydie-scopes": ["docs:write"],
+        "x-lydie-destructive": false,
+        "x-lydie-idempotent": false,
+        "x-lydie-undoable": true
+      },
       "get": {
         "operationId": "doc.get",
         "summary": "Get a document",

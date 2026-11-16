@@ -56,7 +56,7 @@ export const attachmentRestore = defineOperation({
   undo: "inverse",
   emits: ["attachment.restored"],
   rest: { method: "POST", path: "/attachments/{id}/restore" },
-  mcp: { name: "restore_attachment", title: "Restore attachment" },
+  mcp: { none: "Restoring is done in the app; undo_session reverts an agent's own changes." },
   cli: { command: ["attachment", "restore"], args: ["id"] },
 });
 
@@ -74,7 +74,9 @@ export const attachmentPurge = defineOperation({
   undo: { none: "Purged attachments are gone." },
   emits: ["attachment.purged"],
   rest: { method: "POST", path: "/attachments/{id}/purge" },
-  mcp: { name: "purge_attachment", title: "Permanently delete attachment", outputSchema: true },
+  mcp: {
+    none: "Permanent deletion is left to people: agents move things to the trash, which undo_session reverts.",
+  },
   cli: { command: ["attachment", "purge"], args: ["id"] },
 });
 

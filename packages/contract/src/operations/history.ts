@@ -18,7 +18,7 @@ export const historyListSessions = defineQuery({
   output: z.object({ sessions: z.array(HistorySession) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/history/sessions" },
-  mcp: { name: "list_sessions", title: "List agent sessions" },
+  mcp: { none: "list_activity shows each change with its session." },
   cli: { command: ["history", "sessions"] },
 });
 

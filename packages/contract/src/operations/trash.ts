@@ -16,7 +16,9 @@ export const trashList = defineQuery({
   output: z.object({ items: z.array(TrashItem) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/workspaces/{workspaceId}/trash" },
-  mcp: { name: "list_trash", title: "List trash" },
+  mcp: {
+    none: "list_activity shows what was deleted and when; restore_doc brings a document back.",
+  },
   cli: { command: ["trash", "ls"], args: ["workspaceId"] },
   ui: { commandPalette: { title: "Open trash", group: "Navigation" } },
 });
@@ -33,7 +35,9 @@ export const trashEmpty = defineOperation({
   undo: { none: "Emptying the trash deletes permanently." },
   emits: ["doc.purged", "attachment.purged"],
   rest: { method: "DELETE", path: "/workspaces/{workspaceId}/trash" },
-  mcp: { name: "empty_trash", title: "Empty trash", outputSchema: true },
+  mcp: {
+    none: "Permanent deletion is left to people: agents move things to the trash, which undo_session reverts.",
+  },
   cli: { command: ["trash", "empty"], args: ["workspaceId"] },
   ui: { commandPalette: { title: "Empty trash", group: "Document", bindable: false } },
 });

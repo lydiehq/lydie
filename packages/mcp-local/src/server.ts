@@ -1,8 +1,8 @@
-// The local MCP server: every contract operation with an MCP projection becomes a tool, run through
+// The local MCP server: the contract's MCP tools (operations that are one), run through
 // the vault's runtime as an agent actor with the MCP session as its session, so a session's changes
 // can be listed (`list_session_changes`) and reverted together (`undo_session`).
-import { createMcpDispatcher, mcpInstructions, mcpOperations, toMcpTools } from "@lydie/contract";
-import type { Actor, AnyOperation, McpWorkspaceRef, Registry } from "@lydie/contract";
+import { createMcpDispatcher, mcpInstructions } from "@lydie/contract";
+import type { Actor, McpWorkspaceRef } from "@lydie/contract";
 import type { Runtime } from "@lydie/runtime";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -26,20 +26,6 @@ export function agentActor(clientName: string | undefined, session: ToolSession)
     id: clean(session.sessionId),
     onBehalfOf: session.onBehalfOf ?? "local",
   };
-}
-
-// The tools of a registry (the agent set plus run_operation/describe_operation), the operation
-// behind each listed tool name, and every operation an MCP client may run by id.
-export function toolsOf(registry: Registry) {
-  const tools = toMcpTools(registry);
-  const listed = new Set(tools.map((t) => t.name));
-  const byName = new Map<string, AnyOperation>();
-  const byId = new Map<string, AnyOperation>();
-  for (const op of mcpOperations(registry)) {
-    byId.set(op.id, op);
-    if (listed.has(op.mcp!.name)) byName.set(op.mcp!.name, op);
-  }
-  return { tools, byName, byId };
 }
 
 // One MCP server (one session). Connect it to a transport (stdio, Streamable HTTP).

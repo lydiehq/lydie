@@ -68,7 +68,7 @@ export const threadEdit = defineOperation({
   undo: "inverse",
   emits: ["thread.updated"],
   rest: { method: "PATCH", path: "/threads/{id}" },
-  mcp: { name: "edit_thread", title: "Edit a thread or reply", expose: "fine" },
+  mcp: { none: "Agents add to a thread with reply_to_thread instead of rewriting it." },
   cli: { command: ["thread", "edit"], args: ["id", "body"] },
 });
 
@@ -86,7 +86,7 @@ export const threadSetAnchor = defineOperation({
   undo: "inverse",
   emits: ["thread.updated"],
   rest: { method: "PUT", path: "/threads/{id}/anchor" },
-  mcp: { name: "move_thread", title: "Move a thread", expose: "fine" },
+  mcp: { none: "Notes are attached to another passage in the editor." },
   cli: { command: ["thread", "move"], args: ["id"] },
 });
 
@@ -120,7 +120,7 @@ export const threadDelete = defineOperation({
   undo: "inverse",
   emits: ["thread.deleted"],
   rest: { method: "DELETE", path: "/threads/{id}" },
-  mcp: { name: "delete_thread", title: "Delete a thread or reply", expose: "fine" },
+  mcp: { none: "resolve_thread closes a thread; undo_session removes an agent's own." },
   cli: { command: ["thread", "rm"], args: ["id"] },
 });
 
@@ -135,7 +135,7 @@ export const threadRestore = defineOperation({
   undo: "inverse",
   emits: ["thread.restored"],
   rest: { method: "POST", path: "/threads/{id}/restore" },
-  mcp: { name: "restore_thread", title: "Restore a thread or reply", expose: "fine" },
+  mcp: { none: "Restoring is done in the app; undo_session reverts an agent's own changes." },
   cli: { command: ["thread", "restore"], args: ["id"] },
 });
 
@@ -154,6 +154,6 @@ export const threadList = defineQuery({
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/documents/{documentId}/threads" },
   // Agents get a document's open threads from fetch_doc.
-  mcp: { name: "list_threads", title: "List threads", expose: "fine" },
+  mcp: { none: "fetch_doc returns a document's open threads." },
   cli: { command: ["thread", "ls"], args: ["documentId"] },
 });

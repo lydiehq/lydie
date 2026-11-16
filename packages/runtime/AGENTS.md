@@ -169,6 +169,11 @@ parseLayout(value): Layout | null
   creates it, then appends a list item (`captureLine`, `appendTo`) or, with a title, creates a page
   inside it. Its steps run without their own scope check (`exec`): the composite's `inbox:write`
   authorises them.
+- `doc.update` (composite, LYD-443; MCP `update_doc`): runs `doc.rename`, then the properties
+  (`database.writeRows` for a row of a live database, so values are checked and named by id, key
+  or name; `doc.setProperties` otherwise), then `doc.updateBody` last, because a hosted body write
+  reaches collab before the transaction commits. Only the steps are logged. `version` is null when
+  no body was given. Tests: `doc-update.test.ts` and its undo scenario.
 - `history.undoSession` (composite) reverts a session newest first, each change in a savepoint; it
   skips changes that someone outside the session changed later (same entity and aspect, or `*`), those
   that depend on a skipped one, and those that fail. The result is one undo step for the caller.

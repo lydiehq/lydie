@@ -31,6 +31,6 @@ export const workspaceExport = defineQuery({
   output: WorkspaceExport,
   scopes: ["docs:read"],
   rest: { method: "POST", path: "/workspaces/{workspaceId}/export" },
-  mcp: { name: "export_workspace", title: "Export workspace", outputSchema: true },
+  mcp: { none: "Exports are made from the app or the CLI (lydie workspace export)." },
   cli: { command: ["workspace", "export"], args: ["workspaceId"] },
 });

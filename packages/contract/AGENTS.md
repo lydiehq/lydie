@@ -19,7 +19,7 @@ authoritative and runs in CI.
 - Every user-visible action is an operation defined with `defineOperation` (mutations) or `defineQuery`
   (reads) and added to `operations` in `src/registry.ts`.
 - Every operation has `rest`, `mcp` and `cli` projections, or `internal: { reason }`. The parity test fails
-  otherwise.
+  otherwise. `mcp` is a tool (`{ name, title }`) or `{ none: reason }` (see "MCP tools").
 - Every mutation declares `undo`: `"inverse"` (its handler records the operations that undo it) or
   `{ none: "reason" }` (then it must be `destructive`). The parity test fails otherwise, and a runtime
   test fails if an `"inverse"` operation has no undo/redo round-trip scenario.
@@ -38,6 +38,8 @@ defineOperation({ id, summary, description?, input, output, scopes, destructive,
   emits?, rest?, mcp?, cli?, ui?, internal? }): OperationDef<Id, I, O, "mutation">
 defineQuery({ id, summary, description?, input, output, scopes, rest?, mcp?, cli?, ui?, internal? })
   : OperationDef<Id, I, O, "query">       // readOnly, idempotent, undo null, never logged
+mcp: { name, title, outputSchema? } | { none: reason }   // McpToolSpec | McpNone = McpProjection
+mcpToolOf(op): McpToolSpec | null         // the operation's tool, or null
 createRegistry(...ops): RegistryOf<T>     // rejects duplicate ids, routes, MCP names, CLI commands
 operations                                // every operation (typed by id)
 type OperationId, Operations, Registry, AnyOperation, InputOf<O>, ParsedInputOf<O>, OutputOf<O>, UndoSpec
@@ -49,7 +51,7 @@ Operations (mutations marked M; `undo` none marked ✗):
 
 | Area       | Ids                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| doc        | create M, rename M, move M, delete M (to trash), restore M, purge M✗, setProperties M, updateBody M, get, listTree, listChildren, search, backlinks, blockBacklinks, unlinkedMentions, unresolvedLinks, listVersions, getVersion, restoreVersion M                                                                                                                                                                                                                                                                     |
+| doc        | create M, rename M, move M, delete M (to trash), restore M, purge M✗, setProperties M, updateBody M, update M (composite), get, listTree, listChildren, search, backlinks, blockBacklinks, unlinkedMentions, unresolvedLinks, listVersions, getVersion, restoreVersion M                                                                                                                                                                                                                                               |
 | trash      | list, empty M✗                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | attachment | create M, delete M (to trash), restore M, purge M✗, get, list                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | history    | listSessions, listBySession, undoSession M (composite)                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -97,8 +99,8 @@ LYDIE_VERSION ("2026-11-12"), LYDIE_VERSION_HEADER, versionChanges, VersionChang
 AppliedOperation   // { id, operation, input, actor, sessionId?, workspaceId, createdAt, version }
 
 // Projections
-toOpenApi(registry) (adds x-lydie-undoable on mutations), toMcpTools, toMcpTool, toCliCommands,
-toCliCommand, toJsonSchema, generatedFiles
+toOpenApi(registry) (adds x-lydie-undoable on mutations), toMcpTools(registry) (whoami + the
+registry's tools), toMcpTool, mcpOperations, toCliCommands, toCliCommand, toJsonSchema, generatedFiles
 ```
 
 `@lydie/contract/files` (`src/files.ts`): what reads or writes YAML, kept out of the main entry
@@ -201,15 +203,24 @@ rewrites the rows that use it in one undoable step. Deleting a property keeps th
 - Inline databases: an embed `![[Tasks.base]]` (first view) or `![[Tasks.base#View name]]`; the
   runtime resolves `X.base` targets to the database document titled X.
 
-## MCP surface (LYD-200)
+## MCP tools (LYD-200, LYD-443)
 
-- `mcp.expose?: "agent" | "fine"`. `"fine"` operations are left out of the agent tool list and stay
-  reachable through the generic `run_operation` / `describe_operation` tools (`RUN_OPERATION_TOOL`,
-  `DESCRIBE_OPERATION_TOOL`, `mcpOperations`). `toMcpTools(registry, { expose: "agent" | "all" })`.
+- MCP tools are chosen, not one per operation (Linear's and Notion's servers, Anthropic's "Writing
+  effective tools for agents"). An operation is a tool (`mcp: { name, title, outputSchema? }`) when
+  an agent does that task on its own; otherwise `mcp: { none: reason }` names the tool that covers
+  it ("update_doc sets the title") or why agents do not get it (permanent deletion, settings and
+  ordering done in the app). The parity test requires one or the other and checks that a tool a
+  reason names exists.
+- There are no generic tools (the former `run_operation` / `describe_operation`): every tool either
+  reads (`readOnlyHint`) or writes, which Anthropic's connector directory requires. A server lists
+  the tools of the registry it runs: the contract's locally (31 plus `whoami`, ~50 KB, capped at
+  55 KB in `contract.test.ts`), the contract's and the core's when hosted.
+- Agent-sized operations bundle the fine-grained ones (composite): `doc.update` (`update_doc`:
+  title, properties and body in one step; a database row's values go through
+  `database.writeRows`; the body is written last), `database.writeRows` (`write_database_rows`),
+  `database.changeSchema` and `database.changeViews` (both return a `DatabaseOutline`).
 - `mcp.outputSchema?: boolean`: output schemas are opt-in. Set it only where an agent needs to know
   the shape of the result.
-- Agent-sized database operations: `database.writeRows` (`write_database_rows`),
-  `database.changeSchema` and `database.changeViews`. The last two return a `DatabaseOutline`.
 - JSON Schema defs: a schema whose input variant differs from its output gets an `<Name>Input` def.
   Give nested reusable schemas a `.meta({ id })`, so they appear once in `$defs`.
 - `Link` and `Backlink` have an optional `sourceProperty` (frontmatter links, LYD-201).
@@ -219,7 +230,7 @@ rewrites the rows that use it in one undoable step. Deleting a property keeps th
   (`WHOAMI_TOOL`) is answered by the dispatcher from `McpConnection.whoami` (`McpWhoami`): it
   describes the connection, not the workspace, so it is not an operation.
 - `mcpInstructions({ mode: "hosted" | "local", workspace })`: the server instructions every MCP
-  server sends. Change the guide there, not in a server.
+  server sends. Change the guide there, not in a server. A test checks every tool it names exists.
 - References (LYD-288): view settings name a property with `PropertyReference` (JSON `PropertyRef`:
   id, key or name); `query_database` takes a view id or name; `write_database_rows` takes a row id
   or unique id (`RowRef`, "LYD-12"). The runtime resolves them to ids (`database/refs.ts`); stored
@@ -229,8 +240,7 @@ rewrites the rows that use it in one undoable step. Deleting a property keeps th
   `{ oldStr, newStr }` edits are replacements, as before.
 - `database.writeRows` takes `markdown` per row and returns `rows: WrittenRow[]` (id, title,
   uniqueId, action). `ViewResult.hasMore` is set by `database.query`.
-- The tool list drops `annotations.title` (the tool has `title`) and the ±2^53 integer bounds, and
-  `describe_operation` does not repeat the operation enum. The cap in `contract.test.ts` is 58 KB.
+- The tool list drops `annotations.title` (the tool has `title`) and the ±2^53 integer bounds.
 
 ## The folder format (`src/folder/`, plan "export guarantee")
 
@@ -255,7 +265,7 @@ name, has no note or id, and a vault opens it as a top-level page. Without secti
 checks that an export is byte for byte the folder the bridge wrote, and reopens as the same
 workspace.
 
-`workspace.export` (query, `POST /workspaces/{workspaceId}/export`, MCP `export_workspace`, CLI
+`workspace.export` (query, `POST /workspaces/{workspaceId}/export`, not an MCP tool, CLI
 `lydie workspace export`): a zip of that folder; returns `{ url, filename, expiresAt }` (a signed
 link on the core, a blob or file URL locally, null when a save dialog was cancelled).
 
@@ -273,13 +283,13 @@ each link as written, with `target` (the live document it resolves to, with its 
 
 ## MCP dispatch, schema rewrites
 
-- `createMcpDispatcher(listed, { callable?, internalErrors?, expose? })` returns `{ tools, resolve, call }`.
-  It is the tools/list and tools/call handling every Lydie MCP server shares: listed tools, `run_operation`
-  and `describe_operation` by id (over `callable`, default `listed`), `whoami`, and result and error
-  envelopes. Unexpected errors are hidden by default; set `"expose"` when the server's user is its
-  operator. Also exported: `describeOperation`, `mcpResult`, `mcpErrorResult`, `unknownKey`. Servers
-  only supply `execute(op, input)` and the connection (`call(name, args, execute, connection)`:
-  `{ workspaceId?, workspaces?, sessionId?, whoami? }`). Don't copy this logic into a server.
+- `createMcpDispatcher(registry, { internalErrors? })` returns `{ tools, resolve, call }`. It is
+  the tools/list and tools/call handling every Lydie MCP server shares: the registry's tools (only
+  those can be called), `whoami`, and result and error envelopes. Unexpected errors are hidden by
+  default; set `"expose"` when the server's user is its operator. Also exported: `mcpResult`,
+  `mcpErrorResult`, `unknownKey`. Servers only supply `execute(op, input)` and the connection
+  (`call(name, args, execute, connection)`: `{ workspaceId?, workspaces?, sessionId?, whoami? }`).
+  Don't copy this logic into a server.
 - Strict inputs (LYD-289): an argument key the tool's JSON Schema has no place for fails with
   `invalid_input` and a hint naming where it belongs ("limit belongs under window"); records and
   discriminated unions are followed. A `workspaceId` outside `connection.workspaces` is `not_found`
@@ -294,7 +304,7 @@ each link as written, with `target` (the live document it resolves to, with its 
   `starterId(workspaceId, key)` derive its ids (so it is created once and can be found);
   `GETTING_STARTED_TITLE`. It lives here because the client, the desktop main process and the core
   all create it (with `createGettingStarted` in @lydie/runtime). Tone: short, plain, no "!".
-- `database.listTemplates` (`list_row_templates`, fine-grained): a database's row templates, which views leave out.
+- `database.listTemplates` (not an MCP tool): a database's row templates, which views leave out.
   `ChildEntry`/`TreeEntry` have optional `teamspaceId`/`privateOwnerId` (hosted space).
 
 ## Activity (LYD-304)
@@ -321,7 +331,7 @@ each link as written, with `target` (the live document it resolves to, with its 
   actors?: ActorRef[], types?: ActivityType[], targetId?, sessionId?, search? }`, output
   `{ items: Activity[], nextCursor: string | null }`, newest first by `lastAt`, then `id`. REST
   `POST /workspaces/{workspaceId}/activity/query` (POST because of the list filters: GET query
-  parameters must be primitives), MCP `list_activity` (fine), CLI `lydie activity list`.
+  parameters must be primitives), MCP `list_activity`, CLI `lydie activity list`.
 - Rows are written and coalesced by @lydie/runtime (`activity.ts`), not by the API caller.
 
 ## Version history
@@ -342,8 +352,8 @@ Notes and comments beside a document, never in its body and never published.
   the page, `body`, `replies: ThreadReply[]`, `resolvedAt`/`resolvedBy`, `sessionId`), `ThreadKind`,
   `ThreadBody`, and `sameAuthor(a, b)` (an agent and the person it acts for are one author).
 - Operations (`src/operations/thread.ts`): `thread.create` M, `reply` M, `edit` M, `setAnchor` M,
-  `resolve` M, `delete` M, `restore` M, `list`. MCP agent tools: `create_thread`,
-  `reply_to_thread`, `resolve_thread`; the rest are fine-grained. `id` in `edit`, `delete` and
+  `resolve` M, `delete` M, `restore` M, `list`. MCP tools: `create_thread`, `reply_to_thread`,
+  `resolve_thread` (fetch_doc returns open threads); the rest are not tools. `id` in `edit`, `delete` and
   `restore` is a thread or a reply.
 - An anchor is a quote plus the text before and after it, never a position (`src/quote.ts`:
   `findQuote(text, selector)`, `describeQuote(text, range)`, `QUOTE_CONTEXT`). Both work on the
@@ -352,4 +362,3 @@ Notes and comments beside a document, never in its body and never published.
   the logged input, so a replay does not look the quote up again).
 - Events: `thread.created|replied|updated|resolved|deleted|restored`. `data.id` is always the
   thread, `data.documentId` its document, `data.messageId` the thread or reply that changed.
-- The agent tool list cap in `contract.test.ts` is 61 KB (was 58) to fit the three thread tools.

@@ -1,5 +1,5 @@
 // @lydie/mcp-local: the contract's operations as MCP tools over a local vault. See AGENTS.md.
-export { agentActor, createMcpServer, SERVER_NAME, toolsOf } from "./server.ts";
+export { agentActor, createMcpServer, SERVER_NAME } from "./server.ts";
 export type { ToolSession } from "./server.ts";
 export { startHttpMcp } from "./http.ts";
 export type { HttpMcpOptions, HttpMcpServer } from "./http.ts";

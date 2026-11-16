@@ -102,7 +102,7 @@ export const databaseUpdate = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "PATCH", path: "/databases/{id}" },
-  mcp: { name: "update_database", title: "Update database settings", expose: "fine" },
+  mcp: { none: "The database-wide filter and row templates are set in the app." },
   cli: { command: ["db", "update"], args: ["id"] },
 });
 
@@ -118,7 +118,7 @@ export const databaseDelete = defineOperation({
   destructive: true,
   idempotent: true,
   rest: { method: "DELETE", path: "/databases/{id}" },
-  mcp: { name: "delete_database", title: "Turn database into page", expose: "fine" },
+  mcp: { none: "Turning a database back into a page is done in the app." },
   cli: { command: ["db", "rm"], args: ["id"] },
 });
 
@@ -131,7 +131,7 @@ export const databaseRestore = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/databases/{id}/restore" },
-  mcp: { name: "restore_database", title: "Restore database", expose: "fine" },
+  mcp: { none: "Restoring is done in the app; undo_session reverts an agent's own changes." },
   cli: { command: ["db", "restore"], args: ["id"] },
 });
 
@@ -148,7 +148,9 @@ export const databaseSetDefinition = defineOperation({
   destructive: true,
   idempotent: true,
   rest: { method: "PUT", path: "/databases/{id}/definition" },
-  mcp: { name: "set_database_definition", title: "Replace database definition", expose: "fine" },
+  mcp: {
+    none: "Replaces a whole definition, for the file bridge; agents use change_database_schema and change_database_views.",
+  },
   cli: { command: ["db", "define"], args: ["id"] },
 });
 
@@ -174,7 +176,7 @@ export const databaseListTemplates = defineQuery({
   output: z.object({ templates: z.array(Document) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/databases/{databaseId}/templates" },
-  mcp: { name: "list_row_templates", title: "List row templates", expose: "fine" },
+  mcp: { none: "Row templates are used in the app." },
   cli: { command: ["db", "templates"], args: ["databaseId"] },
 });
 
@@ -250,7 +252,7 @@ export const databaseAddProperty = defineOperation({
   destructive: false,
   idempotent: false,
   rest: { method: "POST", path: "/databases/{databaseId}/properties" },
-  mcp: { name: "add_database_property", title: "Add database property", expose: "fine" },
+  mcp: { none: "change_database_schema adds properties." },
   cli: { command: ["db", "prop", "add"], args: ["databaseId", "name", "type"] },
 });
 
@@ -266,7 +268,7 @@ export const databaseRenameProperty = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-properties/{id}/rename" },
-  mcp: { name: "rename_database_property", title: "Rename database property", expose: "fine" },
+  mcp: { none: "change_database_schema renames properties." },
   cli: { command: ["db", "prop", "rename"], args: ["id", "name"] },
 });
 
@@ -287,7 +289,7 @@ export const databaseUpdateProperty = defineOperation({
   idempotent: true,
   emits: ["database.changed", "doc.propertiesChanged"],
   rest: { method: "PATCH", path: "/database-properties/{id}" },
-  mcp: { name: "update_database_property", title: "Update database property", expose: "fine" },
+  mcp: { none: "change_database_schema changes properties." },
   cli: { command: ["db", "prop", "update"], args: ["id"] },
 });
 
@@ -309,7 +311,7 @@ export const databaseChangePropertyType = defineOperation({
   idempotent: true,
   emits: ["database.changed", "doc.propertiesChanged"],
   rest: { method: "POST", path: "/database-properties/{id}/type" },
-  mcp: { name: "change_database_property_type", title: "Change property type", expose: "fine" },
+  mcp: { none: "change_database_schema changes a property's type." },
   cli: { command: ["db", "prop", "type"], args: ["id", "type"] },
 });
 
@@ -322,7 +324,7 @@ export const databaseMoveProperty = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-properties/{id}/move" },
-  mcp: { name: "move_database_property", title: "Reorder database property", expose: "fine" },
+  mcp: { none: "Order is changed in the app." },
   cli: { command: ["db", "prop", "mv"], args: ["id"] },
 });
 
@@ -339,7 +341,7 @@ export const databaseDeleteProperty = defineOperation({
   destructive: true,
   idempotent: true,
   rest: { method: "DELETE", path: "/database-properties/{id}" },
-  mcp: { name: "delete_database_property", title: "Delete database property", expose: "fine" },
+  mcp: { none: "change_database_schema removes properties." },
   cli: { command: ["db", "prop", "rm"], args: ["id"] },
 });
 
@@ -352,7 +354,7 @@ export const databaseRestoreProperty = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-properties/{id}/restore" },
-  mcp: { name: "restore_database_property", title: "Restore database property", expose: "fine" },
+  mcp: { none: "Restoring is done in the app; undo_session reverts an agent's own changes." },
   cli: { command: ["db", "prop", "restore"], args: ["id"] },
 });
 
@@ -373,7 +375,9 @@ export const databaseAddOption = defineOperation({
   destructive: false,
   idempotent: false,
   rest: { method: "POST", path: "/database-properties/{propertyId}/options" },
-  mcp: { name: "add_select_option", title: "Add select option", expose: "fine" },
+  mcp: {
+    none: "change_database_schema sets a property's options; write_database_rows adds new ones.",
+  },
   cli: { command: ["db", "option", "add"], args: ["propertyId"] },
 });
 
@@ -395,7 +399,7 @@ export const databaseUpdateOption = defineOperation({
   idempotent: true,
   emits: ["database.changed", "doc.propertiesChanged"],
   rest: { method: "PATCH", path: "/database-properties/{propertyId}/options/{optionId}" },
-  mcp: { name: "update_select_option", title: "Update select option", expose: "fine" },
+  mcp: { none: "change_database_schema sets a property's options." },
   cli: { command: ["db", "option", "update"], args: ["propertyId", "optionId"] },
 });
 
@@ -408,7 +412,7 @@ export const databaseMoveOption = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-properties/{propertyId}/options/{optionId}/move" },
-  mcp: { name: "move_select_option", title: "Reorder select option", expose: "fine" },
+  mcp: { none: "Order is changed in the app." },
   cli: { command: ["db", "option", "mv"], args: ["propertyId", "optionId", "index"] },
 });
 
@@ -423,7 +427,7 @@ export const databaseDeleteOption = defineOperation({
   idempotent: true,
   emits: ["database.changed", "doc.propertiesChanged"],
   rest: { method: "DELETE", path: "/database-properties/{propertyId}/options/{optionId}" },
-  mcp: { name: "delete_select_option", title: "Delete select option", expose: "fine" },
+  mcp: { none: "change_database_schema sets a property's options." },
   cli: { command: ["db", "option", "rm"], args: ["propertyId", "optionId"] },
 });
 
@@ -445,7 +449,7 @@ export const databaseCreateView = defineOperation({
   destructive: false,
   idempotent: false,
   rest: { method: "POST", path: "/databases/{databaseId}/views" },
-  mcp: { name: "create_database_view", title: "Create database view", expose: "fine" },
+  mcp: { none: "change_database_views adds views." },
   cli: { command: ["db", "view", "add"], args: ["databaseId", "name", "type"] },
 });
 
@@ -458,7 +462,7 @@ export const databaseRenameView = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-views/{id}/rename" },
-  mcp: { name: "rename_database_view", title: "Rename database view", expose: "fine" },
+  mcp: { none: "change_database_views renames views." },
   cli: { command: ["db", "view", "rename"], args: ["id", "name"] },
 });
 
@@ -477,7 +481,7 @@ export const databaseDuplicateView = defineOperation({
   destructive: false,
   idempotent: false,
   rest: { method: "POST", path: "/database-views/{id}/duplicate" },
-  mcp: { name: "duplicate_database_view", title: "Duplicate database view", expose: "fine" },
+  mcp: { none: "change_database_views adds views." },
   cli: { command: ["db", "view", "dup"], args: ["id"] },
 });
 
@@ -491,7 +495,7 @@ export const databaseMoveView = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-views/{id}/move" },
-  mcp: { name: "move_database_view", title: "Reorder database view", expose: "fine" },
+  mcp: { none: "Order is changed in the app." },
   cli: { command: ["db", "view", "mv"], args: ["id"] },
 });
 
@@ -511,7 +515,7 @@ export const databaseUpdateView = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "PATCH", path: "/database-views/{id}" },
-  mcp: { name: "update_database_view", title: "Update database view", expose: "fine" },
+  mcp: { none: "change_database_views changes views." },
   cli: { command: ["db", "view", "update"], args: ["id"] },
 });
 
@@ -524,7 +528,7 @@ export const databaseDeleteView = defineOperation({
   destructive: true,
   idempotent: true,
   rest: { method: "DELETE", path: "/database-views/{id}" },
-  mcp: { name: "delete_database_view", title: "Delete database view", expose: "fine" },
+  mcp: { none: "change_database_views removes views." },
   cli: { command: ["db", "view", "rm"], args: ["id"] },
 });
 
@@ -537,7 +541,7 @@ export const databaseRestoreView = defineOperation({
   destructive: false,
   idempotent: true,
   rest: { method: "POST", path: "/database-views/{id}/restore" },
-  mcp: { name: "restore_database_view", title: "Restore database view", expose: "fine" },
+  mcp: { none: "Restoring is done in the app; undo_session reverts an agent's own changes." },
   cli: { command: ["db", "view", "restore"], args: ["id"] },
 });
 
@@ -574,7 +578,7 @@ export const databaseCreateRow = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "POST", path: "/databases/{databaseId}/rows" },
-  mcp: { name: "create_database_row", title: "Create database row", expose: "fine" },
+  mcp: { none: "write_database_rows creates rows." },
   cli: { command: ["db", "row", "add"], args: ["databaseId", "title"] },
   ui: { commandPalette: { title: "New row", group: "Database" } },
 });
@@ -622,7 +626,7 @@ export const databaseSetValues = defineOperation({
   undo: "inverse",
   emits: ["doc.propertiesChanged", "database.changed"],
   rest: { method: "PATCH", path: "/databases/{databaseId}/rows" },
-  mcp: { name: "set_database_values", title: "Set row values", expose: "fine" },
+  mcp: { none: "write_database_rows sets row values." },
   cli: { command: ["db", "row", "set"], args: ["databaseId"] },
 });
 
@@ -649,7 +653,7 @@ export const databaseMoveRow = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "POST", path: "/database-rows/{rowId}/move" },
-  mcp: { name: "move_database_row", title: "Move database row", expose: "fine" },
+  mcp: { none: "Order is changed in the app." },
   cli: { command: ["db", "row", "mv"], args: ["rowId"] },
 });
 
@@ -669,7 +673,7 @@ export const databaseDuplicateRows = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "POST", path: "/databases/{databaseId}/rows/duplicate" },
-  mcp: { name: "duplicate_database_rows", title: "Duplicate database rows", expose: "fine" },
+  mcp: { none: "write_database_rows creates rows." },
   cli: { command: ["db", "row", "dup"], args: ["databaseId"] },
 });
 
@@ -685,7 +689,7 @@ export const databaseDeleteRows = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "POST", path: "/databases/{databaseId}/rows/delete" },
-  mcp: { name: "delete_database_rows", title: "Delete database rows", expose: "fine" },
+  mcp: { none: "write_database_rows deletes rows." },
   cli: { command: ["db", "row", "rm"], args: ["databaseId"] },
 });
 
@@ -700,7 +704,7 @@ export const databaseRestoreRows = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "POST", path: "/databases/{databaseId}/rows/restore" },
-  mcp: { name: "restore_database_rows", title: "Restore database rows", expose: "fine" },
+  mcp: { none: "Restoring is done in the app; undo_session reverts an agent's own changes." },
   cli: { command: ["db", "row", "restore"], args: ["databaseId"] },
 });
 

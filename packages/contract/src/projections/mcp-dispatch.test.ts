@@ -7,13 +7,7 @@ import { LydieError } from "../errors.ts";
 import { createRegistry, operations } from "../registry.ts";
 import { createMcpDispatcher } from "./mcp-dispatch.ts";
 import type { McpConnection } from "./mcp-dispatch.ts";
-import {
-  DESCRIBE_OPERATION_TOOL,
-  mcpInstructions,
-  RUN_OPERATION_TOOL,
-  toMcpTools,
-  WHOAMI_TOOL,
-} from "./mcp.ts";
+import { mcpInstructions, toMcpTools, WHOAMI_TOOL } from "./mcp.ts";
 
 const text = (r: { content: { text: string }[] }) => JSON.parse(r.content[0]!.text) as unknown;
 
@@ -27,7 +21,7 @@ describe("createMcpDispatcher", () => {
     return { ok: true };
   };
 
-  it("lists the agent tools and runs listed and fine-grained operations", async () => {
+  it("lists the tools and runs the operation behind each", async () => {
     const d = createMcpDispatcher(operations);
     expect(d.tools).toEqual(toMcpTools(operations));
     ran.length = 0;
@@ -36,37 +30,18 @@ describe("createMcpDispatcher", () => {
       content: [{ type: "text", text: JSON.stringify({ ok: true }, null, 2) }],
       structuredContent: { ok: true },
     });
-    const fine = await d.call(
-      RUN_OPERATION_TOOL,
-      { operation: "database.addOption", input: { propertyId: "p" } },
-      execute,
-    );
-    expect(fine.isError).toBeUndefined();
-    expect(ran).toEqual([
-      ["doc.create", { workspaceId: "ws" }],
-      ["database.addOption", { propertyId: "p" }],
-    ]);
-    // A fine-grained operation is not a listed tool name.
-    const fineTool = (await d.call("add_select_option", {}, execute)) as { isError?: true };
-    expect(fineTool.isError).toBe(true);
+    expect(ran).toEqual([["doc.create", { workspaceId: "ws" }]]);
+    // An operation without a tool cannot be called by any name.
+    for (const name of ["rename_doc", "add_select_option", "run_operation", "describe_operation"]) {
+      expect(text(await d.call(name, {}, execute))).toMatchObject({
+        error: { code: "unknown_operation", message: `Unknown tool "${name}"` },
+      });
+    }
+    expect(ran).toHaveLength(1);
   });
 
-  it("describes operations and reports errors in the envelope", async () => {
+  it("reports errors in the envelope", async () => {
     const d = createMcpDispatcher(operations);
-    const described = await d.call(
-      DESCRIBE_OPERATION_TOOL,
-      { operation: "database.addOption" },
-      execute,
-    );
-    expect(text(described)).toMatchObject({ operation: "database.addOption", inputSchema: {} });
-    expect((text(described) as { outputSchema?: unknown }).outputSchema).toBeDefined();
-
-    const unknown = await d.call(RUN_OPERATION_TOOL, { operation: "nope.nope" }, execute);
-    expect(unknown.isError).toBe(true);
-    expect(text(unknown)).toMatchObject({ error: { code: "unknown_operation" } });
-    expect(text(await d.call("no_such_tool", undefined, execute))).toMatchObject({
-      error: { code: "unknown_operation", message: 'Unknown tool "no_such_tool"' },
-    });
     expect(text(await d.call("fetch_doc", { id: "x" }, execute))).toEqual({
       error: { code: "not_found", message: "No such document", hint: "List first." },
     });
@@ -80,26 +55,36 @@ describe("createMcpDispatcher", () => {
     });
   });
 
-  it("reaches a larger callable registry by id without listing it", async () => {
+  it("lists the tools of a server's own operations, and only tools", () => {
     const base = { summary: "x", input: z.object({}), output: z.object({}), scopes: [] as const };
-    const extra = defineOperation({
-      ...base,
-      id: "server.only",
-      destructive: false,
-      idempotent: true,
-      mcp: { name: "server_only", title: "Server only" },
-    });
-    const listed = createRegistry(
+    const registry = createRegistry(
       defineQuery({ ...base, id: "a.read", mcp: { name: "a_read", title: "Read" } }),
+      defineOperation({
+        ...base,
+        id: "server.only",
+        destructive: false,
+        idempotent: true,
+        mcp: { name: "server_only", title: "Server only" },
+      }),
+      defineOperation({
+        ...base,
+        id: "server.admin",
+        destructive: true,
+        idempotent: true,
+        mcp: { none: "People do this in the app." },
+      }),
     );
-    const d = createMcpDispatcher(listed, { callable: { ...listed, [extra.id]: extra } });
-    expect(d.tools.map((t) => t.name)).toEqual(["whoami", "a_read"]);
-    expect(d.resolve(RUN_OPERATION_TOOL, { operation: "server.only" })).toMatchObject({
-      kind: "run",
-      op: { id: "server.only" },
-      input: {},
-    });
-    expect(d.resolve("server_only", {})).toMatchObject({ kind: "result" });
+    const d = createMcpDispatcher(registry);
+    expect(d.tools.map((t) => t.name)).toEqual(["whoami", "a_read", "server_only"]);
+    expect(d.resolve("server_only", {})).toMatchObject({ kind: "run", op: { id: "server.only" } });
+  });
+
+  it("gives every tool either readOnlyHint or destructiveHint", () => {
+    for (const tool of createMcpDispatcher(operations).tools) {
+      const { readOnlyHint, destructiveHint } = tool.annotations;
+      expect(readOnlyHint && destructiveHint, tool.name).toBe(false);
+      expect(tool.title, tool.name).not.toBe("");
+    }
   });
 });
 
@@ -117,13 +102,9 @@ describe("MCP connection defaults and strict inputs", () => {
     expect(tools.create_doc!.inputSchema.required ?? []).not.toContain("workspaceId");
     expect(tools.undo_session!.inputSchema.required ?? []).not.toContain("sessionId");
     expect(resolved("list_databases", {})).toMatchObject({ input: { workspaceId: "ws1" } });
-    expect(resolved("list_sessions", {})).toMatchObject({ input: { workspaceId: "ws1" } });
+    expect(resolved("list_activity", {})).toMatchObject({ input: { workspaceId: "ws1" } });
     expect(resolved("undo_session", {})).toMatchObject({ input: { sessionId: "mcp:abc" } });
     expect(resolved("fetch_doc", { id: "x" })).toMatchObject({ input: { id: "x" } });
-    expect(resolved(RUN_OPERATION_TOOL, { operation: "trash.list", input: {} })).toMatchObject({
-      kind: "run",
-      input: { workspaceId: "ws1" },
-    });
     // A connection with several workspaces has no default.
     expect(
       errorOf(resolved("list_databases", {}, { ...connection, workspaceId: null })),
@@ -136,7 +117,7 @@ describe("MCP connection defaults and strict inputs", () => {
   it("answers an unknown workspace with not_found", () => {
     for (const [name, args] of [
       ["list_databases", {}],
-      ["list_sessions", {}],
+      ["list_activity", {}],
       ["list_docs", {}],
       ["search", { query: "x" }],
     ] as const) {
@@ -161,12 +142,12 @@ describe("MCP connection defaults and strict inputs", () => {
         resolved("write_database_rows", { databaseId: "d", rows: [{ title: "x", body: "y" }] }),
       ),
     ).toMatchObject({ message: 'Unknown input key "rows[0].body"' });
-    expect(
-      errorOf(resolved(RUN_OPERATION_TOOL, { operation: "doc.get", input: { id: "x", body: 1 } })),
-    ).toMatchObject({ message: 'Unknown input key "input.body"' });
-    expect(
-      errorOf(resolved(RUN_OPERATION_TOOL, { operation: "doc.get", inputs: {} })),
-    ).toMatchObject({ message: 'Unknown input key "inputs"' });
+    expect(errorOf(resolved("update_doc", { id: "x", body: "y" }))).toMatchObject({
+      message: 'Unknown input key "body"',
+    });
+    expect(errorOf(resolved(WHOAMI_TOOL, { workspaceId: "ws1" }))).toMatchObject({
+      message: 'Unknown input key "workspaceId"',
+    });
     // Open records and discriminated unions are checked as their schema says.
     expect(
       resolved("write_database_rows", { databaseId: "d", rows: [{ values: { Anything: 1 } }] }),
@@ -204,5 +185,11 @@ describe("MCP connection defaults and strict inputs", () => {
     expect(instructions).toContain('Workspace "Lydie" (ws1)');
     expect(instructions).toContain("oldStr");
     expect(instructions).not.toContain("old_str");
+    // Every tool the guide names is one.
+    const names = new Set(d.tools.map((t) => t.name));
+    for (const mode of ["hosted", "local"] as const) {
+      const named = mcpInstructions({ mode }).match(/\b[a-z]+(?:_[a-z]+)+\b/g) ?? [];
+      for (const name of named) expect(names.has(name), name).toBe(true);
+    }
   });
 });

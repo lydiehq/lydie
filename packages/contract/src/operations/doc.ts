@@ -81,7 +81,7 @@ export const docRename = defineOperation({
   undo: "inverse",
   emits: ["doc.renamed"],
   rest: { method: "POST", path: "/documents/{id}/rename" },
-  mcp: { name: "rename_doc", title: "Rename document" },
+  mcp: { none: "update_doc sets the title." },
   cli: { command: ["doc", "rename"], args: ["id", "title"] },
   ui: { commandPalette: { title: "Rename document", group: "Document" } },
 });
@@ -156,7 +156,9 @@ export const docPurge = defineOperation({
   undo: { none: "Purged documents are gone; restore from a backup or the folder's history." },
   emits: ["doc.purged"],
   rest: { method: "POST", path: "/documents/{id}/purge" },
-  mcp: { name: "purge_doc", title: "Permanently delete document", outputSchema: true },
+  mcp: {
+    none: "Permanent deletion is left to people: agents move things to the trash, which undo_session reverts.",
+  },
   cli: { command: ["doc", "purge"], args: ["id"] },
 });
 
@@ -176,7 +178,7 @@ export const docSetProperties = defineOperation({
   undo: "inverse",
   emits: ["doc.propertiesChanged"],
   rest: { method: "PATCH", path: "/documents/{id}/properties" },
-  mcp: { name: "set_doc_properties", title: "Set document properties" },
+  mcp: { none: "update_doc sets properties (a database row's values too)." },
   cli: { command: ["doc", "props"], args: ["id"] },
 });
 
@@ -231,8 +233,64 @@ export const docUpdateBody = defineOperation({
   undo: "inverse",
   emits: ["doc.bodyUpdated"],
   rest: { method: "PATCH", path: "/documents/{id}/body" },
-  mcp: { name: "update_doc", title: "Update document body" },
+  mcp: { none: "update_doc changes the body, with the title and properties." },
   cli: { command: ["doc", "write"], args: ["id"] },
+});
+
+// An agent changes a document in one call, as Linear's save_issue and Notion's update-page do:
+// title, properties and body together, all or nothing.
+export const docUpdate = defineOperation({
+  id: "doc.update",
+  summary: "Update a document",
+  description:
+    "Changes a document's title, properties and body in one step, all or nothing; pass any of " +
+    "them. properties is merged into the document's properties and unset removes keys; on a " +
+    "database row they are its values, keyed by property id, key or name and checked like " +
+    "write_database_rows. markdown replaces the body, or edits are applied in order: replace " +
+    "swaps oldStr for newStr, insertBefore/insertAfter put newStr next to oldStr, prepend/append " +
+    "add newStr as a block at the start/end. oldStr is matched against the Markdown from " +
+    "fetch_doc and must occur exactly once unless replaceAll. expectedVersion (from fetch_doc) " +
+    "makes a stale body write a conflict.",
+  input: z
+    .object({
+      id: Uuid,
+      title: Title.optional(),
+      properties: Properties.optional(),
+      unset: z.array(PropertyKey).optional().describe("Property keys to remove."),
+      markdown: z.string().optional().describe("The new body as Lydie Markdown."),
+      edits: z.array(BodyEdit).min(1).optional(),
+      expectedVersion: z.string().optional(),
+    })
+    .refine((v) => v.markdown === undefined || v.edits === undefined, {
+      message: "Pass markdown or edits, not both",
+    })
+    .refine(
+      (v) =>
+        v.title !== undefined ||
+        v.properties !== undefined ||
+        v.unset !== undefined ||
+        v.markdown !== undefined ||
+        v.edits !== undefined,
+      { message: "Pass at least one of title, properties, unset, markdown or edits" },
+    ),
+  output: z.object({
+    document: Document,
+    version: z
+      .string()
+      .nullable()
+      .describe(
+        "The body's version after the update (for expectedVersion); null when not written.",
+      ),
+    warnings: z.array(Warning),
+  }),
+  scopes: ["docs:write"],
+  destructive: false,
+  idempotent: false,
+  undo: "inverse",
+  composite: true,
+  rest: { method: "PATCH", path: "/documents/{id}" },
+  mcp: { name: "update_doc", title: "Update document" },
+  cli: { command: ["doc", "update"], args: ["id"] },
 });
 
 export const docGet = defineQuery({
@@ -284,7 +342,7 @@ export const docListChildren = defineQuery({
   output: z.object({ entries: z.array(ChildEntry) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/workspaces/{workspaceId}/children" },
-  mcp: { name: "list_children", title: "List child documents" },
+  mcp: { none: "list_docs with rootId lists what is under a document." },
   cli: { command: ["doc", "ls"], args: ["workspaceId"] },
 });
 
@@ -344,7 +402,7 @@ export const docBlockBacklinks = defineQuery({
   output: z.object({ backlinks: z.array(Backlink) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/documents/{id}/blocks/{blockId}/backlinks" },
-  mcp: { name: "list_block_backlinks", title: "List block backlinks" },
+  mcp: { none: "list_backlinks includes links to blocks (targetBlockId)." },
   cli: { command: ["doc", "block-backlinks"], args: ["id", "blockId"] },
 });
 
@@ -357,7 +415,7 @@ export const docUnlinkedMentions = defineQuery({
   output: z.object({ mentions: z.array(UnlinkedMention) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/documents/{id}/unlinked-mentions" },
-  mcp: { name: "list_unlinked_mentions", title: "List unlinked mentions" },
+  mcp: { none: "search finds where a title is mentioned." },
   cli: { command: ["doc", "mentions"], args: ["id"] },
 });
 
@@ -369,7 +427,7 @@ export const docUnresolvedLinks = defineQuery({
   output: z.object({ links: z.array(UnresolvedLink) }),
   scopes: ["docs:read"],
   rest: { method: "GET", path: "/workspaces/{workspaceId}/unresolved-links" },
-  mcp: { name: "list_unresolved_links", title: "List unresolved links" },
+  mcp: { none: "list_outgoing_links shows a document's links that resolve to nothing." },
   cli: { command: ["links", "unresolved"], args: ["workspaceId"] },
 });
 
