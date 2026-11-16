@@ -40,16 +40,16 @@ const Mentions = Extension.create({
   name: "lydieMentions",
 
   addStorage(): Storage {
-    const storage: Storage = {
+    return {
       store: createSuggestionStore<Mention>(),
       items: async () => [],
       insert: () => {},
-      connect: ({ items, insert }) => {
-        storage.items = items;
-        storage.insert = insert;
+      // `this`, not a closure over this object: TipTap gives the editor a copy of it.
+      connect(this: Storage, { items, insert }: Handlers) {
+        this.items = items;
+        this.insert = insert;
       },
     };
-    return storage;
   },
 
   addProseMirrorPlugins() {
