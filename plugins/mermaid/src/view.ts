@@ -3,6 +3,8 @@
 // is hidden and its diagram shown in its place; "Edit" brings the code back under a live
 // preview. A diagram that does not parse shows the parser's message and its code.
 import {
+  changedRanges,
+  changedTextblocks,
   Decoration,
   DecorationSet,
   Extension,
@@ -13,13 +15,16 @@ import {
 } from "@lydie/plugin-api/editor";
 import type { EditorState, ProseMirrorNode, Transaction } from "@lydie/plugin-api/editor";
 
-type State = {
+export type State = {
   // Diagrams whose code is shown, by the position of their block.
   editing: ReadonlySet<number>;
+  // The source each of those is drawn from: while its code is typed, the preview is drawn again
+  // only once typing pauses (PREVIEW_DELAY), not per key.
+  drawn: ReadonlyMap<number, string>;
   decorations: DecorationSet;
 };
 
-const key = new PluginKey<State>("mermaid");
+export const mermaidKey = new PluginKey<State>("mermaid");
 
 export type DiagramBlock = { from: number; to: number; source: string };
 
@@ -27,7 +32,7 @@ export type DiagramBlock = { from: number; to: number; source: string };
 export function diagramBlocks(doc: ProseMirrorNode): DiagramBlock[] {
   const found: DiagramBlock[] = [];
   doc.descendants((node, pos) => {
-    if (node.type.name !== "codeBlock") return true;
+    if (node.type.name !== "codeBlock") return !node.isTextblock;
     if (isDiagramLanguage(node.attrs.language)) {
       found.push({ from: pos, to: pos + node.nodeSize, source: node.textContent });
     }
@@ -115,23 +120,29 @@ function hash(text: string): string {
   return (h >>> 0).toString(36);
 }
 
-function build(doc: ProseMirrorNode, editing: ReadonlySet<number>): DecorationSet {
+export function build(
+  doc: ProseMirrorNode,
+  editing: ReadonlySet<number>,
+  drawn: ReadonlyMap<number, string>,
+): DecorationSet {
   const blocks = diagramBlocks(doc);
   if (blocks.length === 0) return DecorationSet.empty;
   const out: Decoration[] = [];
   for (const block of blocks) {
     const shown = editing.has(block.from) || block.source.trim() === "";
+    const source = (editing.has(block.from) && drawn.get(block.from)) || block.source;
+    const drawing = { ...block, source };
     out.push(
       Decoration.widget(
         block.from,
         (view, getPos) =>
-          diagramWidget(block, shown, (show) => {
+          diagramWidget(drawing, shown, (show) => {
             const at = getPos();
             if (at === undefined) return;
-            view.dispatch(view.state.tr.setMeta(key, { toggle: at, show }));
+            view.dispatch(view.state.tr.setMeta(mermaidKey, { toggle: at, show }));
           }),
         {
-          key: `mermaid:${shown}:${block.source.length}:${hash(block.source)}`,
+          key: `mermaid:${shown}:${source.length}:${hash(source)}`,
           side: -1,
           ignoreSelection: true,
           stopEvent: () => true,
@@ -143,31 +154,88 @@ function build(doc: ProseMirrorNode, editing: ReadonlySet<number>): DecorationSe
   return DecorationSet.create(doc, out);
 }
 
+// How long typing in a diagram's code must pause before its preview is drawn again.
+export const PREVIEW_DELAY = 300;
+
+type Meta = { toggle: number; show?: boolean } | { redraw: true };
+
+export function initState(doc: ProseMirrorNode): State {
+  return { editing: new Set(), drawn: new Map(), decorations: build(doc, new Set(), new Map()) };
+}
+
+const sourceAt = (doc: ProseMirrorNode, pos: number) => doc.nodeAt(pos)?.textContent ?? "";
+
+export function applyState(tr: Transaction, value: State): State {
+  const meta = tr.getMeta(mermaidKey) as Meta | undefined;
+  if (!tr.docChanged && !meta) return value;
+  const editing = new Set([...value.editing].map((pos) => tr.mapping.map(pos, -1)));
+  const drawn = new Map(
+    [...value.drawn].map(([pos, source]) => [tr.mapping.map(pos, -1), source] as const),
+  );
+  if (meta && "redraw" in meta) {
+    for (const pos of editing) drawn.set(pos, sourceAt(tr.doc, pos));
+  } else if (meta) {
+    const show = meta.show ?? !editing.has(meta.toggle);
+    if (show) {
+      editing.add(meta.toggle);
+      drawn.set(meta.toggle, sourceAt(tr.doc, meta.toggle));
+    } else {
+      editing.delete(meta.toggle);
+      drawn.delete(meta.toggle);
+    }
+  } else {
+    const mapped = value.decorations.map(tr.mapping, tr.doc);
+    // Nothing a diagram is drawn from changed: the drawings stay where they were.
+    if (!touchesDiagram(tr, mapped)) return { editing, drawn, decorations: mapped };
+  }
+  return { editing, drawn, decorations: build(tr.doc, editing, drawn) };
+}
+
+// Whether a change touched a diagram: a code block it changed is (now) one, or it came near a
+// diagram's drawing (one deleted leaves its widget where it was).
+function touchesDiagram(tr: Transaction, mapped: DecorationSet) {
+  if (
+    changedTextblocks(tr).some(
+      ({ node }) => node.type.name === "codeBlock" && isDiagramLanguage(node.attrs.language),
+    )
+  ) {
+    return true;
+  }
+  if (mapped === DecorationSet.empty) return false;
+  return changedRanges(tr).some(([from, to]) => mapped.find(from - 1, to + 1).length > 0);
+}
+
 export const Mermaid = Extension.create({
   name: "mermaid",
   addProseMirrorPlugins() {
     return [
       new Plugin<State>({
-        key,
+        key: mermaidKey,
         state: {
-          init: (_config, state: EditorState) => ({
-            editing: new Set<number>(),
-            decorations: build(state.doc, new Set()),
-          }),
-          apply(tr: Transaction, value: State): State {
-            const meta = tr.getMeta(key) as { toggle: number; show?: boolean } | undefined;
-            if (!tr.docChanged && !meta) return value;
-            const editing = new Set([...value.editing].map((pos) => tr.mapping.map(pos, -1)));
-            if (meta) {
-              const show = meta.show ?? !editing.has(meta.toggle);
-              if (show) editing.add(meta.toggle);
-              else editing.delete(meta.toggle);
-            }
-            return { editing, decorations: build(tr.doc, editing) };
-          },
+          init: (_config, state: EditorState) => initState(state.doc),
+          apply: (tr: Transaction, value: State): State => applyState(tr, value),
         },
         props: {
-          decorations: (state) => key.getState(state)?.decorations ?? DecorationSet.empty,
+          decorations: (state) => mermaidKey.getState(state)?.decorations ?? DecorationSet.empty,
+        },
+        view() {
+          let timer: ReturnType<typeof setTimeout> | undefined;
+          return {
+            update(view, prevState) {
+              const value = mermaidKey.getState(view.state);
+              if (!value || value.editing.size === 0 || view.state.doc === prevState.doc) return;
+              const behind = [...value.editing].some(
+                (pos) => value.drawn.get(pos) !== sourceAt(view.state.doc, pos),
+              );
+              clearTimeout(timer);
+              if (!behind) return;
+              timer = setTimeout(() => {
+                if (!view.isDestroyed)
+                  view.dispatch(view.state.tr.setMeta(mermaidKey, { redraw: true }));
+              }, PREVIEW_DELAY);
+            },
+            destroy: () => clearTimeout(timer),
+          };
         },
       }),
     ];

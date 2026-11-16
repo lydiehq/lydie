@@ -23,7 +23,9 @@ authoritative and runs in CI. The renderer (Pele) is @lydie/editor's dependency,
 `view.ts`: the `Mermaid` editor extension. `diagramBlocks(doc)` finds the diagrams at any depth.
 Each gets a frame with its drawing, fitted to the editor's width, in the theme's colours (the
 `--pele-*` variables are set from the theme's, so light and dark need no redraw). "Edit" (on hover,
-bottom right) shows the code under a live preview; "Done" hides it. An empty diagram or one that
+bottom right) shows the code under a live preview, drawn again once typing pauses for
+`PREVIEW_DELAY` (300 ms), not per key; "Done" hides it. An edit that touches no diagram only maps
+the decorations (`applyState`; `view.test.ts` checks it against drawing everything again). An empty diagram or one that
 does not parse shows its code and, for the latter, the parser's message. The renderer loads when a
 document first has a diagram, one chunk per diagram type.
 
