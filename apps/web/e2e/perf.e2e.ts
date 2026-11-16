@@ -134,7 +134,8 @@ test("tree: expanding a folder with 5,000 children is virtualised", async () => 
     ).__lydie;
     const top = await host.backend.query("doc.children", { workspaceId: "bench", parentId: null });
     const tree = await host.backend.query("doc.tree", { workspaceId: "bench" });
-    const index = top.findIndex((d) => d.title === "Tasks database");
+    // A plain folder: a collection opens to its views, not its rows.
+    const index = top.findIndex((d) => d.title === "Big folder");
     return { id: top[index]!.id, index, total: tree.length };
   });
   results.workspaceDocuments = total;

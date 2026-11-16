@@ -334,6 +334,7 @@ export async function composeBrowser(
           notes: 10_000,
           dbRows: 5_000,
           blocks: 2_000,
+          bigFolder: 5_000,
           onProgress,
         });
       },

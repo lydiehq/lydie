@@ -20,6 +20,8 @@ export type SeedOptions = {
   projectRows?: number;
   // Blocks in one long document.
   blocks?: number;
+  // Short notes in one top-level "Big folder" (none by default), for the tree's virtualisation.
+  bigFolder?: number;
   seed?: number;
   // Documents per transaction.
   batch?: number;
@@ -39,6 +41,8 @@ export type SeedResult = {
   properties: Record<string, string>;
   views: Record<string, string>;
   longDocId: string;
+  // The "Big folder" (null without `bigFolder`).
+  bigFolderId: string | null;
   // A note with many backlinks, for benchmarks.
   hubId: string;
   ms: { folders: number; notes: number; rows: number; longDoc: number; total: number };
@@ -76,7 +80,8 @@ export async function seedWorkspace(store: Store, options: SeedOptions = {}): Pr
     actor: { type: "system", id: "seed" },
     ...deterministicPorts(seed),
   });
-  const total = notes + dbRows + projectRows + 1;
+  const bigFolder = options.bigFolder ?? 0;
+  const total = notes + dbRows + projectRows + 1 + bigFolder;
   let done = 0;
   const started = performance.now();
   const timed = async (fn: () => Promise<void>) => {
@@ -360,6 +365,30 @@ export async function seedWorkspace(store: Store, options: SeedOptions = {}): Pr
   });
   options.onProgress?.(done, total);
 
+  // Last, so everything above (and its ids) is the same with or without it.
+  let bigFolderId: string | null = null;
+  if (bigFolder > 0) {
+    const tx = (fn: (ops: Runtime["ops"]) => Promise<void>) =>
+      runtime.transaction("Seed big folder", fn, { history: false });
+    await tx(async (ops) => {
+      bigFolderId = (await ops.doc.create({ workspaceId, title: "Big folder" })).id;
+    });
+    for (let start = 0; start < bigFolder; start += batch) {
+      await tx(async (ops) => {
+        for (let i = start; i < Math.min(bigFolder, start + batch); i++) {
+          await ops.doc.create({
+            workspaceId,
+            parentId: bigFolderId,
+            title: `Filed ${random.words(1)} ${i + 1}`,
+            markdown: `${sentence(random, 12)}\n`,
+          });
+          done++;
+        }
+      });
+      options.onProgress?.(done, total);
+    }
+  }
+
   return {
     workspaceId,
     folders,
@@ -372,6 +401,7 @@ export async function seedWorkspace(store: Store, options: SeedOptions = {}): Pr
     views,
     me: owners[0]!,
     longDocId,
+    bigFolderId,
     hubId,
     ms: {
       folders: foldersMs,
