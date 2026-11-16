@@ -4,6 +4,7 @@ import type { OpenGesture } from "@lydie/plugin-api";
 // and the unresolved-link decoration. The hover preview is the overlay's (LinkLayer). State lives in a small per-editor store the overlay (LinkLayer)
 // renders from; the extension itself never reads data.
 import {
+  changedTextblocks,
   Decoration,
   DecorationSet,
   Extension,
@@ -12,7 +13,12 @@ import {
   Plugin,
   PluginKey,
 } from "@lydie/plugin-api/editor";
-import type { Editor, EditorView, ProseMirrorNode } from "@lydie/plugin-api/editor";
+import type {
+  Editor,
+  EditorView,
+  ProseMirrorNode,
+  Transaction,
+} from "@lydie/plugin-api/editor";
 
 import { hrefToTarget, isExternalHref, linkKey } from "./targets.ts";
 import type { WikiTarget } from "./targets.ts";
@@ -214,14 +220,17 @@ function iconWidget(icon: string) {
   };
 }
 
-function linkDecorations(
-  doc: ProseMirrorNode,
-  unresolved: Set<string>,
-  icons: ReadonlyMap<string, string>,
-): DecorationSet {
-  if (unresolved.size === 0 && icons.size === 0) return DecorationSet.empty;
-  const decorations: Decoration[] = [];
-  doc.descendants((node, pos) => {
+type LinkTargets = { unresolved: ReadonlySet<string>; icons: ReadonlyMap<string, string> };
+
+// The decorations of one textblock's links (wiki links and link marks are always inline).
+function decorateTextblock(
+  block: ProseMirrorNode,
+  blockPos: number,
+  { unresolved, icons }: LinkTargets,
+  decorations: Decoration[],
+) {
+  block.descendants((node, offset) => {
+    const pos = blockPos + 1 + offset;
     if (node.type.name === "wikiLink") {
       const target = String(node.attrs.target ?? "");
       const icon = target ? icons.get(linkKey(target)) : undefined;
@@ -255,7 +264,34 @@ function linkDecorations(
     }
     return true;
   });
+}
+
+export function linkDecorations(doc: ProseMirrorNode, targets: LinkTargets): DecorationSet {
+  if (targets.unresolved.size === 0 && targets.icons.size === 0) return DecorationSet.empty;
+  const decorations: Decoration[] = [];
+  doc.descendants((node, pos) => {
+    if (node.isTextblock) decorateTextblock(node, pos, targets, decorations);
+    return !node.isTextblock;
+  });
   return DecorationSet.create(doc, decorations);
+}
+
+// An edit only redraws the textblocks it touched; the rest of the set is mapped.
+export function updateLinkDecorations(
+  tr: Transaction,
+  old: DecorationSet,
+  targets: LinkTargets,
+): DecorationSet {
+  if (targets.unresolved.size === 0 && targets.icons.size === 0) return DecorationSet.empty;
+  let set = old.map(tr.mapping, tr.doc);
+  const removed: Decoration[] = [];
+  const added: Decoration[] = [];
+  for (const { node, pos } of changedTextblocks(tr)) {
+    removed.push(...set.find(pos + 1, pos + node.nodeSize - 1));
+    decorateTextblock(node, pos, targets, added);
+  }
+  if (removed.length) set = set.remove(removed);
+  return added.length ? set.add(tr.doc, added) : set;
 }
 
 export const LinkInteractions = Extension.create({
@@ -340,10 +376,10 @@ export const LinkInteractions = Extension.create({
         key: linksPluginKey,
         state: {
           init: () => DecorationSet.empty,
-          apply: (tr, old, _oldState, newState) =>
-            tr.docChanged || tr.getMeta(linksPluginKey)
-              ? linkDecorations(newState.doc, store().unresolved, store().icons)
-              : old.map(tr.mapping, tr.doc),
+          apply: (tr, old, _oldState, newState) => {
+            if (tr.getMeta(linksPluginKey)) return linkDecorations(newState.doc, store());
+            return tr.docChanged ? updateLinkDecorations(tr, old, store()) : old;
+          },
         },
         props: {
           decorations: (state) => linksPluginKey.getState(state),
