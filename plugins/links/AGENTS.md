@@ -24,7 +24,7 @@ Licence: AGPL-3.0-only.
 - `LinkEditor`: text + target with suggestions for documents, `Note#heading`, `Note#^block` (a block without an id gets one through `app.editor.assignBlockId` and `doc.updateBody`, or directly in the open editor for the same note). Tab completes, Enter applies, a URL target makes a Markdown link.
 - Click modes come from `app.modeFor(gesture, "edit" | "read")`: editor Mod-click same tab, Mod+Shift-click or middle new tab, Mod+Alt-click split (reusing the pane beside).
 - Resolution: the source's saved links (`doc.links`, LYD-268) carry the runtime's resolution, live; `useResolved` and `resolveTarget` read them first. A link typed since the last save falls back to `resolve.ts`'s copy of the runtime's rule (title or path, case-insensitive, source folder first, then shortest path) over `doc.search` + `doc.get`, cached 3 s. Unresolved styling comes from the document's own `doc.links` (target null), so creating or renaming a target updates it.
-- Page icons on wiki links (LYD-253): `LinkIcons` reads the resolved targets' icons (`doc.get` per target, at most 100) and the extension draws them as widgets before the links.
+- Page icons on wiki links (LYD-253): `LinkIcons` reads the resolved targets' icons from the document's `doc.links` (the local backend adds `target.icon`; one query, not one per target) and the extension draws them as widgets before the links.
 - New notes from unresolved links go beside the linking note (where resolution looks first).
 - Folder windows: document suggestions in `LinkEditor` name targets per `linkPath`, and new links
   use `linkFormat` (Markdown: `[text](target.md)`); editing an existing link keeps its syntax.

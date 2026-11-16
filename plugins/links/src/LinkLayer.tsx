@@ -4,6 +4,7 @@ import {
   DOC_CARD_CLASS,
   docPath,
   linkStyleOf,
+  PAGE_ICON_KEY,
   pageIconOf,
   prefetchDoc,
   PREVIEW_CLOSE_DELAY,
@@ -11,7 +12,6 @@ import {
   useApp,
   useBackend,
   useQuery,
-  useQuerySelect,
 } from "@lydie/plugin-api";
 import type { EditorOverlayProps, OpenOptions } from "@lydie/plugin-api";
 import type { Editor } from "@lydie/plugin-api/editor";
@@ -24,15 +24,7 @@ import {
   TooltipTrigger,
   UnlinkRegular,
 } from "@lydie/plugin-api/ui";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 
 import {
   applyLink,
@@ -105,58 +97,26 @@ export function LinkLayer(props: EditorOverlayProps) {
   );
 }
 
-// Page icons of the documents this one links to, drawn on its wiki links (LYD-253).
+// Page icons of the documents this one links to, drawn on its wiki links (LYD-253). The local
+// backend's `doc.links` carries each target's icon (`target.icon`): one query for all of them.
 function LinkIcons({ editor, docId }: EditorOverlayProps) {
   const store = linkStoreOf(editor);
   const links = useQuery("doc.links", { id: docId });
-  const targets = useMemo(() => {
-    const out = new Map<string, string>();
-    for (const link of links.data) {
-      if (
-        link.target &&
-        link.sourceProperty == null &&
-        link.syntax === "wikilink" &&
-        out.size < 100
-      )
-        out.set(linkKey(link.targetRef), link.target.id);
-    }
-    return out;
-  }, [links.data]);
-  const [icons, setIcons] = useState<ReadonlyMap<string, string>>(new Map());
   useEffect(() => {
-    const next = new Map<string, string>();
-    for (const [key, id] of targets) {
-      const icon = icons.get(id);
-      if (icon) next.set(key, icon);
+    const icons = new Map<string, string>();
+    for (const { target, sourceProperty, syntax, targetRef } of links.data) {
+      if (!target || sourceProperty != null || syntax !== "wikilink") continue;
+      const icon = "icon" in target ? pageIconOf({ [PAGE_ICON_KEY]: target.icon }) : null;
+      if (icon) icons.set(linkKey(targetRef), icon);
     }
-    store.setIcons(next);
-  }, [targets, icons, store]);
-  const ids = [...new Set(targets.values())];
-  return (
-    <>
-      {ids.map((id) => (
-        <IconProbe
-          key={id}
-          id={id}
-          onIcon={(icon) =>
-            setIcons((current) => {
-              if ((current.get(id) ?? null) === icon) return current;
-              const next = new Map(current);
-              if (icon) next.set(id, icon);
-              else next.delete(id);
-              return next;
-            })
-          }
-        />
-      ))}
-    </>
-  );
+    store.setIcons(icons);
+  }, [links.data, store]);
+  return null;
 }
 
-function IconProbe({ id, onIcon }: { id: string; onIcon: (icon: string | null) => void }) {
-  const icon = useQuerySelect("doc.get", { id }, (s) => pageIconOf(s.data[0]?.document.properties));
-  useEffect(() => onIcon(icon), [icon, onIcon]);
-  return null;
+// The store is the extension's, shared with the editor: set its handlers outside render.
+function setHandlers(store: LinkStore, handlers: LinkStore["handlers"]) {
+  store.handlers = handlers;
 }
 
 function LinkPopovers({ editor, docId }: EditorOverlayProps) {
@@ -188,12 +148,10 @@ function LinkPopovers({ editor, docId }: EditorOverlayProps) {
   );
 
   useEffect(() => {
-    store.handlers = {
+    setHandlers(store, {
       follow: (hit, gesture) => followHit(hit, app.modeFor(gesture, "edit")),
-    };
-    return () => {
-      store.handlers = null;
-    };
+    });
+    return () => setHandlers(store, null);
   }, [store, app, followHit]);
 
   const close = (refocus: boolean) => {
