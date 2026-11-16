@@ -309,15 +309,23 @@ export type DocumentSessionEvent =
   | { type: "conflict"; conflict: FileConflictInfo }
   | { type: "closed"; reason: "deleted" };
 
+// `update` and `save` may send a block patch in place of the whole document (@lydie/bridge-fs's
+// `DocumentPatch`: `{ type: "patch", base, from, to, content, count }`): the document sent with
+// update or save `base`, its top-level blocks `from` to `to` (exclusive) replaced by `content`
+// (ProseMirror JSON), `count` blocks in all; nothing changed since `base` is an empty patch
+// (`from === to`). Main applies one only while its copy is exactly that document (no steps sent
+// since): otherwise the update is dropped and the save answers `stale`; send the whole document.
 export type DocumentSession = {
   // The file's text (with frontmatter) to load with `app.editor.fromMarkdown`.
   readonly source: string;
-  // The editor's document (ProseMirror JSON) while it has unsaved edits, so changes made on disk
-  // merge with them.
+  // The editor's document (ProseMirror JSON, or a patch of the last one sent) while it has
+  // unsaved edits, so changes made on disk merge with them.
   // Returns the update's `seq` (increasing per session; steps events name it in `basedOn`).
   update(doc: unknown): number;
-  // Splice-saves the editor's document to the file (not on the undo stack). `stale`: steps the
-  // editor has not applied yet were pending, nothing was written: apply them, then save again.
+  // Splice-saves the editor's document (ProseMirror JSON, or a patch) to the file (not on the
+  // undo stack); always with one: when main has it already, an empty patch. `stale`: steps the
+  // editor has not applied yet were pending, or main could not apply the patch, and nothing was
+  // written: apply the steps (or send the whole document), then save again.
   save(doc: unknown): Promise<{ changed: boolean; stale?: boolean; seq: number }>;
   subscribe(listener: (event: DocumentSessionEvent) => void): () => void;
   close(): void;
