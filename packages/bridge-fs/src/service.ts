@@ -69,6 +69,20 @@ export type DocumentEvent =
   // The file was deleted or the document purged.
   | { type: "closed"; reason: "deleted" };
 
+// What `updateDocument` and `saveDocument` may send as `doc` instead of the whole document: the
+// document of the update or save with seq `base`, its top-level blocks `from` to `to` (exclusive)
+// replaced by `content` (ProseMirror JSON); `count` is the patched document's number of blocks.
+// Main refuses a patch unless its copy is exactly that document (no steps sent since): the update
+// is dropped, the save answers `stale`. Send the whole document then.
+export type DocumentPatch = {
+  type: "patch";
+  base: number;
+  from: number;
+  to: number;
+  content: unknown[];
+  count: number;
+};
+
 export type McpStatus = {
   running: boolean;
   // http://127.0.0.1:<port>/mcp while running.
@@ -94,8 +108,9 @@ export type VaultServiceContract = {
     pathOf: { input: { id: string }; output: string | null };
     // Open a document for editing: the file text to load with @lydie/markdown's `parse`.
     openDocument: { input: { id: string }; output: { session: string; source: string } };
-    // The editor's current document (ProseMirror JSON); send it (debounced) while it has unsaved
-    // edits, so external changes merge against it. Optional ordering (LYD-254): `seq` increases
+    // The editor's current document (ProseMirror JSON, or a `DocumentPatch` of the last one sent);
+    // send it (debounced) while it has unsaved edits, so external changes merge against it.
+    // Optional ordering (LYD-254): `seq` increases
     // with every update; `version` is the last steps event applied to `doc`. An update with an
     // older `version` than the last steps event sent is dropped (it lacks those steps); send the
     // document again after applying them.
@@ -103,8 +118,9 @@ export type VaultServiceContract = {
       input: { session: string; doc: unknown; seq?: number; version?: number };
       output: null;
     };
-    // Splice-save the editor's document to the file (doc.updateBody, not on the undo stack). With
-    // an older `version` nothing is written and `stale` is true: apply the pending steps, then save.
+    // Splice-save the editor's document (or a `DocumentPatch`) to the file (doc.updateBody, not on
+    // the undo stack). With an older `version` nothing is written and `stale` is true: apply the
+    // pending steps, then save. A patch main cannot apply is `stale` too.
     saveDocument: {
       input: { session: string; doc: unknown; seq?: number; version?: number };
       output: { changed: boolean; verified: boolean; stale?: boolean };

@@ -74,12 +74,13 @@ export type WriteHooks = { beforeRename?(temp: string, target: string): void | P
 
 // Writes `data` next to `target` under a hidden temp name, flushes it, then renames it over the
 // target. A crash at any point leaves either the old or the new file, never a partial one.
-// Leftover temp files are hidden (never indexed) and removed by `removeTempFiles`.
+// Leftover temp files are hidden (never indexed) and removed by `removeTempFiles`. Resolves the
+// written file's mtime and size (a rename keeps them), as `readFileState` would report them.
 export async function atomicWrite(
   target: string,
   data: Uint8Array | string,
   hooks?: WriteHooks,
-): Promise<void> {
+): Promise<{ mtime: number; size: number }> {
   const dir = dirname(target);
   await mkdir(dir, { recursive: true });
   const temp = join(dir, `.${basename(target)}${TEMP_MARKER}${randomBytes(4).toString("hex")}`);
@@ -90,9 +91,11 @@ export async function atomicWrite(
     if (!isMissing(error)) throw error;
   }
   const handle = await open(temp, "wx", mode);
+  let info;
   try {
     await handle.writeFile(data);
     await handle.sync();
+    info = await handle.stat();
   } finally {
     await handle.close();
   }
@@ -103,6 +106,7 @@ export async function atomicWrite(
     await rm(temp, { force: true });
     throw error;
   }
+  return { mtime: Math.floor(info.mtimeMs), size: info.size };
 }
 
 // Moves a file or folder, creating the destination's parent. Refuses to overwrite. Returns false

@@ -119,6 +119,38 @@ describe("body and properties", () => {
     );
   });
 
+  test("a value set on many rows rewrites each row's frontmatter, bodies untouched", async () => {
+    const folder = fixtureVault({});
+    const databasePath = join(fixtureVault({}), "..", "db.sqlite");
+    const vault = await openTestVault(folder, { databasePath });
+    const ops = vault.runtime.ops;
+    const db = await ops.database.create({ workspaceId: vault.workspaceId, title: "Tasks" });
+    const status = await ops.database.addProperty({
+      databaseId: db.database.id,
+      name: "Status",
+      type: "select",
+      config: { options: [{ name: "Todo", color: "gray" }] },
+    });
+    const { rows } = await ops.database.writeRows({
+      databaseId: db.database.id,
+      rows: Array.from({ length: 30 }, (_, i) => ({ title: `Task ${i}`, markdown: `Body ${i}\n` })),
+    });
+    await ops.database.setValues({
+      databaseId: db.database.id,
+      rowIds: rows.map((r) => r.id),
+      set: { [status.id]: "Done" },
+    });
+    for (let i = 0; i < 30; i++) {
+      const text = read(folder, `Tasks/Task ${i}.md`);
+      expect(text).toContain("Status: Done\n");
+      expect(text.endsWith(`---\nBody ${i}\n`)).toBe(true);
+    }
+    // The file index has every write: a reopen reads nothing.
+    await vault.close();
+    const again = await openTestVault(folder, { databasePath });
+    expect(again.index.read).toBe(0);
+  });
+
   test("properties on a folder create its note", async () => {
     const folder = fixtureVault({ "Folder/Child.md": "c\n" });
     const vault = await openTestVault(folder);
@@ -171,6 +203,32 @@ describe("rename and move", () => {
     expect(read(folder, "B/Note.md")).toBe(
       "[up](../B/Other.md) and [[Other]]\n".replace("../B/Other.md", "Other.md"),
     );
+  });
+
+  test("a burst of renames moves the file and rewrites links once per write, to the last title", async () => {
+    const folder = fixtureVault({
+      "Target.md": "t\n",
+      "A.md": "See [[Target]].\n",
+      "B.md": "And [[Target]] too.\n",
+    });
+    const writes: string[] = [];
+    const vault = await openTestVault(folder, {
+      hooks: { beforeRename: (_temp, target) => void writes.push(target) },
+    });
+    const id = await idOf(vault, "Target");
+    const word = "Target renamed";
+    // Typing a title: one operation per keystroke, none awaited before the next.
+    await Promise.all(
+      Array.from(word, (_, i) => vault.runtime.ops.doc.rename({ id, title: word.slice(0, i + 1) })),
+    );
+    expect(existsSync(join(folder, "Target renamed.md"))).toBe(true);
+    expect(read(folder, "A.md")).toBe("See [[Target renamed]].\n");
+    expect(read(folder, "B.md")).toBe("And [[Target renamed]] too.\n");
+    // Links written at an intermediate title kept their target meanwhile.
+    expect((await vault.store.backlinks(id)).map((b) => b.source.title).sort()).toEqual(["A", "B"]);
+    // The first rename is written alone; the ones that committed meanwhile share the next write.
+    expect(writes.filter((p) => p.endsWith("/A.md")).length).toBeLessThanOrEqual(2);
+    expect(readdirSync(folder).sort()).toEqual([".lydie", "A.md", "B.md", "Target renamed.md"]);
   });
 
   test("undo of a rename renames the file back", async () => {

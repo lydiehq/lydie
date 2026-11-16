@@ -5,11 +5,11 @@ import { randomUUID } from "node:crypto";
 import { importDoc, parse, schema } from "@lydie/markdown";
 import type { DocInput, ReplaceStepJSON } from "@lydie/markdown";
 import type { Node } from "prosemirror-model";
-import { Slice } from "prosemirror-model";
+import { Fragment, Slice } from "prosemirror-model";
 import { Transform } from "prosemirror-transform";
 
 import type { OpenDocument } from "./bridge.ts";
-import type { DocumentEvent, McpStatus, VaultServiceContract } from "./service.ts";
+import type { DocumentEvent, DocumentPatch, McpStatus, VaultServiceContract } from "./service.ts";
 import type { Vault } from "./vault.ts";
 
 type Contract = VaultServiceContract;
@@ -44,6 +44,8 @@ type Session = {
   // Steps events sent (the last one's `version`), and the `seq` of the update `doc` came from.
   version: number;
   seq: number | null;
+  // `doc` is exactly what update `seq` sent (no steps since): a patch of it can be applied.
+  exact: boolean;
   listeners: Set<(event: DocumentEvent) => void>;
   // Events raised before the editor subscribed.
   backlog: DocumentEvent[];
@@ -79,6 +81,7 @@ export function serveVault(
           doc: schema.nodes.doc.createAndFill()!,
           version: 0,
           seq: null,
+          exact: false,
           listeners: new Set(),
           backlog: [],
         };
@@ -87,6 +90,7 @@ export function serveVault(
           getDoc: () => session.doc,
           applySteps(steps: ReplaceStepJSON[], info: { source: string }) {
             session.doc = applySteps(session.doc, steps);
+            session.exact = false;
             session.version += 1;
             emitTo(session, {
               type: "steps",
@@ -106,19 +110,32 @@ export function serveVault(
       updateDocument: ({ session, doc, seq, version }) => {
         const s = find(session);
         // Built before the client applied steps already sent: keeping it would drop them (and
-        // the next reconcile would read the external change as the user deleting it).
-        if (isStale(s, version)) return null;
-        // Out of order: an older update arriving after a newer one.
-        if (seq !== undefined && s.seq !== null && seq <= s.seq) return null;
-        s.doc = importDoc(doc as DocInput);
+        // the next reconcile would read the external change as the user deleting it). Out of
+        // order: an older update arriving after a newer one.
+        const next =
+          isStale(s, version) || (seq !== undefined && s.seq !== null && seq <= s.seq)
+            ? null
+            : received(s, doc);
+        // A dropped update leaves `doc` behind what the client sent: no patch applies to it.
+        if (!next) {
+          s.exact = false;
+          return null;
+        }
+        s.doc = next;
         s.seq = seq ?? null;
+        s.exact = seq !== undefined;
         return null;
       },
       saveDocument: async ({ session, doc, seq, version }) => {
         const s = find(session);
-        if (isStale(s, version)) return { changed: false, verified: true, stale: true };
-        s.doc = importDoc(doc as DocInput);
+        const next = isStale(s, version) ? null : received(s, doc);
+        if (!next) {
+          s.exact = false;
+          return { changed: false, verified: true, stale: true };
+        }
+        s.doc = next;
         if (seq !== undefined) s.seq = Math.max(seq, s.seq ?? seq);
+        s.exact = seq !== undefined && s.seq === seq;
         return s.open!.save(s.doc);
       },
       closeDocument: ({ session }) => {
@@ -177,6 +194,22 @@ export function serveVault(
 // Clients that send no `version` keep the old behaviour (last update wins).
 function isStale(session: Session, version: number | undefined): boolean {
   return version !== undefined && version < session.version;
+}
+
+// The document an update or save sends: the whole document, or a patch of the one main has (null
+// when it is not the document the patch was made against).
+function received(session: Session, doc: unknown): Node | null {
+  if ((doc as { type?: unknown } | null)?.type !== "patch") return importDoc(doc as DocInput);
+  const patch = doc as DocumentPatch;
+  const current = session.doc;
+  if (!session.exact || patch.base !== session.seq) return null;
+  if (!(0 <= patch.from && patch.from <= patch.to && patch.to <= current.childCount)) return null;
+  const blocks: Node[] = [];
+  for (let i = 0; i < patch.from; i++) blocks.push(current.child(i));
+  importDoc({ type: "doc", content: patch.content }).forEach((b) => blocks.push(b));
+  for (let i = patch.to; i < current.childCount; i++) blocks.push(current.child(i));
+  if (blocks.length !== patch.count) return null;
+  return current.copy(Fragment.fromArray(blocks));
 }
 
 function applySteps(doc: Node, steps: ReplaceStepJSON[]): Node {

@@ -28,13 +28,14 @@ import type {
   DatabaseDefinition,
   DatabaseProperty,
   Document,
+  DocumentBody,
   LydieEvent,
   OperationId,
   Properties,
   PropertyInput,
 } from "@lydie/contract";
 import { merge3, parse, reconcile, rewriteLinks, save } from "@lydie/markdown";
-import type { DocInput, ReplaceStepJSON, TextConflict } from "@lydie/markdown";
+import type { DocInput, ParseResult, ReplaceStepJSON, TextConflict } from "@lydie/markdown";
 import {
   bodyVersion,
   linkKey,
@@ -58,8 +59,16 @@ import {
   obsidianTypes,
   sameDefinition,
 } from "./databases.ts";
-import { atomicWrite, exists, isDirectory, move, readFileState, removeIfEmpty } from "./fs.ts";
-import type { WriteHooks } from "./fs.ts";
+import {
+  atomicWrite,
+  exists,
+  isDirectory,
+  move,
+  readFileState,
+  removeIfEmpty,
+  sha256,
+} from "./fs.ts";
+import type { FileRead, WriteHooks } from "./fs.ts";
 import { assignId, defaultId, deriveId } from "./ids.ts";
 import { VaultMeta } from "./meta.ts";
 import type { AttachmentRecord } from "./meta.ts";
@@ -170,7 +179,33 @@ export type BridgeOptions = {
   onError?: (error: unknown) => void;
 };
 
-type Session = { id: string; handle: DocumentHandle; base: string };
+// `base`: the last agreed text of an open document; `parsed`: its parse once known, the original
+// of the next save (parsing a large note is most of a save's cost).
+type Session = { id: string; handle: DocumentHandle; base: string; parsed: ParseResult | null };
+
+// Operations whose files are written together (see handleEvents). `ids` has each operation's
+// documents, repeats included: one `pending` count each.
+type WriteBatch = { events: LydieEvent[]; ids: string[]; done: Promise<void> };
+
+// A document and its body (null: none; undefined: not read).
+type Row = { document: Document; body?: DocumentBody | null };
+
+// A document whose files are in place, waiting for its content (`writeContents`).
+type Placed = { entry: Entry; created: boolean; isDatabase: boolean };
+
+// A written file and what went into it. `from`: the database state it was written from.
+type Written = {
+  entry: Entry;
+  source: string;
+  final: string;
+  conflicts: TextConflict[] | null;
+  external: boolean;
+  from: { body: string | null | undefined; parentId: string | null; properties: Properties };
+  emptyBody: boolean;
+};
+
+// Files written at once by an operation that touches many documents (database rows).
+const WRITE_CONCURRENCY = 8;
 
 export class Bridge {
   readonly root: string;
@@ -200,6 +235,11 @@ export class Bridge {
   private types: Record<string, string> = {};
   // Documents with committed operations whose files are not written yet (count per document).
   private readonly pending = new Map<string, number>();
+  // Operations' writes waiting for the queue; later operations join them.
+  private waiting: WriteBatch | null = null;
+  private readonly unpersisted = new Set<Entry>();
+  // Counts syncPaths runs: what was read before one may be out of date.
+  private rescans = 0;
   private readonly statusListeners = new Set<(status: VaultStatus) => void>();
   private readonly changeListeners = new Set<(change: ExternalChange) => void>();
   private readonly conflictListeners = new Set<(conflict: FileConflict) => void>();
@@ -1371,6 +1411,7 @@ export class Bridge {
 
   private async syncPaths(rawPaths: string[]): Promise<void> {
     if (this.closed) return;
+    this.rescans++;
     // Paths to the keys whose subtree to rescan; the trash and .lydie are handled separately.
     const roots = new Set<string>();
     // Folders whose .base file changed.
@@ -1731,6 +1772,8 @@ export class Bridge {
 
   // The runtime's events port: runs after an operation commits and resolves once the folder
   // reflects it, so an operation is complete only when its files have landed (plan §1).
+  // Operations that commit while earlier ones wait for the queue share their write: a burst of
+  // renames (typing a title) renames the file and rewrites the links to it once.
   async handleEvents(events: readonly LydieEvent[]): Promise<void> {
     if (events.length === 0 || this.closed) return;
     if (events.every((e) => e.actor.type === "system" && e.actor.id === BRIDGE_ACTOR.id)) return;
@@ -1738,64 +1781,117 @@ export class Bridge {
     // Until their files are written, these documents are ahead of the folder: a watcher batch must
     // not overwrite them from disk (it would undo the operation).
     for (const id of ids) this.pending.set(id, (this.pending.get(id) ?? 0) + 1);
-    await this.queue.run(
-      async () => {
-        try {
-          await this.writeEvents(events, ids);
-        } finally {
-          for (const id of ids) {
-            const n = (this.pending.get(id) ?? 1) - 1;
-            if (n > 0) this.pending.set(id, n);
-            else this.pending.delete(id);
+    let batch = this.waiting;
+    if (batch) {
+      batch.events.push(...events);
+      batch.ids.push(...ids);
+    } else {
+      const next: WriteBatch = { events: [...events], ids: [...ids], done: Promise.resolve() };
+      this.waiting = batch = next;
+      next.done = this.queue.run(
+        async () => {
+          // Operations from now on wait for the next batch.
+          if (this.waiting === next) this.waiting = null;
+          try {
+            await this.writeEvents(next.events, idsOf(next.events));
+          } finally {
+            for (const id of next.ids) {
+              const n = (this.pending.get(id) ?? 1) - 1;
+              if (n > 0) this.pending.set(id, n);
+              else this.pending.delete(id);
+            }
           }
-        }
-      },
-      { urgent: true },
-    );
+        },
+        { urgent: true },
+      );
+    }
+    await batch.done;
   }
 
   private async writeEvents(events: readonly LydieEvent[], ids: string[]): Promise<void> {
-    {
-      const attachments = events.some((e) => e.type.startsWith("attachment."));
-      // Schema first: whether a document is a database, and how its rows' values are written.
-      for (const e of events) {
-        if (e.type !== "database.changed") continue;
-        await this.loadSchema(e.data.id);
-        this.baseDirty.set(e.data.id, this.baseDirty.get(e.data.id));
-      }
-      const touchedFolders = new Set<string>();
+    const attachments = events.some((e) => e.type.startsWith("attachment."));
+    // Schema first: whether a document is a database, and how its rows' values are written.
+    for (const e of events) {
+      if (e.type !== "database.changed") continue;
+      await this.loadSchema(e.data.id);
+      this.baseDirty.set(e.data.id, this.baseDirty.get(e.data.id));
+    }
+    const touchedFolders = new Set<string>();
+    try {
+      // Places one at a time (names, moves and the trash depend on each other), then contents.
+      const rows = await this.readRows(ids);
+      const rescans = this.rescans;
+      const placed: Placed[] = [];
       for (const id of ids) {
         try {
-          await this.syncDocToDisk(id, touchedFolders, new Set());
+          // A rescan meanwhile may have applied changes from disk: read again.
+          const doc = this.rescans === rescans ? (rows.get(id)?.document ?? null) : undefined;
+          const p = await this.placeDoc(id, touchedFolders, new Set(), false, doc);
+          if (p) placed.push(p);
         } catch (error) {
           this.fail(error);
         }
       }
+      await this.writeContents(placed, propertiesOnly(events));
       for (const folder of touchedFolders) await this.syncOrder(folder);
       if (attachments) await this.syncAttachments(events);
       await this.flushBases();
+    } finally {
+      await this.persistDeferred();
       await this.meta.flush();
     }
   }
 
+  // Documents with their bodies where `withBody` names them (body undefined: not read), in one
+  // read rather than a round trip per document.
+  private async readRows(
+    ids: readonly string[],
+    withBody: ReadonlySet<string> = new Set(),
+  ): Promise<Map<string, Row>> {
+    return this.store.ports.db.read(async (tx) => {
+      const docs = tx.docs.getMany
+        ? await tx.docs.getMany(ids)
+        : (await Promise.all(ids.map((id) => tx.docs.get(id)))).filter((d) => d !== null);
+      const out = new Map<string, Row>();
+      for (const document of docs) {
+        out.set(document.id, {
+          document,
+          body: withBody.has(document.id) ? await tx.bodies.get(document.id) : undefined,
+        });
+      }
+      return out;
+    });
+  }
+
   // Makes the files of one document match the database.
-  private async syncDocToDisk(
+  private async syncDocToDisk(id: string, folders: Set<string>, visiting: Set<string>) {
+    const placed = await this.placeDoc(id, folders, visiting);
+    if (placed) await this.writeContents([placed], new Set());
+  }
+
+  // Makes a document's files be where the database says (created, moved, renamed, trashed or
+  // restored); its content is written by `writeContents`. `prefetched`: the document as read
+  // for the batch (null: none), else it is read here.
+  private async placeDoc(
     id: string,
     folders: Set<string>,
     visiting: Set<string>,
     rescanned = false,
-  ): Promise<void> {
-    if (visiting.has(id)) return;
+    prefetched?: Document | null,
+  ): Promise<Placed | null> {
+    if (visiting.has(id)) return null;
     visiting.add(id);
-    const row = await this.store.getDoc(id, { includeBody: true });
+    const doc =
+      prefetched !== undefined
+        ? prefetched
+        : ((await this.store.getDoc(id, { includeBody: false }))?.document ?? null);
     let entry = this.entries.get(id);
 
-    if (!row) {
+    if (!doc) {
       if (entry) await this.purgeEntry(entry);
-      return;
+      return null;
     }
-    const doc = row.document;
-    if (doc.workspaceId !== this.workspaceId) return;
+    if (doc.workspaceId !== this.workspaceId) return null;
 
     // Another program moved or deleted the file and the watcher has not reported it yet: rescan
     // first so the change lands where the file is now. If the file is gone, the database's version
@@ -1805,15 +1901,16 @@ export class Bridge {
       await this.syncPaths([""]);
       entry = this.entries.get(id);
       if (!entry) {
-        await this.recover(row, lostKey);
-        return;
+        const row = await this.store.getDoc(id, { includeBody: true });
+        if (row) await this.recover(row, lostKey);
+        return null;
       }
       visiting.delete(id);
-      return this.syncDocToDisk(id, folders, visiting, true);
+      return this.placeDoc(id, folders, visiting, true);
     }
 
     if (doc.deletedAt) {
-      if (!entry || entry.trashed) return;
+      if (!entry || entry.trashed) return null;
       // Trash the topmost document deleted together with this one; its folder carries the rest.
       let root = doc;
       for (let p = doc.parentId; p;) {
@@ -1824,7 +1921,7 @@ export class Bridge {
       }
       const rootEntry = this.entries.get(root.id);
       if (rootEntry && !rootEntry.trashed) await this.moveToTrash(rootEntry, root, folders);
-      return;
+      return null;
     }
 
     // The parent's files first (a document created under a new document, a restore).
@@ -1875,35 +1972,82 @@ export class Bridge {
     // hold, a name taken), the title follows the name so a rebuild gives the same title.
     const name = baseName(entry.key);
     if (titleOf(name) !== doc.title) await this.exec("doc.rename", { id, title: titleOf(name) });
-
-    // Content. A folder without a note gets one only when it has a body or properties. Read again:
-    // moving may have rewritten links in this very document.
-    const latest = (await this.store.getDoc(id, { includeBody: true })) ?? row;
-    const body = latest.body?.markdown ?? null;
-    const properties = this.fileProperties(latest.document.parentId, latest.document.properties);
     if (created && isDatabase) {
       await mkdir(this.abs(entry.key), { recursive: true });
       entry.dir = true;
       if (!this.baseDirty.has(id)) this.baseDirty.set(id, undefined);
     }
+    return { entry, created, isDatabase };
+  }
+
+  // Writes the content of placed documents: their rows read in one go after every move (moving
+  // rewrites links in other documents), without bodies where only properties changed (the file
+  // keeps its body), the files a few at a time, then what the database must learn from them.
+  private async writeContents(placed: Placed[], propertiesOnly: ReadonlySet<string>) {
+    if (!placed.length) return;
+    const withBody = new Set(
+      placed.filter((p) => !p.entry.file || !propertiesOnly.has(p.entry.id)).map((p) => p.entry.id),
+    );
+    const rows = await this.readRows(
+      placed.map((p) => p.entry.id),
+      withBody,
+    );
+    const written = await mapLimit(placed, WRITE_CONCURRENCY, async (p) => {
+      const row = rows.get(p.entry.id);
+      if (!row) return null;
+      try {
+        return await this.writeContent(p, row);
+      } catch (error) {
+        this.fail(error);
+        return null;
+      }
+    });
+    for (const w of written) {
+      if (!w) continue;
+      try {
+        if (w.conflicts) await this.saveConflict(w.entry, w.source, w.conflicts);
+        // Nothing but what the database holds went into the file: it needs no second look.
+        await this.landed(w.entry, w.final, w.final === w.source && !w.external ? w.from : null);
+        // A document with a file has a body, if only an empty one (as a rebuild would read it).
+        if (w.emptyBody) await this.exec("doc.updateBody", { id: w.entry.id, markdown: "" });
+        this.noteId(w.entry);
+        this.persistLater(w.entry);
+      } catch (error) {
+        this.fail(error);
+      }
+    }
+  }
+
+  // The file of one placed document from its row. A folder without a note gets one only when it
+  // has a body or properties.
+  private async writeContent(
+    { entry, created, isDatabase }: Placed,
+    row: Row,
+  ): Promise<Written | null> {
+    let body = row.body === undefined ? undefined : (row.body?.markdown ?? null);
+    const properties = this.fileProperties(row.document.parentId, row.document.properties);
     const needsFile =
       (created && !isDatabase) ||
       entry.file ||
-      (body !== null && body !== "") ||
+      (body !== undefined && body !== null && body !== "") ||
       Object.keys(properties).length > 0;
     if (!needsFile) {
       this.noteId(entry);
-      await this.persist([entry]);
-      return;
+      this.persistLater(entry);
+      return null;
     }
     const current = entry.file ? await readFileState(this.absFile(entry.key)) : null;
-    if (current && current.text === null) return; // not UTF-8: never written
+    if (current && current.text === null) return null; // not UTF-8: never written
+    if (body === undefined && current?.text == null) {
+      // The file is gone after all: the new one gets the database's body.
+      body = (await this.store.getDoc(entry.id, { includeBody: true }))?.body?.markdown ?? null;
+    }
     let source: string;
     if (current?.text != null) {
       const text = current.text;
       const content = readContent(text);
       const eol = dominantEol(text);
-      const nextBody = body === null ? content.body : fitBody(content.body, body, eol);
+      const nextBody = body == null ? content.body : fitBody(content.body, body, eol);
       let prefix = content.prefix;
       const frontmatter = mergeFrontmatter(content.frontmatter, properties);
       if (JSON.stringify(frontmatter) !== JSON.stringify(content.frontmatter ?? {})) {
@@ -1919,18 +2063,16 @@ export class Bridge {
       // A new file. Documents Lydie creates carry their id (plan §3).
       const writeId = created && !Object.hasOwn(properties, "id");
       const frontmatter: Record<string, unknown> = writeId
-        ? { id, ...properties }
+        ? { id: entry.id, ...properties }
         : { ...properties };
       if (writeId) entry.fmId = true;
       // The folder format's writer (@lydie/contract), shared with workspace exports.
       const head = Object.keys(frontmatter).length ? frontmatterBlock(frontmatter) : "";
       source = head + (body ?? "");
     }
-    await this.writeDocument(entry, source);
-    // A document with a file has a body, if only an empty one (as a rebuild would read it).
-    if (body === null && created) await this.exec("doc.updateBody", { id, markdown: "" });
-    this.noteId(entry);
-    await this.persist([entry]);
+    const { final, conflicts, external } = await this.writeFile(entry, source, current);
+    const from = { body, parentId: row.document.parentId, properties: row.document.properties };
+    return { entry, source, final, conflicts, external, from, emptyBody: body === null && created };
   }
 
   private async present(entry: Entry): Promise<boolean> {
@@ -1972,13 +2114,21 @@ export class Bridge {
     }
   }
 
-  // Writes a document's file, unless another program changed it since the bridge last saw it:
-  // then the change is merged three ways (base: the last agreed text). A true conflict keeps the
-  // disk version in the file and saves this version next to it as `<name>.conflict-<time>.md`.
-  private async writeDocument(entry: Entry, source: string): Promise<void> {
+  // Writes a document's file and brings the database to what landed (see writeFile).
+  private async writeDocument(entry: Entry, source: string, state: FileRead | null) {
+    const { final, conflicts } = await this.writeFile(entry, source, state);
+    if (conflicts) await this.saveConflict(entry, source, conflicts);
+    await this.landed(entry, final, null);
+  }
+
+  // Writes a document's file (`state`: what is on disk now), unless another program changed it
+  // since the bridge last saw it: then the change is merged three ways (base: the last agreed
+  // text). A true conflict keeps the disk version in the file; the caller saves this version next
+  // to it as `<name>.conflict-<time>.md` (`conflicts`). `external`: the file had changed.
+  private async writeFile(entry: Entry, source: string, state: FileRead | null) {
     const path = this.absFile(entry.key);
     let final = source;
-    const state = await readFileState(path);
+    let conflicts: TextConflict[] | null = null;
     const current = state?.text ?? null;
     if (state && current !== null && state.hash !== entry.hash && current !== source) {
       const merged = merge3(entry.lca ?? "", source, current);
@@ -1986,29 +2136,59 @@ export class Bridge {
         final = merged.text;
       } else {
         final = current;
-        await this.saveConflict(entry, source, merged.conflicts);
+        conflicts = merged.conflicts;
       }
     }
-    if (current !== final) await atomicWrite(path, final, this.options.hooks);
-    const written = await readFileState(path);
+    const external = state !== null && state.hash !== entry.hash;
+    if (current !== final) {
+      // The bytes written are the text's UTF-8, so its hash is theirs: no reading back.
+      const { mtime, size } = await atomicWrite(path, final, this.options.hooks);
+      entry.hash = sha256(final);
+      entry.mtime = mtime;
+      entry.size = size;
+    } else if (state) {
+      entry.hash = state.hash;
+      entry.mtime = state.mtime;
+      entry.size = state.size;
+    }
     entry.file = true;
-    entry.hash = written?.hash ?? entry.hash;
-    entry.mtime = written?.mtime ?? entry.mtime;
-    entry.size = written?.size ?? entry.size;
     entry.lca = final;
     entry.seen = undefined;
-    // The database follows what landed on disk (a merge, or line endings fitted to the file).
+    return { final, conflicts, external };
+  }
+
+  // The database follows what landed on disk (a merge, or line endings fitted to the file).
+  // `from`: the database state the file was written from, when nothing else went into it; then
+  // the database is read only if the file holds something else.
+  private async landed(entry: Entry, final: string, from: Written["from"] | null) {
     const landed = readContent(final);
-    const row = await this.store.getDoc(entry.id, { includeBody: true });
-    if (
-      row &&
-      (row.body?.markdown !== landed.body ||
-        JSON.stringify(row.document.properties) !==
-          JSON.stringify(this.dbProperties(row.document.parentId, landed)))
-    ) {
-      await this.applyContent(entry.id, row.document, row.body?.markdown ?? null, landed);
+    const same =
+      from !== null &&
+      (from.body === undefined || from.body === landed.body) &&
+      JSON.stringify(from.properties) === JSON.stringify(this.dbProperties(from.parentId, landed));
+    if (!same) {
+      const row = await this.store.getDoc(entry.id, { includeBody: true });
+      if (
+        row &&
+        (row.body?.markdown !== landed.body ||
+          JSON.stringify(row.document.properties) !==
+            JSON.stringify(this.dbProperties(row.document.parentId, landed)))
+      ) {
+        await this.applyContent(entry.id, row.document, row.body?.markdown ?? null, landed);
+      }
     }
     await this.notifySession(entry.id, final);
+  }
+
+  // Entries whose file_index rows are written at the end of the batch, in one transaction.
+  private persistLater(entry: Entry): void {
+    this.unpersisted.add(entry);
+  }
+
+  private async persistDeferred(): Promise<void> {
+    const entries = [...this.unpersisted].filter((e) => this.entries.get(e.id) === e);
+    this.unpersisted.clear();
+    if (entries.length) await this.persist(entries);
   }
 
   private async saveConflict(
@@ -2237,6 +2417,8 @@ export class Bridge {
       const state = await readFileState(this.absFile(entry.key));
       if (!state?.text) continue;
       const sourceMoved = moved.has(sourceId);
+      // Rewritten links (syntax and new text) and the documents they point at.
+      const rewritten = new Map<string, string>();
       const next = rewriteLinks(state.text, (link) => {
         const syntax = link.kind === "wikilink" || link.kind === "embed" ? "wikilink" : "markdown";
         const targetId = targets.get(`${syntax}\u0000${link.target.trim()}`);
@@ -2245,27 +2427,45 @@ export class Bridge {
         if (!targetEntry || targetEntry.trashed) return undefined;
         const relative = syntax === "markdown" && /^\.\.?\//.test(link.target);
         if (!moved.has(targetId) && !(sourceMoved && relative)) return undefined;
-        return newLinkTarget(
+        const ref = newLinkTarget(
           link.target,
           syntax,
           entry.key,
           targetEntry.key,
           oldKeys.get(targetId),
         );
+        if (ref !== undefined) rewritten.set(`${syntax}\u0000${ref.trim()}`, targetId);
+        return ref;
       });
       if (next === state.text) continue;
-      await this.writeDocument(entry, next);
-      const row = await this.store.getDoc(sourceId, { includeBody: true });
-      if (row) {
-        await this.applyContent(
-          sourceId,
-          row.document,
-          row.body?.markdown ?? null,
-          readContent(next),
-        );
-      }
-      await this.persist([entry]);
+      // Also brings the database to the rewritten text.
+      await this.writeDocument(entry, next, state);
+      await this.keepTargets(sourceId, rewritten);
+      this.persistLater(entry);
     }
+  }
+
+  // Rewritten links name where their targets' files are now. While a later rename of a target is
+  // still to be written (a burst of renames: typing a title), its title already says otherwise and
+  // they resolved to nothing; then the next move would not find them. They keep pointing at what
+  // they pointed at before, as links whose text did not change do (the runtime keeps those).
+  private async keepTargets(sourceId: string, rewritten: ReadonlyMap<string, string>) {
+    if (!rewritten.size) return;
+    const target = (l: LinkRow) =>
+      l.targetId === null && !l.sourceProperty
+        ? rewritten.get(`${l.syntax ?? ""}\u0000${l.targetRef}`)
+        : undefined;
+    const links = await this.store.ports.db.read(
+      async (tx) => (await tx.links.from?.(sourceId)) ?? [],
+    );
+    if (!links.some(target)) return;
+    await this.store.ports.db.write(async (tx) => {
+      const rows = (await tx.links.from?.(sourceId)) ?? [];
+      await tx.links.replaceFrom(
+        sourceId,
+        rows.map((l) => ({ ...l, targetId: target(l) ?? l.targetId })),
+      );
+    });
   }
 
   // ---- Attachments
@@ -2372,7 +2572,7 @@ export class Bridge {
         const state = await readFileState(this.absFile(entry.key));
         source = state?.text ?? entry.lca ?? "";
       }
-      const session: Session = { id, handle, base: source };
+      const session: Session = { id, handle, base: source, parsed: null };
       this.sessions.set(id, session);
       const open: OpenDocument = {
         get source() {
@@ -2391,7 +2591,9 @@ export class Bridge {
     session: Session,
     doc: DocInput,
   ): Promise<{ changed: boolean; verified: boolean }> {
-    const result = save({ original: session.base, doc });
+    const result = save({ original: session.parsed ?? session.base, doc });
+    // The verification's parse of what was saved: the next save starts from it.
+    session.parsed = result.parse;
     if (result.source === session.base) return { changed: false, verified: result.verified };
     session.base = result.source;
     const body = readContent(result.source).body;
@@ -2415,11 +2617,12 @@ export class Bridge {
       this.onError(error);
       return;
     }
-    const result = reconcile({ base: session.base, disk: final, doc });
+    const result = reconcile({ base: session.parsed ?? session.base, disk: final, doc });
     if (result.status === "clean") {
       // The editor now holds the merge: the disk text plus its own unsaved edits, which its next
       // save writes. The base stays what is on disk.
       session.base = final;
+      session.parsed = result.source === final ? result.parse : null;
       await session.handle.applySteps(result.steps, { source: result.source });
       return;
     }
@@ -2427,6 +2630,7 @@ export class Bridge {
     if (entry) await this.saveConflict(entry, result.ours, result.conflicts);
     const reload = reconcile({ base: result.ours, disk: final, doc });
     session.base = final;
+    session.parsed = null;
     if (reload.status === "clean") {
       await session.handle.applySteps(reload.steps, { source: final });
     }
@@ -2469,6 +2673,18 @@ function idsOf(events: readonly LydieEvent[]): string[] {
     }
   }
   return [...new Set(ids)];
+}
+
+// Documents whose only change is to their properties: their files keep the body they have.
+function propertiesOnly(events: readonly LydieEvent[]): Set<string> {
+  const only = new Set<string>();
+  const other = new Set<string>();
+  for (const e of events) {
+    if (e.type === "doc.propertiesChanged") only.add(e.data.id);
+    else for (const id of idsOf([e])) other.add(id);
+  }
+  for (const id of other) only.delete(id);
+  return only;
 }
 
 // The frontmatter block (with BOM) that makes `prefix` hold `frontmatter`. @lydie/markdown's save

@@ -5,7 +5,7 @@
 import { useApp, useBackend, useOps } from "@lydie/plugin-api";
 import type { DocumentSession, FileConflictInfo } from "@lydie/plugin-api";
 import { Mapping, Step } from "@lydie/plugin-api/editor";
-import type { Editor, Transaction } from "@lydie/plugin-api/editor";
+import type { Editor, ProseMirrorNode, Transaction } from "@lydie/plugin-api/editor";
 import { Button, StatusBanner } from "@lydie/plugin-api/ui";
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
@@ -48,10 +48,36 @@ export function applyExternalSteps(
   return { steps: remote, applied: tr.mapping };
 }
 
+// What main has of the editor's document: update or save `seq` sent `doc`, and no steps came
+// since. Later updates and saves send only the blocks that changed after it.
+type Sent = { seq: number; doc: ProseMirrorNode };
+
+// The vault service's document patch (@lydie/bridge-fs `DocumentPatch`): the top-level blocks of
+// `doc` that differ from what main has. ProseMirror keeps unchanged blocks as the same nodes from
+// one state to the next, so this compares references, not content.
+export function patchFrom(sent: Sent, doc: ProseMirrorNode) {
+  const before = sent.doc.childCount;
+  const after = doc.childCount;
+  let from = 0;
+  while (from < before && from < after && sent.doc.child(from) === doc.child(from)) from++;
+  let tail = 0;
+  while (
+    tail < before - from &&
+    tail < after - from &&
+    sent.doc.child(before - 1 - tail) === doc.child(after - 1 - tail)
+  ) {
+    tail++;
+  }
+  const content: unknown[] = [];
+  for (let i = from; i < after - tail; i++) content.push(doc.child(i).toJSON());
+  return { type: "patch", base: sent.seq, from, to: before - tail, content, count: after };
+}
+
 export type FileSession = {
   // Saves go to the file through the session.
   active: boolean;
-  save(doc: unknown): Promise<void>;
+  // Saves the editor's document (`doc`, its JSON, is only used once the editor is gone).
+  save(doc?: unknown): Promise<void>;
   // Called for every editor transaction that changed the document.
   track(tr: Transaction): void;
   conflict: FileConflictInfo | null;
@@ -71,6 +97,11 @@ export function useFileSession(
   // Resolves when the next steps event has been applied (a stale save waits for it).
   const applied = useRef<(() => void)[]>([]);
   const updateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sent = useRef<Sent | null>(null);
+  // Updates and saves sent, and saves not answered yet: a save's seq is known only then, so
+  // updates sent meanwhile carry the whole document.
+  const sends = useRef(0);
+  const saving = useRef(0);
 
   useEffect(() => {
     if (!documents) return;
@@ -83,9 +114,12 @@ export function useFileSession(
         opened = s;
         if (!live) return s.close();
         log.current = new SessionLog();
+        sent.current = null;
         off = s.subscribe((event) => {
           const editor = editorRef.current;
           if (event.type === "steps") {
+            // Main applied these to its copy: it is no longer what was sent.
+            sent.current = null;
             if (!editor || editor.isDestroyed) return;
             const { steps, applied: done } = applyExternalSteps(
               editor,
@@ -97,7 +131,13 @@ export function useFileSession(
             // Main's copy lacks the edits mapped onto the merge (and the version it now has):
             // send it, tagged with this event's version by the session.
             queueMicrotask(() => {
-              if (!editor.isDestroyed) log.current.update(s.update(editor.getJSON()));
+              if (!editor.isDestroyed) {
+                const doc = editor.state.doc;
+                const seq = s.update(doc.toJSON());
+                sends.current++;
+                log.current.update(seq);
+                sent.current = { seq, doc };
+              }
               for (const resolve of applied.current.splice(0)) resolve();
             });
           } else if (event.type === "conflict") setConflict(event.conflict);
@@ -128,21 +168,38 @@ export function useFileSession(
     async save(doc) {
       if (!session) return;
       if (updateTimer.current) clearTimeout(updateTimer.current);
-      let current = doc;
+      let whole = false;
       // Stale: main sent steps this document lacks; apply them (they are on the way) and save the
-      // result instead.
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // result instead. A patch main could not apply goes again as the whole document, at once.
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const editor = editorRef.current;
+        const live = editor && !editor.isDestroyed ? editor.state.doc : null;
+        if (!live && (attempt > 0 || doc === undefined)) return;
+        const patch = live && sent.current && !whole ? patchFrom(sent.current, live) : null;
         const setSeq = log.current.update(-1);
-        const result = await session.save(current);
+        const mark = ++sends.current;
+        saving.current++;
+        let result: Awaited<ReturnType<DocumentSession["save"]>>;
+        try {
+          result = await session.save(patch ?? live?.toJSON() ?? doc);
+        } finally {
+          saving.current--;
+        }
         setSeq(result.seq);
-        if (!result.stale) return;
+        if (!result.stale) {
+          if (live && sends.current === mark) sent.current = { seq: result.seq, doc: live };
+          return;
+        }
+        sent.current = null;
+        if (patch) {
+          whole = true;
+          continue;
+        }
+        whole = false;
         await new Promise<void>((resolve) => {
           applied.current.push(resolve);
           setTimeout(resolve, 1000);
         });
-        const editor = editorRef.current;
-        if (!editor || editor.isDestroyed) return;
-        current = editor.getJSON();
       }
     },
     track(tr) {
@@ -152,7 +209,12 @@ export function useFileSession(
       updateTimer.current = setTimeout(() => {
         const editor = editorRef.current;
         if (!editor || editor.isDestroyed || !dirty.current) return;
-        log.current.update(session.update(editor.getJSON()));
+        const doc = editor.state.doc;
+        const patch = sent.current && saving.current === 0 ? patchFrom(sent.current, doc) : null;
+        const seq = session.update(patch ?? doc.toJSON());
+        sends.current++;
+        log.current.update(seq);
+        sent.current = { seq, doc };
       }, UPDATE_DELAY);
     },
   };

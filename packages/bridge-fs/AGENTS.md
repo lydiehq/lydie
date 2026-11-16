@@ -121,6 +121,16 @@ runtime does not stop vaults from opening.
   files match the database, then resolves, so an operation completes when its files landed. Those
   tasks jump ahead of queued watcher batches; while a document has unwritten changes, a watcher
   batch never overwrites it from disk (and disk → database body updates carry `expectedVersion`).
+- **Write batches**: operations that commit while earlier ones wait for the queue share one write
+  (`handleEvents`). Documents are placed one at a time (`placeDoc`: create, move, rename, trash),
+  then their rows are read in one go (no bodies when only properties changed: the file keeps its
+  body), files are written 8 at a time (`WRITE_CONCURRENCY`), and the file index is recorded in
+  one transaction. The database is read again after a write only when the file holds something
+  else than it was written from (a merge, fitted line endings). A written file's hash is that of
+  its text and its mtime and size come from the temp file, so nothing is read back.
+- **Bursts of renames** (typing a title): the renames that commit meanwhile share the next write,
+  which moves the file once to the last title. Links rewritten to a name that a later rename
+  replaces keep pointing at their target (`keepTargets`), so the next move finds them.
 - **Own writes** are recognised by hash (the index is updated before the watcher reports them).
 - **Writing over an external change** the bridge has not processed yet: three-way merge with the last
   agreed text (`merge3`); a true conflict keeps the disk version in the file, writes the other one to
@@ -138,6 +148,9 @@ program, an agent's operation), the bridge calls `getDoc()`, runs `reconcile`, a
 `applySteps(steps)` (ProseMirror replace steps, apply in order). On a conflict the editor's version
 goes to the conflict copy, `onConflict` fires and the steps bring the editor to the disk version.
 
+The session keeps the parse of the last agreed text (each `save`'s verification parse) as the
+next save's original, so a save parses only what it wrote.
+
 Ordering over the vault service (LYD-254, `serve.ts`):
 
 - Each "steps" event carries `version` (1, 2, … per session) and `basedOn`, the `seq` of the
@@ -146,6 +159,11 @@ Ordering over the vault service (LYD-254, `serve.ts`):
   the doc). An update older than the last steps event is dropped. A save like that writes nothing
   and returns `stale: true`.
 - Clients that send neither field get the old behaviour.
+- Patches (`DocumentPatch`): instead of the whole document, an update or save may send the
+  top-level blocks that changed since update or save `base` (`from`, `to`, `content`, `count`).
+  Main applies one only when its copy is exactly that document: no steps sent since and no update
+  dropped. Otherwise the update is dropped and the save answers `stale`; the client then sends the
+  whole document. Typing in a 2,000-block note sends about 200 bytes per pause instead of 1.2 MB.
 
 ## Exports
 
