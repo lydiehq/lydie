@@ -19,8 +19,8 @@ import {
   NoDocumentIllustration,
   sidebarSectionTitleClass,
 } from "@lydie/plugin-api/ui";
-import { useState } from "react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { mentionEdit } from "./mentions.ts";
 
@@ -104,25 +104,71 @@ function hasLinkTo(node: JSONContent, title: string): boolean {
   return blockText(node, title).includes("<mark>");
 }
 
-// Where a source links here: the blocks around each link, read when the row shows.
+// The snippets of a source body, by its version: parsing a whole body is the expensive part, and
+// the same one comes back (a row scrolled in again, the panel of another page it links to).
+const snippets = new Map<string, readonly string[]>();
+const SNIPPETS_KEPT = 200;
+
+function snippetsOf(
+  app: AppApi,
+  sourceId: string,
+  body: { markdown: string; version: string },
+  title: string,
+): readonly string[] {
+  const key = `${sourceId}\u0000${body.version}\u0000${title}`;
+  let found = snippets.get(key);
+  if (found) {
+    snippets.delete(key);
+  } else {
+    found = (app.editor.fromMarkdown(body.markdown).content.content ?? [])
+      .filter((b) => hasLinkTo(b, title))
+      .slice(0, 3)
+      .map((b) => blockText(b, title).slice(0, 280));
+    if (snippets.size >= SNIPPETS_KEPT) snippets.delete(snippets.keys().next().value!);
+  }
+  snippets.set(key, found);
+  return found;
+}
+
+// Whether the element has come near the visible part of its scroller (and stays true after).
+function useNearView(ref: RefObject<HTMLElement | null>): boolean {
+  const [near, setNear] = useState(typeof IntersectionObserver === "undefined");
+  useEffect(() => {
+    const el = ref.current;
+    if (near || !el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setNear(true);
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [near, ref]);
+  return near;
+}
+
+// Where a source links here: the blocks around each link, read once the row is about to show
+// (a panel of 50 sources reads and parses only the ones on screen).
 function Context({ sourceId, title }: { sourceId: string; title: string }) {
-  const app = useApp();
-  const markdown = useQuerySelect(
-    "doc.get",
-    { id: sourceId, includeBody: true },
-    (s) => s.data[0]?.body?.markdown ?? null,
-  );
-  if (markdown === null) return null;
-  const blocks = (app.editor.fromMarkdown(markdown).content.content ?? []).filter((b) =>
-    hasLinkTo(b, title),
-  );
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNearView(ref);
   return (
-    <div className="flex flex-col gap-0.5 pl-1">
-      {blocks.slice(0, 3).map((b, i) => (
-        <Snippet key={i} text={blockText(b, title).slice(0, 280)} />
-      ))}
+    <div ref={ref} className="flex min-h-4 flex-col gap-0.5 pl-1">
+      {near && <ContextSnippets sourceId={sourceId} title={title} />}
     </div>
   );
+}
+
+function ContextSnippets({ sourceId, title }: { sourceId: string; title: string }) {
+  const app = useApp();
+  const body = useQuerySelect(
+    "doc.get",
+    { id: sourceId, includeBody: true },
+    (s) => s.data[0]?.body ?? null,
+  );
+  if (body === null) return null;
+  return snippetsOf(app, sourceId, body, title).map((text, i) => <Snippet key={i} text={text} />);
 }
 
 function PartBadge({ link, targetId }: { link: Backlink; targetId: string }) {

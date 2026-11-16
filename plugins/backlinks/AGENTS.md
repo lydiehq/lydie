@@ -19,6 +19,6 @@ Licence: AGPL-3.0-only.
 
 The "Links" panel for the focused document:
 
-- **Linked mentions**: one row per linking document (`doc.backlinks`), the blocks around each link as context (the source body is read when the row shows), badges for links to a heading or `^block` (click: go there), the property name for links in frontmatter. 50 rows at a time ("Show more").
+- **Linked mentions**: one row per linking document (`doc.backlinks`), the blocks around each link as context (the source body is read once the row is near the visible part of the panel, and its snippets are cached by body version), badges for links to a heading or `^block` (click: go there), the property name for links in frontmatter. 50 rows at a time ("Show more").
 - **Unlinked mentions** (`doc.unlinkedMentions`): snippet and a "Link" button that turns the first plain mention into `[[Title]]` (or `[[Title|as written]]`) with one exact `doc.updateBody` edit + `expectedVersion`, on the active tab's undo scope (Mod+Z undoes it). `mentions.ts` computes the edit (tested).
 - Titles open with the usual modifiers and preview on hover (`useHoverPreview`). The outline moved to the outline plugin.
