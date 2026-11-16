@@ -128,6 +128,9 @@ function ShortcutRow({ command, commands }: { command: CommandInfo; commands: Co
   );
 }
 
+const byGroupThenTitle = (a: CommandInfo, b: CommandInfo) =>
+  (a.group ?? "").localeCompare(b.group ?? "") || a.title.localeCompare(b.title);
+
 export function ShortcutsPage() {
   const app = useApp();
   const [filter, setFilter] = useState("");
@@ -141,7 +144,7 @@ export function ShortcutsPage() {
   const commands = app
     .commands()
     .filter((c) => c.bindable || c.keybindings.length > 0)
-    .sort((a, b) => (a.group ?? "").localeCompare(b.group ?? "") || a.title.localeCompare(b.title));
+    .sort(byGroupThenTitle);
   const words = filter.toLowerCase().split(/\s+/).filter(Boolean);
   const shown = commands.filter((c) => {
     const text =

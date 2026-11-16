@@ -59,13 +59,14 @@ function InviteDialog({ close, onInvited }: { close: () => void; onInvited: () =
     setBusy(true);
     setError(null);
     const failed: string[] = [];
+    const teamspaceIds = spaces.length && role !== "guest" ? { teamspaceIds: spaces } : {};
     for (const email of list) {
       try {
         await app.services!.account!.call("invitation.create", {
           workspaceId: app.workspace.workspaceId,
           email,
           role,
-          ...(spaces.length && role !== "guest" ? { teamspaceIds: spaces } : {}),
+          ...teamspaceIds,
         });
       } catch (e) {
         failed.push(`${email}: ${errorText(e)}`);

@@ -86,11 +86,12 @@ export function SpacesTree() {
   ];
 
   const create = async (group: Group) => {
+    const teamspaceId = group.teamspaceId ?? null;
     try {
       const doc = await ops.doc.create({
         workspaceId,
         title: "Untitled",
-        teamspaceId: group.teamspaceId ?? null,
+        teamspaceId,
         ...(await atTop(app.backend, workspaceId, null)),
       });
       app.openDoc(doc.id, { state: { focusTitle: true } });

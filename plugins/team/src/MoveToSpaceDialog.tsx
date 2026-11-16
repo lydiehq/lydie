@@ -45,12 +45,11 @@ export function MoveToSpaceDialog({ close, props }: { close: () => void; props: 
   const move = async () => {
     setBusy(true);
     setError(null);
+    const teamspaceId = target === PRIVATE ? null : target;
+    const moved = `Moved “${doc.title || "Untitled"}” to ${nameOf(target)}`;
     try {
-      await app.services!.account!.call("doc.moveToSpace", {
-        id: doc.id,
-        teamspaceId: target === PRIVATE ? null : target,
-      });
-      app.notify({ title: `Moved “${doc.title || "Untitled"}” to ${nameOf(target)}` });
+      await app.services!.account!.call("doc.moveToSpace", { id: doc.id, teamspaceId });
+      app.notify({ title: moved });
       close();
     } catch (e) {
       setError(errorText(e));
