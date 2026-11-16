@@ -17,10 +17,16 @@ import { useEffect } from "react";
 import { dateMentions, personHref } from "./suggest.ts";
 import type { Mention } from "./suggest.ts";
 
-type Storage = {
-  store: ReturnType<typeof createSuggestionStore<Mention>>;
+type Handlers = {
   items: (query: string) => Promise<Mention[]>;
   insert: (editor: Editor, mention: Mention) => void;
+};
+
+type Storage = Handlers & {
+  store: ReturnType<typeof createSuggestionStore<Mention>>;
+  // The overlay, which has the app, sets the handlers through this rather than assigning them
+  // itself (the React Compiler gives up on a component that modifies what it was given).
+  connect: (handlers: Handlers) => void;
 };
 
 const mentionKey = new PluginKey("lydieMentions");
@@ -34,11 +40,16 @@ const Mentions = Extension.create({
   name: "lydieMentions",
 
   addStorage(): Storage {
-    return {
+    const storage: Storage = {
       store: createSuggestionStore<Mention>(),
       items: async () => [],
       insert: () => {},
+      connect: ({ items, insert }) => {
+        storage.items = items;
+        storage.insert = insert;
+      },
     };
+    return storage;
   },
 
   addProseMirrorPlugins() {
@@ -128,8 +139,7 @@ function MentionMenu({ editor }: EditorOverlayProps) {
   const app = useApp();
   const storage = storageOf(editor);
   useEffect(() => {
-    storage.items = (query) => items(app, query);
-    storage.insert = (e, mention) => insert(e, mention);
+    storage.connect({ items: (query) => items(app, query), insert });
   }, [storage, app]);
   return (
     <SuggestionPopup editor={editor} store={storage.store}>
