@@ -47,9 +47,22 @@ export function mcpOperations(registry: Registry): AnyOperation[] {
   return Object.values(registry).filter((op) => mcpToolOf(op) && !op.internal);
 }
 
-// whoami, then one tool per operation that is one.
+// whoami, then one tool per operation that is one. Descriptions are shared with REST and the CLI,
+// so they name other operations by id; an agent sees the tool's name instead.
 export function toMcpTools(registry: Registry): McpTool[] {
-  return [whoamiTool(), ...mcpOperations(registry).map((op) => toMcpTool(op))];
+  const ops = mcpOperations(registry);
+  const names = new Map(ops.map((op) => [op.id, mcpToolOf(op)!.name]));
+  return [
+    whoamiTool(),
+    ...ops.map((op) => {
+      const tool = toMcpTool(op);
+      return { ...tool, description: withToolNames(tool.description, names) };
+    }),
+  ];
+}
+
+function withToolNames(text: string, names: Map<string, string>): string {
+  return text.replace(/\b[a-z]+\.[a-z][A-Za-z]*\b/g, (id) => names.get(id) ?? id);
 }
 
 function withConnectionDefaults(schema: JsonSchema): JsonSchema {
@@ -108,9 +121,9 @@ export function toMcpTool(op: AnyOperation, options: { outputSchema?: boolean } 
     ...(withOutput ? { outputSchema: withUrlProperty(selfContained(op.output, "output")) } : {}),
     annotations: {
       readOnlyHint: op.readOnly,
-      destructiveHint: op.destructive,
+      destructiveHint: tool.destructive ?? op.destructive,
       idempotentHint: op.idempotent,
-      openWorldHint: false,
+      openWorldHint: tool.openWorld ?? false,
     },
     _meta: { "lydie/operation": op.id, "lydie/scopes": op.scopes },
   };

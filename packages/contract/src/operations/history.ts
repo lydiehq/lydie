@@ -61,6 +61,7 @@ export const historyUndoSession = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "POST", path: "/history/sessions/{sessionId}/undo" },
-  mcp: { name: "undo_session", title: "Undo session", outputSchema: true },
+  // It reverts a run of changes, deletions and overwrites included.
+  mcp: { name: "undo_session", title: "Undo session", outputSchema: true, destructive: true },
   cli: { command: ["history", "undo"], args: ["sessionId"] },
 });

@@ -109,6 +109,29 @@ describe("MCP tools", () => {
       readOnlyHint: false,
     });
     expect(tools.search?.annotations).toMatchObject({ readOnlyHint: true, idempotentHint: true });
+    // Overwriting counts as destructive for the directories, even where Lydie can undo it.
+    for (const name of ["update_doc", "restore_doc_version", "undo_session"]) {
+      expect(tools[name]?.annotations.destructiveHint, name).toBe(true);
+    }
+  });
+
+  it("override hints only on mutations", () => {
+    for (const op of Object.values(operations)) {
+      const tool = mcpToolOf(op);
+      if (tool?.destructive !== undefined) expect(op.kind, op.id).toBe("mutation");
+    }
+  });
+
+  it("name other tools, never operation ids, in descriptions", () => {
+    const tools = toMcpTools(operations);
+    expect(tools.find((t) => t.name === "delete_doc")?.description).toContain("restore_doc");
+    for (const tool of tools) {
+      for (const id of Object.keys(operations)) {
+        expect(tool.description, tool.name).not.toMatch(
+          new RegExp(`\\b${id.replace(".", "\\.")}\\b`),
+        );
+      }
+    }
   });
 });
 

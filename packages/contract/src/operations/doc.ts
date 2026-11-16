@@ -289,7 +289,8 @@ export const docUpdate = defineOperation({
   undo: "inverse",
   composite: true,
   rest: { method: "PATCH", path: "/documents/{id}" },
-  mcp: { name: "update_doc", title: "Update document" },
+  // It can replace the body and drop properties.
+  mcp: { name: "update_doc", title: "Update document", destructive: true },
   cli: { command: ["doc", "update"], args: ["id"] },
 });
 
@@ -480,6 +481,7 @@ export const docRestoreVersion = defineOperation({
   undo: "inverse",
   emits: ["doc.bodyUpdated"],
   rest: { method: "POST", path: "/documents/{id}/versions/{versionId}/restore" },
-  mcp: { name: "restore_doc_version", title: "Restore document version" },
+  // It replaces the body (the old one is kept as a version).
+  mcp: { name: "restore_doc_version", title: "Restore document version", destructive: true },
   cli: { command: ["doc", "restore-version"], args: ["id", "versionId"] },
 });

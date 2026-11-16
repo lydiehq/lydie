@@ -38,7 +38,7 @@ defineOperation({ id, summary, description?, input, output, scopes, destructive,
   emits?, rest?, mcp?, cli?, ui?, internal? }): OperationDef<Id, I, O, "mutation">
 defineQuery({ id, summary, description?, input, output, scopes, rest?, mcp?, cli?, ui?, internal? })
   : OperationDef<Id, I, O, "query">       // readOnly, idempotent, undo null, never logged
-mcp: { name, title, outputSchema? } | { none: reason }   // McpToolSpec | McpNone = McpProjection
+mcp: { name, title, outputSchema?, destructive?, openWorld? } | { none: reason }   // McpToolSpec | McpNone
 mcpToolOf(op): McpToolSpec | null         // the operation's tool, or null
 createRegistry(...ops): RegistryOf<T>     // rejects duplicate ids, routes, MCP names, CLI commands
 operations                                // every operation (typed by id)
@@ -221,6 +221,15 @@ rewrites the rows that use it in one undoable step. Deleting a property keeps th
   `database.changeSchema` and `database.changeViews` (both return a `DatabaseOutline`).
 - `mcp.outputSchema?: boolean`: output schemas are opt-in. Set it only where an agent needs to know
   the shape of the result.
+- Hints (LYD-447): `destructiveHint` is the operation's `destructive` unless `mcp.destructive`
+  says otherwise, and `openWorldHint` is `mcp.openWorld ?? false`. The directories count
+  overwriting, taking access away and sending outside the workspace as destructive even when Lydie
+  can undo it, so `update_doc`, `restore_doc_version` and `undo_session` (and the core's sharing and
+  publishing tools) set `destructive: true` for MCP only; the operation's own flag still decides
+  the app's confirmations. Overrides are for mutations only (test).
+- Descriptions are shared with REST and the CLI, so they name other operations by id
+  (`doc.restore`); `toMcpTools` swaps in the tool's name (`restore_doc`). Don't name an operation
+  that is not a tool: tests fail on any operation id left in a tool description.
 - JSON Schema defs: a schema whose input variant differs from its output gets an `<Name>Input` def.
   Give nested reusable schemas a `.meta({ id })`, so they appear once in `$defs`.
 - `Link` and `Backlink` have an optional `sourceProperty` (frontmatter links, LYD-201).

@@ -215,7 +215,7 @@
     {
       "name": "delete_doc",
       "title": "Delete document",
-      "description": "Delete a document. Soft-deletes a document and its subtree. Restore it with doc.restore. Deleting a deleted document is a no-op.",
+      "description": "Delete a document. Soft-deletes a document and its subtree. Restore it with restore_doc. Deleting a deleted document is a no-op.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -439,7 +439,7 @@
       },
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": false,
         "openWorldHint": false
       },
@@ -804,7 +804,7 @@
       },
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": false
       },
@@ -890,7 +890,7 @@
     {
       "name": "delete_attachment",
       "title": "Delete attachment",
-      "description": "Delete an attachment. Moves an attachment to the trash. Restore it with attachment.restore.",
+      "description": "Delete an attachment. Moves an attachment to the trash, where it can be restored.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1260,7 +1260,7 @@
       },
       "annotations": {
         "readOnlyHint": false,
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": false
       },

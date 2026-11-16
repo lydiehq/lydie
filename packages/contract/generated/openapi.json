@@ -115,7 +115,7 @@
       "delete": {
         "operationId": "attachment.delete",
         "summary": "Delete an attachment",
-        "description": "Moves an attachment to the trash. Restore it with attachment.restore.",
+        "description": "Moves an attachment to the trash, where it can be restored.",
         "tags": [
           "attachment"
         ],

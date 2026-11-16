@@ -32,7 +32,7 @@ export const attachmentCreate = defineOperation({
 export const attachmentDelete = defineOperation({
   id: "attachment.delete",
   summary: "Delete an attachment",
-  description: "Moves an attachment to the trash. Restore it with attachment.restore.",
+  description: "Moves an attachment to the trash, where it can be restored.",
   input: z.object({ id: Uuid }),
   output: Attachment,
   scopes: ["docs:write"],

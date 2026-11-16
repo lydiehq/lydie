@@ -31,6 +31,13 @@ export type McpToolSpec = {
   // and structuredContent anyway, and most output schemas (documents, definitions, query results)
   // are large without telling it anything it needs. Turn it on for small results worth describing.
   outputSchema?: boolean;
+  // destructiveHint when it differs from the operation's `destructive`. MCP clients ask before a
+  // destructive tool, and the directories count overwriting, revoking access and sending to the
+  // outside world as destructive even when Lydie can undo it (OpenAI: "being able to undo an action
+  // does not, by itself, justify false"). Only for mutations.
+  destructive?: boolean;
+  // openWorldHint: the tool reaches past the workspace (publishing to a blog). Default false.
+  openWorld?: boolean;
 };
 
 // Not a tool. The reason names the tool that covers the operation ("update_doc sets the title"),
