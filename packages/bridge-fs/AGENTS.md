@@ -235,6 +235,10 @@ The vault gives the runtime one `Versions` port (plan §4, "One mechanism per jo
   Files live beside the database, outside the folder (`<database path without .sqlite>.versions/`:
   `<doc id>.json` and `<doc id>/<version id>.md`), so they are never notes, are not synced by
   iCloud or Dropbox, and survive a rebuilt database. A purged document's versions are deleted.
+  Every body save records a version, so the store writes a document's files at once only when
+  they were not written in the last 30 s; later saves wait in memory (`list` and `read` see them)
+  and are written together every 30 s and on close (`flush`). A crash loses only those: the note
+  is in the folder, and its next save records it as `before_write`.
 - **git**: `openGitVersions`. The folder is the working tree (its own repository, or a folder of a
   larger one). Lydie only adds commits; it never pulls, pushes, rebases or resets.
   - A checkpoint is `git add -A` and a commit of the folder, and nothing outside it (`--` with

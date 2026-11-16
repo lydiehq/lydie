@@ -158,7 +158,10 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
 
   // Version history (the `versionHistory` setting). The runtime gets one port for its lifetime;
   // which provider answers follows the setting. Snapshots live beside the database.
-  const versionStore = createFileVersionStore(`${databasePath.replace(/\.sqlite$/, "")}.versions`);
+  const report = options.onError ?? ((error: unknown) => console.error(error));
+  const versionStore = createFileVersionStore(`${databasePath.replace(/\.sqlite$/, "")}.versions`, {
+    onError: report,
+  });
   const snapshots = createSnapshotVersions(versionStore);
   let git: GitVersions | null = null;
   let versionHistory: VersionHistory = "off";
@@ -171,7 +174,6 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
     checkpoint: async (id, markdown, at) =>
       (await provider()?.checkpoint?.(id, markdown, at)) ?? null,
   };
-  const report = options.onError ?? ((error: unknown) => console.error(error));
 
   const actor = options.actor ?? LOCAL_USER;
   const bridge = new Bridge({
@@ -329,6 +331,7 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
     close() {
       closed ??= (async () => {
         await bridge.close();
+        await versionStore.flush();
         // A last checkpoint of what this session changed.
         await git?.close();
         await store.close();
