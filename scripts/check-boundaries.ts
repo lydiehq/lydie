@@ -49,8 +49,13 @@ export const ALLOWED_INTERNAL: Record<string, readonly string[]> = {
 };
 
 const PLUGIN_ALLOWED = ["@lydie/plugin-api", "react", "react/jsx-runtime"];
-// Test files in plugins may also use the test tooling.
-const PLUGIN_TEST_ALLOWED = ["bun:test", "@testing-library/react", "@testing-library/dom"];
+// Test files in plugins may also use the test tooling, and render to a string without a DOM.
+const PLUGIN_TEST_ALLOWED = [
+  "bun:test",
+  "@testing-library/react",
+  "@testing-library/dom",
+  "react-dom/server",
+];
 const UI_PACKAGES = ["@lydie/ui", "@lydie/app"];
 
 export type PackageKind = "package" | "plugin" | "app";
