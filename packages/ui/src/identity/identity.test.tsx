@@ -3,8 +3,13 @@ import { afterEach, describe, expect, it, mock } from "bun:test";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import {
+  AGENT_SCRIBBLES,
+  agentScribbleFor,
   AvatarEditor,
+  BotAvatar,
   randomScribbleImage,
+  SCRIBBLE_PAPER,
+  SCRIBBLE_PENS,
   scribbleFor,
   scribbleImage,
   SpaceIcon,
@@ -12,6 +17,29 @@ import {
 } from "../index";
 
 afterEach(() => cleanup());
+
+describe("agents", () => {
+  it("draws an agent as a sparkle in a pen on paper, the same for the same app", () => {
+    const choice = agentScribbleFor("agent:claude");
+    expect(AGENT_SCRIBBLES).toContain(choice.scribble);
+    expect(SCRIBBLE_PENS).toContain(choice.pen);
+    expect(agentScribbleFor("agent:claude")).toEqual(choice);
+
+    const { container } = render(<BotAvatar seed="agent:claude" size={20} />);
+    const [paper, ...strokes] = container.querySelectorAll("path");
+    expect(paper?.getAttribute("fill")).toBe(SCRIBBLE_PAPER);
+    expect(container.querySelector("g")?.getAttribute("stroke")).toBe(choice.pen);
+    expect(strokes).toHaveLength(choice.scribble.strokes().length);
+  });
+
+  it("shows an agent's logo, and the person it worked for as a badge", () => {
+    const { container } = render(
+      <BotAvatar seed="agent:cursor" logo="https://x/cursor.png" behalf={{ seed: "maya" }} />,
+    );
+    expect(container.querySelector("img")?.getAttribute("src")).toBe("https://x/cursor.png");
+    expect(container.querySelectorAll("[data-avatar]")).toHaveLength(1);
+  });
+});
 
 describe("workspace pictures", () => {
   it("draws a doodle as a squircle picture when asked", () => {

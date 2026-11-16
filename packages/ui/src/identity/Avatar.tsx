@@ -4,10 +4,11 @@ import type { CSSProperties } from "react";
 
 import { MARK_PATH, SQUIRCLE_PATH } from "./cut";
 import { ScribbleIcon } from "./Scribble";
+import { agentScribbleFor } from "./scribbles";
 
 // Who did something, at a glance: the shape says what kind of thing it is (a person is a circle, a
-// place a squircle), the surface who drew it (people and places on paper, machines on a screen,
-// Lydie itself in its green).
+// place a squircle), the drawing who it is (people and places get doodles, agents a sparkle,
+// Lydie itself is its mark in its green).
 
 type GlyphProps = { size: number; className?: string | undefined };
 
@@ -67,9 +68,9 @@ type BotAvatarProps = {
   className?: string | undefined;
 };
 
-// A machine acting in the workspace (an MCP client, an API token, the CLI): its logo, or a doodle
-// in a light colour on a dark screen. With `behalf`, the person it worked for sits in a cut-out at
-// the bottom right.
+// An agent acting in the workspace (an MCP client, an API token, the CLI): its logo, or a
+// hand-drawn sparkle in its own pen on the people's paper. With `behalf`, the person it worked
+// for sits in a cut-out at the bottom right.
 export function BotAvatar({ seed, logo, behalf, size = 32, className }: BotAvatarProps) {
   const badge = Math.max(10, Math.round(size * 0.5));
   // The badge hangs a little off the corner; the cut-out leaves a gap of about 1.5 px round it.
@@ -97,7 +98,7 @@ export function BotAvatar({ seed, logo, behalf, size = 32, className }: BotAvata
             className="rounded-full bg-elevated object-cover"
           />
         ) : (
-          <ScribbleIcon seed={seed} ink="screen" size={size} shape="circle" />
+          <ScribbleIcon choice={agentScribbleFor(seed)} size={size} shape="circle" />
         )}
       </span>
       {behalf && (
