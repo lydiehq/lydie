@@ -1,8 +1,10 @@
 // S6 baseline: launches the packaged app (`bun run package:dir` first) several times and reports
-// bundle size, time from spawn to first contentful paint, and idle memory per process type.
-//   bun scripts/measure.ts [path/to/Lydie.app] [--runs=5] [--idle=5000]
+// bundle size, time from spawn to first contentful paint, to the workspace being ready and to the
+// first row of the sidebar, and idle memory per process type. Each run opens a
+// new folder with a few notes (`--start-screen`: no folder, the start screen).
+//   bun scripts/measure.ts [path/to/Lydie.app] [--runs=5] [--idle=5000] [--start-screen]
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -10,6 +12,7 @@ const args = process.argv.slice(2);
 const option = (name: string, fallback: number) =>
   Number(args.find((a) => a.startsWith(`--${name}=`))?.split("=")[1] ?? fallback);
 const runs = option("runs", 5);
+const startScreen = args.includes("--start-screen");
 const idleMs = option("idle", 5000);
 const appPath = resolve(
   args.find((a) => !a.startsWith("--")) ??
@@ -21,6 +24,8 @@ const binary =
 type Measurement = {
   mainStartedAt: number;
   firstPaintAt: number;
+  workspaceReadyAt: number | null;
+  firstRowAt: number | null;
   memoryKB: Record<string, number>;
   totalKB: number;
   processes: { pid: number; type: string }[];
@@ -43,9 +48,14 @@ async function measureOnce(): Promise<
   Measurement & { spawnedAt: number; physical: Record<string, number> | null }
 > {
   const userData = await mkdtemp(join(tmpdir(), "lydie-measure-"));
+  const folder = join(userData, "Notes");
+  if (!startScreen) {
+    await mkdir(folder);
+    for (let i = 1; i <= 20; i++) await writeFile(join(folder, `Note ${i}.md`), `Note ${i}.\n`);
+  }
   try {
     const spawnedAt = Date.now();
-    const child = spawn(binary, [], {
+    const child = spawn(binary, startScreen ? [] : [`--open-folder=${folder}`], {
       env: {
         ...process.env,
         LYDIE_MEASURE: "1",
@@ -89,6 +99,8 @@ for (let i = 0; i < runs; i++) {
     run: i + 1,
     toMainMs: r.mainStartedAt - r.spawnedAt,
     toFirstPaintMs: Math.round(r.firstPaintAt - r.spawnedAt),
+    toReadyMs: r.workspaceReadyAt === null ? null : Math.round(r.workspaceReadyAt - r.spawnedAt),
+    toFirstRowMs: r.firstRowAt === null ? null : Math.round(r.firstRowAt - r.spawnedAt),
     workingSetMB: +(r.totalKB / 1024).toFixed(1),
     footprintMB: r.physical
       ? +Object.values(r.physical)
@@ -104,6 +116,8 @@ for (let i = 0; i < runs; i++) {
 console.table(results);
 console.log(
   `Median: first paint ${median(results.map((r) => r.toFirstPaintMs))} ms, ` +
+    `workspace ready ${median(results.flatMap((r) => r.toReadyMs ?? []))} ms, ` +
+    `first sidebar row ${median(results.flatMap((r) => r.toFirstRowMs ?? []))} ms, ` +
     `idle working set ${median(results.map((r) => r.workingSetMB))} MB, ` +
     `idle footprint ${median(results.map((r) => r.footprintMB ?? Number.NaN))} MB (after ${idleMs} ms)`,
 );

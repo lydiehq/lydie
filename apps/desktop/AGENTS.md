@@ -73,6 +73,10 @@ e2e/                          Playwright-on-Electron tests against the built app
   shared by all its windows (ref-counted by window id), opened when the window is created (indexing
   starts while the page loads) and closed when the last window on it closes, or on quit
   (`will-quit` waits for queued file writes).
+- Windows are served as soon as the database is open (`VaultManager.acquireServing`), while the
+  folder is still being indexed: reads are answered from the database, writes (mutations,
+  transactions, undo/redo, attachments) wait for the index. `acquire` resolves once indexed (the
+  hand-off source, `onOpened`).
 - The database is `userData/workspaces/<hash of the folder path>.sqlite`; nothing is written into
   the folder except `.lydie/`, and, the first time an empty folder is opened, the Getting started
   page (`openVault({ gettingStarted: true })`; its id goes to the backend's `info.welcomeDocId`).
@@ -82,13 +86,21 @@ e2e/                          Playwright-on-Electron tests against the built app
   conflicts, the MCP toggle). Every request has a zod schema in `vaults.ts`; `satisfies` makes a
   method added to either contract fail the type check until it has one.
 - The MCP server of a vault is off until `mcpSetEnabled({ enabled: true })`; its token is in
-  `userData/mcp/`.
+  `userData/mcp/`. The MCP SDK (and its HTTP server) is a chunk of its own, loaded when a server
+  first starts (`@lydie/mcp-local` imports it dynamically).
 - The preload wraps the bridged platform in the page's world (`contextBridge.executeInMainWorld`) so
   `windows.state()` and `updater.state()` keep their identity: contextBridge clones every return
   value, which made `useSyncExternalStore` loop (React #185).
 
 ## Hosted windows (src/main/hosted.ts)
 
+- Windows open from the stored session (`storedSession`): the token and user read from the
+  keychain decide the scope at once, and the server's check (`session.restore()`, in the
+  background) can then move the session to expired, which the renderer follows on the `state`
+  stream. A folder window's scope waits for nothing. The sync engine, collab and Yjs are
+  `src/main/hosted-lazy.ts`, imported when a hosted workspace opens or the hand-off runs, so the
+  main process does not evaluate them before its first window (`out/main/index.js`: 1,286 KB before,
+  960 KB after, Nov 2026; the MCP and hosted chunks are 219 KB and 128 KB).
 - `HostedManager` holds the session (token in `SecretStore`, i.e. the OS keychain), decides each
   window's scope once (a folder window shows its folder; one without opens the remembered hosted
   workspace when signed in, else the web app shows a start screen), and opens one synced database
@@ -125,7 +137,9 @@ bun run test:e2e          # trackpad addon + electron-vite build, then bun test 
 bun run dist:mac          # unsigned (ad-hoc) arm64 Lydie.app in dist/mac-arm64/, no dmg/zip
 bun scripts/check-release.ts [--arch arm64,x64] [--signed]   # checks dist/ after packaging and
                           # copies the release files to dist/release/ (used by the release workflow)
-bun run measure           # S6 baseline against dist/mac-<arch>/Lydie.app (run package:dir first)
+bun run measure           # S6 baseline against dist/mac-<arch>/Lydie.app (run package:dir first):
+                          # first paint, workspace ready (`lydie:ready`), first sidebar row, memory;
+                          # each run opens a new folder of 20 notes (--start-screen: no folder)
 bun run typecheck
 ```
 
@@ -175,7 +189,8 @@ screen locks or the computer sleeps, and after the idle time without system inpu
 then each waits, doubling from 30 s to 15 min. Changing or removing it needs the current secret;
 nothing changes while locked. Channels `app-lock:*`, state broadcast on the `app-lock:state` event,
 `platform.appLock`. The lock screen is `apps/web/src/AppLock.tsx`: the gate waits for the state
-before rendering the app, so a locked window never paints notes; a lock that comes later covers
+before rendering the app, so a locked window never paints notes (the workspace opens meanwhile:
+only rendering waits); a lock that comes later covers
 the window and makes the rest of `<body>` inert and swallows keys. A forgotten lock is removed by
 deleting the file with the app closed (the lock screen says where): it locks the app, it does not
 encrypt the notes.
