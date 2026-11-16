@@ -1,9 +1,33 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, spyOn, test } from "bun:test";
+
+import type { ParseResult } from "@lydie/markdown";
+import type { JSONContent } from "@lydie/plugin-api";
 
 import { createContributionRegistry } from "./contributions.ts";
 import { createEditorFacilities } from "./editor-facilities.ts";
 
 const editor = createEditorFacilities(createContributionRegistry());
+
+describe("fromMarkdown", () => {
+  test("converts the parse to the editor's document once, when it is first read", () => {
+    const parsed = editor.fromMarkdown("Text\n\n> [!note]- More\n> Hidden\n");
+    const source = parsed.source as ParseResult;
+    const toJSON = spyOn(source.doc, "toJSON");
+    expect(toJSON).not.toHaveBeenCalled();
+    const content = parsed.content;
+    expect(parsed.content).toBe(content);
+    expect(toJSON).toHaveBeenCalledTimes(1);
+    // The parse's JSON, with the callout's fold in the editor's words.
+    const json = source.doc.toJSON() as JSONContent;
+    const callout = json.content![1]!;
+    expect(callout.attrs?.fold).toBe("-");
+    expect(content).toEqual({
+      ...json,
+      content: [json.content![0]!, { ...callout, attrs: { ...callout.attrs, fold: "closed" } }],
+    });
+    toJSON.mockRestore();
+  });
+});
 
 describe("fromHtml", () => {
   test.each([
