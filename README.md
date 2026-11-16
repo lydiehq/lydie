@@ -33,6 +33,16 @@ bun run check       # lint, format check, typecheck, tests, package boundaries
 
 See `AGENTS.md` for the package map and rules.
 
+## Plugins
+
+Every built-in feature is a plugin on `@lydie/plugin-api`. That is how the app is organised
+internally, not yet a way to extend it:
+
+- The plugin API is experimental and may change without notice.
+- Third-party plugins cannot be loaded yet.
+- Plugins run with the app's full access, with no sandbox or permissions yet. That is why only the
+  built-in plugins are loaded.
+
 ## Licence
 
 AGPL-3.0 (see `LICENSE`). Packages marked MIT in `AGENTS.md` are MIT, each with its own `LICENSE`.
