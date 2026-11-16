@@ -139,7 +139,7 @@ test("tree: expanding a folder with 5,000 children is virtualised", async () => 
   });
   results.workspaceDocuments = total;
   await page.evaluate((i) => {
-    document.querySelector("[data-testid=document-tree]")!.parentElement!.scrollTop = i * 30;
+    document.querySelector("[data-testid=document-tree]")!.parentElement!.scrollTop = i * 32;
   }, index);
   const row = page.locator(`[data-testid=tree-row][data-doc-id="${id}"]`);
   await row.waitFor();
