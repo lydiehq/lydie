@@ -66,6 +66,12 @@ hover that removes it, and has its own context menu. Tests: `favorites.test.ts`.
 In a hosted workspace a page with a public link of its own has a grey globe after its title
 ("Published to web"; one live `workspace.publicPages` per tree). Subpages a link reaches show none.
 
+Rows render only when their own props change: they share one `RowEvents` object for the life of
+the tree (each call runs the latest render's handler), the window moves in bands of 8 rows
+(`BAND`), so scrolling within one renders nothing, and a save (a new `updatedAt`) keeps the row
+(`sameEntry` in `tree-model.ts`: only what rows show or act on counts). Test:
+`DocumentTree.renders.test.tsx`.
+
 Rows and favorites fetch their page ahead of the click (`useDocPrefetch`, `prefetchDoc` from the
 plugin API: after a 60 ms rest and on the press), so it opens whole.
 

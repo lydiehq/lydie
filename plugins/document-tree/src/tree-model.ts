@@ -68,6 +68,16 @@ type Level =
 
 const NO_COLLECTIONS: ReadonlySet<string> = new Set();
 
+// What a row shows or acts on. Saving a page changes its `updatedAt`, which no row draws, so its
+// row keeps its identity (and does not render); the hover card reads the page itself.
+const sameEntry = (a: ChildEntry, b: ChildEntry) =>
+  a === b ||
+  (a.id === b.id &&
+    a.title === b.title &&
+    a.parentId === b.parentId &&
+    a.childCount === b.childCount &&
+    JSON.stringify(a.properties) === JSON.stringify(b.properties));
+
 export function createTreeModel(
   backend: Backend,
   workspaceId: string,
@@ -113,17 +123,17 @@ export function createTreeModel(
         const collection = collections.has(doc.id);
         const expandable = collection || doc.childCount > 0;
         const open = expanded.has(doc.id) && expandable;
-        keep<DocRow>(
+        const row = keep<DocRow>(
           { kind: "doc", id: doc.id, doc, depth, expanded: open, expandable, collection },
           (c) =>
-            c.doc === doc &&
+            sameEntry(c.doc, doc) &&
             c.depth === depth &&
             c.expanded === open &&
             c.expandable === expandable &&
             c.collection === collection,
         );
         if (!open) continue;
-        if (collection) views(doc, depth + 1);
+        if (collection) views(row.doc, depth + 1);
         else walk(doc.id, depth + 1);
       }
     };

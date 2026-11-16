@@ -55,6 +55,8 @@ export const ROW_HEIGHT = 32;
 // v1's indent: 8 px, and 8 px more per level.
 const indentOf = (depth: number) => 8 + depth * 8;
 const OVERSCAN = 12;
+// The window moves in bands of rows, so scrolling within one renders nothing.
+const BAND = 8;
 // How long a drag rests on a closed folder before it opens.
 const HOVER_EXPAND_MS = 600;
 
@@ -129,6 +131,58 @@ const refOf = (doc: ChildEntry): DocumentRef => ({
 
 const DROP_LINE = "pointer-events-none absolute right-1 h-0.5 rounded-full bg-gray-950/40";
 
+// The rows on screen, widened to whole bands.
+type Span = { from: number; to: number };
+
+function spanOf(scrollTop: number, height: number): Span {
+  return {
+    from: Math.floor(scrollTop / ROW_HEIGHT / BAND) * BAND,
+    to: Math.ceil((scrollTop + height) / ROW_HEIGHT / BAND) * BAND,
+  };
+}
+
+const sameSpan = (a: Span, b: Span) => a.from === b.from && a.to === b.to;
+
+// What rows do. They get one object of these for the life of the tree, so a row renders only when
+// its own props change, not on every scroll, save or navigation; each call runs the latest
+// render's handler.
+type RowEvents = {
+  press: (row: DocRow, event: MouseEvent) => void;
+  pressView: (row: ViewRow, event: MouseEvent) => void;
+  toggle: (row: DocRow) => void;
+  rename: (row: DocRow, title: string) => void;
+  cancelRename: () => void;
+  addChild: (row: DocRow) => void;
+  menu: (row: DocRow, x: number, y: number) => void;
+  dragStart: (row: DocRow, event: DragEvent<HTMLElement>) => void;
+  dragOver: (row: DocRow, event: DragEvent<HTMLElement>) => void;
+  drop: (row: DocRow, event: DragEvent<HTMLElement>) => void;
+};
+
+function useRowEvents(events: RowEvents): RowEvents {
+  const latest = useRef(events);
+  useLayoutEffect(() => {
+    latest.current = events;
+  });
+  const [stable] = useState<RowEvents>(() => ({
+    press: (row, event) => latest.current.press(row, event),
+    pressView: (row, event) => latest.current.pressView(row, event),
+    toggle: (row) => latest.current.toggle(row),
+    rename: (row, title) => latest.current.rename(row, title),
+    cancelRename: () => latest.current.cancelRename(),
+    addChild: (row) => latest.current.addChild(row),
+    menu: (row, x, y) => latest.current.menu(row, x, y),
+    dragStart: (row, event) => latest.current.dragStart(row, event),
+    dragOver: (row, event) => latest.current.dragOver(row, event),
+    drop: (row, event) => latest.current.drop(row, event),
+  }));
+  return stable;
+}
+
+async function inTurn<T>(items: readonly T[], run: (item: T) => Promise<unknown>) {
+  for (const item of items) await run(item);
+}
+
 function scrollParentOf(el: HTMLElement): HTMLElement | null {
   const marked = el.parentElement?.closest<HTMLElement>("[data-scroll-root]");
   if (marked) return marked;
@@ -201,8 +255,11 @@ export function DocumentTree(props: DocumentTreeProps) {
 
   const scroller = useRef<HTMLDivElement>(null);
   const treeRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [height, setHeight] = useState(600);
+  const [span, setSpan] = useState(() => spanOf(0, 600));
+  const measure = (scrollTop: number, height: number) => {
+    const next = spanOf(scrollTop, height);
+    setSpan((current) => (sameSpan(current, next) ? current : next));
+  };
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [drop, setDrop] = useState<DropTarget | null>(null);
@@ -217,8 +274,9 @@ export function DocumentTree(props: DocumentTreeProps) {
     if (scroll !== "self") return;
     const el = scroller.current;
     if (!el) return;
-    setHeight(el.clientHeight || 600);
-    const observer = new ResizeObserver(() => setHeight(el.clientHeight || 600));
+    const update = () => measure(el.scrollTop, el.clientHeight || 600);
+    update();
+    const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
   }, [scroll]);
@@ -233,8 +291,10 @@ export function DocumentTree(props: DocumentTreeProps) {
     const parent = scrollParentOf(tree);
     const update = () => {
       const top = parent?.getBoundingClientRect().top ?? 0;
-      setScrollTop(Math.max(0, top - tree.getBoundingClientRect().top));
-      setHeight(parent?.clientHeight ?? window.innerHeight);
+      measure(
+        Math.max(0, top - tree.getBoundingClientRect().top),
+        parent?.clientHeight ?? window.innerHeight,
+      );
     };
     update();
     const target: HTMLElement | Window = parent ?? window;
@@ -250,8 +310,8 @@ export function DocumentTree(props: DocumentTreeProps) {
     };
   }, [scroll, hasRows]);
 
-  const first = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN);
-  const last = Math.min(rows.length, Math.ceil((scrollTop + height) / ROW_HEIGHT) + OVERSCAN);
+  const first = Math.max(0, span.from - OVERSCAN);
+  const last = Math.min(rows.length, span.to + OVERSCAN);
   const visible = rows.slice(first, last);
   const focusedIndex = focusedId ? rows.findIndex((r) => r.id === focusedId) : -1;
   // Only rows on screen count: a selected page inside a folder that was closed drops out.
@@ -589,27 +649,31 @@ export function DocumentTree(props: DocumentTreeProps) {
     const placement = placementOf(target);
     if (!placement) return;
     const steps = placements(ids, placement);
+    const [only] = steps;
     const from = types.find((t) => t.startsWith(DRAG_KEY_PREFIX));
     const foreign = Boolean(from) && from !== dragKeyType(dragKey);
-    try {
-      if (foreign) {
-        if (!onForeignDrop) return;
-        for (const step of steps) await onForeignDrop(step.id, step.placement);
-      } else if (steps.length === 1 && steps[0]) {
-        await ops.doc.move({ id: steps[0].id, ...steps[0].placement });
-      } else {
-        await backend.transaction(
-          `Move ${steps.length} documents`,
-          async (tx) => {
-            for (const step of steps) await tx.doc.move({ id: step.id, ...step.placement });
-          },
-          { scope: historyScope() },
-        );
-      }
-      if (target.id !== null && target.where === "inside") expandToShow(target.id);
-    } catch (error) {
-      app.notify({ title: "Could not move", description: (error as Error).message, kind: "error" });
-    }
+    if (foreign && !onForeignDrop) return;
+    // Promise handlers rather than try/catch, which the React Compiler cannot compile here.
+    const moved = foreign
+      ? inTurn(steps, (step) => onForeignDrop!(step.id, step.placement))
+      : steps.length === 1 && only
+        ? ops.doc.move({ id: only.id, ...only.placement })
+        : backend.transaction(
+            `Move ${steps.length} documents`,
+            (tx) => inTurn(steps, (step) => tx.doc.move({ id: step.id, ...step.placement })),
+            { scope: historyScope() },
+          );
+    await moved.then(
+      () => {
+        if (target.id !== null && target.where === "inside") expandToShow(target.id);
+      },
+      (error: unknown) =>
+        app.notify({
+          title: "Could not move",
+          description: (error as Error).message,
+          kind: "error",
+        }),
+    );
   };
 
   // A menu on a row outside the selection is about that row alone, so the selection goes.
@@ -663,6 +727,32 @@ export function DocumentTree(props: DocumentTreeProps) {
       }
     },
   };
+
+  const rowEvents = useRowEvents({
+    press,
+    pressView,
+    toggle: (row) => model.setExpanded(row.doc.id, !row.expanded),
+    rename: (row, title) => void rename(row.doc, title),
+    cancelRename: () => setRenamingId(null),
+    addChild: (row) => void createIn(row.doc.id),
+    menu: (row, x, y) => openMenu(row.doc, x, y),
+    dragStart: startDrag,
+    dragOver: (row, event) => {
+      if (!accepts(event.dataTransfer.types)) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      const target = dropTargetFor(event, row);
+      expandOnHover(row, target);
+      if (!drop || drop.id !== target.id || drop.where !== target.where) setDrop(target);
+    },
+    drop: (row, event) => {
+      const ids = draggedIds(event.dataTransfer);
+      if (ids.length === 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      void onDrop(dropTargetFor(event, row), ids, [...event.dataTransfer.types]);
+    },
+  });
 
   if (rows.length === 0 && awaitingFirstSync) {
     return <SyncingRows padded={scroll === "self"} />;
@@ -721,7 +811,10 @@ export function DocumentTree(props: DocumentTreeProps) {
           : "pb-2" /* end drop zone */
       }
       onScroll={
-        scroll === "self" ? (event) => setScrollTop(event.currentTarget.scrollTop) : undefined
+        scroll === "self"
+          ? (event) =>
+              measure(event.currentTarget.scrollTop, event.currentTarget.clientHeight || 600)
+          : undefined
       }
       {...endDrop}
     >
@@ -758,7 +851,7 @@ export function DocumentTree(props: DocumentTreeProps) {
               top={(first + i) * ROW_HEIGHT}
               focused={row.id === focusedId}
               href={app.href(docPath(row.collection.id), row.collection.title)}
-              onPress={(event) => pressView(row, event)}
+              events={rowEvents}
             />
           ) : (
             <TreeItem
@@ -774,30 +867,9 @@ export function DocumentTree(props: DocumentTreeProps) {
               published={published.has(row.doc.id)}
               dimmed={dragging.has(row.doc.id)}
               drop={drop && drop.id === row.doc.id ? drop.where : null}
-              onToggle={() => model.setExpanded(row.doc.id, !row.expanded)}
               href={app.href(docPath(row.doc.id), row.doc.title)}
-              onPress={(event) => press(row, event)}
-              onRename={(title) => void rename(row.doc, title)}
-              onCancelRename={() => setRenamingId(null)}
-              onAddChild={() => void createIn(row.doc.id)}
-              onMenu={(x, y) => openMenu(row.doc, x, y)}
-              onDragStartRow={(event) => startDrag(row, event)}
               busy={busy}
-              onDragOverRow={(event) => {
-                if (!accepts(event.dataTransfer.types)) return;
-                event.preventDefault();
-                event.dataTransfer.dropEffect = "move";
-                const target = dropTargetFor(event, row);
-                expandOnHover(row, target);
-                if (!drop || drop.id !== target.id || drop.where !== target.where) setDrop(target);
-              }}
-              onDropRow={(event) => {
-                const ids = draggedIds(event.dataTransfer);
-                if (ids.length === 0) return;
-                event.preventDefault();
-                event.stopPropagation();
-                void onDrop(dropTargetFor(event, row), ids, [...event.dataTransfer.types]);
-              }}
+              events={rowEvents}
             />
           ),
         )}
@@ -836,18 +908,10 @@ type ItemProps = {
   // Being dragged.
   dimmed: boolean;
   drop: "before" | "after" | "inside" | "end" | null;
-  onToggle: () => void;
   // The row is a link to the page.
   href: string;
-  onPress: (event: MouseEvent) => void;
-  onRename: (title: string) => void;
-  onCancelRename: () => void;
-  onAddChild: () => void;
-  onMenu: (x: number, y: number) => void;
-  onDragStartRow: (event: DragEvent<HTMLDivElement>) => void;
   busy: boolean;
-  onDragOverRow: (event: DragEvent<HTMLDivElement>) => void;
-  onDropRow: (event: DragEvent<HTMLDivElement>) => void;
+  events: RowEvents;
 };
 
 const TreeItem = memo(function TreeItem({
@@ -862,17 +926,9 @@ const TreeItem = memo(function TreeItem({
   published,
   dimmed,
   drop,
-  onToggle,
   href,
-  onPress,
-  onRename,
-  onCancelRename,
-  onAddChild,
-  onMenu,
-  onDragStartRow,
   busy,
-  onDragOverRow,
-  onDropRow,
+  events,
 }: ItemProps) {
   const { doc, depth, expanded } = row;
   const hasChildren = row.expandable;
@@ -912,12 +968,12 @@ const TreeItem = memo(function TreeItem({
         data-doc-id={doc.id}
         data-dragging={dimmed || undefined}
         draggable={!renaming}
-        onDragStart={onDragStartRow}
-        onDragOver={onDragOverRow}
-        onDrop={onDropRow}
+        onDragStart={(event) => events.dragStart(row, event)}
+        onDragOver={(event) => events.dragOver(row, event)}
+        onDrop={(event) => events.drop(row, event)}
         onContextMenu={(event) => {
           event.preventDefault();
-          onMenu(event.clientX, event.clientY);
+          events.menu(row, event.clientX, event.clientY);
         }}
         className={[
           // `isolate` keeps the background layer below the contents and above the sidebar.
@@ -960,7 +1016,7 @@ const TreeItem = memo(function TreeItem({
               {...overControl}
               onClick={(event) => {
                 event.stopPropagation();
-                onToggle();
+                events.toggle(row);
               }}
               className="relative z-10 -ml-1 flex size-5 shrink-0 items-center justify-center rounded-md text-gray-500 hover:bg-gray-950/5"
             >
@@ -987,10 +1043,18 @@ const TreeItem = memo(function TreeItem({
           </span>
         )}
         {renaming ? (
-          <RenameInput initial={doc.title} onCommit={onRename} onCancel={onCancelRename} />
+          <RenameInput
+            initial={doc.title}
+            onCommit={(title) => events.rename(row, title)}
+            onCancel={events.cancelRename}
+          />
         ) : (
           <>
-            <RowLink href={href} onPress={onPress} className={published ? "" : "grow"}>
+            <RowLink
+              href={href}
+              onPress={(event) => events.press(row, event)}
+              className={published ? "" : "grow"}
+            >
               {doc.title || "Untitled"}
             </RowLink>
             {published && (
@@ -1015,14 +1079,14 @@ const TreeItem = memo(function TreeItem({
             <RowAction
               label={`New document inside ${doc.title || "Untitled"}`}
               tooltip="Add page inside"
-              onPress={onAddChild}
+              onPress={() => events.addChild(row)}
             >
               <AddRegular className="size-3.5" />
             </RowAction>
             <RowAction
               label={`More actions for ${doc.title || "Untitled"}`}
               tooltip="Document options"
-              onPress={(x, y) => onMenu(x, y)}
+              onPress={(x, y) => events.menu(row, x, y)}
             >
               <More1Regular className="size-4" />
             </RowAction>
@@ -1041,13 +1105,13 @@ const ViewItem = memo(function ViewItem({
   top,
   focused,
   href,
-  onPress,
+  events,
 }: {
   row: ViewRow;
   top: number;
   focused: boolean;
   href: string;
-  onPress: (event: MouseEvent) => void;
+  events: RowEvents;
 }) {
   const ViewIcon = VIEW_ICONS[row.view.type];
   return (
@@ -1075,7 +1139,7 @@ const ViewItem = memo(function ViewItem({
       <span className="-ml-1 flex size-5 shrink-0 items-center justify-center text-gray-500">
         <ViewIcon aria-hidden className="size-4" />
       </span>
-      <RowLink href={href} onPress={onPress} className="grow">
+      <RowLink href={href} onPress={(event) => events.pressView(row, event)} className="grow">
         {row.view.name}
       </RowLink>
     </div>
