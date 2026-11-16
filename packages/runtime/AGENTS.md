@@ -67,7 +67,9 @@ coreHandlers                         // handlers for every operation in the cont
 ACTIVITY_WINDOW_MS (10 min), ACTIVITY_KEYS_LIMIT (50), coalesceActivity(previous, draft, newId)
   → { kind: "insert", row } | { kind: "update", id, patch }, mergeActivityData(type, prev, next),
 activityData(event, hint?), activityTarget(event), activityKeyOf(draft),
-recordActivity(tx, event, hint, newId), encodeActivityCursor, decodeActivityCursor
+recordActivity(tx, event, hint, newId), activityDrafts(tx, [{ event, hint }]) (titles read in one
+  round trip), writeActivity(tx, drafts, newId) (coalesces in order, batched through the port),
+encodeActivityCursor, decodeActivityCursor
 type ActivityHint { title?, keys?, quiet? }, ActivityDraft, ActivityDecision
 addAttachment(runtime, blob, { workspaceId, documentId?, filename, contentType, data }, options?)
 createGettingStarted(ops /* doc + database */, { workspaceId, mode, mcpUrl?, today? }) → { id } | null
@@ -94,6 +96,8 @@ exportFilename(name, now) → "Notes 2026-11-15.zip"
 // `ExecuteOptions.onProgress({ done, total })` (`ctx.progress` in query handlers) hears how many
 // of the export's entries are written.
 resolveLink(tx, sourceDoc, { target, syntax })   // Obsidian rules, see below
+resolveLinks(tx, sourceDoc, links)   // the same for many links: ids in one getMany, title keys in
+                                     // one findAllByLinkKeys (each distinct key once)
 touchesOf(op, input, inverse), touchesOverlap(a, b)   // conflict detection for session undo
 placeKey(tx, workspaceId, parentId, { afterId?, beforeId?, sortKey? }, excludeId?)
 bodyVersion, applyEdits, extract, extractLinks, linkKey, uuid, createUuidGenerator   // version 7 UUIDs, monotonic within a millisecond
@@ -119,8 +123,12 @@ targetKey(target)                             // link target → title key; "X.b
 //   DatabasesWrite { insert, update, insertProperty, updateProperty, insertView, updateView },
 //   DatabasePatch, PropertyPatch, ViewPatch, ViewQuery; docs.getMany? / docs.updateMany? (bulk)
 // DbTx (+ writes, oplog, savepoint?). Optional capabilities: docs.childEntries/ancestors/
-// findAllByLinkKey/slotKeys/trashed/purge, links.blockBacklinks/from/unresolved, Search.mentions,
-// Blob.has. Plus LinkRow, BlockRow, HistoryRow, SlotAnchor, SlotKeys, AttachmentPatch, MentionsQuery.
+// findAllByLinkKey/findAllByLinkKeys/slotKeys/trashed/purge, links.blockBacklinks/from/unresolved,
+// activity.latestMany/insertMany/updateMany, Search.mentions, Blob.has. Plus LinkRow, BlockRow,
+// HistoryRow, SlotAnchor, SlotKeys, AttachmentPatch, MentionsQuery.
+// FreshOptions { fresh? }: bodies.put, links.replaceFrom and blocks.replaceFor get { fresh: true }
+// from doc.create with an id it minted (no rows to replace; a backend may ignore it).
+// docs.trashed(ws, { limit? }): newest deletion first; a backend may return more.
 
 // "@lydie/runtime/memory"
 createMemoryPorts(): { db, search, blob (+ size), events (published[], subscribe), state }
@@ -188,18 +196,27 @@ properties) are operations and do go on the stack; typing in a title should pass
   Markdown links starting with `./` or `../` resolve relative to the source. Folders are parent
   documents.
 - Links are sticky: once resolved, a link keeps its target (by id) while that document is live, even
-  after a rename, until its text changes. Renames resolve dangling links that match the new title. The
-  file bridge rewrites link text on rename, as Obsidian does.
+  after a rename, until its text changes. A save does not resolve a link written as before whose
+  target is live (one `getMany` checks them), so a better match appearing later does not move it;
+  relative Markdown links (`./`, `../`) always resolve again, since the source may have moved.
+  Renames resolve dangling links that match the new title. The file bridge rewrites link text on
+  rename, as Obsidian does.
 - Links to trashed documents count as unresolved; purge unresolves them.
 - Frontmatter links (`property-links.ts`): wikilinks and Markdown links in property values, and
   relation ids, are links with `sourceProperty` set. Body saves replace only body links
   (`sourceProperty` null) and property changes replace only property links (`indexLinks`,
   `relinkProperties` in `handlers/doc.ts`). Relinking reads nothing unless a changed property may hold a link.
+  A row's relation keys are read once per database and transaction (`cachedRelationKeys`, keyed on
+  the frame's own `tx` object; database and property writes, and purges, forget them).
 
 ## Notes
 
 - Bodies are Markdown stored through the `bodies` port; `doc.get` returns `body: null` when no body is
   stored locally (for example a hosted document never opened on this device).
+- `doc.updateBody` stamps `updatedAt`/`updatedBy` at most once a minute per author
+  (`BODY_STAMP_MS`): a save by the author who stamped it less than a minute ago leaves the row
+  alone (typing would rewrite it, and wake every live query on documents, per save). Another
+  author stamps at once. `doc.restoreVersion` always stamps.
 - Deleting is soft and cascades to live descendants; restore brings back what was deleted with it and
   moves the document to the top level if its parent is gone. Purge requires the trash and removes the
   subtree, its bodies, blocks, outgoing links and attachments; bytes are deleted after commit only when
@@ -288,7 +305,12 @@ properties) are operations and do go on the stack; typing in a title should pass
 ## Activity (`activity.ts`, LYD-304)
 
 - `apply` writes every event an operation emits to the activity log, in the operation's
-  transaction (so a failed transaction or savepoint leaves nothing). A composite's own `apply`
+  transaction (so a failed transaction or savepoint leaves nothing). Titles are read right after
+  the handler (`activityDrafts`); the rows of the whole transaction are written together before it
+  commits (`writeActivity`: one `latestMany`, one `insertMany`, one `updateMany` where the port has
+  them), coalescing in order exactly as one at a time. A savepoint that rolls back drops what its
+  operations queued (the runtime wraps `tx.savepoint`). Handlers that know the target's title pass
+  it (`writeBody`, `writeRows`), so a bulk change reads none. A composite's own `apply`
   records only events it emits itself; its steps record theirs, so nothing is counted twice.
   `history: false` operations and system actors (the file bridge) are recorded; `reindexBodies`
   (no journal) is not. Nothing is skipped by event type.
