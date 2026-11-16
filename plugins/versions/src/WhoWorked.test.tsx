@@ -2,11 +2,11 @@
 // opening are React Aria's and the host's; what is drawn from the contributors is checked here.
 import { describe, expect, it } from "bun:test";
 
-import type { Activity, Actor } from "@lydie/plugin-api";
+import type { Activity, Actor, AppApi } from "@lydie/plugin-api";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { contributorsOf, whoIs } from "./contributors.ts";
-import { WhoPanel, WhoWorked } from "./WhoWorked.tsx";
+import { readActivity, WhoPanel, WhoWorked } from "./WhoWorked.tsx";
 
 const maya: Actor = { type: "user", id: "maya" };
 const claude: Actor = { type: "agent", app: "claude-code", id: "s1", onBehalfOf: "maya" };
@@ -97,5 +97,43 @@ describe("WhoPanel", () => {
     expect(text).toContain("Cursor| for you|");
     expect(text).toContain("Version history");
     expect(text).not.toContain("All activity");
+  });
+});
+
+describe("readActivity", () => {
+  // Pages of one row each; `cursor` is the index of the next page.
+  function app(mode: "local" | "synced", pages: number) {
+    const calls: { where: string; input: { cursor?: string } }[] = [];
+    const answer = (where: string) => async (_id: string, input: { cursor?: string }) => {
+      calls.push({ where, input });
+      const at = Number(input.cursor ?? 0);
+      return {
+        items: [row(maya, "doc.bodyUpdated", at)],
+        nextCursor: at + 1 < pages ? String(at + 1) : null,
+      };
+    };
+    const fake = {
+      workspace: { mode },
+      backend: { execute: answer("local") },
+      services: { account: { callContract: answer("server") } },
+    } as unknown as AppApi;
+    return { fake, calls };
+  }
+  const query = { workspaceId: "w1", targetId: "11111111-1111-4111-8111-111111111111" };
+
+  it("follows the cursor to the last page, where the window keeps the activity", async () => {
+    const { fake, calls } = app("local", 3);
+    expect(await readActivity(fake, query)).toHaveLength(3);
+    expect(calls.map((c) => [c.where, c.input.cursor])).toEqual([
+      ["local", undefined],
+      ["local", "1"],
+      ["local", "2"],
+    ]);
+  });
+
+  it("asks the server in a synced window, and stops after five pages", async () => {
+    const { fake, calls } = app("synced", 9);
+    expect(await readActivity(fake, query)).toHaveLength(5);
+    expect(calls.every((c) => c.where === "server")).toBe(true);
   });
 });

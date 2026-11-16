@@ -31,7 +31,9 @@ history" (folder windows) and "All activity" (Settings → Activity). In the but
 without the person badge. An agent that changed the page in the last two minutes, while it is the
 newest, has a pen circling its face ("Writing now"). Data: `activity.list` with `targetId`, read
 where the activity log reads it (a synced window through `account.callContract`, others on the
-window's runtime), again once edits pause for 2 s; an error (an older core) hides the button.
+window's runtime), following `nextCursor` up to five pages of 100 (rows are coalesced, so that is
+a very busy page); read again once edits pause for 2 s and when the signed-in user changes (a
+synced window that read while signed out); an error (an older core) hides the button.
 Names come from `workspace.members` (hosted), else "You". Tests: `contributors.test.ts` and
 `WhoWorked.test.tsx` (markup through `react-dom/server`).
 
