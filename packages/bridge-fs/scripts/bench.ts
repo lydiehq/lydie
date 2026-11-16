@@ -1,4 +1,4 @@
-// Indexing and write-path benchmarks: bun scripts/bench.ts [--notes=10000] [--only=write]
+// Indexing and write-path benchmarks: bun scripts/bench.ts [--notes=10000] [--only=write|index]
 //   - N generated notes (frontmatter, headings, lists, links) in 100 folders: cold open, warm
 //     reopen with nothing changed, reopen after 1% changed.
 //   - the Obsidian help vault (all languages) if @lydie/markdown's corpus cache is downloaded.
@@ -40,6 +40,30 @@ async function time<T>(label: string, fn: () => Promise<T>): Promise<T> {
   const result = await fn();
   console.log(`${label.padEnd(44)} ${(performance.now() - t0).toFixed(0).padStart(7)} ms`);
   return result;
+}
+
+// Measures how long the event loop is blocked while `fn` runs, as a timer that should fire every
+// millisecond sees it: the longest gap, and the time spent in gaps of 50 ms or more (what a window
+// served from this process would feel).
+async function blocking<T>(
+  fn: () => Promise<T>,
+): Promise<{ result: T; longest: number; over50: number }> {
+  let last = performance.now();
+  let longest = 0;
+  let over50 = 0;
+  const timer = setInterval(() => {
+    const now = performance.now();
+    const gap = now - last;
+    last = now;
+    longest = Math.max(longest, gap);
+    if (gap >= 50) over50 += gap;
+  }, 1);
+  try {
+    const result = await fn();
+    return { result, longest, over50 };
+  } finally {
+    clearInterval(timer);
+  }
 }
 
 function median(values: number[]): number {
@@ -214,8 +238,12 @@ async function indexing(): Promise<void> {
     const t0 = performance.now();
     vault = await openVault({ folder, databasePath, watch: false, indexInBackground: true });
     line(`${label}, background: served`, performance.now() - t0);
-    await vault.indexed;
-    line(`${label}, background: indexed`, performance.now() - t0);
+    const { longest, over50 } = await blocking(() => vault.indexed);
+    line(
+      `${label}, background: indexed`,
+      performance.now() - t0,
+      `longest gap ${longest.toFixed(0)} ms, ${over50.toFixed(0)} ms in gaps ≥ 50 ms`,
+    );
     await vault.close();
   }
 
@@ -228,8 +256,15 @@ async function indexing(): Promise<void> {
       const copy = join(work, label.replace(/\W+/g, "-"));
       cpSync(source, copy, { recursive: true });
       const db = join(work, `${label.replace(/\W+/g, "-")}.sqlite`);
-      vault = await time(`${label}: cold open`, () =>
+      const t0 = performance.now();
+      const open = await blocking(() =>
         openVault({ folder: copy, databasePath: db, watch: false }),
+      );
+      vault = open.result;
+      line(
+        `${label}: cold open`,
+        performance.now() - t0,
+        `longest gap ${open.longest.toFixed(0)} ms, ${open.over50.toFixed(0)} ms in gaps ≥ 50 ms`,
       );
       console.log("  ", vault.index);
       await vault.close();
@@ -244,7 +279,7 @@ async function indexing(): Promise<void> {
 }
 
 try {
-  await writePath();
+  if (args.get("only") !== "index") await writePath();
   if (args.get("only") !== "write") await indexing();
 } finally {
   rmSync(work, { recursive: true, force: true });
