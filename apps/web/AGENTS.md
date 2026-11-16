@@ -184,9 +184,10 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   blob, one shared face, each through idle, thinking, working, happy, oops and asleep;
   `avatars/mascot.tsx`), and scribbles (`@lydie/ui`'s `ScribbleIcon`, what workspace icons
   are). It opens with "Agents" (`avatars/agents.tsx`): scribble avatars for agents (sparkle,
-  robot doodle, plotter, stamp, the person tagged, and today's `BotAvatar`), each with the person
-  it worked for as a badge, and mocks of a page's top-right "who worked on this" button and its
-  popover, its states (an agent writing, an unreviewed draft, a page an automation keeps) and
+  robot doodle, plotter, stamp, the person tagged, and the dark screen `BotAvatar` had before; the
+  sparkle is `BotAvatar` now), each with the person
+  it worked for as a badge, and mocks of a page's top-right "who worked on this" button (built in the versions
+  plugin) and its popover, its states (an agent writing, an unreviewed draft, a page an automation keeps) and
   per-paragraph authorship in the margin. "Scribbles" (`src/playground/scribbles/`) shows only the ten doodles, small; "Draw your
   own" (`scribbles/DrawPlayground.tsx`) is a pointer canvas on the beige squircle with the six
   pens, undo, clear, the ten as starting points, previews at 64 to 16 px and Copy SVG (kept in

@@ -1,6 +1,7 @@
-// Version history of the open document: the versions the workspace keeps (snapshots, or git when
-// the folder uses it), what one said, and putting it back. Everything goes through the contract's
-// doc.listVersions, doc.getVersion and doc.restoreVersion.
+// A page's history: who worked on it (people and agents, at its top right), and the versions the
+// workspace keeps (snapshots, or git when the folder uses it), what one said, and putting it back.
+// Everything goes through the contract's activity.list, doc.listVersions, doc.getVersion and
+// doc.restoreVersion.
 import { definePlugin, docIdOf, useApp, useQuerySelect } from "@lydie/plugin-api";
 import type { DocumentVersion, TabInfo } from "@lydie/plugin-api";
 import {
@@ -14,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { versionTime, versionTitle } from "./format.ts";
+import { WhoWorkedButton } from "./WhoWorked.tsx";
 
 type Loaded = { id: string; versions: DocumentVersion[] } | { id: string; error: string };
 
@@ -153,11 +155,18 @@ function VersionsPanel({ activeTab }: { activeTab: TabInfo | null }) {
 
 export const versionsPlugin = definePlugin({
   id: "versions",
-  name: "Version history",
-  description: "Earlier versions of a document, and restoring one.",
-  // Only folder windows keep versions.
-  permissions: ["vault"],
+  name: "History",
+  description: "Who worked on a page, people and agents, and its earlier versions.",
+  // vault: only folder windows keep versions. account: a synced window reads who worked on a
+  // page from the hosted API.
+  permissions: ["vault", "account"],
   activate(ctx) {
+    ctx.documents.register({
+      id: "versions.who",
+      slot: "actions",
+      order: 1,
+      component: WhoWorkedButton,
+    });
     // Folder workspaces keep versions (snapshots or git). Hosted and browser workspaces get the
     // panel when their backends can answer the same operations.
     if (!ctx.app.services?.vault) return;
