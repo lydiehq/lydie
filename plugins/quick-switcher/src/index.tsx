@@ -83,7 +83,10 @@ function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
   const backend = useBackend();
   const [typed, setQuery] = useState("");
   // The field shows each key at once; ranking thousands of titles may lag a keystroke behind.
-  const query = useDeferredValue(typed);
+  // Commands and headings are few: they follow the field at once, so Enter never meets an
+  // earlier query's list (or its "Searching…").
+  const deferred = useDeferredValue(typed);
+  const query = parseQuery(typed).kind === "docs" ? deferred : typed;
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
   const [now] = useState(() => Date.now());
   // Read once: opens are recorded when a document becomes the focused tab, after this closes.
@@ -101,49 +104,56 @@ function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
     };
   }, [app]);
 
-  let items: PickerItem[] = [];
-  let isLoading = candidates === null;
-  if (parsed.kind === "commands") {
-    items = app
-      .commands()
-      .filter((c) => c.enabled)
-      .map((c) => ({ c, s: fuzzyScore(parsed.text, c.title) }))
-      .filter((x) => x.s !== null)
-      .sort((a, b) => b.s! - a.s!)
-      .slice(0, 50)
-      .map(({ c }) => ({
-        id: `command:${c.id}`,
-        title: c.title,
-        ...(c.group ? { subtitle: c.group } : {}),
-        ...(c.keybindings[0] ? { hint: app.formatKeybinding(c.keybindings[0]) } : {}),
-      }));
-  } else if (parsed.kind === "headings") {
-    isLoading = headings === null;
-    items = (headings ?? [])
-      .map((h, i) => ({ h, i, s: parsed.text ? fuzzyScore(parsed.text, h.text) : 0 }))
-      .filter((x) => x.s !== null)
-      .sort((a, b) => (parsed.text ? b.s! - a.s! : a.i - b.i))
-      .map(({ h, i }) => ({
-        id: `heading:${h.docId}:${i}`,
-        title: h.text,
-        subtitle: `H${h.level}`,
-      }));
-  } else {
-    const ranked = rank(candidates ?? [], query, usage, now);
-    items = ranked.map((c) =>
+  // The items for a query. The list shows the deferred query's; Enter right after typing uses the
+  // typed text's, so it never opens a result for text the field no longer shows.
+  function itemsFor(text: string): PickerItem[] {
+    const q = parseQuery(text);
+    if (q.kind === "commands") {
+      return app
+        .commands()
+        .filter((c) => c.enabled)
+        .map((c) => ({ c, s: fuzzyScore(q.text, c.title) }))
+        .filter((x) => x.s !== null)
+        .sort((a, b) => b.s! - a.s!)
+        .slice(0, 50)
+        .map(({ c }) => ({
+          id: `command:${c.id}`,
+          title: c.title,
+          ...(c.group ? { subtitle: c.group } : {}),
+          ...(c.keybindings[0] ? { hint: app.formatKeybinding(c.keybindings[0]) } : {}),
+        }));
+    }
+    if (q.kind === "headings") {
+      // Headings are loaded for the deferred query's document only.
+      if (parsed.kind !== "headings" || parsed.doc !== q.doc) return [];
+      return (headings ?? [])
+        .map((h, i) => ({ h, i, s: q.text ? fuzzyScore(q.text, h.text) : 0 }))
+        .filter((x) => x.s !== null)
+        .sort((a, b) => (q.text ? b.s! - a.s! : a.i - b.i))
+        .map(({ h, i }) => ({
+          id: `heading:${h.docId}:${i}`,
+          title: h.text,
+          subtitle: `H${h.level}`,
+        }));
+    }
+    const ranked = rank(candidates ?? [], text, usage, now);
+    const list: PickerItem[] = ranked.map((c) =>
       docPickerItem(
         { id: c.id, title: c.title, properties: c.icon ? { icon: c.icon } : null },
         c.path ? { subtitle: c.path } : {},
       ),
     );
-    if (
-      query.trim() &&
-      candidates &&
-      !ranked.some((c) => c.title.toLowerCase() === query.trim().toLowerCase())
-    ) {
-      items.push({ id: "create", title: `Create “${query.trim()}”` });
+    const title = text.trim();
+    if (title && candidates && !ranked.some((c) => c.title.toLowerCase() === title.toLowerCase())) {
+      list.push({ id: "create", title: `Create “${title}”` });
     }
+    return list;
   }
+
+  const items = itemsFor(query);
+  // Commands need no documents: they are listed (and Enter runs one) before the titles load.
+  const isLoading =
+    parsed.kind === "headings" ? headings === null : parsed.kind === "docs" && candidates === null;
 
   return (
     <PickerDialog
@@ -168,7 +178,10 @@ function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
       }
       footer={`Enter to open · ${app.formatKeybinding("Mod+Enter")} new tab · ${app.formatKeybinding("Mod+Alt+Enter")} to the side`}
       onClose={close}
-      onSelect={(item, event) => {
+      onSelect={(shown, event) => {
+        // Still showing an earlier query's results: take the first result for what is typed.
+        const item = typed === query ? shown : (itemsFor(typed)[0] ?? shown);
+        const title = typed.trim();
         close();
         const mode = modeOf(app, event);
         if (item.id.startsWith("command:")) {
@@ -179,10 +192,7 @@ function QuickSwitcher({ close }: { close: () => void; props: unknown }) {
           if (docId && heading) app.open(docPath(docId, { heading: heading.text }), { mode });
         } else if (item.id === "create") {
           void backend.ops.doc
-            .create(
-              { workspaceId: backend.info.workspaceId, title: query.trim() },
-              { scope: app.historyScope() },
-            )
+            .create({ workspaceId: backend.info.workspaceId, title }, { scope: app.historyScope() })
             .then((doc) => app.openDoc(doc.id, { mode }));
         } else app.openDoc(item.id, { mode });
       }}
