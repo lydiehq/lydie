@@ -14,14 +14,7 @@ import { realpathSync } from "node:fs";
 import { mkdir, readdir, readFile, rm } from "node:fs/promises";
 import { join, posix } from "node:path";
 
-import {
-  fromBase,
-  fromFileValue,
-  frontmatterBlock,
-  isLydieError,
-  toBase,
-  toFileValue,
-} from "@lydie/contract";
+import { fromFileValue, isLydieError, toFileValue } from "@lydie/contract";
 import type {
   Actor,
   Attachment,
@@ -34,6 +27,7 @@ import type {
   Properties,
   PropertyInput,
 } from "@lydie/contract";
+import { fromBase, frontmatterBlock, toBase } from "@lydie/contract/files";
 import { merge3, parse, reconcile, rewriteLinks, save } from "@lydie/markdown";
 import type { DocInput, ParseResult, ReplaceStepJSON, TextConflict } from "@lydie/markdown";
 import {

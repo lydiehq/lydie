@@ -4,8 +4,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatterBlock } from "@lydie/contract";
 import type { DatabaseDefinition } from "@lydie/contract";
+import { frontmatterBlock } from "@lydie/contract/files";
 import { extract, rewriteLinks, serialize } from "@lydie/markdown";
 import { addAttachment, exportWorkspace, zipStream } from "@lydie/runtime";
 import type { ExportOptions, ExportSource } from "@lydie/runtime";
