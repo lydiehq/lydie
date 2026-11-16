@@ -234,6 +234,9 @@ export function memoryOplog(entries: AppliedOperation[] = []) {
       const sorted = [...log].sort((a, b) => (a.id < b.id ? -1 : 1));
       return limit === undefined || limit < 0 ? sorted : sorted.slice(0, limit);
     },
+    async isEmpty() {
+      return log.length === 0;
+    },
     async remove(ids: readonly string[]) {
       const gone = new Set(ids);
       for (let i = log.length - 1; i >= 0; i--) if (gone.has(log[i]!.id)) log.splice(i, 1);

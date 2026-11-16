@@ -53,6 +53,29 @@ describe("uploader", () => {
     expect(oplog.entries).toHaveLength(0);
   });
 
+  test("keeps each request under the size cap, a larger entry going alone", async () => {
+    const core = createFakeCore();
+    const api = createApiClient({
+      baseUrl: "http://core.test",
+      token: () => "token-1",
+      fetch: core.fetch,
+    });
+    const body = (n: number) => "x".repeat(n);
+    const oplog = memoryOplog([
+      makeOp("doc.updateBody", { id: "a", markdown: body(400) }),
+      makeOp("doc.updateBody", { id: "b", markdown: body(400) }),
+      makeOp("doc.updateBody", { id: "c", markdown: body(3000) }),
+      makeOp("doc.rename", { id: "d", title: "D" }),
+      makeOp("doc.rename", { id: "e", title: "E" }),
+    ]);
+    const ids = (await oplog.list()).map((e) => e.id);
+    const uploader = createUploader({ api, oplog, backoff: fast, batchBytes: 1500 });
+    expect(await uploader.drain()).toEqual({ uploaded: 5, rejected: 0, batches: 3 });
+    expect(core.uploads).toEqual([ids.slice(0, 2), ids.slice(2, 3), ids.slice(3)]);
+    expect(core.applied.map((e) => e.id)).toEqual(ids);
+    expect(oplog.entries).toHaveLength(0);
+  });
+
   test("drops rejected entries, surfaces them with the reason, and keeps going", async () => {
     const { core, oplog, uploader, rejected, warnings } = setup(5);
     const entries = await oplog.list();

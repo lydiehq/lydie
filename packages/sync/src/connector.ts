@@ -67,7 +67,10 @@ export function createConnector(options: ConnectorOptions): LydieConnector {
             // an operation that already left the log (uploaded or rejected).
             const batch = await database.getCrudBatch(crudBatch);
             if (!batch) break;
-            if ((await options.oplog.list({ limit: 1 })).length > 0) {
+            const empty = options.oplog.isEmpty
+              ? await options.oplog.isEmpty()
+              : (await options.oplog.list({ limit: 1 })).length === 0;
+            if (!empty) {
               await options.uploader.drain();
               continue;
             }

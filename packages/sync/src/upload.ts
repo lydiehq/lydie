@@ -6,6 +6,9 @@ import type { AppliedOperation, ErrorBody } from "./types.ts";
 
 // The server's limit per request.
 export const MAX_BATCH = 500;
+// Request size a batch stays under (JSON of its entries), so a queue of large bodies is not one
+// huge POST that a proxy refuses or a slow connection never finishes. A larger entry goes alone.
+export const MAX_BATCH_BYTES = 4 * 1024 * 1024;
 
 // One entry of `POST /v1/sync/upload`'s response, in request order.
 export type UploadResult = {
@@ -40,6 +43,8 @@ export type UploadWarning = {
 export type OplogPort = {
   list(options?: { limit?: number }): Promise<AppliedOperation[]>;
   remove(ids: readonly string[]): Promise<void>;
+  // Whether the queue is empty, without reading an entry. Without it, `list({ limit: 1 })`.
+  isEmpty?(): Promise<boolean>;
 };
 
 export type UploaderOptions = {
@@ -47,6 +52,8 @@ export type UploaderOptions = {
   oplog: OplogPort;
   // ≤ 500.
   batchSize?: number;
+  // Request size per batch (JSON characters of the entries). Default MAX_BATCH_BYTES.
+  batchBytes?: number;
   onRejected?: (changes: readonly RejectedChange[]) => void;
   onWarnings?: (warnings: readonly UploadWarning[]) => void;
   // Called with how many entries left the queue after each batch.
@@ -70,6 +77,7 @@ export type Uploader = {
 
 export function createUploader(options: UploaderOptions): Uploader {
   const batchSize = Math.min(options.batchSize ?? MAX_BATCH, MAX_BATCH);
+  const batchBytes = options.batchBytes ?? MAX_BATCH_BYTES;
   const retries = options.retries ?? 4;
 
   async function send(entries: readonly AppliedOperation[], signal?: AbortSignal) {
@@ -101,33 +109,60 @@ export function createUploader(options: UploaderOptions): Uploader {
       const total: DrainResult = { uploaded: 0, rejected: 0, batches: 0 };
       for (;;) {
         signal?.throwIfAborted();
-        const batch = await options.oplog.list({ limit: batchSize });
-        if (batch.length === 0) return total;
-        const results = await sendWithRetry(batch, signal);
-        options.onResults?.(results);
-        const outcome = settle(batch, results);
-        // Only now do entries leave the queue. A crash before this line re-sends them, and the
-        // server answers `duplicate` with the first outcome (dedupe by operation id).
-        await options.oplog.remove(outcome.done);
-        total.batches++;
-        total.uploaded += outcome.done.length - outcome.rejected.length;
-        total.rejected += outcome.rejected.length;
-        if (outcome.rejected.length > 0) options.onRejected?.(outcome.rejected);
-        if (outcome.warnings.length > 0) options.onWarnings?.(outcome.warnings);
-        options.onProgress?.({
-          uploaded: outcome.done.length - outcome.rejected.length,
-          rejected: outcome.rejected.length,
-        });
-        if (outcome.done.length < batch.length) {
-          // The server answered for fewer entries than sent. Never spin on the remainder.
-          throw new ApiError(
-            "server",
-            `Upload answered ${outcome.done.length} of ${batch.length} operations`,
-          );
+        const listed = await options.oplog.list({ limit: batchSize });
+        if (listed.length === 0) return total;
+        // Nothing but this drain removes entries (it holds the upload mutex), so the listed ones
+        // go out oldest first in batches that stay under the size cap.
+        for (const batch of bySize(listed, batchBytes)) {
+          signal?.throwIfAborted();
+          const results = await sendWithRetry(batch, signal);
+          options.onResults?.(results);
+          const outcome = settle(batch, results);
+          // Only now do entries leave the queue. A crash before this line re-sends them, and the
+          // server answers `duplicate` with the first outcome (dedupe by operation id).
+          await options.oplog.remove(outcome.done);
+          total.batches++;
+          total.uploaded += outcome.done.length - outcome.rejected.length;
+          total.rejected += outcome.rejected.length;
+          if (outcome.rejected.length > 0) options.onRejected?.(outcome.rejected);
+          if (outcome.warnings.length > 0) options.onWarnings?.(outcome.warnings);
+          options.onProgress?.({
+            uploaded: outcome.done.length - outcome.rejected.length,
+            rejected: outcome.rejected.length,
+          });
+          if (outcome.done.length < batch.length) {
+            // The server answered for fewer entries than sent. Never spin on the remainder.
+            throw new ApiError(
+              "server",
+              `Upload answered ${outcome.done.length} of ${batch.length} operations`,
+            );
+          }
         }
       }
     },
   };
+}
+
+// Consecutive runs of entries whose JSON stays under `maxBytes` together (at least one each).
+export function bySize(
+  entries: readonly AppliedOperation[],
+  maxBytes: number,
+): AppliedOperation[][] {
+  const out: AppliedOperation[][] = [];
+  let current: AppliedOperation[] = [];
+  let size = 0;
+  for (const entry of entries) {
+    const bytes = JSON.stringify(entry).length + 1;
+    if (current.length > 0 && size + bytes > maxBytes) {
+      out.push(current);
+      current = [];
+      size = 0;
+    }
+    current.push(entry);
+    size += bytes;
+  }
+  if (current.length > 0) out.push(current);
+  return out;
 }
 
 // Pairs results with entries (by position, checked against the id) and sorts them into done,
