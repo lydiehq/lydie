@@ -256,10 +256,11 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   (menus and dropdowns, whose section titles stick to the top), `scroll-fade-<n>` the depth; it is
   a mask, so backgrounds, borders and shadows go on a wrapper (the sidebar trees and favorites,
   the settings navigation, the palette, menus, view tabs); `editor-content.css`, the document typography, including v2
-  node types, tables (a rounded card: `separate` borders, hairline rules, tinted header row, at
-  least the text column wide; a wider one starts at the text column and scrolls sideways across the
-  editor's whole width, as a collection's table does) with their hover "+" bars, collection embeds
-  (`[data-embed-bare]`) laid out the same way, with their `[data-embed-column]` parts (title, bar
+  node types, tables (a rounded card: `separate` borders, hairline rules, tinted header row, the
+  text column wide; cells wrap, and a table that still does not fit scrolls sideways inside the
+  column, clipped at its edges) with their hover "+" bars, collection embeds
+  (`[data-embed-bare]`, starting at the text column and running on across the editor's whole
+  width), with their `[data-embed-column]` parts (title, bar
   of views) capped at the text column (`--editor-text-width`, none on full-width pages), and block dragging (the blue drop line gliding between gaps, the dimmed source, the
   lifted preview card), typeset math (`[data-math-view]`, source only while `[data-editing]`) and
   to-do checkboxes drawn as CheckboxMark (`[data-checkbox-mark]`, from the editor's input

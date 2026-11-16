@@ -26,6 +26,7 @@
   @media (prefers-reduced-motion: no-preference) {
     [data-width-transition] &[data-doc-content] > * {
       transition:
+        width 300ms ease-in-out,
         max-width 300ms ease-in-out,
         padding 300ms ease-in-out;
     }
@@ -48,38 +49,20 @@
     padding-inline: 0;
   }
 
-  /* A table spans the editor's whole width like a collection's views: it starts at the text column,
-     scrolls sideways across the full width and bleeds left into the margin when scrolled. The
-     `:not()`s outrank the text-column rule above. */
+  /* A table keeps to the text column: its wrapper is the column itself, with no padding, so a
+     table too wide for it scrolls sideways and is clipped at the text's edges. Cells wrap their
+     text first. The `:not()`s outrank the text-column rule above. */
   &[data-doc-content]
     > :not(.doc-block-wide):not([data-doc-block-wide]):has(
       > table:not([data-editor-widget-table])
     ) {
-    width: 100%;
-    max-width: none;
-    margin-inline: 0;
+    width: calc(100% - 2 * var(--editor-block-padding-x, 1rem));
+    max-width: calc(var(--editor-block-max-width, 680px) - 2 * var(--editor-block-padding-x, 1rem));
+    padding-inline: 0;
     overflow-x: auto;
-    padding-left: var(--editor-content-line-start, var(--editor-block-padding-x, 1rem));
-    padding-right: var(--editor-block-padding-x, 1rem);
   }
 
-  &[data-doc-content]
-    > :has(> table:not([data-editor-widget-table]))
-    > table:not([data-editor-widget-table]) {
-    width: max-content;
-    /* At least the text column (full width: no minimum). Important: TipTap writes an inline
-       `min-width` from its columns. */
-    min-width: var(
-      --editor-table-min-width,
-      min(
-        100%,
-        calc(var(--editor-block-max-width, 680px) - 2 * var(--editor-block-padding-x, 1rem))
-      )
-    ) !important;
-  }
-
-  /* A collection embed spans the editor's whole width as a table does: it starts at the text
-     column and its view runs on towards the right edge when it has the width for it. Its header
+  /* A collection embed spans the editor's whole width: it starts at the text column and its view runs on towards the right edge when it has the width for it. Its header
      and bar of views keep to the text column (`[data-embed-column]`). */
   &[data-doc-content] > :not(.doc-block-wide):not([data-doc-block-wide]):has([data-embed-bare]) {
     width: 100%;

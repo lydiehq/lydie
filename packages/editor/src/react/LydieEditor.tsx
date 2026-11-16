@@ -245,9 +245,8 @@ function lineHeightOf(dom: Element | null) {
 // A bulleted or numbered item's marker is drawn outside the <li>, in the list's padding. As in
 // Notion the marker belongs to the block, so the handle goes left of it: measured from the list's
 // left edge, a top-level item's handle shares the paragraphs' column. Task items keep their
-// checkbox inside the <li> and need nothing. A table's wrapper spans the editor's whole width and
-// pads the table to the text column, so its handle is measured from the padding's inner edge. A
-// bare embed (a collection) is laid out the same way by the host (editor-content.css), but its
+// checkbox inside the <li> and need nothing. A table's wrapper is the text column itself,
+// unpadded, so its handle is measured from the column's edge, not a padded box's. A bare embed (a collection) is laid out the same way by the host (editor-content.css), but its
 // title is text: its handle sits where a paragraph's does, a block padding (the wrapper's right
 // padding) left of the text column.
 function handleAnchor(dom: Element | null) {
@@ -533,7 +532,7 @@ function EditorWithContent(props: LydieEditorProps) {
           // Full width is 100%, not `none`, so blocks can animate between the two widths.
           className={
             fullWidth
-              ? "flex grow flex-col [--editor-block-max-width:100%] [--editor-block-padding-x:5rem] [--editor-table-min-width:auto] [--editor-text-width:none]"
+              ? "flex grow flex-col [--editor-block-max-width:100%] [--editor-block-padding-x:5rem] [--editor-text-width:none]"
               : "flex grow flex-col"
           }
           style={{ "--editor-content-line-start": lineStart } as CSSProperties}

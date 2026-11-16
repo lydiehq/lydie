@@ -178,7 +178,7 @@ function SharedPage({ share, go }: { share: PublicShare; go: (pageId: string | n
         </nav>
       )}
       {/* Laid out as in the editor: the title in the page column, the body's blocks in the same
-          column through editor-content.css's `data-doc-content` rules (tables span the width). */}
+          column through editor-content.css's `data-doc-content` rules (collections span the width). */}
       <main className="min-w-0 flex-1 py-16">
         <h1
           className={`${pageColumnClass(false)} mb-6 text-[1.75rem] leading-tight font-medium tracking-[-0.05rem] text-gray-950`}
