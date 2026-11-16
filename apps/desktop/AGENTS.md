@@ -94,9 +94,9 @@ e2e/                          Playwright-on-Electron tests against the built app
 
 ## Hosted windows (src/main/hosted.ts)
 
-- Windows open from the stored session (`storedSession`): the token and user read from the
-  keychain decide the scope at once, and the server's check (`session.restore()`, in the
-  background) can then move the session to expired, which the renderer follows on the `state`
+- Windows open from the stored session (`session.load()`): the token and user read from the
+  keychain decide the scope at once, and the server's check (`session.check()`, in the
+  background, at most 10 s) can then move the session to expired, which the renderer follows on the `state`
   stream. A folder window's scope waits for nothing. The sync engine, collab and Yjs are
   `src/main/hosted-lazy.ts`, imported when a hosted workspace opens or the hand-off runs, so the
   main process does not evaluate them before its first window (`out/main/index.js`: 1,286 KB before,

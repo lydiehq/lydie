@@ -17,7 +17,7 @@ import type { Blob as BlobPort } from "@lydie/runtime";
 import { createMemoryPorts } from "@lydie/runtime/memory";
 import { deleteWebDatabaseFiles, openWebStore } from "@lydie/store/web";
 import { createScopePreference, createSession } from "@lydie/sync";
-import type { Session, SessionState } from "@lydie/sync";
+import type { Session } from "@lydie/sync";
 
 import { ABOUT } from "./compose.ts";
 import type { ComposeOptions, Composition } from "./compose.ts";
@@ -153,23 +153,6 @@ async function resolveWorkspace(session: Session, ref: string): Promise<string |
   }
 }
 
-// The session as stored, as soon as `restore` has read it: signed in from the stored token without
-// waiting for the server to confirm it (its answer arrives later through `session.state`).
-function storedSession(session: Session): Promise<SessionState> {
-  const restoring = session.restore().catch(() => session.state.get());
-  return new Promise((resolve) => {
-    const stop = session.state.subscribe((state) => {
-      if (state.status === "signed-out") return;
-      stop();
-      resolve(state);
-    });
-    void restoring.then((state) => {
-      stop();
-      resolve(state);
-    });
-  });
-}
-
 export async function composeBrowser(
   injected: Platform | null,
   options: ComposeOptions,
@@ -195,15 +178,17 @@ export async function composeBrowser(
   const hostedNamed = (linked ?? preferred)?.kind === "hosted";
   // Its code downloads while the session is read.
   if (hostedNamed) void import("./hosted-lazy.ts").catch(() => {});
+  // The stored session, read without the network; the server's check follows in the background.
+  const stored = session.load().catch(() => session.state.get());
+  void stored.then(() => session.check()).catch(() => {});
   const decision = await decideScope({
     linked,
     preferred,
-    signedIn: async () => (await storedSession(session)).status !== "signed-out",
+    signedIn: async () => (await stored).status !== "signed-out",
     resolve: (ref) => resolveWorkspace(session, ref),
   });
   let { scope, wanted } = decision;
   const notice = decision.notice ?? undefined;
-  if (!hostedNamed) void session.restore().catch(() => {});
   if (scope.kind === "hosted") {
     try {
       const hosted = await composeHosted({

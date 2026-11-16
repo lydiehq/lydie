@@ -47,6 +47,7 @@ export type { HostedParts, HostedPartsOptions } from "./hosted.ts";
 export { ApiError, createApiClient, isApiError } from "./http.ts";
 export type { ApiClient, ApiClientOptions, ApiErrorKind } from "./http.ts";
 export {
+  CHECK_TIMEOUT_MS,
   createScopePreference,
   createSession,
   formatScope,

@@ -31,7 +31,7 @@ built by the app and injected (`createRuntime` option).
 
 ```ts
 // Session and scope
-createSession({ baseUrl, secrets, fetch?, version? }): Session
+createSession({ baseUrl, secrets, fetch?, version?, checkTimeoutMs? }): Session
   // signIn rejects with an ApiError coded TWO_FACTOR_REQUIRED when the account has two-step
   // verification; verifySignIn({ code, method: "app" | "backup" }) finishes it (the challenge from the
   // `lydie-two-factor` header, ten minutes). twoFactor.{ hasPassword(), enable(password) → { uri,
@@ -39,7 +39,10 @@ createSession({ baseUrl, secrets, fetch?, version? }): Session
   // take over the session the server replaced them with. setImage(image | null) sets the picture
   // (Better Auth's update-user; the core copies it to the person's memberships) and refreshes the
   // stored user.
-  // { state: Observable<SessionState>, api: ApiClient, token(), user(), restore(), signIn({email,password}),
+  // load(): the stored token and user, no network (windows open from it); check(): the server's
+  // answer (fresh details, or expired) within checkTimeoutMs (CHECK_TIMEOUT_MS, 10 s; offline or
+  // slow keeps the session); restore() = load, then check.
+  // { state: Observable<SessionState>, api: ApiClient, token(), user(), load(), check(), restore(), signIn({email,password}),
   //   signUp({email,password,name?}), socialUrl(provider, returnTo), signInWithToken(oneTimeToken),
   //   signOut(), markExpired(), workspaces(), createWorkspace({name,id?,gettingStarted?}),
   //   teamspaces(workspaceId) }
@@ -123,6 +126,7 @@ accountService, AccountServiceContract { state, scope, setScope, signIn, signUp,
 // HTTP
 createApiClient({ baseUrl, token, fetch?, version?, onUnauthorized? }), ApiError (kind: network | server
   | auth | client; retryable; code from `{ error: { code } }` or Better Auth's `{ code }`),
-  request option keepSessionOn401 (a 401 refusing the request, not the session), backoffDelay, sleep,
+  request options keepSessionOn401 (a 401 refusing the request, not the session) and timeoutMs
+  (gives up with a "network" error, as if offline; for requests something waits on), backoffDelay, sleep,
   createMutex
 ```

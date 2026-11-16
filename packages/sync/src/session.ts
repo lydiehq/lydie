@@ -1,4 +1,4 @@
-import { ApiError, createApiClient, isApiError } from "./http.ts";
+import { ApiError, createApiClient } from "./http.ts";
 import type { ApiClient } from "./http.ts";
 import { createObservable, jsonEqual } from "./types.ts";
 import type { FetchLike, KeyValueStorage, Observable, SecretStorage } from "./types.ts";
@@ -83,6 +83,8 @@ export type SessionOptions = {
   secrets: SecretStorage;
   fetch?: FetchLike;
   version?: string;
+  // How long `check` waits for the server. Default CHECK_TIMEOUT_MS.
+  checkTimeoutMs?: number;
 };
 
 export type Session = {
@@ -92,7 +94,12 @@ export type Session = {
   readonly api: ApiClient;
   token(): string | null;
   user(): SessionUser | null;
-  // Loads the stored token and checks it with the server. Offline: trusts the stored session.
+  // The stored token and user, without the network: signed in from them at once, or signed out.
+  load(): Promise<SessionState>;
+  // Asks the server whether the session is still good (at most `checkTimeoutMs`): fresh details,
+  // or expired. Offline or slow: keeps the session as it is.
+  check(): Promise<SessionState>;
+  // load, then check.
   restore(): Promise<SessionState>;
   // An account with two-step verification rejects with an ApiError whose code is
   // TWO_FACTOR_REQUIRED; `verifySignIn` then finishes it (within ten minutes).
@@ -134,6 +141,10 @@ export type Session = {
 };
 
 type Stored = { token: string; user: SessionUser };
+
+// How long the session check waits for the server: a stalled connection would otherwise hang for
+// the operating system's TCP timeout.
+export const CHECK_TIMEOUT_MS = 10_000;
 
 const storageKey = (baseUrl: string) => `lydie.session:${baseUrl}`;
 
@@ -200,6 +211,47 @@ export function createSession(options: SessionOptions): Session {
     return signedIn;
   }
 
+  async function load(): Promise<SessionState> {
+    const raw = await options.secrets.get(key);
+    if (!raw) {
+      state.set({ status: "signed-out" });
+      return state.get();
+    }
+    let stored: Stored;
+    try {
+      stored = JSON.parse(raw) as Stored;
+    } catch {
+      await persist(null);
+      state.set({ status: "signed-out" });
+      return state.get();
+    }
+    state.set({ status: "signed-in", user: stored.user, token: stored.token });
+    return state.get();
+  }
+
+  async function check(): Promise<SessionState> {
+    const current = state.get();
+    if (current.status !== "signed-in") return current;
+    try {
+      const data = await api.get<{ user?: Record<string, unknown> } | null>("/auth/get-session", {
+        timeoutMs: options.checkTimeoutMs ?? CHECK_TIMEOUT_MS,
+      });
+      // Signed in or out meanwhile: that is newer than this answer.
+      if (state.get() !== current) return state.get();
+      if (!data?.user) {
+        state.set({ status: "expired", user: current.user });
+      } else {
+        const fresh = toUser(data.user);
+        if (!jsonEqual(fresh, current.user)) await persist({ token: current.token, user: fresh });
+        state.set({ status: "signed-in", user: fresh, token: current.token });
+      }
+    } catch {
+      // Offline, slow or the server is down: keep working from the stored session. A 401 has
+      // marked it expired already.
+    }
+    return state.get();
+  }
+
   return {
     state,
     baseUrl,
@@ -208,35 +260,11 @@ export function createSession(options: SessionOptions): Session {
     user,
     markExpired,
 
+    load,
+    check,
     async restore() {
-      const raw = await options.secrets.get(key);
-      if (!raw) {
-        state.set({ status: "signed-out" });
-        return state.get();
-      }
-      let stored: Stored;
-      try {
-        stored = JSON.parse(raw) as Stored;
-      } catch {
-        await persist(null);
-        state.set({ status: "signed-out" });
-        return state.get();
-      }
-      state.set({ status: "signed-in", user: stored.user, token: stored.token });
-      try {
-        const data = await api.get<{ user?: Record<string, unknown> } | null>("/auth/get-session");
-        if (!data?.user) {
-          state.set({ status: "expired", user: stored.user });
-        } else {
-          const fresh = toUser(data.user);
-          if (!jsonEqual(fresh, stored.user)) await persist({ token: stored.token, user: fresh });
-          state.set({ status: "signed-in", user: fresh, token: stored.token });
-        }
-      } catch (error) {
-        // Offline or the server is down: keep working from the stored session.
-        if (!isApiError(error) || error.kind !== "auth") return state.get();
-      }
-      return state.get();
+      await load();
+      return check();
     },
 
     async signIn(input) {

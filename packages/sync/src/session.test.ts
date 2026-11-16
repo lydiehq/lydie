@@ -112,6 +112,34 @@ describe("session", () => {
     expect((await refused.restore()).status).toBe("expired");
   });
 
+  test("load signs in from the stored session without the network; check gives up when stalled", async () => {
+    const core = createFakeCore();
+    const secrets = memorySecrets();
+    const session = createSession({ baseUrl: "http://core.test", secrets, fetch: core.fetch });
+    await session.signIn({ email: "ada@x.dev", password: "password1234" });
+
+    const fetches: string[] = [];
+    const stalled = createSession({
+      baseUrl: "http://core.test",
+      secrets,
+      checkTimeoutMs: 20,
+      // Never answers; fails only when the request is aborted.
+      fetch: (input, init) => {
+        fetches.push(input);
+        return new Promise((_, reject) =>
+          init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))),
+        );
+      },
+    });
+    expect(await stalled.load()).toMatchObject({
+      status: "signed-in",
+      user: { id: "user-ada@x.dev" },
+    });
+    expect(fetches).toEqual([]);
+    expect((await stalled.check()).status).toBe("signed-in");
+    expect(fetches).toEqual(["http://core.test/auth/get-session"]);
+  });
+
   test("sign-out forgets the token", async () => {
     const core = createFakeCore();
     const secrets = memorySecrets();

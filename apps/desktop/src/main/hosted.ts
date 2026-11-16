@@ -172,25 +172,6 @@ function withUserAgent(fetch: typeof nodeFetch): typeof nodeFetch {
   };
 }
 
-// The session as stored, as soon as `restore` has read it: signed in from the stored token without
-// waiting for the server to confirm it, or whatever `restoring` settles with when there is none.
-export function storedSession(
-  session: Session,
-  restoring: Promise<SessionState>,
-): Promise<SessionState> {
-  return new Promise((resolve) => {
-    const stop = session.state.subscribe((state) => {
-      if (state.status === "signed-out") return;
-      stop();
-      resolve(state);
-    });
-    void restoring.then((state) => {
-      stop();
-      resolve(state);
-    });
-  });
-}
-
 const wireState = (state: SessionState): AccountWireState =>
   state.status === "signed-out" ? state : { status: state.status, user: state.user };
 
@@ -228,10 +209,8 @@ export class HostedManager {
     // Windows open from the stored session: the server's answer (fresh details, or that the
     // session expired) arrives later through `session.state`, which the renderer follows. Offline
     // or no keychain: the window opens signed out (or from the stored session).
-    this.ready = storedSession(
-      this.session,
-      this.session.restore().catch(() => this.session.state.get()),
-    );
+    this.ready = this.session.load().catch(() => this.session.state.get());
+    void this.ready.then(() => this.session.check()).catch(() => {});
   }
 
   // Opens the browser on the provider and waits for the deep link that brings the session back.
