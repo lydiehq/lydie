@@ -6,7 +6,6 @@ import { basename } from "node:path";
 
 import { backendService, createLocalBackend, serveBackend } from "@lydie/app/backend";
 import type { BackendContract, LocalBackend } from "@lydie/app/backend";
-import { openVault, serveVault, vaultService } from "@lydie/bridge-fs";
 import type {
   McpControl,
   OpenVaultOptions,
@@ -14,6 +13,7 @@ import type {
   VaultHandlers,
   VaultServiceContract,
 } from "@lydie/bridge-fs";
+import { vaultService } from "@lydie/bridge-fs/service";
 import { operations } from "@lydie/contract";
 import { PlatformError } from "@lydie/platform";
 import type { ServiceContract, ServiceHandlers, Unsubscribe } from "@lydie/platform";
@@ -126,6 +126,9 @@ export class VaultManager {
   private openSlot(folder: string): Slot {
     const onError = this.options.onError ?? ((error: unknown) => console.error("[vault]", error));
     const ready = (async (): Promise<VaultHost> => {
+      // The file bridge (with the Markdown parser) loads when the first folder opens, not before
+      // the app is ready.
+      const { openVault, serveVault } = await import("@lydie/bridge-fs");
       const vault = await (this.options.open ?? openVault)({
         folder,
         dataDir: this.options.dataDir,
