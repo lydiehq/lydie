@@ -15,7 +15,7 @@ linkKey, targetKey, uuid). External: `yaml` (reads `lydie.id` of .base files). `
 
 ```ts
 openVault({ folder, databasePath?, dataDir?, actor?, watch?: boolean | WatchOptions, hooks?, onError?,
-            gettingStarted?, indexInBackground? })
+            gettingStarted?, indexInBackground?, extractWorker? })
   : Promise<Vault>
 Vault = { folder, workspaceId, databasePath, store, runtime, bridge, blob, index: IndexReport,
           indexed: Promise<IndexReport>, gettingStartedId, status(): VaultStatus,
@@ -31,6 +31,9 @@ Vault = { folder, workspaceId, databasePath, store, runtime, bridge, blob, index
 // into a folder that held nothing but system files (.DS_Store, Thumbs.db, …), write the Getting
 // started page (LYD-313) in one transaction off the undo stack; `gettingStartedId` is its id, else
 // null. A folder with notes, an `.obsidian/` or an earlier `.lydie/` never gets it.
+// extractWorker: starts a thread for the index's Markdown extraction (see "Indexing cost").
+// Default: `src/extract-worker.ts`, which runs under Bun; a bundle passes its build of
+// `@lydie/bridge-fs/extract-worker` (the desktop app: `?modulePath`); null: this thread only.
 defaultDataDir(), databasePathFor(folder, dataDir), LOCAL_USER, runnableOperations()
 
 bridge.status / onStatus(fn)          // VaultStatus { state, folder, workspaceId, indexed, total,
@@ -207,8 +210,9 @@ watcher) and checks that every edit is on disk and that database and folder agre
   `INDEX_VERSION` "b3"). A relation keeps its target while that document is in the trash.
 - A trashed database comes back from a rebuild as a database (`indexTrashedDatabases`, LYD-214).
 - The bridge no longer trims the upload queue: local stores keep none (LYD-169).
-- Initial indexing is single-threaded: the full multilingual help vault (6.5k files, 35 MB) takes
-  ~22 s cold, dominated by Markdown parsing; 10k small notes ~10 s; warm reopen <0.4 s.
+- A first index parses Markdown on up to 4 threads, but the database writes stay in one: the full
+  multilingual help vault (6.5k files, 35 MB) takes ~8 s cold; 10k small notes ~2.2 s; warm
+  reopen <0.4 s. Watcher batches and rescans extract in the calling thread.
 - A document whose operation committed but whose file was not written before a crash is dropped on
   the next open (the folder wins).
 - Another process (the CLI) on the same folder has its own database; both see each other's writes
@@ -237,6 +241,17 @@ watcher) and checks that every edit is on disk and that database and folder agre
 - `IndexReport.treeMs`: when the tree was in the database.
 - 10k generated notes: cold open 9.6 → 2.8 s (tree 1.8 → 0.47 s); reopen with nothing changed
   171 → 132 ms; reopen with 1% changed 230 → 179 ms. Help vault (all languages): cold 19.6 → 12.4 s.
+- Extraction runs on threads (`extract-pool.ts`, LYD-199): parsing was 9.5 of the help vault's
+  14 s, and in the desktop app it held Electron's main process (every window's requests) for up to
+  0.9 s at a time. A pool of min(4, cores − 1) `worker_threads` extracts bodies in jobs of 100, up
+  to 3 chunks ahead of the chunk being written; the calling thread keeps link resolution, the
+  writes and their order. Bodies under ~25 ms of parsing (64 KB, counting 100 per body) stay in the
+  calling thread. A job no thread did (none starts, as in Node without TypeScript; one fails) is
+  extracted in the calling thread: same result (`extract-pool.test.ts` compares both on a varied
+  corpus and the help vault).
+- `bench` reports the event loop's longest gap while indexing. Help vault cold: 14.2 → 8.0 s,
+  longest gap 895 → 63 ms; 10k notes (background): 3.5 → 2.2 s, 236 → 75 ms. In the desktop app
+  (help vault): indexed in 11.9 → 6.1 s, longest wait of a window's request 635 → 63 ms.
 
 ## Version history (`version-store.ts`, `git-versions.ts`, wiring in `vault.ts`)
 

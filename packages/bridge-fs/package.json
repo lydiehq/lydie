@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./service": "./src/service.ts"
+    "./service": "./src/service.ts",
+    "./extract-worker": "./src/extract-worker.ts"
   },
   "scripts": {
     "test": "bun test --timeout 60000 ./src",

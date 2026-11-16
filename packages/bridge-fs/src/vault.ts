@@ -24,6 +24,7 @@ import type { NodeStoreOptions } from "@lydie/store/node";
 import { Bridge } from "./bridge.ts";
 import type { IndexReport, VaultStatus } from "./bridge.ts";
 import { extractBody } from "./content.ts";
+import type { ExtractWorker } from "./extract-pool.ts";
 import type { WriteHooks } from "./fs.ts";
 import {
   gitAvailable,
@@ -69,6 +70,11 @@ export type OpenVaultOptions = {
   // file writes, open documents and rescans wait for the index (the bridge's queue). A folder
   // opened for the first time while empty is indexed before resolving either way.
   indexInBackground?: boolean;
+  // Starts a thread that extracts Markdown while many files are indexed (a first open). Default:
+  // `extract-worker.ts` itself, which runs under Bun; a bundled app passes its build of
+  // `@lydie/bridge-fs/extract-worker`. null: extract in this thread. Without a working thread the
+  // index extracts here, with the same result.
+  extractWorker?: ExtractWorker | null;
 };
 
 const NOT_INDEXED: IndexReport = {
@@ -205,6 +211,7 @@ export async function openVault(options: OpenVaultOptions): Promise<Vault> {
     ...(options.hooks ? { hooks: options.hooks } : {}),
     ...(typeof options.watch === "object" ? { watch: options.watch } : {}),
     ...(options.onError ? { onError: options.onError } : {}),
+    ...(options.extractWorker !== undefined ? { extractWorker: options.extractWorker } : {}),
   });
   const listeners = new Set<(events: readonly LydieEvent[]) => void>();
   const runtime = createRuntime({

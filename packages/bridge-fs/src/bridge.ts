@@ -53,6 +53,8 @@ import {
   obsidianTypes,
   sameDefinition,
 } from "./databases.ts";
+import { defaultExtractWorker, ExtractPool } from "./extract-pool.ts";
+import type { ExtractWorker } from "./extract-pool.ts";
 import {
   atomicWrite,
   exists,
@@ -171,6 +173,8 @@ export type BridgeOptions = {
   // The actor that editor saves run as.
   actor: Actor;
   onError?: (error: unknown) => void;
+  // Threads for the index's Markdown extraction: see `OpenVaultOptions.extractWorker`.
+  extractWorker?: ExtractWorker | null;
 };
 
 // `base`: the last agreed text of an open document; `parsed`: its parse once known, the original
@@ -200,6 +204,9 @@ type Written = {
 
 // Files written at once by an operation that touches many documents (database rows).
 const WRITE_CONCURRENCY = 8;
+
+// Chunks of the index (500 files) extracted ahead of the one being written.
+const EXTRACT_AHEAD = 3;
 
 export class Bridge {
   readonly root: string;
@@ -682,81 +689,101 @@ export class Bridge {
     const memory = memoryDocs(desired);
     const bodies = [...contents.entries()];
     const chunk = 500;
-    for (let i = 0; i < bodies.length; i += chunk) {
-      const slice = bodies.slice(i, i + chunk).map(([id, content]) => {
-        const x = extractBody(content.body);
-        return { id, content, x };
-      });
-      const prepared: {
-        id: string;
-        content: FileContent;
-        x: Extracted;
-        links: LinkRow[];
-        doc: Document;
-      }[] = [];
-      for (const { id, content, x } of slice) {
-        const doc = desired.get(id)!;
-        const links: LinkRow[] = [];
-        // Body links, then [[links]] in properties (relation values are added once databases
-        // are known, see indexDatabases).
-        const all = [
-          ...x.links.map((link) => ({ link, property: null as string | null })),
-          ...propertyLinks(doc.properties).map((link) => ({ link, property: link.property })),
-        ];
-        for (const { link, property } of all) {
-          const targetId = await resolveLink(memory, doc, link);
-          links.push({
-            id: uuid(),
-            workspaceId: ws,
-            sourceId: id,
-            sourceBlockId: link.sourceBlockId,
-            targetId,
-            targetRef: link.target,
-            targetKey: targetKey(link.target),
-            targetHeading: link.heading,
-            targetBlockId: link.blockId,
-            kind: link.kind,
-            syntax: link.syntax,
-            sourceProperty: property,
-          });
-        }
-        prepared.push({ id, content, x, links, doc });
-      }
-      const blocksOf = (id: string, x: Extracted) =>
-        x.blocks.map((b) => ({
-          docId: id,
-          blockId: b.id,
-          type: b.type,
-          text: b.text,
-          order: b.order,
-        }));
-      await this.store.ports.db.write(async (tx) => {
-        // A chunk in a few statements where the store can: per-row statements are round trips to
-        // the database worker, which dominated a first open.
-        const { bodies: b, links: l, blocks: k } = tx;
-        if (b.putMany && l.replaceFromMany && k?.replaceForMany) {
-          await b.putMany(
-            prepared.map(({ id, content, doc }) => ({
-              id,
+    // Many bodies are extracted on other threads, a few chunks ahead of the one being written:
+    // enough to keep the threads busy, few enough that the extracts are not all held at once.
+    const texts = bodies.map(([, content]) => content.body);
+    const workers =
+      this.options.extractWorker === undefined ? defaultExtractWorker : this.options.extractWorker;
+    const pool = workers ? ExtractPool.start(workers, texts) : null;
+    const extracts: (() => Promise<Extracted[]>)[] = [];
+    const schedule = (i: number) => {
+      if (i >= texts.length) return;
+      const slice = texts.slice(i, i + chunk);
+      extracts.push(pool ? pool.extract(slice) : async () => slice.map(extractBody));
+    };
+    for (let i = 0; i < EXTRACT_AHEAD * chunk; i += chunk) schedule(i);
+    try {
+      for (let i = 0; i < bodies.length; i += chunk) {
+        schedule(i + EXTRACT_AHEAD * chunk);
+        const xs = await extracts[i / chunk]!();
+        const prepared: {
+          id: string;
+          content: FileContent;
+          x: Extracted;
+          links: LinkRow[];
+          doc: Document;
+        }[] = [];
+        for (const [j, [id, content]] of bodies.slice(i, i + chunk).entries()) {
+          const x = xs[j]!;
+          const doc = desired.get(id)!;
+          const links: LinkRow[] = [];
+          // Body links, then [[links]] in properties (relation values are added once databases
+          // are known, see indexDatabases).
+          const all = [
+            ...x.links.map((link) => ({ link, property: null as string | null })),
+            ...propertyLinks(doc.properties).map((link) => ({ link, property: link.property })),
+          ];
+          for (const { link, property } of all) {
+            const targetId = await resolveLink(memory, doc, link);
+            links.push({
+              id: uuid(),
               workspaceId: ws,
-              body: { markdown: content.body, version: bodyVersion(content.body) },
-              updatedAt: doc.updatedAt,
-            })),
-          );
-          await l.replaceFromMany(prepared.map(({ id, links }) => ({ sourceId: id, links })));
-          await k.replaceForMany(
-            prepared.map(({ id, x }) => ({ docId: id, workspaceId: ws, blocks: blocksOf(id, x) })),
-          );
-          return;
+              sourceId: id,
+              sourceBlockId: link.sourceBlockId,
+              targetId,
+              targetRef: link.target,
+              targetKey: targetKey(link.target),
+              targetHeading: link.heading,
+              targetBlockId: link.blockId,
+              kind: link.kind,
+              syntax: link.syntax,
+              sourceProperty: property,
+            });
+          }
+          prepared.push({ id, content, x, links, doc });
         }
-        for (const { id, content, x, links, doc } of prepared) {
-          const markdown = content.body;
-          await b.put(id, ws, { markdown, version: bodyVersion(markdown) }, doc.updatedAt);
-          await l.replaceFrom(id, links);
-          await k?.replaceFor(id, ws, blocksOf(id, x));
-        }
-      });
-      this.setStatus({ indexed: Math.min(i + chunk, bodies.length) });
+        const blocksOf = (id: string, x: Extracted) =>
+          x.blocks.map((b) => ({
+            docId: id,
+            blockId: b.id,
+            type: b.type,
+            text: b.text,
+            order: b.order,
+          }));
+        await this.store.ports.db.write(async (tx) => {
+          // A chunk in a few statements where the store can: per-row statements are round trips to
+          // the database worker, which dominated a first open.
+          const { bodies: b, links: l, blocks: k } = tx;
+          if (b.putMany && l.replaceFromMany && k?.replaceForMany) {
+            await b.putMany(
+              prepared.map(({ id, content, doc }) => ({
+                id,
+                workspaceId: ws,
+                body: { markdown: content.body, version: bodyVersion(content.body) },
+                updatedAt: doc.updatedAt,
+              })),
+            );
+            await l.replaceFromMany(prepared.map(({ id, links }) => ({ sourceId: id, links })));
+            await k.replaceForMany(
+              prepared.map(({ id, x }) => ({
+                docId: id,
+                workspaceId: ws,
+                blocks: blocksOf(id, x),
+              })),
+            );
+            return;
+          }
+          for (const { id, content, x, links, doc } of prepared) {
+            const markdown = content.body;
+            await b.put(id, ws, { markdown, version: bodyVersion(markdown) }, doc.updatedAt);
+            await l.replaceFrom(id, links);
+            await k?.replaceFor(id, ws, blocksOf(id, x));
+          }
+        });
+        this.setStatus({ indexed: Math.min(i + chunk, bodies.length) });
+      }
+    } finally {
+      await pool?.close();
     }
     // Sources that were not re-read keep their links; new and renamed titles may resolve some of
     // their dangling ones.

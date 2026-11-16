@@ -20,6 +20,7 @@ export {
 export type { OpenVaultOptions, Vault } from "./vault.ts";
 export { extractBody, prefixLength, readContent } from "./content.ts";
 export { deriveId } from "./ids.ts";
+export type { ExtractWorker } from "./extract-pool.ts";
 export { exportsTo } from "./exports.ts";
 export type { WriteHooks } from "./fs.ts";
 export type { WatchOptions } from "./watch.ts";
