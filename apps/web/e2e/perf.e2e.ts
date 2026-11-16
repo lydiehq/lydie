@@ -2,6 +2,8 @@
 // 5k children, a 2k-block document), seeded once through `?seed=large` into a reused profile.
 // Thresholds are generous (CI machines vary); the measured numbers are printed and written to
 // /tmp/lydie-web-perf.json. Run: `bun run test:perf` (builds first; the first run seeds, ~minutes).
+// LYDIE_PERF_PROFILE, LYDIE_PERF_PORT and LYDIE_PERF_OUT_DIR (a build of its own) keep a run apart
+// from another one.
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -18,7 +20,10 @@ const results: Record<string, unknown> = {};
 
 beforeAll(async () => {
   // Same origin every run, so the seeded database in the profile is found again.
-  server = await startServer(Number(process.env.LYDIE_PERF_PORT ?? 5197));
+  server = await startServer(
+    Number(process.env.LYDIE_PERF_PORT ?? 5197),
+    process.env.LYDIE_PERF_OUT_DIR ?? ".e2e/main",
+  );
   mkdirSync(PROFILE, { recursive: true });
   context = await browserType().launchPersistentContext(PROFILE, {
     viewport: { width: 1400, height: 900 },
@@ -233,8 +238,9 @@ test("open a document, switch tabs without mounting", async () => {
   expect(median(switches)).toBeLessThan(34);
 });
 
-test("typing in the 2,000-block document", async () => {
-  await page.evaluate(async () => {
+// The seed's 2,000-block document, open in the active tab.
+async function openLongDocument() {
+  const id = await page.evaluate(async () => {
     const { host } = (
       window as unknown as {
         __lydie: {
@@ -251,7 +257,12 @@ test("typing in the 2,000-block document", async () => {
       limit: 5,
     });
     const doc = hits.find((h) => h.title === "Long document");
-    if (doc) host.app.openDoc(doc.id, { mode: "tab" });
+    if (
+      doc &&
+      !document.querySelector(`[data-testid=tab-view][data-active] [data-doc-id="${doc.id}"]`)
+    )
+      host.app.openDoc(doc.id, { mode: "tab" });
+    return doc?.id ?? null;
   });
   const editor = page.locator("[data-testid=tab-view][data-active] [data-doc-content]");
   await editor.waitFor({ timeout: 30_000 });
@@ -260,10 +271,22 @@ test("typing in the 2,000-block document", async () => {
     30_000,
     "long document rendered",
   );
-  await editor.locator("p").nth(5).click();
+  return { id: id!, editor };
+}
+
+// From now on, every keypress's time to the next painted frame, and every long task (Chromium
+// only: elsewhere `longTasks` stays null).
+async function startRecording() {
   await page.evaluate(() => {
-    const w = window as unknown as { __latencies: number[] };
+    const w = window as unknown as {
+      __latencies: number[];
+      __longTasks: number[] | null;
+      __recording?: boolean;
+    };
     w.__latencies = [];
+    w.__longTasks = PerformanceObserver.supportedEntryTypes.includes("longtask") ? [] : null;
+    if (w.__recording) return;
+    w.__recording = true;
     document.addEventListener(
       "keydown",
       (event) => {
@@ -275,19 +298,91 @@ test("typing in the 2,000-block document", async () => {
       },
       true,
     );
+    if (w.__longTasks) {
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) w.__longTasks?.push(entry.duration);
+      }).observe({ type: "longtask" });
+    }
   });
+}
+
+async function recorded() {
+  const { latencies, longTasks } = await page.evaluate(() => {
+    const w = window as unknown as { __latencies: number[]; __longTasks: number[] | null };
+    return { latencies: w.__latencies, longTasks: w.__longTasks };
+  });
+  latencies.sort((a, b) => a - b);
+  return {
+    latencies,
+    p50: latencies[Math.floor(latencies.length / 2)]!,
+    p95: latencies[Math.floor(latencies.length * 0.95)]!,
+    max: latencies.at(-1)!,
+    longTasks: longTasks && [...longTasks].sort((a, b) => b - a),
+  };
+}
+
+test("typing in the 2,000-block document", async () => {
+  const { editor } = await openLongDocument();
+  await editor.locator("p").nth(5).click();
+  await startRecording();
   await page.keyboard.type("the quick brown fox jumps over", { delay: 40 });
   await page.waitForTimeout(500);
-  const latencies = await page.evaluate(
-    () => (window as unknown as { __latencies: number[] }).__latencies,
-  );
-  latencies.sort((a, b) => a - b);
-  results.typingLatencyMs = {
-    p50: latencies[Math.floor(latencies.length / 2)],
-    p95: latencies[Math.floor(latencies.length * 0.95)],
-    max: latencies.at(-1),
-  };
+  const r = await recorded();
+  results.typingLatencyMs = { p50: r.p50, p95: r.p95, max: r.max };
   // Keypress → next painted frame.
-  expect(latencies[Math.floor(latencies.length / 2)]!).toBeLessThan(25);
-  expect(latencies[Math.floor(latencies.length * 0.95)]!).toBeLessThan(34);
+  expect(r.p50).toBeLessThan(25);
+  expect(r.p95).toBeLessThan(34);
+});
+
+// Typing with pauses lets the 400 ms save run between words: each save serialises and verifies
+// the body, and the runtime extracts it for the index, on the page's thread.
+test("saving while typing in the 2,000-block document", async () => {
+  const { id, editor } = await openLongDocument();
+  await editor.locator("p").nth(40).click();
+  await page.keyboard.press("End");
+  await startRecording();
+  const words = ["saved", "between", "every", "word", "here"];
+  for (const word of words) {
+    await page.keyboard.type(` ${word}`, { delay: 40 });
+    await page.waitForTimeout(600);
+  }
+  const r = await recorded();
+  const body = await page.evaluate(async (docId) => {
+    const w = window as unknown as {
+      __lydie: {
+        host: {
+          backend: {
+            query: (n: string, p: unknown) => Promise<{ body: { markdown: string } | null }[]>;
+          };
+        };
+      };
+    };
+    const [doc] = await w.__lydie.host.backend.query("doc.get", { id: docId, includeBody: true });
+    return doc?.body?.markdown ?? "";
+  }, id);
+  results.savingWhileTyping = {
+    p50: r.p50,
+    p95: r.p95,
+    max: r.max,
+    longTasksMs: r.longTasks,
+  };
+  expect(body).toContain(` ${words.join(" ")}`);
+  expect(r.p50).toBeLessThan(25);
+  // A save may land on a keypress; it must still not hold the page for long.
+  if (r.longTasks) expect(r.longTasks[0] ?? 0).toBeLessThan(250);
+});
+
+test("typing in a code block of the 2,000-block document", async () => {
+  const { editor } = await openLongDocument();
+  const code = editor.locator("pre code").nth(10);
+  await code.click();
+  await page.keyboard.press("End");
+  await startRecording();
+  await page.keyboard.type(" + value * 2", { delay: 40 });
+  await page.waitForTimeout(600);
+  const r = await recorded();
+  results.codeBlockTypingMs = { p50: r.p50, p95: r.p95, max: r.max, longTasksMs: r.longTasks };
+  expect(await code.textContent()).toContain(" + value * 2");
+  expect(r.p50).toBeLessThan(25);
+  expect(r.p95).toBeLessThan(34);
 });
