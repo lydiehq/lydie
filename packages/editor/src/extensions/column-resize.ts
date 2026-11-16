@@ -1,9 +1,10 @@
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { NodeSelection, Plugin, PluginKey, Selection } from "@tiptap/pm/state";
-import type { EditorState } from "@tiptap/pm/state";
+import type { EditorState, Transaction } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import type { EditorView } from "@tiptap/pm/view";
 
+import { changedRanges } from "./changed-ranges";
 import { columnShares, MIN_COLUMN_SHARE, resizeColumns } from "./column-layout";
 
 // Column widths on screen, and dragging the gap between two columns to change them
@@ -23,24 +24,67 @@ const widthsOf = (row: ProseMirrorNode) =>
 
 // Each column's share of its row as its flex-grow: a column without a width needs its siblings'
 // widths, which renderHTML cannot see.
-function widthDecorations(doc: ProseMirrorNode, preview: Preview | null) {
+function rowDecorations(
+  row: ProseMirrorNode,
+  pos: number,
+  preview: Preview | null,
+  decorations: Decoration[],
+) {
+  const shares =
+    preview?.pos === pos && preview.shares.length === row.childCount
+      ? preview.shares
+      : columnShares(widthsOf(row));
+  row.forEach((column, offset, i) => {
+    decorations.push(
+      Decoration.node(pos + 1 + offset, pos + 1 + offset + column.nodeSize, {
+        style: `flex-grow: ${String(shares[i])}`,
+      }),
+    );
+  });
+}
+
+export function widthDecorations(doc: ProseMirrorNode, preview: Preview | null) {
   const decorations: Decoration[] = [];
   doc.descendants((node, pos) => {
     if (node.type.name !== "columnList") return !node.isTextblock && !node.isAtom;
-    const shares =
-      preview?.pos === pos && preview.shares.length === node.childCount
-        ? preview.shares
-        : columnShares(widthsOf(node));
-    node.forEach((column, offset, i) => {
-      decorations.push(
-        Decoration.node(pos + 1 + offset, pos + 1 + offset + column.nodeSize, {
-          style: `flex-grow: ${String(shares[i])}`,
-        }),
-      );
-    });
-    return true;
+    rowDecorations(node, pos, preview, decorations);
+    return false;
   });
   return DecorationSet.create(doc, decorations);
+}
+
+// Only the rows a transaction touched (or whose preview started or ended) are drawn again; typing
+// outside a row, or in a document without rows, only maps the set.
+function updateWidths(
+  tr: Transaction,
+  value: WidthsState,
+  preview: Preview | null,
+  previous: Preview | null,
+) {
+  const doc = tr.doc;
+  const rows = new Map<number, ProseMirrorNode>();
+  const size = doc.content.size;
+  for (const [from, to] of changedRanges(tr)) {
+    doc.nodesBetween(Math.max(0, from - 1), Math.min(size, to + 1), (node, pos) => {
+      if (node.type.name !== "columnList") return !node.isTextblock && !node.isAtom;
+      rows.set(pos, node);
+      return false;
+    });
+  }
+  for (const pos of [preview?.pos, previous?.pos]) {
+    const node = pos === undefined ? null : doc.nodeAt(pos);
+    if (pos !== undefined && node?.type.name === "columnList") rows.set(pos, node);
+  }
+  let set = value.decorations.map(tr.mapping, doc);
+  if (rows.size === 0) return set;
+  const removed: Decoration[] = [];
+  const added: Decoration[] = [];
+  for (const [pos, row] of [...rows].sort(([a], [b]) => a - b)) {
+    removed.push(...set.find(pos + 1, pos + row.nodeSize - 1));
+    rowDecorations(row, pos, preview, added);
+  }
+  set = set.remove(removed);
+  return set.add(doc, added);
 }
 
 export const columnWidths = () =>
@@ -48,15 +92,17 @@ export const columnWidths = () =>
     key: widthsKey,
     state: {
       init: (_, state) => ({ decorations: widthDecorations(state.doc, null), preview: null }),
-      apply(tr, value, _old, state) {
+      apply(tr, value) {
         const meta = tr.getMeta(widthsKey) as Preview | null | undefined;
         if (meta === undefined && !tr.docChanged) return value;
-        let preview = meta === undefined ? value.preview : meta;
-        if (preview && meta === undefined) {
-          const mapped = tr.mapping.mapResult(preview.pos, 1);
-          preview = mapped.deleted ? null : { ...preview, pos: mapped.pos };
-        }
-        return { decorations: widthDecorations(state.doc, preview), preview };
+        const mapPreview = (p: Preview | null) => {
+          if (!p) return null;
+          const mapped = tr.mapping.mapResult(p.pos, 1);
+          return mapped.deleted ? null : { ...p, pos: mapped.pos };
+        };
+        const previous = mapPreview(value.preview);
+        const preview = meta === undefined ? previous : meta;
+        return { decorations: updateWidths(tr, value, preview, previous), preview };
       },
     },
     props: { decorations: (state) => widthsKey.getState(state)?.decorations },

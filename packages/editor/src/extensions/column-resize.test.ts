@@ -2,13 +2,18 @@ import { afterEach, describe, expect, it } from "bun:test";
 
 import { Editor } from "@tiptap/core";
 import type { JSONContent } from "@tiptap/core";
-import { NodeSelection } from "@tiptap/pm/state";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { EditorState, NodeSelection } from "@tiptap/pm/state";
+import type { DecorationSet } from "@tiptap/pm/view";
 
+import { getLydieSchema } from "../schema";
 import {
   COLUMN_RESIZE_STEP,
   COLUMN_RESIZE_STEP_LARGE,
   columnsStacked,
+  columnWidths,
   setColumnsStacked,
+  widthDecorations,
 } from "./column-resize";
 import { createLydieExtensions } from "./index";
 
@@ -238,5 +243,74 @@ describe("stacked columns (a narrow editor)", () => {
     expect(bar()!.hidden).toBe(true);
     expect(target.view.hasFocus()).toBe(true);
     expect(widths(target)).toEqual([null, null]);
+  });
+});
+
+describe("column width decorations", () => {
+  it("an edit draws what a full pass would, after random edits and previews", () => {
+    const schema = getLydieSchema();
+    const plugin = columnWidths();
+    const paragraph = (text: string) => schema.nodes.paragraph!.create(null, schema.text(text));
+    const row = (widths: (number | null)[]) =>
+      schema.nodes.columnList!.create(
+        null,
+        widths.map((width, i) => schema.nodes.column!.create({ width }, paragraph(`Column ${i}`))),
+      );
+    let state = EditorState.create({
+      doc: schema.nodes.doc!.create(null, [
+        paragraph("Before"),
+        row([40, null]),
+        paragraph("Between"),
+        row([null, null, 20]),
+      ]),
+      plugins: [plugin],
+    });
+    let seed = 7;
+    const next = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+    const drawn = (set: DecorationSet) =>
+      set
+        .find()
+        .map(
+          (d) =>
+            `${d.from}-${d.to}:${JSON.stringify((d as unknown as { type: { attrs: object } }).type.attrs)}`,
+        );
+    for (let step = 0; step < 120; step++) {
+      const rows: { node: ProseMirrorNode; pos: number }[] = [];
+      const columns: number[] = [];
+      const text: number[] = [];
+      state.doc.descendants((node, pos) => {
+        if (node.type.name === "columnList") rows.push({ node, pos });
+        if (node.type.name === "column") columns.push(pos);
+        if (node.isTextblock) text.push(pos + 1);
+        return true;
+      });
+      const pick = <T>(items: T[]) => items[Math.floor(next() * items.length)]!;
+      const tr = state.tr;
+      const kind = Math.floor(next() * 6);
+      if (kind === 0 && columns.length)
+        tr.setNodeAttribute(pick(columns), "width", pick([null, 25, 50]));
+      else if (kind === 1) tr.insert(pick([0, state.doc.content.size]), row([null, 30]));
+      else if (kind === 2 && rows.length) {
+        // A drag's preview of one row, then its end.
+        const r = pick(rows);
+        tr.setMeta(plugin, {
+          pos: r.pos,
+          shares: Array.from({ length: r.node.childCount }, (_, i) => 10 + i),
+        });
+      } else if (kind === 3) tr.setMeta(plugin, null);
+      else if (kind === 4 && columns.length > 2) {
+        const pos = pick(columns);
+        const node = state.doc.nodeAt(pos)!;
+        const $pos = state.doc.resolve(pos);
+        if ($pos.parent.childCount > 1) tr.delete(pos, pos + node.nodeSize);
+        else tr.insertText("x", pick(text));
+      } else tr.insertText("x", pick(text));
+      state = state.apply(tr);
+      const value = plugin.getState(state) as { decorations: DecorationSet; preview: never };
+      expect(drawn(value.decorations)).toEqual(drawn(widthDecorations(state.doc, value.preview)));
+    }
   });
 });
