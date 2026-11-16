@@ -255,8 +255,10 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   that scrolls fades an edge only while there is more that way (default depth min(8%, 24px), set in `index.css`), `scroll-fade-b` the bottom only
   (menus and dropdowns, whose section titles stick to the top), `scroll-fade-<n>` the depth; it is
   a mask, so backgrounds, borders and shadows go on a wrapper (the sidebar trees and favorites,
-  the settings navigation, the palette, menus, view tabs); `editor-content.css`, the document typography, including v2
-  node types, tables (a rounded card: `separate` borders, hairline rules, tinted header row, the
+  the settings navigation, the palette, menus, view tabs); `editor-content.css`, the document typography (after Linear's: body text
+  in gray-900, semibold headings and bold, markers as strong as the text and inside the text column,
+  links in indigo-700 with an underline only on hover, inline code as a bordered chip; proportional
+  figures, since Inter's tabular ones widen hyphens and commas), including v2 node types, tables (a rounded card: `separate` borders, hairline rules, tinted header row, the
   text column wide; cells wrap, and a table that still does not fit scrolls sideways inside the
   column, clipped at its edges) with their hover "+" bars, collection embeds
   (`[data-embed-bare]`, starting at the text column and running on across the editor's whole
