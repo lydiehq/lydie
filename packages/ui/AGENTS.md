@@ -124,8 +124,8 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   rounded-lg` recipe), Separator, CollaborationCaret + `renderCollaborationCaret`/
   `renderCollaborationSelection`/`useUserColor`.
 - **Identity** (`src/identity`): the shape says what kind of thing it is (a person is a circle,
-  a place a squircle), the surface who drew it (people and places on paper, machines on a screen,
-  Lydie in its green). `Avatar` (a person: `seed` = their user id; their `image` if they have one,
+  a place a squircle), the drawing who it is (people and places get doodles, agents a sparkle,
+  Lydie its mark in its green). `Avatar` (a person: `seed` = their user id; their `image` if they have one,
   else `ScribbleIcon` on a circle; takes `style`), `SpaceIcon` (a workspace, teamspace or app:
   its `image` cut to the squircle in SVG if it has one, else `ScribbleIcon` on a squircle;
   workspaces are seeded by name, because a desktop folder's id in the switcher is not its
@@ -135,9 +135,11 @@ root (this monorepo), allow it in `server.fs.allow` or the Inter font 403s (see 
   `description`, `onSave(image)` (a rejection keeps the editor open), `readOnly`, `share`
   (`{ label, onShare(drawing) }`: a checkbox under a drawing, off by default; `onShare` gets the
   strokes, pen and shape after the picture is saved); the
-  account's avatar and a workspace's picture), `BotAvatar` (an MCP client, API token or the CLI:
-  `logo` if it has one, else `ScribbleIcon` with `ink="screen"`; `behalf` puts the person it
-  worked for in a cut-out at the bottom right), `LydieAvatar` (the system: the white mark on the
+  account's avatar and a workspace's picture), `BotAvatar` (an agent: an MCP client, API token or the CLI;
+  `logo` if it has one, else a hand-drawn sparkle in a pen on the people's paper,
+  `agentScribbleFor(seed)`, one of `AGENT_SCRIBBLES` (one sparkle, or a big and a small one), so it
+  reads as a machine at 16 px and never passes for a person; `behalf` puts the person it worked
+  for in a cut-out at the bottom right), `LydieAvatar` (the system: the white mark on the
   brand green), `LydieMark` (the mark in `currentColor`; LoadingState spins it). `ScribbleIcon`
   (`Scribble.tsx`; the doodles and pictures without React are `scribbles.ts`, also exported as
   `@lydie/ui/scribbles` for the core): one of ten pen doodles, `SCRIBBLES`, as one wobbly stroke in one of

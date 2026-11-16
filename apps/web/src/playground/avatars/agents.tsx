@@ -1,4 +1,5 @@
 import {
+  agentScribbleFor,
   AriaDialog,
   Avatar,
   BotAvatar,
@@ -9,7 +10,6 @@ import {
   More1Regular,
   Popover,
   SCRIBBLE_PAPER,
-  SCRIBBLE_PENS,
   scribbleFor,
   ScribbleIcon,
   scribbleOutline,
@@ -79,15 +79,6 @@ function box(x0: number, y0: number, x1: number, y1: number, round: number): P[]
   out.push(out[0]!);
   return out;
 }
-
-const SPARKLES: Scribble[] = [
-  { id: "sparkle", name: "Sparkle", strokes: () => [sparkle(C, C, 31)] },
-  {
-    id: "sparkles",
-    name: "Sparkles",
-    strokes: () => [sparkle(C - 5, C + 5, 27), sparkle(C + 19, C - 19, 11)],
-  },
-];
 
 // Little robot heads: a box, an antenna, two eyes. The seed picks the antenna and the eyes, so
 // Claude and Cursor are not the same robot.
@@ -222,22 +213,17 @@ function Behalf({
   );
 }
 
-const penFor = (seed: string) => pick(SCRIBBLE_PENS, seed, "agent-pen");
+// The agent's own pen, as BotAvatar draws it.
+const penFor = (seed: string) => agentScribbleFor(seed).pen;
 
 export const AGENT_VARIANTS: AgentVariant[] = [
   {
     id: "sparkle",
     name: "Sparkle",
     description:
-      "A hand-drawn sparkle on the people's paper: the sign everyone already reads as AI, in our pen. One or two sparkles and a pen per agent.",
+      "What the app has now (BotAvatar): a hand-drawn sparkle on the people's paper, the sign everyone already reads as AI, in our pen. One or two sparkles and a pen per agent.",
     render: (seed, size, behalf) => (
-      <Behalf behalf={behalf} size={size}>
-        <ScribbleIcon
-          choice={{ scribble: pick(SPARKLES, seed, "sparkle"), pen: penFor(seed), seed }}
-          size={size}
-          shape="circle"
-        />
-      </Behalf>
+      <BotAvatar seed={seed} size={size} behalf={behalf && size >= 20 ? { seed: behalf } : null} />
     ),
   },
   {
@@ -288,9 +274,11 @@ export const AGENT_VARIANTS: AgentVariant[] = [
     id: "screen",
     name: "On a screen",
     description:
-      "What the app has now (BotAvatar): the doodles in a light colour on a dark screen, for comparison.",
+      "What the app had before: the people's doodles in a light colour on a dark screen, for comparison.",
     render: (seed, size, behalf) => (
-      <BotAvatar seed={seed} size={size} behalf={behalf && size >= 20 ? { seed: behalf } : null} />
+      <Behalf behalf={behalf} size={size}>
+        <ScribbleIcon seed={seed} ink="screen" size={size} shape="circle" />
+      </Behalf>
     ),
   },
 ];

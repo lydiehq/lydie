@@ -277,7 +277,7 @@ export const ROBOT_VARIANTS: Variant[] = [
     id: "screen",
     name: "On a screen",
     description:
-      "What the app has now: the same doodles in a light colour on a dark screen (the app's logo when it has one), with the person it worked for as a badge.",
+      "What the app has now: a hand-drawn sparkle on paper (the app's logo when it has one), with the person it worked for as a badge.",
     render: (seed, size) => (
       <BotAvatar seed={seed} size={size} behalf={size >= 20 ? { seed: "Maya Lindqvist" } : null} />
     ),

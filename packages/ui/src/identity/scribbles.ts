@@ -157,6 +157,23 @@ export const SCRIBBLES: Scribble[] = [
   },
 ];
 
+// A four-pointed sparkle, the sign people already read as "AI": an astroid, pinched further.
+function sparkle(cx: number, cy: number, r: number): P[] {
+  const pinch = (v: number) => Math.sign(v) * Math.abs(v) ** 3.4;
+  return curve(120, 0, TAU, (t) => [cx + r * pinch(Math.cos(t)), cy + r * pinch(Math.sin(t))]);
+}
+
+// What agents draw instead: one sparkle, or a big one and a small one, so it reads as a machine
+// at 16 px and never passes for a person.
+export const AGENT_SCRIBBLES: Scribble[] = [
+  { id: "sparkle", name: "Sparkle", strokes: () => [sparkle(C, C, 31)] },
+  {
+    id: "sparkles",
+    name: "Sparkles",
+    strokes: () => [sparkle(C - 5, C + 5, 27), sparkle(C + 19, C - 19, 11)],
+  },
+];
+
 // Pens: literal colours on purpose, like the paper; a doodle is a picture in both themes.
 export const SCRIBBLE_PENS = ["#2747c9", "#20232b", "#d93a3a", "#1f8a5b", "#6a4bd1", "#7a4a2a"];
 export const SCRIBBLE_PAPER = "#faf9f6";
@@ -170,6 +187,16 @@ export function scribbleFor(seed: string): ScribbleChoice {
   const r = random(`scribble:${seed}`);
   return {
     scribble: SCRIBBLES[Math.floor(r() * SCRIBBLES.length)]!,
+    pen: SCRIBBLE_PENS[Math.floor(r() * SCRIBBLE_PENS.length)]!,
+    seed,
+  };
+}
+
+// An agent's sparkle and pen, from its seed (its app).
+export function agentScribbleFor(seed: string): ScribbleChoice {
+  const r = random(`agent:${seed}`);
+  return {
+    scribble: AGENT_SCRIBBLES[Math.floor(r() * AGENT_SCRIBBLES.length)]!,
     pen: SCRIBBLE_PENS[Math.floor(r() * SCRIBBLE_PENS.length)]!,
     seed,
   };
