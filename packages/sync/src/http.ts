@@ -42,6 +42,10 @@ export type ApiClientOptions = {
 export type RequestOptions = {
   body?: unknown;
   signal?: AbortSignal;
+  // Gives up after this long with a "network" error, as if offline. For requests something waits
+  // on (the session check at startup), where a stalled connection would otherwise hang for the
+  // operating system's TCP timeout.
+  timeoutMs?: number;
   // Default true: send the bearer token.
   auth?: boolean;
   // A 401 here refuses the request itself (a wrong two-step code), not the session: do not mark
@@ -75,19 +79,28 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     if (token) headers.authorization = `Bearer ${token}`;
     if (options.version) headers["lydie-version"] = options.version;
     if (req.body !== undefined) headers["content-type"] = "application/json";
+    const signals = [
+      ...(req.signal ? [req.signal] : []),
+      ...(req.timeoutMs !== undefined ? [AbortSignal.timeout(req.timeoutMs)] : []),
+    ];
+    const signal = signals.length > 1 ? AbortSignal.any(signals) : signals[0];
     let response: Response;
+    let text: string;
     try {
       response = await doFetch(path.startsWith("http") ? path : `${baseUrl}${path}`, {
         method,
         headers,
         ...(req.body !== undefined ? { body: JSON.stringify(req.body) } : {}),
-        ...(req.signal ? { signal: req.signal } : {}),
+        ...(signal ? { signal } : {}),
+      });
+      text = await response.text().catch((error: unknown) => {
+        if (signal?.aborted) throw error;
+        return "";
       });
     } catch (error) {
       if (req.signal?.aborted) throw error;
       throw new ApiError("network", `${method} ${path}: ${messageOf(error)}`);
     }
-    const text = await response.text().catch(() => "");
     let data: unknown = null;
     if (text) {
       try {
