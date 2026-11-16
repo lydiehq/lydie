@@ -12,6 +12,12 @@ const installedNodeModules = dirname(
 
 export default defineConfig(({ command }) => ({
   main: {
+    resolve: {
+      // fflate's Node build declares a top-level `require`, and electron-vite's CommonJS shim
+      // then declares another in the same chunk (a SyntaxError at launch). Lydie uses only the
+      // synchronous APIs (Zip, inflateSync), which are the same in the browser build.
+      alias: [{ find: /^fflate$/, replacement: "fflate/browser" }],
+    },
     build: {
       minify: command === "build",
       rolldownOptions: {
