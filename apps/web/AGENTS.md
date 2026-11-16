@@ -166,8 +166,7 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   Safari and mobile browsers that tab says "Lydie is open in another tab" (`single-tab.ts`).
 - `?embed=1`: for a page that frames the app; posts `{ type: "lydie:embed-ready" }` to the parent
   once mounted. The marketing site no longer frames it (it mounts the try-out instead).
-  `Content-Security-Policy: frame-ancestors 'self' https://lydie.co http://localhost:4300` is set
-  by the dev and preview servers (production: CloudFront).
+  `frame-ancestors 'self' https://lydie.co http://localhost:4300` is part of the app's CSP.
 - `?seed=large` (dev, and builds with `VITE_LYDIE_SEED=1`): opens `lydie-bench.db` and seeds it once
   with `client/scripts/seed` (10k notes, a folder with 5k children, a 2k-block document; ~15 s).
 - `/playground` (dev only): the design-system and editor playground.
@@ -194,7 +193,20 @@ app (the marketing site's home page, which paints a captured copy of the shell f
 - "Sign in to Lydie Cloud" in the sidebar footer is a stub dialog (hosted sync wiring: see
   `packages/sync/INTEGRATION.md`).
 
+## Content-Security-Policy
+
+`csp.ts` builds the policy; the dev and preview servers serve it (`vite.config.ts`), and production
+serves the same directives. It mirrors the desktop renderer's (`apps/desktop/src/main/security.ts`):
+no inline or eval'd script (`'wasm-unsafe-eval'` for SQLite), inline styles, images and media from
+anywhere on https, no frames, no form posts. `connect-src` lists the core's origins: locally the API
+(`VITE_LYDIE_API_URL`, nothing extra when it is relative) and the sync (4180) and collab (4191)
+ports. The dev server adds `'unsafe-inline'` scripts (React Refresh's preamble) and `ws:` (HMR).
+A new third-party origin the app fetches from, or a frame, needs the policy changed in both places.
+
 ## Tests
+
+- E2E builds set `VITE_LYDIE_E2E=1`, which exposes `window.__lydie` (`{ host, bootMs }`, from
+  `src/boot.ts`) for the suites; the dev server has it too, builds for people do not.
 
 - `bun run test:e2e`: builds `.e2e/main` (e2e builds live in gitignored `.e2e/<suite>`, outside
   `dist/`, so a plain `vite build` cannot empty them mid-run), serves it with `vite preview` on a free port and runs

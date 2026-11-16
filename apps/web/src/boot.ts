@@ -36,7 +36,11 @@ export function bootOnce(): Promise<Host> {
     void booting.then(
       (host) => {
         performance.mark("lydie:ready");
-        (window as { __lydie?: unknown }).__lydie = { host, bootMs: performance.now() - started };
+        // A handle for the end-to-end and performance suites, which build with VITE_LYDIE_E2E=1;
+        // builds served to people do not expose the host to whatever runs in the page.
+        if (import.meta.env.DEV || import.meta.env.VITE_LYDIE_E2E === "1") {
+          (window as { __lydie?: unknown }).__lydie = { host, bootMs: performance.now() - started };
+        }
       },
       () => {},
     );

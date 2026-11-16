@@ -17,13 +17,13 @@
     "typecheck": "bun check",
     "test:e2e": "bun run build:e2e && bun test --timeout 120000 ./e2e/flows.e2e.ts",
     "test:perf": "bun run build:e2e && bun test --timeout 900000 ./e2e/perf.e2e.ts",
-    "test:e2e:databases": "VITE_LYDIE_SEED=1 vite build --configLoader runner --outDir .e2e/databases --emptyOutDir && bun test --timeout 900000 ./e2e/databases.e2e.ts ./e2e/databases-perf.e2e.ts",
-    "test:e2e:threads": "vite build --configLoader runner --outDir .e2e/threads --emptyOutDir && bun test --timeout 120000 ./e2e/threads.e2e.ts",
-    "test:e2e:threads:hosted": "VITE_LYDIE_API_URL=/__core vite build --configLoader runner --outDir .e2e/settings --emptyOutDir && bun test --timeout 240000 ./e2e/threads-hosted.e2e.ts",
-    "test:e2e:links": "vite build --configLoader runner --outDir .e2e/links --emptyOutDir && bun test --timeout 120000 ./e2e/links-features.e2e.ts",
-    "test:e2e:settings": "VITE_LYDIE_API_URL=/__core vite build --configLoader runner --outDir .e2e/settings --emptyOutDir && bun test --timeout 240000 ./e2e/settings-team.e2e.ts ./e2e/hosted.e2e.ts",
-    "build:e2e": "VITE_LYDIE_SEED=1 vite build --configLoader runner --outDir .e2e/main --emptyOutDir",
-    "build:e2e:desktop": "vite build --configLoader runner --outDir .e2e/desktop --emptyOutDir"
+    "test:e2e:databases": "VITE_LYDIE_E2E=1 VITE_LYDIE_SEED=1 vite build --configLoader runner --outDir .e2e/databases --emptyOutDir && bun test --timeout 900000 ./e2e/databases.e2e.ts ./e2e/databases-perf.e2e.ts",
+    "test:e2e:threads": "VITE_LYDIE_E2E=1 vite build --configLoader runner --outDir .e2e/threads --emptyOutDir && bun test --timeout 120000 ./e2e/threads.e2e.ts",
+    "test:e2e:threads:hosted": "VITE_LYDIE_E2E=1 VITE_LYDIE_API_URL=/__core vite build --configLoader runner --outDir .e2e/settings --emptyOutDir && bun test --timeout 240000 ./e2e/threads-hosted.e2e.ts",
+    "test:e2e:links": "VITE_LYDIE_E2E=1 vite build --configLoader runner --outDir .e2e/links --emptyOutDir && bun test --timeout 120000 ./e2e/links-features.e2e.ts",
+    "test:e2e:settings": "VITE_LYDIE_E2E=1 VITE_LYDIE_API_URL=/__core vite build --configLoader runner --outDir .e2e/settings --emptyOutDir && bun test --timeout 240000 ./e2e/settings-team.e2e.ts ./e2e/hosted.e2e.ts",
+    "build:e2e": "VITE_LYDIE_E2E=1 VITE_LYDIE_SEED=1 vite build --configLoader runner --outDir .e2e/main --emptyOutDir",
+    "build:e2e:desktop": "VITE_LYDIE_E2E=1 vite build --configLoader runner --outDir .e2e/desktop --emptyOutDir"
   },
   "dependencies": {
     "@lydie/app": "workspace:*",

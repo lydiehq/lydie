@@ -1,8 +1,9 @@
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-import { defineConfig, searchForWorkspaceRoot } from "vite";
+import { defineConfig, loadEnv, searchForWorkspaceRoot } from "vite";
 
+import { contentSecurityPolicy } from "./csp.ts";
 import { startupPreloads } from "./vite-startup.ts";
 import { appVite } from "./vite.shared.ts";
 
@@ -12,12 +13,29 @@ const installedNodeModules = dirname(
   dirname(createRequire(import.meta.url).resolve("vite/package.json")),
 );
 
-// Who may frame the app: itself and the marketing site (LYD-155). Production serves the same
-// header from CloudFront.
-const headers = {
-  "Content-Security-Policy":
-    "frame-ancestors 'self' https://lydie.co http://localhost:4300 http://127.0.0.1:4300",
-};
+// Who may frame the app: itself and the marketing site (LYD-155).
+const frameAncestors = [
+  "'self'",
+  "https://lydie.co",
+  "http://localhost:4300",
+  "http://127.0.0.1:4300",
+];
+
+// The core the app talks to locally: the API (VITE_LYDIE_API_URL; a relative one is a same-origin
+// proxy), and the sync and collab services the API hands out. Production serves the same policy
+// for its own origins.
+function cspHeaders(mode: string, dev: boolean) {
+  const api = loadEnv(mode, process.cwd(), "VITE_").VITE_LYDIE_API_URL ?? "http://localhost:4100";
+  const connect = [
+    ...(/^https?:/.test(api) ? [new URL(api).origin] : []),
+    "http://localhost:4180",
+    "ws://localhost:4180",
+    "ws://localhost:4191",
+  ];
+  return {
+    "Content-Security-Policy": contentSecurityPolicy({ connect, frameAncestors, dev }),
+  };
+}
 
 // Vendor chunks for the code every start needs (LYD-226): they change far less often than the app,
 // so a deploy leaves them cached, and they download in parallel. The lists are explicit packages,
@@ -36,7 +54,7 @@ const vendorChunks: Record<string, RegExp> = {
 
 const shared = appVite();
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   cacheDir: join(installedNodeModules, ".vite", "web"),
   build: {
     rolldownOptions: {
@@ -57,9 +75,9 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: true,
-    headers,
+    headers: cspHeaders(mode, true),
     // Dependencies (fonts, etc.) can live in an install root above client/ when it is a submodule.
     fs: { allow: [searchForWorkspaceRoot(process.cwd()), installedNodeModules] },
   },
-  preview: { port: 3000, strictPort: true, headers },
-});
+  preview: { port: 3000, strictPort: true, headers: cspHeaders(mode, false) },
+}));
