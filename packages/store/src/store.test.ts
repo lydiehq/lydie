@@ -97,7 +97,9 @@ describe("runtime + store end to end", () => {
 
   it("logs each mutation in the same transaction", async () => {
     const { runtime, store } = await openTestStore("synced");
+    expect(await store.oplog.isEmpty()).toBe(true);
     const doc = await runtime.ops.doc.create({ workspaceId: WS, title: "A", markdown: "x" });
+    expect(await store.oplog.isEmpty()).toBe(false);
     await runtime.ops.doc.get({ id: doc.id });
     await runtime.ops.doc.rename({ id: doc.id, title: "B" });
     const log = await store.oplog.list();

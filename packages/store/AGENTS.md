@@ -58,7 +58,7 @@ type Store = {
                                            // the tables a statement reads are resolved once per SQL string
   status: { get(): StoreStatus; subscribe(fn) };   // StoreStatus below
   fileIndex: { get, getByPath, list, put, remove };
-  oplog: { list({ limit? }), remove(ids) };        // the upload queue (AppliedOperation, oldest first)
+  oplog: { list({ limit? }), remove(ids), isEmpty() };   // the upload queue (AppliedOperation, oldest first)
   meta: { get(key), set(key, value) };              // small local values (lydie_meta, keys stored as
                                                     // `app:<key>`, apart from the store's own; never synced)
   uploads: { get(id), list({ state? }), set(id, state, error?) };   // attachment byte upload state
@@ -309,6 +309,25 @@ property links, each in document order, with `target` resolved to a live documen
   `links.resolveDanglingMany`, `blocks.replaceForMany`, `fileIndex.putMany`/`removeMany` (one or
   two statements each; `bulk.test.ts` checks them against the per-row versions).
 - `openWebStore` accepts `CreateStoreOptions`.
+
+## Write path (ports.ts)
+
+- `docs.findAllByLinkKeys(ws, keys)` resolves many link keys in one read per kind of key: ASCII
+  keys (and `<key>.md`) in one statement through `doc_keys`; every other key through `search_fts`
+  (`title : (...)` with the key's words, which unicode61 folds), a key with no words by scanning
+  the workspace. Every candidate is then checked exactly (`linkKey(title)`), since SQLite's
+  `lower()` folds ASCII only. `findAllByLinkKey` and `findByLinkKey` go through it.
+- `docs.trashed(ws, { limit? })`: the trash's top level (newest deletion first, limited) and each
+  root's descendant count, in one statement.
+- `activity.latest` forces `INDEXED BY activity_key`: without statistics SQLite picks
+  `activity_recent` and walks the whole log for a target with no rows yet (every new document).
+  `latestMany`, `insertMany` and `updateMany` do the same for all of an operation's events in one
+  statement each (`latestMany` returns the newest row of each key that has one, in any order).
+- `{ fresh: true }` on `bodies.put`, `links.replaceFrom` and `blocks.replaceFor` (runtime
+  `FreshOptions`): the document was created in this transaction, so the update or delete of
+  existing rows is skipped and the rows are inserted straight away.
+- `oplog.isEmpty()`: whether the upload queue is empty without reading an entry (`@lydie/sync`'s
+  connector checks it between batches).
 
 ## Live queries: guards
 

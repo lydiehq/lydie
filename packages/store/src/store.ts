@@ -132,6 +132,9 @@ export type Store = {
     // Oldest first.
     list(options?: { limit?: number }): Promise<AppliedOperation[]>;
     remove(ids: readonly string[]): Promise<void>;
+    // Whether the queue is empty, without reading an entry (the sync connector asks between
+    // batches).
+    isEmpty(): Promise<boolean>;
   };
 
   // Small values kept with the database, such as which extractor indexed its bodies. Local to
@@ -568,6 +571,9 @@ export async function createStore(
         await db.execute("DELETE FROM operation_log WHERE id IN (SELECT value FROM json_each(?))", [
           JSON.stringify(ids),
         ]);
+      },
+      async isEmpty() {
+        return (await db.getOptional("SELECT 1 FROM operation_log LIMIT 1")) === null;
       },
     },
 
