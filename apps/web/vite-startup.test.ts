@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import type { Rolldown } from "vite";
 
-import { startupFiles } from "./vite-startup.ts";
+import { startupFiles, swManifest } from "./vite-startup.ts";
 
 type Bundle = Rolldown.OutputBundle;
 
@@ -74,4 +77,38 @@ test("startup files: the app's chunks, then what only a browser window needs", (
     { href: "assets/wa-sqlite-ABCDEFGH.wasm", rel: "preload" },
   ]);
   expect(files.font).toBe("assets/inter-latin-wght-normal-Xy12.woff2");
+});
+
+test("the service worker precaches the page, its scripts and the startup files, not lazy chunks", () => {
+  const publicDir = mkdtempSync(join(tmpdir(), "lydie-public-"));
+  try {
+    writeFileSync(join(publicDir, "theme.js"), "1");
+    writeFileSync(join(publicDir, "boot-shell.js"), "2");
+    const manifest = swManifest(bundle, { base: "/", publicDir, apiUrl: "/__core" });
+    expect(manifest.precache).toEqual([
+      "/",
+      "/theme.js",
+      "/boot-shell.js",
+      "/assets/index-1.js",
+      "/assets/helper-1.js",
+      "/assets/mount-1.js",
+      "/assets/react-1.js",
+      "/assets/index-1.css",
+      "/assets/compose-browser-1.js",
+      "/assets/web-1.js",
+      "/assets/worker-AbCdEfGh.js",
+      "/assets/wa-sqlite-12345678.js",
+      "/assets/SimpleOpfsFileSystem-abcdefgh.js",
+      "/assets/wa-sqlite-ABCDEFGH.wasm",
+      "/assets/inter-latin-wght-normal-Xy12.woff2",
+    ]);
+    expect(manifest.apiPrefix).toBe("/__core/");
+    // A public file that changes is a new version.
+    writeFileSync(join(publicDir, "theme.js"), "3");
+    expect(swManifest(bundle, { base: "/", publicDir, apiUrl: undefined }).version).not.toBe(
+      manifest.version,
+    );
+  } finally {
+    rmSync(publicDir, { recursive: true, force: true });
+  }
 });

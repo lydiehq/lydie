@@ -1,4 +1,5 @@
-// What index.html starts downloading before any module runs (LYD-226 follow-up). The entry
+// What index.html starts downloading before any module runs (LYD-226 follow-up), and what the
+// service worker keeps (`src/sw.ts`, emitted as sw.js with this build's manifest). The entry
 // (`src/main.tsx`) is small and loads the app with a dynamic import, so Vite alone would only
 // preload the entry: this adds
 //   - modulepreloads for the app's chunks (`src/mount.tsx` and what it imports), in every window;
@@ -7,7 +8,13 @@
 //     database's chunks (`src/compose-browser.ts`, `@lydie/store/web`), PowerSync's database worker,
 //     its SQLite build and WASM. `src/early.ts` turns it into <link rel=preload> where there is no
 //     desktop shell, so an Electron window (same index.html) does not fetch them.
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import type { HtmlTagDescriptor, Plugin, Rolldown } from "vite";
+
+import type { SwManifest } from "./src/sw-rules.ts";
 
 type Bundle = Rolldown.OutputBundle;
 type Chunk = Rolldown.OutputChunk;
@@ -93,13 +100,80 @@ export function startupFiles(bundle: Bundle, entry: Chunk): StartupFiles {
   };
 }
 
+// Files of `public/` that index.html loads before any module.
+const PUBLIC_FILES = ["theme.js", "boot-shell.js", "favicon.svg"];
+
+// The service worker's manifest: what it fetches when it installs (paths below the origin).
+export function swManifest(
+  bundle: Bundle,
+  options: { base: string; publicDir: string; apiUrl: string | undefined },
+): SwManifest {
+  const entry = chunks(bundle).find(
+    (chunk) => chunk.isEntry && chunk.facadeModuleId?.endsWith("/index.html"),
+  );
+  if (!entry) throw new Error("lydie:startup-preloads: no index.html entry in the bundle");
+  const files = startupFiles(bundle, entry);
+  const scripts = [...closureFrom(bundle, entry.fileName), ...files.app];
+  const css = scripts.flatMap((name) => {
+    const chunk = bundle[name];
+    return chunk?.type === "chunk" ? [...(chunk.viteMetadata?.importedCss ?? [])] : [];
+  });
+  const built = [
+    ...scripts,
+    ...css,
+    ...files.browser.map((file) => file.href),
+    ...(files.font ? [files.font] : []),
+  ];
+  const publicFiles = PUBLIC_FILES.filter((name) => existsSync(join(options.publicDir, name)));
+  const hash = createHash("sha256");
+  for (const name of built) hash.update(name);
+  for (const name of publicFiles) hash.update(readFileSync(join(options.publicDir, name)));
+  const html = bundle["index.html"];
+  if (html?.type === "asset") hash.update(html.source);
+  const api = options.apiUrl?.startsWith("/") ? `${options.apiUrl.replace(/\/+$/, "")}/` : null;
+  return {
+    version: hash.digest("hex").slice(0, 16),
+    base: options.base,
+    precache: [
+      options.base,
+      ...publicFiles.map((name) => options.base + name),
+      ...[...new Set(built)].map((name) => options.base + name),
+    ],
+    apiPrefix: api,
+  };
+}
+
+const SW_SOURCE = join(import.meta.dirname, "src/sw.ts");
+const SW_PLACEHOLDER = "__LYDIE_SW_MANIFEST__";
+
 export function startupPreloads(): Plugin {
   let base = "/";
+  let publicDir = "";
+  let apiUrl: string | undefined;
   return {
     name: "lydie:startup-preloads",
     apply: "build",
     configResolved(config) {
       base = config.base;
+      publicDir = config.publicDir;
+      apiUrl = config.env.VITE_LYDIE_API_URL as string | undefined;
+    },
+    buildStart() {
+      this.emitFile({ type: "chunk", id: SW_SOURCE, fileName: "sw.js" });
+    },
+    generateBundle: {
+      order: "post",
+      handler(_options, bundle) {
+        const sw = bundle["sw.js"];
+        if (sw?.type !== "chunk") return;
+        // A classic script: a worker registered without `type: "module"` cannot import.
+        if (sw.imports.length > 0 || sw.dynamicImports.length > 0) {
+          this.error(`sw.js must not import other chunks (it imports ${sw.imports.join(", ")})`);
+        }
+        if (!sw.code.includes(SW_PLACEHOLDER)) this.error("sw.js lost its manifest placeholder");
+        const manifest = swManifest(bundle, { base, publicDir, apiUrl });
+        sw.code = sw.code.replaceAll(SW_PLACEHOLDER, JSON.stringify(manifest));
+      },
     },
     transformIndexHtml: {
       order: "post",

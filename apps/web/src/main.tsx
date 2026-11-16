@@ -4,6 +4,7 @@
 import { databaseStarted, SEED, startEarly } from "./early.ts";
 import { routeOf } from "./routes.ts";
 import { rewriteStoredIds } from "./stored-ids.ts";
+import { registerServiceWorker } from "./sw-register.ts";
 
 import "./index.css";
 
@@ -16,3 +17,4 @@ if (!root) throw new Error("Missing #root element");
 void databaseStarted()
   .then(() => import("./mount.tsx"))
   .then(({ mount }) => mount(root));
+registerServiceWorker();

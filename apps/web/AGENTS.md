@@ -122,6 +122,28 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   splitting"). Vite's dynamic-import helper has a group of its own (`preload-helper`, priority 1):
   the PowerSync group would take it, and the entry would load PowerSync.
 
+## Service worker (`src/sw.ts`)
+
+- The production web app on https registers `sw.js` (`src/sw-register.ts`, once the page has loaded
+  and is idle; not in development, `vite preview` on http, the desktop app or a frame;
+  `VITE_LYDIE_SW=1` builds register on http too, for testing). `vite-startup.ts` builds it from
+  `src/sw.ts` as a classic script and writes the build's manifest in (`swManifest`: `index.html`,
+  `theme.js`, `boot-shell.js`, `favicon.svg`, the startup chunks and stylesheet, the font, the
+  database worker and WASM). Its rules are in `src/sw-rules.ts` (unit-tested).
+- Every build has its own cache (`lydie-<version>`), filled when its worker installs. The app's pages
+  are answered with that build's `index.html` from the cache, and `assets/` from any cache, else the
+  network (kept for next time). So a reload does not wait for the network, and this browser's notes
+  open offline. A page always runs one build: the new worker takes over once installed, the open
+  page keeps its build (its lazy chunks come from the previous cache, kept until the next update,
+  or from the network, where old hashed files stay deployed), and the next load is the new build.
+- It only handles GETs to its own origin: navigations below the base that are not a file (no `.`
+  in the last segment) and not a same-origin API (`VITE_LYDIE_API_URL` starting with `/`), and
+  `assets/` plus the precached files. The API on its own origin, OAuth and provider returns (pages
+  of the app: `/oauth/consent`, `?login=`) and everything else are left alone.
+- `sw.js` must be served with `max-age=0, must-revalidate` (as the deploy does for everything
+  outside `assets/`); hashed assets must stay deployed after a release. To withdraw it, ship a
+  `sw.ts` that deletes its caches and calls `self.registration.unregister()`.
+
 ## Modes and routes
 
 - The address bar follows the focused tab (`syncUrl` from `@lydie/app`, started in `LydieWeb.tsx`
