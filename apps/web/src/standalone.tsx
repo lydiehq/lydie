@@ -72,29 +72,28 @@ export function AuthForm({ initialMode = "sign-up" }: { initialMode?: "sign-in" 
     event.preventDefault();
     setBusy(true);
     setError(null);
-    try {
-      if (mode === "sign-up") {
-        await session.signUp({
-          email: email.trim(),
-          password,
-          ...(name.trim() ? { name: name.trim() } : {}),
-        });
-      } else {
-        await session.signIn({ email: email.trim(), password });
-      }
-    } catch (e) {
-      const err = toHostedError(e);
+    const credentials = { email: email.trim(), password };
+    // Not `try`: the React Compiler skips a component with a condition inside one.
+    const failed = await (
+      mode === "sign-up"
+        ? session.signUp({ ...credentials, ...(name.trim() ? { name: name.trim() } : {}) })
+        : session.signIn(credentials)
+    ).then(
+      () => null,
+      (e: unknown) => toHostedError(e),
+    );
+    if (failed) {
+      const exists = /already/i.test(failed.message) || /ALREADY/.test(failed.code ?? "");
       setError(
-        /already/i.test(err.message) || /ALREADY/.test(err.code ?? "")
+        exists
           ? "There is already an account with this email. Sign in instead."
-          : err.status === 401
+          : failed.status === 401
             ? "That password does not match."
-            : err.message,
+            : failed.message,
       );
-      if (/already/i.test(err.message) || /ALREADY/.test(err.code ?? "")) setMode("sign-in");
-    } finally {
-      setBusy(false);
+      if (exists) setMode("sign-in");
     }
+    setBusy(false);
   };
   return (
     <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-3">

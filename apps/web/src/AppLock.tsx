@@ -1,5 +1,5 @@
 // The app lock's screen (desktop, LYD-383). The gate waits for the lock's state before showing the
-// app, so a locked app never paints notes. When it locks later, the screen covers the window and
+// app, so a locked app never paints notes (the workspace opens meanwhile: only showing it waits). When it locks later, the screen covers the window and
 // everything else on the page is made inert, keys included, until it is unlocked.
 import type { AppLock, AppLockState } from "@lydie/platform";
 import { Button, LydieMark, TextField } from "@lydie/ui";
@@ -60,13 +60,13 @@ function LockScreen({ lock, state }: { lock: AppLock; state: AppLockState }) {
     if (!secret) return;
     setBusy(true);
     setError(null);
-    try {
-      if (!(await lock.unlock(secret))) {
-        setSecret("");
-        setError("That is not it. Try again.");
-      }
-    } finally {
-      setBusy(false);
+    const unlocked = await lock.unlock(secret).catch(() => null);
+    setBusy(false);
+    if (unlocked === null) {
+      setError("Lydie could not check that. Try again.");
+    } else if (!unlocked) {
+      setSecret("");
+      setError("That is not it. Try again.");
     }
   };
 

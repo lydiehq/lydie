@@ -14,13 +14,17 @@ function useAction() {
   const [error, setError] = useState<string>("");
   async function run(action: () => unknown) {
     setError("");
-    try {
-      const value = await action();
-      setResult(typeof value === "string" ? value : (JSON.stringify(value, null, 2) ?? "done"));
-    } catch (caught) {
-      const platformError = toPlatformError(caught);
-      setError(`${platformError.code}: ${platformError.detail}`);
-    }
+    // Not `try`: the React Compiler skips a component with a condition inside one.
+    await Promise.resolve()
+      .then(action)
+      .then(
+        (value) =>
+          setResult(typeof value === "string" ? value : (JSON.stringify(value, null, 2) ?? "done")),
+        (caught: unknown) => {
+          const platformError = toPlatformError(caught);
+          setError(`${platformError.code}: ${platformError.detail}`);
+        },
+      );
   }
   return { result, error, run };
 }

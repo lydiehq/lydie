@@ -20,7 +20,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { NEVER_ASK_KEY } from "./after-sign-in.ts";
-import { bytes, errorMessage, plural } from "./format.ts";
+import { bytes, errorMessage, failureOf, plural } from "./format.ts";
 import { readCloud, readCopied, rememberCopied } from "./local-notice.ts";
 
 export type HandoffProps = {
@@ -120,41 +120,46 @@ export function HandoffDialog({ close, props }: { close: () => void; props: unkn
   const plan = async () => {
     setError(null);
     setStep({ kind: "planning" });
-    try {
-      let ws: { id: string; name: string };
-      if (choice === "new") {
-        ws = await api.createWorkspace({ name: name.trim() || app.workspace.workspaceName });
-      } else {
-        const found = workspaces?.find((w) => w.id === choice);
-        if (!found) throw new Error("Choose a workspace");
-        ws = found;
-      }
-      const planned = await handoff.plan({ workspaceId: ws.id, workspaceName: ws.name });
-      setStep({ kind: "review", plan: planned });
-    } catch (e) {
-      setError(errorMessage(e));
+    const found = workspaces?.find((w) => w.id === choice);
+    const target: Promise<{ id: string; name: string }> =
+      choice === "new"
+        ? api.createWorkspace({ name: name.trim() || app.workspace.workspaceName })
+        : found
+          ? Promise.resolve(found)
+          : Promise.reject(new Error("Choose a workspace"));
+    const planning = target.then((ws) =>
+      handoff.plan({ workspaceId: ws.id, workspaceName: ws.name }),
+    );
+    const failed = await failureOf(planning);
+    if (failed) {
+      setError(errorMessage(failed.error));
       setStep({ kind: "choose" });
+    } else {
+      setStep({ kind: "review", plan: await planning });
     }
   };
 
   const run = async (planned: HandoffPlanHandle) => {
     setError(null);
-    abort.current = new AbortController();
+    const { signal } = (abort.current = new AbortController());
     setStep({ kind: "running", plan: planned, progress: null });
-    try {
-      const outcome = await handoff.run(planned, {
-        signal: abort.current.signal,
-        onProgress: (progress) => setStep({ kind: "running", plan: planned, progress }),
-      });
-      if (outcome.ok) rememberCopied(app, app.workspace.workspaceId, planned.target);
-      // Asked and answered: with everything moved there is nothing left to read here.
-      if (ask && complete(planned, outcome)) await openTarget(planned, outcome);
-      else setStep({ kind: "done", plan: planned, outcome });
-    } catch (e) {
+    const running = handoff.run(planned, {
+      signal,
+      onProgress: (progress) => setStep({ kind: "running", plan: planned, progress }),
+    });
+    const failed = await failureOf(
+      running.then(async (outcome) => {
+        if (outcome.ok) rememberCopied(app, app.workspace.workspaceId, planned.target);
+        // Asked and answered: with everything moved there is nothing left to read here.
+        if (ask && complete(planned, outcome)) await openTarget(planned, outcome);
+        else setStep({ kind: "done", plan: planned, outcome });
+      }),
+    );
+    if (failed) {
       setError(
-        abort.current.signal.aborted
+        signal.aborted
           ? "Stopped. Nothing is lost: run it again to continue."
-          : errorMessage(e),
+          : errorMessage(failed.error),
       );
       setStep({ kind: "review", plan: planned });
     }
@@ -166,17 +171,19 @@ export function HandoffDialog({ close, props }: { close: () => void; props: unkn
     if (neverAsk) app.storage.set(NEVER_ASK_KEY, true);
     setError(null);
     setStep({ kind: "planning" });
-    try {
-      const planned = await handoff.plan({
-        workspaceId: ask.workspaceId,
-        workspaceName: ask.workspaceName,
-      });
-      if (clean(planned) && planned.summary.warnings.length === 0) await run(planned);
-      else setStep({ kind: "review", plan: planned });
-    } catch (e) {
-      setError(errorMessage(e));
+    const planning = handoff.plan({
+      workspaceId: ask.workspaceId,
+      workspaceName: ask.workspaceName,
+    });
+    const failed = await failureOf(planning);
+    if (failed) {
+      setError(errorMessage(failed.error));
       setStep({ kind: "ask" });
+      return;
     }
+    const planned = await planning;
+    if (clean(planned) && planned.summary.warnings.length === 0) await run(planned);
+    else setStep({ kind: "review", plan: planned });
   };
   const notNow = async () => {
     if (!ask) return;

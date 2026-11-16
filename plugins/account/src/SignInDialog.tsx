@@ -4,7 +4,13 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { continueAfterSignIn } from "./after-sign-in.ts";
-import { authMessage, providerMessage, TWO_FACTOR_REQUIRED, twoFactorMessage } from "./format.ts";
+import {
+  authMessage,
+  failureOf,
+  providerMessage,
+  TWO_FACTOR_REQUIRED,
+  twoFactorMessage,
+} from "./format.ts";
 
 export type SignInProps = {
   mode?: "sign-in" | "sign-up";
@@ -52,42 +58,31 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
   const google = async () => {
     setError(null);
     setWaiting(true);
-    try {
-      // The web app leaves the page here and finishes when it comes back.
-      await api.signInWith("google", { then: options.then ?? null });
-      await signedIn("sign-in");
-    } catch (e) {
-      setError(providerMessage(e));
-    } finally {
-      setWaiting(false);
-    }
+    // The web app leaves the page here and finishes when it comes back.
+    const failed = await failureOf(
+      api.signInWith("google", { then: options.then ?? null }).then(() => signedIn("sign-in")),
+    );
+    if (failed) setError(providerMessage(failed.error));
+    setWaiting(false);
   };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
     setError(null);
-    try {
-      if (mode === "sign-up") {
-        await api.signUp({
-          email: email.trim(),
-          password,
-          ...(name.trim() ? { name: name.trim() } : {}),
-        });
-      } else {
-        await api.signIn({ email: email.trim(), password });
-      }
-      await signedIn(mode);
-    } catch (e) {
-      if ((e as { code?: string } | null)?.code === TWO_FACTOR_REQUIRED) {
-        setPassword("");
-        setSecondFactor("app");
-        return;
-      }
-      setError(authMessage(e, mode));
-    } finally {
-      setBusy(false);
+    const credentials = { email: email.trim(), password };
+    const account =
+      mode === "sign-up"
+        ? api.signUp({ ...credentials, ...(name.trim() ? { name: name.trim() } : {}) })
+        : api.signIn(credentials);
+    const failed = await failureOf(account.then(() => signedIn(mode)));
+    if ((failed?.error as { code?: string } | null)?.code === TWO_FACTOR_REQUIRED) {
+      setPassword("");
+      setSecondFactor("app");
+    } else if (failed) {
+      setError(authMessage(failed.error, mode));
     }
+    setBusy(false);
   };
 
   const verify = async (event: FormEvent) => {
@@ -95,21 +90,19 @@ export function SignInDialog({ close, props }: { close: () => void; props: unkno
     if (!secondFactor) return;
     setBusy(true);
     setError(null);
-    try {
-      await api.verifySignIn({ code: code.trim(), method: secondFactor });
-      await signedIn("sign-in");
-    } catch (e) {
-      const message = twoFactorMessage(e);
-      const failure = ((e as { code?: string } | null)?.code ?? "").toUpperCase();
+    const failed = await failureOf(
+      api.verifySignIn({ code: code.trim(), method: secondFactor }).then(() => signedIn("sign-in")),
+    );
+    if (failed) {
+      const failure = ((failed.error as { code?: string } | null)?.code ?? "").toUpperCase();
       // The pending sign-in is gone: start again from the password.
       if (/EXPIRED|TOO_MANY_ATTEMPTS|TWO_FACTOR_COOKIE/.test(failure)) {
         setSecondFactor(null);
         setCode("");
       }
-      setError(message);
-    } finally {
-      setBusy(false);
+      setError(twoFactorMessage(failed.error));
     }
+    setBusy(false);
   };
 
   if (secondFactor) {

@@ -62,18 +62,20 @@ export function AvatarEditor({
   const picked = { scribble, pen, seed };
   const save = async (next: string) => {
     setSaving(true);
-    try {
-      await onSave(next);
+    // The caller says why it failed; then what was picked or drawn stays. (Not `try`: the React
+    // Compiler skips a component with a condition inside one.)
+    const saved = await onSave(next).then(
+      () => true,
+      () => false,
+    );
+    if (saved) {
       if (share && sharing && mode === "draw") {
         await share.onShare({ strokes, pen, shape }).catch(() => {});
       }
       setMode("view");
       setStrokes([]);
-    } catch {
-      // The caller has said why; keep what was picked or drawn.
-    } finally {
-      setSaving(false);
     }
+    setSaving(false);
   };
 
   return (

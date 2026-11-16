@@ -1,5 +1,14 @@
 import type { HostedApiError, RejectedChange } from "@lydie/plugin-api";
 
+// What a piece of work failed with, or null when it did not. Instead of `try` in components: the
+// React Compiler skips a component whose `try` has a `finally`, a `throw` or a condition in it.
+export function failureOf(work: Promise<unknown>): Promise<{ error: unknown } | null> {
+  return work.then(
+    () => null,
+    (error: unknown) => ({ error }),
+  );
+}
+
 export function errorMessage(error: unknown): string {
   const e = error as HostedApiError | null;
   if (e?.kind === "network")

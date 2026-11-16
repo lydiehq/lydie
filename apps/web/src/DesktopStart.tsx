@@ -228,16 +228,16 @@ function SignIn({ start, reason }: { start: NoWorkspaceError; reason: string }) 
     event.preventDefault();
     setBusy(true);
     setError(null);
-    try {
-      const input = { email: email.trim(), password };
-      unwrap(await start.client.request(mode === "sign-up" ? "signUp" : "signIn", input));
-      // A window that was meant to open a workspace opens it now.
-      if (start.info.wanted) window.location.reload();
-    } catch (e) {
-      setError(message(e));
-    } finally {
-      setBusy(false);
-    }
+    const input = { email: email.trim(), password };
+    // Not `try`: the React Compiler skips a component with a condition inside one.
+    const failed = await start.client.request(mode === "sign-up" ? "signUp" : "signIn", input).then(
+      (wire) => void unwrap(wire),
+      (e: unknown) => ({ error: e }),
+    );
+    if (failed) setError(message(failed.error));
+    // A window that was meant to open a workspace opens it now.
+    else if (start.info.wanted) window.location.reload();
+    setBusy(false);
   };
   return (
     <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-3">

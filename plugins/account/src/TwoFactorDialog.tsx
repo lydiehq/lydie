@@ -3,7 +3,7 @@ import { Button, Dialog, Heading, Modal, QrCode, TextField } from "@lydie/plugin
 import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
-import { twoFactorMessage } from "./format.ts";
+import { failureOf, twoFactorMessage } from "./format.ts";
 
 export type TwoFactorAction = "enable" | "disable" | "backupCodes";
 
@@ -33,13 +33,9 @@ export function TwoFactorDialog({ action, close }: { action: TwoFactorAction; cl
   const run = async (work: () => Promise<void>) => {
     setBusy(true);
     setError(null);
-    try {
-      await work();
-    } catch (e) {
-      setError(twoFactorMessage(e));
-    } finally {
-      setBusy(false);
-    }
+    const failed = await failureOf(work());
+    if (failed) setError(twoFactorMessage(failed.error));
+    setBusy(false);
   };
 
   const submitPassword = (event: FormEvent) => {

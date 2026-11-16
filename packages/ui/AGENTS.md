@@ -21,7 +21,11 @@ nothing internal. `client/scripts/check-boundaries.ts` is authoritative and runs
   ("core-regular"). Add one to `src/icons/mingcute.tsx` by copying its `elements` from
   `@mingcute/icons` (`dist/styles/core-regular/<name>.js`); name it as `@mingcute/react` does
   (`settings-3` → `Settings3Regular`). Do not add an icon package. Solid icons (`...Filled`,
-  core-filled) only where a filled glyph is the point, e.g. a selected state.
+  core-filled) only where a filled glyph is the point, e.g. a selected state. `createIcon` is
+  marked `/* @__NO_SIDE_EFFECTS__ */` and the package is `"sideEffects": ["**/*.css"]`, so a bundle
+  only carries the icons it uses: keep every module free of import-time effects (or list it there).
+- Components avoid `??=` and `try` with `finally` or conditions in it: the React Compiler skips a
+  function that has them (`apps/web/react-compiler.test.ts` lists every skip).
 
 ## Using it in an app
 

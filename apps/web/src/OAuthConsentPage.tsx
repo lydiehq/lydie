@@ -96,11 +96,9 @@ function Consent({ request: req, email }: { request: ConsentRequest; email: stri
   const send = async (approve: boolean) => {
     setBusy(approve ? "approve" : "deny");
     setError(null);
+    const choice = { approve, ...(approve && workspaceId ? { workspaceId } : {}) };
     try {
-      const to = await decide(api, req.id, {
-        approve,
-        ...(approve && workspaceId ? { workspaceId } : {}),
-      });
+      const to = await decide(api, req.id, choice);
       window.location.assign(to);
     } catch (e) {
       setError(message(e));

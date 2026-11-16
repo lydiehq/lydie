@@ -175,17 +175,20 @@ export function useElasticPanel({
   const [commitVersion, setCommitVersion] = useState(0);
 
   const ctx = (): Ctx => {
-    engine.current ??= {
-      base: restingWidth,
-      offset: 0,
-      locked: null,
-      collapsed,
-      rest: restingWidth,
-      animation: null,
-      drag: null,
-      panel: null,
-      content: null,
-    };
+    // Not `??=`, which the React Compiler cannot compile: it would skip the whole hook.
+    if (engine.current === null) {
+      engine.current = {
+        base: restingWidth,
+        offset: 0,
+        locked: null,
+        collapsed,
+        rest: restingWidth,
+        animation: null,
+        drag: null,
+        panel: null,
+        content: null,
+      };
+    }
     return { e: engine.current, minWidth, setCollapsed, setSwitching };
   };
 
