@@ -18,8 +18,11 @@ const stores: Store[] = [];
 
 // Each `new PowerSyncDatabase()` takes the next plan: a database whose init fails like the
 // browser's "disk I/O error", or a real (Node) database.
+let constructed = 0;
+
 class FakePowerSyncDatabase {
   constructor(options: { schema: unknown; database: { dbFilename: string } }) {
+    constructed++;
     const plan = plans.shift() ?? "open";
     if (plan === "open" || plan === "newer") {
       const dir = mkdtempSync(join(tmpdir(), "lydie-web-"));
@@ -92,6 +95,36 @@ describe("openWebStore", () => {
     expect(opened).toEqual([{ closed: true }, { closed: true }, { closed: true }]);
     // The version marker is only written after a successful open.
     expect(localStorage.getItem("lydie:schema-version:b.db")).toBeNull();
+  });
+
+  it("starts the database while OPFS is still being checked, and reports the check", async () => {
+    let answer!: (ok: boolean) => void;
+    const checked = new Promise<boolean>((resolve) => (answer = resolve));
+    Object.defineProperty(navigator, "storage", {
+      configurable: true,
+      value: {
+        getDirectory: async () => {
+          if (!(await checked)) throw new DOMException("no OPFS", "SecurityError");
+          return {};
+        },
+      },
+    });
+    const before = constructed;
+    const opening = openWebStore({ dbFilename: "d.db" });
+    expect(constructed).toBe(before + 1);
+    answer(false);
+    const store = await opening;
+    stores.push(store);
+    // Private browsing without OPFS: in memory, and the app is told.
+    expect(store.persistent).toBe(false);
+
+    Object.defineProperty(navigator, "storage", {
+      configurable: true,
+      value: { getDirectory: async () => ({}) },
+    });
+    const persisted = await openWebStore({ dbFilename: "e.db" });
+    stores.push(persisted);
+    expect(persisted.persistent).toBe(true);
   });
 
   it("does not retry a database from a newer version", async () => {

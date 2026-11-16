@@ -56,7 +56,9 @@ export async function openWebStore(options: WebStoreOptions): Promise<WebStore> 
   // An in-memory database starts empty every time: there is no older or newer file to check.
   const storage = memory || typeof localStorage === "undefined" ? null : localStorage;
   assertOpenable(Number(storage?.getItem(versionKey(options.dbFilename)) ?? 0));
-  const persistent = memory ? false : await hasOpfs();
+  // Only the `persistent` flag needs it ("auto" makes PowerSync detect OPFS itself), so it runs
+  // while the worker starts instead of before. hasOpfs never rejects.
+  const persistent = memory ? Promise.resolve(false) : hasOpfs();
   const attempts = Math.max(1, options.attempts ?? 2);
   let failure: unknown;
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -67,7 +69,7 @@ export async function openWebStore(options: WebStoreOptions): Promise<WebStore> 
     try {
       const store = await createStore(db, options);
       storage?.setItem(versionKey(options.dbFilename), String(SCHEMA_VERSION));
-      return Object.assign(store, { persistent });
+      return Object.assign(store, { persistent: await persistent });
     } catch (error) {
       // Closing releases the worker's file handles; it never deletes or rewrites the files.
       await db.close().catch(() => {});
