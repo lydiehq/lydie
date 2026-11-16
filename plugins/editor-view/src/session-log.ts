@@ -58,6 +58,13 @@ export class SessionLog {
     if (from > 0) this.entries = this.entries.slice(from);
   }
 
+  // A save main took as current (not `stale`): it had no steps the editor lacked, so whatever it
+  // sends later is based on this save or a later update. Without disk changes nothing else prunes,
+  // and the log would keep every edit of the session.
+  saved(seq: number) {
+    this.prune(seq);
+  }
+
   hasLocal(): boolean {
     return this.entries.some((e) => e.kind === "local");
   }

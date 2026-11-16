@@ -64,4 +64,20 @@ describe("session log", () => {
     expect(log.hasLocal()).toBe(false);
     expect(log.since(2).maps.length).toBe(0);
   });
+
+  test("a save main took as current drops what came before it", () => {
+    const log = new SessionLog();
+    for (let seq = 1; seq <= 50; seq++) {
+      log.local(mappingOf(insert(1, "x")));
+      log.update(seq);
+    }
+    log.local(mappingOf(insert(1, "y")));
+    const setSeq = log.update(-1);
+    setSeq(51);
+    log.saved(51);
+    expect(log.hasLocal()).toBe(false);
+    // Typing after the save is all that steps based on it map through.
+    log.local(mappingOf(insert(1, "z")));
+    expect(log.since(51).maps.length).toBe(1);
+  });
 });
