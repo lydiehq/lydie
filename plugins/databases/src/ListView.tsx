@@ -53,7 +53,8 @@ export function useVirtualScroll() {
 export function ListView({ maxHeight }: { maxHeight?: number | undefined }) {
   const ctx = useViewContext();
   const { definition, view, params } = ctx;
-  const scroll = useVirtualScroll();
+  // Destructured: the React Compiler takes a read from an object holding a ref for a ref read.
+  const { ref: scrollRef, top: scrollTop, height, onScroll } = useVirtualScroll();
   // Until the first result (`pending`) the list draws placeholder lines.
   const [shape, setShape] = useState<{
     total: number;
@@ -74,7 +75,7 @@ export function ListView({ maxHeight }: { maxHeight?: number | undefined }) {
     [shape, grouped, view.config.groupBy?.collapsed],
   );
   const columns = useMemo(() => visibleColumns(definition, view), [definition, view]);
-  const range = visibleRange(scroll.top, scroll.height, ROW, items.length);
+  const range = visibleRange(scrollTop, height, ROW, items.length);
   let first = Number.POSITIVE_INFINITY;
   let last = 0;
   for (let i = range.start; i < range.end; i++) {
@@ -101,8 +102,8 @@ export function ListView({ maxHeight }: { maxHeight?: number | undefined }) {
 
   return (
     <div
-      ref={scroll.ref}
-      onScroll={scroll.onScroll}
+      ref={scrollRef}
+      onScroll={onScroll}
       role="list"
       aria-label="Pages"
       aria-busy={shape.pending}

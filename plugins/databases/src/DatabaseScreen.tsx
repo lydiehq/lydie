@@ -68,7 +68,7 @@ export function DatabaseScreen({
       viewId: view.id,
       ...(Object.keys(config).length > 0 ? { view: { config } } : {}),
     };
-  }, [definition.database.id, view, overlay, title?.id, search]);
+  }, [definition.database.id, definition.properties, view, overlay, title?.id, search]);
 
   if (!saved || !view) {
     return <EmptyState title="This collection has no views" />;

@@ -102,6 +102,31 @@ type Write = {
   updates: Map<string, { rowId: string; set: Record<string, PropertyValue> }>;
 };
 
+// The whole page shows the grabbing hand during a row drag. Returns what puts the cursor back.
+function grabCursor(): () => void {
+  const cursor = document.body.style.cursor;
+  document.body.style.cursor = "grabbing";
+  return () => {
+    document.body.style.cursor = cursor;
+  };
+}
+
+// By content: over IPC an unchanged property arrives as a new object.
+function sameColumns(a: readonly Column[], b: readonly Column[]) {
+  return (
+    a.length === b.length &&
+    a.every((c, i) => {
+      const before = b[i]!;
+      return (
+        c.width === before.width &&
+        (c.property === before.property ||
+          (c.property.id === before.property.id &&
+            c.property.updatedAt === before.property.updatedAt))
+      );
+    })
+  );
+}
+
 export function TableView({ maxHeight }: { maxHeight?: number }) {
   const ctx = useViewContext();
   const { definition, view, params, databaseId } = ctx;
@@ -119,7 +144,9 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
   const ghostAt = useRef({ x: 0, y: 0 });
   const content = useRef<HTMLDivElement>(null);
   const editorAnchor = useRef<HTMLDivElement>(null);
-  const [viewportSize] = useState(() => ({ width: 1000, height: 600 }));
+  const viewportSize = useRef({ width: 1000, height: 600 });
+  // Until when keys that reach the page body are the grid's (see `rescueKey`).
+  const rescueUntil = useRef(0);
   const [pendingEdit, setPendingEdit] = useState<string | null>(null);
   // The page margin the table starts at and bleeds into when scrolled sideways: a CSS length
   // (`--table-inset`, a function of the width) on the page, measured here in px.
@@ -132,28 +159,16 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
   const wrap = view.config.layout.wrapCells ?? false;
   // The same array while the columns are the same (a filter change emits a new definition and
   // view): rows memoised on it then skip re-rendering until their data changes.
-  const [columnCache] = useState(() => ({ last: [] as Column[] }));
-  const columns = useMemo(() => {
-    const next = visibleColumns(definition, view).map((c) => {
-      const draft = widthDrafts.get(c.property.id);
-      return draft === undefined ? c : { ...c, width: draft };
-    });
-    const last = columnCache.last;
-    const same =
-      next.length === last.length &&
-      next.every((c, i) => {
-        const before = last[i]!;
-        // By content: over IPC an unchanged property arrives as a new object.
-        return (
-          c.width === before.width &&
-          (c.property === before.property ||
-            (c.property.id === before.property.id &&
-              c.property.updatedAt === before.property.updatedAt))
-        );
-      });
-    if (!same) columnCache.last = next;
-    return columnCache.last;
-  }, [definition, view, columnCache, widthDrafts]);
+  const shown = useMemo(
+    () =>
+      visibleColumns(definition, view).map((c) => {
+        const draft = widthDrafts.get(c.property.id);
+        return draft === undefined ? c : { ...c, width: draft };
+      }),
+    [definition, view, widthDrafts],
+  );
+  const [columns, setColumns] = useState(shown);
+  if (shown !== columns && !sameColumns(shown, columns)) setColumns(shown);
   useEffect(() => {
     if (widthDrafts.size === 0) return;
     const saved = visibleColumns(definition, view);
@@ -194,9 +209,9 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
   const aria = useMemo(() => {
     const index = new Int32Array(items.length);
     let n = 1;
-    items.forEach((item, i) => {
-      if (item.kind !== "add") index[i] = ++n;
-    });
+    for (let i = 0; i < items.length; i++) {
+      if (items[i]!.kind !== "add") index[i] = ++n;
+    }
     return { index, count: n };
   }, [items]);
 
@@ -262,8 +277,8 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
     return {
       top: el?.scrollTop ?? 0,
       left: el?.scrollLeft ?? 0,
-      width: viewportSize.width,
-      height: viewportSize.height,
+      width: viewportSize.current.width,
+      height: viewportSize.current.height,
     };
   };
 
@@ -275,8 +290,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
     const el = scroller.current;
     if (!el) return;
     const measure = () => {
-      viewportSize.width = el.clientWidth;
-      viewportSize.height = el.clientHeight;
+      viewportSize.current = { width: el.clientWidth, height: el.clientHeight };
       store.scrolled(readScroll());
     };
     measure();
@@ -284,7 +298,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
     observer.observe(el);
     return () => observer.disconnect();
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- readScroll reads refs only
-  }, [store, viewportSize]);
+  }, [store]);
 
   useLayoutEffect(() => {
     const el = insetProbe.current;
@@ -315,15 +329,15 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
 
   // At most one window update per frame, in the frame's animation callbacks (rendering inside
   // every scroll event measured slower: p95 frame 21 ms against 17 ms).
-  const [scrollFrame] = useState(() => ({ id: 0 }));
+  const scrollFrame = useRef(0);
   const onScroll = () => {
-    if (scrollFrame.id) return;
-    scrollFrame.id = requestAnimationFrame(() => {
-      scrollFrame.id = 0;
+    if (scrollFrame.current) return;
+    scrollFrame.current = requestAnimationFrame(() => {
+      scrollFrame.current = 0;
       store.scrolled(readScroll());
     });
   };
-  useEffect(() => () => cancelAnimationFrame(scrollFrame.id), [scrollFrame]);
+  useEffect(() => () => cancelAnimationFrame(scrollFrame.current), []);
 
   function reveal(cell: Cell) {
     const el = scroller.current;
@@ -339,17 +353,6 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
     store.dispatch({ type: "select", selection });
     reveal(selection.focus);
   }
-
-  // A new row from "+ New": edit its title once it is loaded.
-  useEffect(() => {
-    if (!pendingEdit) return;
-    const index = rowItems.findIndex((r) => rowAtPosition(r.position)?.id === pendingEdit);
-    if (index === -1) return;
-    setPendingEdit(null);
-    select(single({ row: index, col: 0 }));
-    requestAnimationFrame(() => startEdit({ row: index, col: 0 }));
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- runs when the new row may have arrived
-  }, [pendingEdit, rowItems, result]);
 
   // ---- Writes
 
@@ -510,6 +513,17 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
       ...(initialText !== undefined ? { initialText } : {}),
     });
   }
+
+  // A new row from "+ New": edit its title once it is loaded.
+  useEffect(() => {
+    if (!pendingEdit) return;
+    const index = rowItems.findIndex((r) => rowAtPosition(r.position)?.id === pendingEdit);
+    if (index === -1) return;
+    setPendingEdit(null);
+    select(single({ row: index, col: 0 }));
+    requestAnimationFrame(() => startEdit({ row: index, col: 0 }));
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- runs when the new row may have arrived
+  }, [pendingEdit, rowItems, result]);
 
   // Delete/Backspace: the range's editable cells (or the active column of every picked page).
   async function clearRange(selection: GridSelection) {
@@ -674,7 +688,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
   const closeEditor = (reason: EditorCloseReason) => {
     const mode = store.getState().mode;
     store.dispatch({ type: "endEdit" });
-    rescue.until = performance.now() + 250;
+    rescueUntil.current = performance.now() + 250;
     // Back to the grid, also after the popover's own focus restore (it has no focusable trigger).
     const refocus = () => scroller.current?.focus({ preventScroll: true });
     refocus();
@@ -690,8 +704,6 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
 
   // ---- Keyboard
 
-  const page = Math.max(1, Math.floor((viewportSize.height - HEADER - FOOTER) / rowHeight) - 1);
-
   // `rescued`: a key that reached the page body in the frame after an editor closed (LYD-257).
   const onKeyDown = (
     event: KeyboardEvent<HTMLDivElement> | globalThis.KeyboardEvent,
@@ -700,7 +712,10 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
     const state = store.getState();
     if (state.mode.kind === "editing" || (!rescued && event.target !== scroller.current)) return;
     const command = keyCommand(event, state, {
-      page,
+      page: Math.max(
+        1,
+        Math.floor((viewportSize.current.height - HEADER - FOOTER) / rowHeight) - 1,
+      ),
       editable: (col) => {
         const type = columns[col]?.property.type;
         return type !== undefined && isEditableType(type);
@@ -761,21 +776,21 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
 
   // Keys typed right after an editor closes can arrive before focus is back on the grid (the
   // popover restores focus a frame later, to the body): handle them as the grid's.
-  const [rescue] = useState(() => ({ until: 0, handle: onKeyDown }));
+  const rescueKey = useRef(onKeyDown);
   useLayoutEffect(() => {
-    rescue.handle = onKeyDown;
+    rescueKey.current = onKeyDown;
   });
   useEffect(() => {
     const listener = (event: globalThis.KeyboardEvent) => {
-      if (performance.now() > rescue.until || event.defaultPrevented) return;
+      if (performance.now() > rescueUntil.current || event.defaultPrevented) return;
       const active = document.activeElement;
       if (active && active !== document.body) return;
       scroller.current?.focus({ preventScroll: true });
-      rescue.handle(event, true);
+      rescueKey.current(event, true);
     };
     document.addEventListener("keydown", listener, true);
     return () => document.removeEventListener("keydown", listener, true);
-  }, [rescue]);
+  }, []);
 
   // ---- Clipboard (TSV and an HTML table; rows outside the loaded window are read first)
 
@@ -913,8 +928,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
   function startRowDrag(row: number, box: DOMRect) {
     store.dispatch({ type: "startRowDrag", row });
     if (store.getState().mode.kind !== "rowDragging") return;
-    const cursor = document.body.style.cursor;
-    document.body.style.cursor = "grabbing";
+    const restoreCursor = grabCursor();
     track(
       (move) => {
         ghostAt.current = { x: move.clientX, y: move.clientY };
@@ -924,7 +938,7 @@ export function TableView({ maxHeight }: { maxHeight?: number }) {
         if (hit.item >= 0) store.dispatch({ type: "rowDragOver", item: hit.item, edge: hit.edge });
       },
       () => {
-        document.body.style.cursor = cursor;
+        restoreCursor();
         const mode = store.getState().mode;
         store.dispatch({ type: "endDrag" });
         if (mode.kind === "rowDragging" && mode.over)
