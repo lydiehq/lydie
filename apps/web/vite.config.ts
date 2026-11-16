@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 
 import { defineConfig, searchForWorkspaceRoot } from "vite";
 
+import { startupPreloads } from "./vite-startup.ts";
 import { appVite } from "./vite.shared.ts";
 
 // Keep Vite's cache in the install root's node_modules (wherever `bun install` ran) so no
@@ -33,18 +34,26 @@ const vendorChunks: Record<string, RegExp> = {
   powersync: /\/node_modules\/@powersync\/(common|web|shared-internals)\/(?!dist\/websockets)/,
 };
 
+const shared = appVite();
+
 export default defineConfig({
   cacheDir: join(installedNodeModules, ".vite", "web"),
   build: {
     rolldownOptions: {
       output: {
         codeSplitting: {
-          groups: Object.entries(vendorChunks).map(([name, test]) => ({ name, test })),
+          groups: [
+            // Vite's helper for dynamic imports, which the entry uses. The PowerSync group would
+            // take it (a group takes its modules' dependencies), and the entry would load PowerSync.
+            { name: "preload-helper", test: /^\0vite\/preload-helper/, priority: 1 },
+            ...Object.entries(vendorChunks).map(([name, test]) => ({ name, test })),
+          ],
         },
       },
     },
   },
-  ...appVite(),
+  ...shared,
+  plugins: [...(shared.plugins ?? []), startupPreloads()],
   server: {
     port: 3000,
     strictPort: true,

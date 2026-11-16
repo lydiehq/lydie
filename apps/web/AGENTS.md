@@ -12,9 +12,12 @@ composition root.
 ## Composition (`src/compose.ts`, the only place that decides)
 
 - Electron injected a platform with `services` (`getInjectedPlatform()`): the backend is
-  `createRemoteBackend(platform.services)`; the database lives in the main process.
+  `createRemoteBackend(platform.services)`; the database lives in the main process
+  (`src/compose-desktop.ts`).
 - Plain browser ("local browser mode", no login): SQLite WASM on OPFS through `openWebStore`
-  (PowerSync's worker), runtime in the page, `createLocalBackend`. The workspace id is minted on
+  (PowerSync's worker), runtime in the page, `createLocalBackend` (`src/compose-browser.ts`). The two
+  are separate chunks, chosen by a dynamic import, so a desktop window never loads the in-page
+  database, runtime and Getting started page. The workspace id is minted on
   first run (`localStorage` `lydie:local-workspace`) together with the Getting started page
   (`createGettingStarted`, one transaction, not on the undo stack), which the window opens.
 - First run elsewhere (`src/welcome.ts`, LYD-313): a desktop folder window opens
@@ -46,7 +49,8 @@ composition root.
 - `vite.config.ts` must keep `powersyncOpfsFix()` from `@lydie/store/vite` in `plugins` and
   `worker.plugins` (LYD-279; see `packages/store/AGENTS.md`). Those settings live in
   `vite.shared.ts` (`appVite()`, exported as `@lydie/web/vite`) so that any other bundler of the
-  app uses the same ones.
+  app uses the same ones. `vite.config.ts` adds `startupPreloads()` (`vite-startup.ts`), which only
+  this app's own `index.html` needs.
 
 ## The try-out (`src/try.tsx`, exported as `@lydie/web/try`)
 
@@ -74,15 +78,35 @@ app (the marketing site's home page, which paints a captured copy of the shell f
 - Hosted-only code (the sync engine, the collab pool, the hand-off, Yjs) is reached only through
   `src/hosted-lazy.ts`, imported dynamically where a window opens a hosted workspace, the desktop
   collab pool starts, or the hand-off runs. `@lydie/sync` is `"sideEffects": false`, so what the
-  startup imports from it (session, scope preference) does not pull the rest in.
+  startup imports from it (session, scope preference) does not pull the rest in. A browser window
+  whose URL or preference names a hosted workspace starts that import while it reads the session.
+- Client packages are `"sideEffects": false` (`["**/*.css"]` for `ui` and `editor`), so a module
+  only one lazy chunk uses stays out of the startup. A module that does something when imported
+  (registers a global, starts a fetch) must be listed there instead. `createIcon` (`@lydie/ui`) is
+  marked `/* @__NO_SIDE_EFFECTS__ */`, so icons nothing uses are dropped.
 - `src/plugins.ts`: settings, team, sharing and publishing are `lazyPlugin`s (`src/lazy-plugin.ts`):
-  id and name up front, code in their own chunks, loaded at startup in parallel with the database,
-  activated when in.
-- Initial JS (entry + modulepreloads) in local mode: 2,500 KB / 768 KB gzip before round 4,
-  2,196 KB / 675 KB after.
+  id and name up front, code in their own chunks, loaded once the page is idle (or when activated,
+  if that is first), activated when in.
+- Initial JS (entry + modulepreloads, Nov 2026, measured with gzip -9): 2,959 KB / 928 KB gzip in
+  11 files before the startup round; after it, 2,457 KB / 791 KB in 28 files for every window, plus
+  271 KB / 82 KB of browser-only chunks (the in-page database) in a browser window.
 
 ## Boot
 
+- `src/main.tsx` is the entry and is kept small (~14 KB): it decides from `localStorage` and the
+  URL whether the window opens this browser's own workspace (`src/early.ts`, the same rules as
+  `compose-browser.ts`: `lydie:local-workspace`, the `lydie:lydie.scope` preference, `w/…` URLs via
+  `urlNamesHosted` in `src/routes.ts`, which `scope.test.ts` checks against `linkedScope`) and, if
+  so, takes the single-tab lock and starts `openWebStore` before the app's code is evaluated. Then
+  it imports `src/mount.tsx` (the app), which starts `bootOnce` (`src/boot.ts`: compose, then
+  `startApp`) before React renders: what is shown waits for the boot, the boot does not wait for
+  what is shown (the desktop app lock only gates what is shown).
+- `vite-startup.ts` (a Vite plugin) adds to `index.html`: modulepreloads for the app's chunks
+  (`mount.tsx` and what it imports), a preload of Inter latin, and a data block (`lydie-preloads`)
+  listing the browser-only files: the in-page database's chunks, PowerSync's database worker, its
+  SQLite build and WASM. `early.ts` turns the block into `<link rel=preload>`s (low priority for the
+  worker files) only where there is no desktop shell, so an Electron window does not fetch them.
+- Measures: `lydie:open-store`, `lydie:compose`, `lydie:start-app`, and the `lydie:ready` mark.
 - `public/theme.js` (head) applies the saved theme before the first paint; light by default.
 - `public/boot-shell.js` (after `#root`) paints the shell's frame (window background and content
   card, at the saved sidebar width) before any module loads, so a reload never shows a blank page.
@@ -94,8 +118,9 @@ app (the marketing site's home page, which paints a captured copy of the shell f
   leaves them cached. Groups list packages explicitly: a group pulls in modules that only lazy
   chunks use, so a broad pattern turned wa-sqlite, PowerSync's WebSocket transport and every
   highlight.js grammar into startup code. After changing a group, compare what `dist/index.html`
-  loads (entry, modulepreloads) before and after. Nov 2026: startup 2.5 MB / 767 kB gzip in 13
-  files; the largest is the entry, 626 kB.
+  loads (entry, modulepreloads, and the `lydie-preloads` block) before and after (sizes: "Bundle
+  splitting"). Vite's dynamic-import helper has a group of its own (`preload-helper`, priority 1):
+  the PowerSync group would take it, and the entry would load PowerSync.
 
 ## Modes and routes
 

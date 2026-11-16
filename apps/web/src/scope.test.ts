@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import type { WorkspaceScope } from "@lydie/plugin-api";
 
+import { urlNamesHosted } from "./routes.ts";
 import { decideScope, linkedScope, LOCAL } from "./scope.ts";
 
 const A = "0193a5e2-7c3b-7def-8a1b-00000000000a";
@@ -61,4 +62,29 @@ describe("the workspace a window opens", () => {
     // The workspace opened last is not looked up: it opens offline.
     expect((await decide(null, hosted(X))).scope).toEqual(hosted(X));
   });
+});
+
+test("the entry's quick check agrees with linkedScope", () => {
+  const paths = [
+    ["/", "/"],
+    ["/", "/index.html"],
+    ["/", "/w/acme"],
+    ["/", "/w/acme/"],
+    ["/", "/w/acme/d/x"],
+    ["/", "/w/"],
+    ["/", "/w"],
+    ["/", "/d/a-0193a5e27c3b7def8a1b00000000000a"],
+    ["/", "/trash"],
+    ["/app/", "/app"],
+    ["/app/", "/app/"],
+    ["/app/", "/app/w/acme/trash"],
+    ["/app/", "/elsewhere/w/acme"],
+  ] as const;
+  for (const [base, pathname] of paths) {
+    const linked = linkedScope(base, pathname);
+    expect([pathname, urlNamesHosted(base, pathname)]).toEqual([
+      pathname,
+      linked ? linked.kind === "hosted" : null,
+    ]);
+  }
 });
