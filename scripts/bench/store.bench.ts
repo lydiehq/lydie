@@ -18,7 +18,7 @@ import type { ViewWindowInput } from "@lydie/contract";
 import { createRuntime } from "@lydie/runtime";
 import type { Runtime } from "@lydie/runtime";
 import { queries } from "@lydie/store";
-import type { LiveQuery, Store } from "@lydie/store";
+import type { LiveQuery, Store, StoreQuery } from "@lydie/store";
 import { openNodeStore } from "@lydie/store/node";
 
 import { seedWorkspace } from "../seed/seed.ts";
@@ -33,20 +33,103 @@ const FRAME_MS = 16;
 type Stats = { median: number; p95: number; min: number; runs: number };
 const results: Record<string, Stats & { budget: number; unit?: string }> = {};
 
-async function measure(fn: (i: number) => Promise<unknown>, runs = 20, warmup = 3): Promise<Stats> {
+// PowerSync's Node pool hands reads to its five connections in turn, each with its own page
+// cache: with fewer warm-up runs than connections, the first measured runs on the cold ones were
+// the outliers that made p95.
+const WARMUP = 6;
+
+async function sample(
+  fn: (i: number) => Promise<number>,
+  runs = 20,
+  warmup = WARMUP,
+): Promise<Stats> {
   for (let i = 0; i < warmup; i++) await fn(-1 - i);
+  // A collection left over from the previous measurement lands in this one otherwise.
+  Bun.gc(true);
   const times: number[] = [];
-  for (let i = 0; i < runs; i++) {
-    const t = performance.now();
-    await fn(i);
-    times.push(performance.now() - t);
-  }
+  for (let i = 0; i < runs; i++) times.push(await fn(i));
   times.sort((a, b) => a - b);
   return {
     median: times[Math.floor(times.length / 2)]!,
-    p95: times[Math.min(times.length - 1, Math.floor(times.length * 0.95))]!,
+    // Nearest rank: the 19th of 20 runs, not the slowest.
+    p95: times[Math.max(0, Math.ceil(times.length * 0.95) - 1)]!,
     min: times[0]!,
     runs,
+  };
+}
+
+function measure(fn: (i: number) => Promise<unknown>, runs = 20, warmup = WARMUP): Promise<Stats> {
+  return sample(
+    async (i) => {
+      const t = performance.now();
+      await fn(i);
+      return performance.now() - t;
+    },
+    runs,
+    warmup,
+  );
+}
+
+// Counts the statements the store runs and tells when it has gone quiet: the reads of live
+// queries after a write, which the write's own promise does not wait for.
+function trackReads(target: Store) {
+  const db = target.db as unknown as Record<
+    "get" | "getAll",
+    (...a: unknown[]) => Promise<unknown>
+  >;
+  let inFlight = 0;
+  let started = 0;
+  let lastStart = 0;
+  let lastEnd = 0;
+  const originals = { get: db.get, getAll: db.getAll };
+  for (const name of ["get", "getAll"] as const) {
+    const original = originals[name].bind(target.db);
+    db[name] = async (...args: unknown[]) => {
+      inFlight++;
+      started++;
+      lastStart = performance.now();
+      try {
+        return await original(...args);
+      } finally {
+        inFlight--;
+        lastEnd = performance.now();
+      }
+    };
+  }
+  return {
+    reset() {
+      started = 0;
+      lastEnd = 0;
+    },
+    get statements() {
+      return started;
+    },
+    get lastEnd() {
+      return lastEnd;
+    },
+    // Nothing running and nothing started for `idleMs`.
+    async quiet(idleMs = 10) {
+      for (;;) {
+        await new Promise((resolve) => setTimeout(resolve, idleMs));
+        if (inFlight === 0 && performance.now() - lastStart >= idleMs) return;
+      }
+    },
+    restore() {
+      db.get = originals.get;
+      db.getAll = originals.getAll;
+    },
+  };
+}
+
+// A count per run (statements), reported like a measurement.
+function counted(name: string, counts: number[], budget: number) {
+  counts.sort((a, b) => a - b);
+  results[name] = {
+    median: counts[Math.floor(counts.length / 2)]!,
+    p95: counts[Math.ceil(counts.length * 0.95) - 1]!,
+    min: counts[0]!,
+    runs: counts.length,
+    budget,
   };
 }
 
@@ -573,5 +656,69 @@ describe(`store with ${NOTES} notes, ${ROWS} database rows, ${PROJECTS} related 
       ),
       FRAME_MS,
     );
+  });
+
+  it("saves a body with the queries a window has open", async () => {
+    const ws = seed.workspaceId;
+    const edited = seed.notes[42]!;
+    const title = (await store.getDoc(edited, { includeBody: false }))!.document.title;
+    // While someone types: eight pooled tabs (body, links, access), the sidebar (top level and
+    // three folders), Home's recent pages, and the links panel of the page being edited. The
+    // workspace-wide ones run here on every save, as after a pause in typing (the app's backend
+    // re-runs them at most every 1.5 s).
+    const open = [
+      ...[edited, ...seed.notes.slice(1000, 1007)].flatMap((id) => [
+        queries.getDoc(id, { includeBody: true }),
+        queries.outgoingLinks(id, { icons: true }),
+        queries.myAccess(id),
+      ]),
+      queries.children(ws, null),
+      ...seed.folders.slice(0, 3).map((folder) => queries.children(ws, folder)),
+      queries.recent(ws),
+      queries.backlinks(edited),
+      queries.unlinkedMentions(ws, edited, [title]),
+    ];
+    const lives = open.map((q) => store.live(q as StoreQuery<unknown>));
+    const reads = trackReads(store);
+    const statements: number[] = [];
+    try {
+      for (const live of lives) await waitFor(live, () => true);
+      const body = lives[0] as LiveQuery<{ body: { markdown: string } | null }>;
+      const save = await sample(async (i) => {
+        await reads.quiet();
+        reads.reset();
+        const markdown = `# Note\n\nTyping ${i} [[Hub]]`;
+        const seen = waitFor(body, (rows) => rows[0]?.body?.markdown === markdown);
+        const t = performance.now();
+        await runtime.execute("doc.updateBody", { id: edited, markdown }, { history: false });
+        await seen;
+        await reads.quiet();
+        if (i >= 0) statements.push(reads.statements);
+        return Math.max(reads.lastEnd, t) - t;
+      });
+      record(`updateBody + ${open.length} live queries settle`, save, FRAME_MS);
+      counted("updateBody: statements live queries run per save (count)", statements, 10);
+
+      // Typing in the title (a `documents` change, as when a save stamps `updated_at`).
+      statements.length = 0;
+      const rename = await sample(async (i) => {
+        await reads.quiet();
+        reads.reset();
+        const t = performance.now();
+        await runtime.execute(
+          "doc.rename",
+          { id: edited, title: `${title} ${i}` },
+          { history: false },
+        );
+        await reads.quiet();
+        if (i >= 0) statements.push(reads.statements);
+        return Math.max(reads.lastEnd, t) - t;
+      });
+      record(`doc.rename + ${open.length} live queries settle`, rename, FRAME_MS);
+      counted("doc.rename: statements live queries run (count)", statements, 20);
+    } finally {
+      reads.restore();
+      for (const live of lives) await live.close();
+    }
   });
 });
