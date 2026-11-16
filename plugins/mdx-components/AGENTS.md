@@ -31,7 +31,8 @@ authoritative and runs in CI.
 - `view.ts`: the `MdxComponents` editor extension. A container gets a header (icon, its `title`
   prop or its name, its other props as pills) and a coloured rail down its blocks; a leaf gets a
   card, with the picture it points at above its name; module lines fold into an "MDX · 2 imports"
-  chip. Top-level blocks only.
+  chip. Top-level blocks only. A document without MDX costs an edit only a look at the start of
+  the top-level blocks it touched (`startsLikeMdx`), not every block's text.
 
 Not done: editing props in place, components inside list items or other blocks, inline components,
 rendering a project's real components.

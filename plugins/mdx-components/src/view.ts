@@ -3,7 +3,14 @@
 // only draws over them: a tag pair becomes a titled frame around its blocks, a self-closing tag
 // a card (with the picture it points at), and the file's import/export lines fold into one chip.
 // Every one of them can be flipped back to its source, where it is edited as before.
-import { Decoration, DecorationSet, Extension, Plugin, PluginKey } from "@lydie/plugin-api/editor";
+import {
+  changedRanges,
+  Decoration,
+  DecorationSet,
+  Extension,
+  Plugin,
+  PluginKey,
+} from "@lydie/plugin-api/editor";
 import type { EditorState, ProseMirrorNode, Transaction } from "@lydie/plugin-api/editor";
 
 import { constants, images, prop, readableName, regions, toneOf } from "./parse.ts";
@@ -205,7 +212,7 @@ function esmChip(region: Extract<Region, { kind: "esm" }>, shown: boolean, dispa
 
 // A block's text as the file has it: a raw block's source, and for a paragraph its text with
 // the inline source it holds (a tag over several lines is one inline raw node in a paragraph).
-function sourceOf(node: ProseMirrorNode): string {
+export function sourceOf(node: ProseMirrorNode): string {
   if (node.type.name === "rawBlock") return String(node.attrs.source ?? "");
   let text = "";
   node.forEach((child) => {
@@ -230,12 +237,51 @@ function blocksOf(doc: ProseMirrorNode): Block[] {
   return blocks;
 }
 
-function build(doc: ProseMirrorNode, source: ReadonlySet<number>): DecorationSet {
-  const blocks = blocksOf(doc);
-  // Cheap way out for documents with no MDX in them, which is nearly all of them.
-  if (!blocks.some((b) => b.type === "rawBlock" || /^\s*(import\s|export\s|<[A-Z])/.test(b.text))) {
-    return DecorationSet.empty;
+const MDX_START = /^\s*(import\s|export\s|<[A-Z])/;
+// "import " is the longest start MDX_START looks at.
+const MDX_START_LENGTH = 7;
+
+// Whether a block could be part of MDX: a raw block, or a paragraph (regions read no other
+// blocks) whose source starts as a module line or a component tag does. Reads only the start of
+// the block, not its whole text.
+export function startsLikeMdx(node: ProseMirrorNode): boolean {
+  if (node.type.name === "rawBlock") return true;
+  if (node.type.name !== "paragraph") return false;
+  let start = "";
+  for (let i = 0; i < node.childCount && start.trimStart().length < MDX_START_LENGTH; i++) {
+    const child = node.child(i);
+    if (child.isText) start += child.text ?? "";
+    else if (child.type.name === "rawInline") start += String(child.attrs.source ?? "");
+    else if (child.type.name === "hardBreak") start += "\n";
+    else start += child.textContent;
   }
+  return MDX_START.test(start);
+}
+
+// Whether a change may have added MDX to a document that had none: one of the top-level blocks it
+// touched (only those are read) now starts like it.
+function addsMdx(tr: Transaction): boolean {
+  const doc = tr.doc;
+  const size = doc.content.size;
+  let found = false;
+  for (const [from, to] of changedRanges(tr)) {
+    doc.nodesBetween(Math.max(0, from - 1), Math.min(size, to + 1), (node) => {
+      if (!found && startsLikeMdx(node)) found = true;
+      return false;
+    });
+    if (found) return true;
+  }
+  return false;
+}
+
+function build(doc: ProseMirrorNode, source: ReadonlySet<number>): DecorationSet {
+  // Cheap way out for documents with no MDX in them, which is nearly all of them.
+  let any = false;
+  doc.forEach((node) => {
+    any ||= startsLikeMdx(node);
+  });
+  if (!any) return DecorationSet.empty;
+  const blocks = blocksOf(doc);
   const found = regions(blocks);
   const known = constants(
     found.flatMap((r) => (r.kind === "esm" ? r.blocks.map((b) => b.text) : [])).join("\n"),
@@ -306,6 +352,8 @@ export const MdxComponents = Extension.create({
             if (meta) {
               if (source.has(meta.toggle)) source.delete(meta.toggle);
               else source.add(meta.toggle);
+            } else if (value.decorations === DecorationSet.empty && !addsMdx(tr)) {
+              return { source, decorations: DecorationSet.empty };
             }
             return { source, decorations: build(tr.doc, source) };
           },
