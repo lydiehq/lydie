@@ -13,7 +13,7 @@ test("a block starts like MDX when its whole source would, read from its start o
   const paragraph = (...content: ProseMirrorNode[]) =>
     schema.nodes.paragraph!.create(null, content);
   const blocks = [
-    paragraph(text("import x from 'y'")),
+    paragraph(text("import Chart, { Tabs }")),
     paragraph(text("  "), text("exp"), text("ort const a = 1")),
     paragraph(br(), text("import a")),
     paragraph(raw('<Card\n  title="x"\n/>')),
