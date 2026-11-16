@@ -92,21 +92,21 @@ export function Composer({
   const [busy, setBusy] = useState(false);
   useFocusWhenShown(field, !!autoFocus);
   const body = text.trim();
-  const submit = async () => {
-    if (!body || busy) return;
+  // A promise chain, not try/finally: the React Compiler cannot compile a component with one.
+  const submit = () => {
+    if (!body || busy) return Promise.resolve();
     setBusy(true);
-    try {
-      await onSubmit(body);
-      setText("");
-    } catch (error) {
-      app.notify({
-        kind: "error",
-        title: "That could not be saved",
-        description: error instanceof Error ? error.message : String(error),
-      });
-    } finally {
-      setBusy(false);
-    }
+    return onSubmit(body)
+      .then(
+        () => setText(""),
+        (error: unknown) =>
+          app.notify({
+            kind: "error",
+            title: "That could not be saved",
+            description: error instanceof Error ? error.message : String(error),
+          }),
+      )
+      .finally(() => setBusy(false));
   };
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
