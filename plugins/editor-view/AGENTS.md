@@ -17,13 +17,14 @@ Licence: AGPL-3.0-only.
 
 ## What it does
 
-Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.editor.fromMarkdown`/`toMarkdown` (splice-preserving), saves through `doc.updateBody` debounced (400 ms) with `history: false`, takes outside changes when there are no unsaved edits. Title renames coalesce per document. Restores scroll and selection from the tab state; `route.heading` / `route.blockId` scroll there (also when they change in place); tab state `focusEditor: true` focuses the editor once opened. Enter or ArrowDown in the title moves into the body; Shift-Tab in the body with nothing to outdent moves back to the title (a priority-50 extension under the indent handler).
+Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.editor.fromMarkdown`/`toMarkdown` (splice-preserving), saves through `doc.updateBody` debounced (400 ms) with `history: false`; each save's text (its parse, cached by `@lydie/markdown`) is the next save's original, so a session's saves stay small. Takes outside changes when there are no unsaved edits, in a hidden tab (the pool's) only once it shows again, never with a collaborative body. Title renames wait for a pause in typing (`RENAME_DELAY`, 400 ms; written at once on blur, Enter, unmount and `pagehide`) and coalesce per document; meanwhile the tab title and the breadcrumbs show what is typed (`title-drafts.ts`), the sidebar after the rename. Restores scroll and selection from the tab state; `route.heading` / `route.blockId` scroll there (also when they change in place); tab state `focusEditor: true` focuses the editor once opened. Enter or ArrowDown in the title moves into the body; Shift-Tab in the body with nothing to outdent moves back to the title (a priority-50 extension under the indent handler).
 
 - **File sessions** (`file-session.tsx`, LYD-196/197): when `backend.documents` exists (Electron folder windows), the editor opens a session, sends `update(doc)` 150 ms after local edits while dirty, saves with `session.save(doc)`, and applies `steps` events rebased over local edits since the last update (prosemirror-collab style), off the undo stack. A `conflict` event (or a flag found on open) shows `ConflictBanner`: Keep mine (loads the conflict copy, undoable), Keep theirs, Open both (split); both clear the flag and trash the copy.
 - **Session ordering** (LYD-269, `session-log.ts`): updates and saves carry `seq`/`version` (the
   session tags them); disk steps are mapped through what the editor did since update `basedOn`
   (undoing main's steps received since, redoing local edits and applied steps); after applying, an
-  update is sent; a `stale` save waits for the pending steps and saves again.
+  update is sent; a `stale` save waits for the pending steps and saves again; after a save that is
+  not stale, `saved(seq)` prunes the log, so it holds no more than the edits since.
 - **Plugin hooks**: renders every `editor.register({ overlay })` once per editor (`EditorOverlays`), `![[embeds]]` through the first matching `links.register({ kind: "embed" })` (`EmbedSlot`), `documents` slots "top" (above the title), "header" and "body".
 - **Find in page** (`FindBar.tsx`, `find.ts`): command `editor-view.find` (Mod+F, "Find in page";
   enabled while the active tab is a doc with an editor, so elsewhere the browser's find still
@@ -33,8 +34,9 @@ Loads the body with `useQuery("doc.get", { includeBody })`, converts with `app.e
   link matches whole by its label. The `FindExtension` plugin (registered with
   `ctx.editor.register({ extensions })`) holds query, matches and current index and paints them as
   decorations (`data-find-match` / `data-find-current`); it changes only through meta transactions
-  (`addToHistory: false`, no doc change), so nothing is saved, synced or undoable, and it searches
-  again after any edit (local, collab, disk). Enter / Shift+Enter in the bar, `editor-view.find-next`
+  (`addToHistory: false`, no doc change), so nothing is saved, synced or undoable. After any edit (local, collab,
+  disk) it searches again only the textblocks the edit touched and maps the other matches
+  (`remapMatches`, checked against a full search by a fuzz test). Enter / Shift+Enter in the bar, `editor-view.find-next`
   (Mod+G) and `find-previous` (Mod+Shift+G, enabled while the bar is open) step with wraparound;
   Escape closes, clears and selects the current match in the editor. Bars register per tab id in
   a module map that the commands read for `app.activeTab()`.

@@ -21,11 +21,11 @@ import {
   useQuery,
   useQuerySelect,
   useSetTabTint,
-  useStatus,
   useTabStateSnapshot,
 } from "@lydie/plugin-api";
 import type {
   AppApi,
+  Backend,
   DocWithBody,
   JSONContent,
   ParsedDocument,
@@ -48,8 +48,8 @@ import {
   StatusBanner,
   TableHandleMenu,
 } from "@lydie/plugin-api/ui";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent, RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import type { CSSProperties, KeyboardEvent, RefObject } from "react";
 
 import { Breadcrumbs } from "./Breadcrumbs.tsx";
 import { BubbleMenu } from "./BubbleMenu.tsx";
@@ -58,14 +58,21 @@ import { FindBar } from "./FindBar.tsx";
 import { PageMenu, shownFullWidth } from "./PageMenu.tsx";
 import { rankSlash, recordSlashUse } from "./slash-ranking.ts";
 import type { SlashRecents } from "./slash-ranking.ts";
+import { clearTitleDraft, setTitleDraft, useTitleDraft } from "./title-drafts.ts";
 
 const SAVE_DELAY = 400;
+// Renames wait for a pause in typing: each one is a write, and in a folder a file rename that
+// rewrites the files linking to it.
+const RENAME_DELAY = 400;
 
 export function DocTabTitle({ path }: { path: string }) {
   const id = docIdOf(path);
-  const title = useQuerySelect("doc.get", id ? { id } : null, (s) =>
+  const stored = useQuerySelect("doc.get", id ? { id } : null, (s) =>
     s.data[0] ? s.data[0].document.title || "Untitled" : s.isLoading ? "" : "Not found",
   );
+  // While the title is being typed, before the rename is written.
+  const draft = useTitleDraft(id);
+  const title = draft === null ? stored : draft || "Untitled";
   const icon = useQuerySelect("doc.get", id ? { id } : null, (s) =>
     pageIconOf(s.data[0]?.document.properties),
   );
@@ -82,13 +89,19 @@ export function DocView({ tab }: ViewProps) {
   const app = useApp();
   const route = parseDocPath(tab.path);
   const ops = useOps();
+  const backend = useBackend();
   const { data, isLoading, error } = useQuery(
     "doc.get",
     route ? { id: route.id, includeBody: true } : null,
   );
   const entry = data[0];
-  // Hosted, before the first download: a page that is not here may still be on its way.
-  const arriving = useStatus().awaitingFirstSync === true;
+  // Hosted, before the first download: a page that is not here may still be on its way. Only
+  // that: the status changes with every pending operation.
+  const arriving = useSyncExternalStore(
+    backend.status.subscribe,
+    () => backend.status.get().awaitingFirstSync === true,
+  );
+  const draftTitle = useTitleDraft(entry?.document.id ?? null);
   const fullWidth = pageFullWidthOf(entry?.document.properties);
   const shownId = entry?.document.id;
   useEffect(() => {
@@ -128,7 +141,7 @@ export function DocView({ tab }: ViewProps) {
   }
   const ref = {
     id: entry.document.id,
-    title: entry.document.title,
+    title: draftTitle ?? entry.document.title,
     parentId: entry.document.parentId,
   };
   return (
@@ -136,7 +149,7 @@ export function DocView({ tab }: ViewProps) {
       ref={root}
       // `isolate`: the bar's z-index stays inside the view, under a host's own controls.
       className="relative isolate flex min-h-0 grow flex-col"
-      style={overlay ? { ["--page-bar-overlay" as string]: "2.25rem" } : undefined}
+      style={overlay ? BAR_OVERLAY : undefined}
       data-testid="doc-view"
       data-doc-id={route.id}
       data-full-width={fullWidth || undefined}
@@ -212,6 +225,9 @@ export function DocView({ tab }: ViewProps) {
 const INK =
   "data-[over-cover=dark]:[&_*]:text-white/85! data-[over-cover=dark]:[&_button:hover]:bg-white/15! data-[over-cover=dark]:[&_button:hover]:text-white! data-[over-cover=dark]:[&_button:hover_*]:text-white! " +
   "data-[over-cover=light]:[&_*]:text-black/60! data-[over-cover=light]:[&_button:hover]:bg-black/8! data-[over-cover=light]:[&_button:hover]:text-black/90! data-[over-cover=light]:[&_button:hover_*]:text-black/90!";
+
+// The bar's height while it lies over the cover, which the find bar keeps clear of.
+const BAR_OVERLAY = { "--page-bar-overlay": "2.25rem" } as CSSProperties;
 
 // How far short of the cover's bottom edge the underlay stops: more than a frame of fast scrolling.
 const UNDERLAY_SLACK = 60;
@@ -453,6 +469,41 @@ function scrollToTarget(editor: Editor, heading: string | null, blockId: string 
   setTimeout(() => el?.removeAttribute("data-flash"), 1200);
 }
 
+// The page a link's target names as a title: its last path segment, without `.md`.
+function linkTitle(target: string): string {
+  return target.split("/").at(-1)?.replace(/\.md$/i, "") ?? target;
+}
+
+// The document a wiki link in `fromId` opens, null when there is none. The saved link carries the
+// runtime's resolution; a link typed since the last save falls back to a title search.
+async function wikiLinkTarget(
+  backend: Backend,
+  fromId: string,
+  target: string,
+): Promise<string | null> {
+  const key = (ref: string) =>
+    ref
+      .replace(/#.*$/, "")
+      .replace(/\.(md|base)$/i, "")
+      .trim()
+      .toLowerCase();
+  try {
+    const saved = (await backend.query("doc.links", { id: fromId })).find(
+      (l) => key(l.targetRef) === key(target),
+    );
+    if (saved) return saved.target?.id ?? null;
+    const title = linkTitle(target).toLowerCase();
+    const hits = await backend.query("doc.search", {
+      workspaceId: backend.info.workspaceId,
+      text: linkTitle(target),
+      limit: 20,
+    });
+    return hits.find((h) => h.title.toLowerCase() === title)?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function DocEditor({
   entry,
   tabId,
@@ -480,7 +531,7 @@ function DocEditor({
   // Someone who may comment but not edit still gets the selection toolbar's reading actions.
   const mayComment = useQuerySelect(
     "doc.access",
-    binding?.state.readOnly ? { id } : null,
+    binding?.readOnly ? { id } : null,
     (s) => s.data[0]?.level === "comment",
   );
 
@@ -541,6 +592,9 @@ function DocEditor({
     const next = app.editor.toMarkdown(parsed.current, editor.getJSON());
     if (next === lastSaved.current) return;
     lastSaved.current = next;
+    // The next save splices into this text, so it re-serialises only what changes from here on.
+    // The save parsed it to verify it: this finds that parse (its content is never read).
+    parsed.current = app.editor.fromMarkdown(next);
     ours.current = [...ours.current.slice(-9), next];
     void ops.doc.updateBody({ id, markdown: next }, { history: false }).catch((error: unknown) => {
       app.notify({ title: "Could not save", description: (error as Error).message, kind: "error" });
@@ -554,16 +608,20 @@ function DocEditor({
   });
 
   // Someone else changed the body (another tab, an agent, the file bridge): take it if we have
-  // no unsaved edits.
+  // no unsaved edits. A hidden tab (kept by the pool) takes it when it shows again: with the
+  // same page open beside it, every save would otherwise reload the whole document there.
+  const live = binding !== null;
   useEffect(() => {
-    // With a file session, changes on disk arrive as steps instead.
-    if (file.active || markdown === lastSaved.current || dirty.current) return;
+    // With a file session, changes on disk arrive as steps instead; a collaborative editor has
+    // the Yjs document as its content.
+    if (live || file.active || !active) return;
+    if (markdown === lastSaved.current || dirty.current) return;
     if (ours.current.includes(markdown)) return;
     lastSaved.current = markdown;
     ours.current = [markdown];
     parsed.current = app.editor.fromMarkdown(markdown);
     setContent(parsed.current.content);
-  }, [markdown, app, file.active]);
+  }, [markdown, app, file.active, live, active]);
 
   useEffect(() => {
     const flush = () => saveRef.current();
@@ -694,45 +752,20 @@ function DocEditor({
   };
 
   const openWikiLink = async (attrs: { target: string; heading?: string | null }) => {
-    const target = attrs.target.split("/").at(-1)?.replace(/\.md$/i, "") ?? attrs.target;
     // Without the links plugin: Mod-click follows (as Obsidian does while editing).
     const mode = app.modeFor(lastGesture, "edit");
-    let docId: string | null = null;
-    try {
-      // The saved link carries the runtime's resolution; a link typed since the last save falls
-      // back to a title search.
-      const key = (ref: string) =>
-        ref
-          .replace(/#.*$/, "")
-          .replace(/\.(md|base)$/i, "")
-          .trim()
-          .toLowerCase();
-      const saved = (await backend.query("doc.links", { id })).find(
-        (l) => key(l.targetRef) === key(attrs.target),
-      );
-      if (saved?.target) docId = saved.target.id;
-      const hits = saved
-        ? []
-        : await backend.query("doc.search", {
-            workspaceId: backend.info.workspaceId,
-            text: target,
-            limit: 20,
-          });
-      docId ??= hits.find((h) => h.title.toLowerCase() === target.toLowerCase())?.id ?? null;
-    } catch {
-      docId = null;
-    }
+    let docId = await wikiLinkTarget(backend, id, attrs.target);
     if (!docId) {
       const created = await ops.doc.create({
         workspaceId: backend.info.workspaceId,
-        title: target,
+        title: linkTitle(attrs.target),
       });
       docId = created.id;
     }
     app.open(docPath(docId, { heading: attrs.heading ?? undefined }), { mode });
   };
 
-  if (binding?.state.status === "unavailable") {
+  if (binding?.unavailable) {
     return (
       <EmptyState
         className="h-full"
@@ -766,7 +799,7 @@ function DocEditor({
       }}
     >
       {editor && !editor.isDestroyed && <FindBar editor={editor} tabId={tabId} />}
-      {binding?.state.readOnly && (
+      {binding?.readOnly && (
         <StatusBanner kind="info">You can view this page but not edit it.</StatusBanner>
       )}
       {file.conflict && file.conflict.at !== dismissedConflict && (
@@ -830,7 +863,7 @@ function DocEditor({
                   ? {
                       ydoc: binding.session.ydoc as never,
                       awareness: binding.session.awareness,
-                      readOnly: binding.state.readOnly,
+                      readOnly: binding.readOnly,
                       user: binding.session.user,
                     }
                   : undefined
@@ -895,6 +928,9 @@ function TitleField({
   const shown = (t: string) => (t === "Untitled" ? "" : t);
   const [value, setValue] = useState(shown(title));
   const focused = useRef(false);
+  // What was typed since the last rename; null when it is written.
+  const pending = useRef<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!focused.current) setValue(shown(title));
@@ -911,25 +947,47 @@ function TitleField({
     if (autoFocus) ref.current?.focus();
   }, [autoFocus, ref]);
 
-  const commit = (next: string) => {
-    const trimmed = next.trim().replace(/\s+/g, " ");
-    if (trimmed && trimmed !== title) {
-      void ops.doc
-        .rename({ id, title: trimmed }, { coalesce: `title:${id}`, label: "Rename document" })
-        .catch((error: unknown) =>
-          app.notify({
-            title: "Could not rename",
-            description: error instanceof Error ? error.message : String(error),
-            kind: "error",
-          }),
-        );
+  // Writes the rename typing is waiting on, if any.
+  const flush = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    const next = pending.current;
+    pending.current = null;
+    if (next === null) return;
+    const trimmed = cleanTitle(next);
+    if (!trimmed || trimmed === title) {
+      clearTitleDraft(id, trimmed);
+      return;
     }
+    void ops.doc
+      .rename({ id, title: trimmed }, { coalesce: `title:${id}`, label: "Rename document" })
+      .catch((error: unknown) =>
+        app.notify({
+          title: "Could not rename",
+          description: error instanceof Error ? error.message : String(error),
+          kind: "error",
+        }),
+      )
+      .finally(() => clearTitleDraft(id, trimmed));
   };
+  const flushRef = useRef(flush);
+  useLayoutEffect(() => {
+    flushRef.current = flush;
+  });
+  // Also when the view goes (another page in the tab, the tab closed) or the window does.
+  useEffect(() => {
+    const onHide = () => flushRef.current();
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      window.removeEventListener("pagehide", onHide);
+      flushRef.current();
+    };
+  }, []);
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" || (event.key === "ArrowDown" && !value.includes("\n"))) {
       event.preventDefault();
-      commit(value);
+      flush();
       onDone();
     }
   };
@@ -948,15 +1006,22 @@ function TitleField({
       onFocus={() => (focused.current = true)}
       onBlur={() => {
         focused.current = false;
-        commit(value);
+        flush();
       }}
       onChange={(event) => {
         const next = event.target.value.replace(/\n/g, " ");
         setValue(next);
-        commit(next);
+        pending.current = next;
+        setTitleDraft(id, cleanTitle(next) || null);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => flushRef.current(), RENAME_DELAY);
       }}
       onKeyDown={onKeyDown}
       className="my-2 w-full resize-none overflow-hidden bg-transparent py-2 text-[1.75rem] leading-tight font-medium tracking-[-0.05rem] text-gray-950 outline-none placeholder:text-gray-300"
     />
   );
+}
+
+function cleanTitle(text: string): string {
+  return text.trim().replace(/\s+/g, " ");
 }

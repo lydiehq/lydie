@@ -9,13 +9,7 @@ import {
 } from "react";
 
 import type { HostedInput, HostedOperationId, HostedOutput } from "./hosted-operations.ts";
-import type {
-  AccountApi,
-  AccountState,
-  CollabDocState,
-  CollabSession,
-  Observable,
-} from "./hosted.ts";
+import type { AccountApi, AccountState, CollabSession, Observable } from "./hosted.ts";
 import { useApp } from "./react.tsx";
 
 const NEVER: Observable<null> = { get: () => null, subscribe: () => () => {} };
@@ -37,13 +31,19 @@ export function useAccount(): { api: AccountApi | null; state: AccountState } {
 
 export type CollabBinding = {
   session: CollabSession;
-  state: CollabDocState;
+  // What a view draws from the session's live state. The state itself changes on every local edit
+  // and every acknowledgement (`unsyncedChanges`, `status`); these change only when access does,
+  // so the editor under them does not re-render as you type. Read `session.state` for the rest.
+  readOnly: boolean;
+  // Access was removed or the page was deleted (`status` "unavailable").
+  unavailable: boolean;
+  level: string | null;
 };
 
 // The collaborative body of a document in a hosted window: `null` where bodies are not collaborative
 // (local mode), `"loading"` until the local copy is loaded (the doc view shows the body it has
-// meanwhile, read-only), else the session (for the editor's
-// `collab` prop) and its live state (read-only, access removed, …). Released on unmount.
+// meanwhile, read-only), else the session (for the editor's `collab` prop) and what its live state
+// says about access (read-only, access removed). Released on unmount.
 export function useCollabDocument(documentId: string | null): CollabBinding | "loading" | null {
   const collab = useApp().services?.collab ?? null;
   const [session, setSession] = useState<{ session: CollabSession; loaded: boolean } | null>(null);
@@ -63,10 +63,26 @@ export function useCollabDocument(documentId: string | null): CollabBinding | "l
       opened.release();
     };
   }, [collab, documentId]);
-  const state = useObservable(session?.session.state);
+  const state = session?.session.state;
+  const readOnly = useSelected(state, (s) => s.readOnly, false);
+  const unavailable = useSelected(state, (s) => s.status === "unavailable", false);
+  const level = useSelected(state, (s) => s.level, null);
   if (!collab || !documentId) return null;
-  if (!session || !session.loaded || !state || session.session.id !== documentId) return "loading";
-  return { session: session.session, state };
+  if (!session || !session.loaded || session.session.id !== documentId) return "loading";
+  return { session: session.session, readOnly, unavailable, level };
+}
+
+// One value read from an observable, re-rendering only when it changes (keep it a primitive).
+function useSelected<T, R>(
+  observable: Observable<T> | undefined,
+  select: (value: T) => R,
+  fallback: R,
+): R {
+  const source = (observable ?? NEVER) as Observable<T | null>;
+  return useSyncExternalStore(source.subscribe, () => {
+    const value = source.get();
+    return value === null ? fallback : select(value);
+  });
 }
 
 export type HostedQueryState<T> = {
@@ -112,16 +128,9 @@ export function useHostedQuery<K extends HostedOperationId>(
       const data = await api.call(id, current);
       hostedCache.set(key, data);
       setState((s) => (s.key === key ? { key, data, error: null, isLoading: false } : s));
-    } catch (error) {
-      setState((s) =>
-        s.key === key
-          ? {
-              ...s,
-              error: error instanceof Error ? error : new Error(String(error)),
-              isLoading: false,
-            }
-          : s,
-      );
+    } catch (caught) {
+      const error = caught instanceof Error ? caught : new Error(String(caught));
+      setState((s) => (s.key === key ? { ...s, error, isLoading: false } : s));
     }
   }, [api, id, key]);
   useEffect(() => {

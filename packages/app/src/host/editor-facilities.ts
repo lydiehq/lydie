@@ -44,7 +44,15 @@ export function createEditorFacilities(contributions: ContributionRegistry): Edi
   return {
     fromMarkdown(markdown) {
       const result = parse(markdown);
-      return { content: editorFolds(result.doc.toJSON() as JSONContent), source: result };
+      let content: JSONContent | null = null;
+      // Converted when first read: the doc view takes the text it has just saved (a cached parse)
+      // only as the original of its next save.
+      return {
+        get content() {
+          return (content ??= editorFolds(result.doc.toJSON() as JSONContent));
+        },
+        source: result,
+      };
     },
     toMarkdown(original, content) {
       const base: ParseResult | string =
