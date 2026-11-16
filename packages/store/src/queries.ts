@@ -327,28 +327,24 @@ export function blockBacklinks(id: string, blockId: string): StoreQuery<Backlink
 }
 
 // The links in one document as written, each with the live document it resolves to (null when
-// it resolves to nothing or to the trash). Body links first, then property links; ids are minted in
-// document order. `icons`: each target also carries its page icon (`target.icon`, the `icon`
-// property as written, or null), so an editor draws them without a query per target.
-export function outgoingLinks(
-  sourceId: string,
-  options: { icons?: boolean } = {},
-): StoreQuery<OutgoingLink> {
+// it resolves to nothing or to the trash) and that document's page icon (`target.icon`, the `icon`
+// property as written, or null), so an editor draws them without a query per target. Body links
+// first, then property links; ids are minted in document order.
+export function outgoingLinks(sourceId: string): StoreQuery<OutgoingLink> {
   return {
     name: "outgoingLinks",
     sql: `SELECT l.id AS link_id, l.kind AS kind, l.syntax AS syntax, l.target_ref AS target_ref,
                  l.target_heading AS target_heading, l.target_block_id AS target_block_id,
                  l.source_block_id AS source_block_id, l.source_property AS source_property,
                  t.id AS target_id, t.title AS target_title, t.parent_id AS target_parent_id,
-                 t.workspace_id AS target_workspace_id${
-                   options.icons ? ", json_extract(t.properties, '$.icon') AS target_icon" : ""
-                 }
+                 t.workspace_id AS target_workspace_id,
+                 json_extract(t.properties, '$.icon') AS target_icon
           FROM links l
           LEFT JOIN documents t ON t.id = l.target_id AND t.deleted_at IS NULL
           WHERE l.source_id = ?
           ORDER BY l.source_property IS NOT NULL, l.id`,
     parameters: [sourceId],
-    map: options.icons ? withTargetIcon : toOutgoingLink,
+    map: withTargetIcon,
     key: (l) => l.id,
     guard: linkedVersions("target_id", sourceId),
   };
@@ -356,12 +352,9 @@ export function outgoingLinks(
 
 function withTargetIcon(row: Record<string, unknown>): OutgoingLink {
   const link = toOutgoingLink(row);
-  if (link.target) {
-    Object.assign(link.target, {
-      icon: typeof row.target_icon === "string" ? row.target_icon : null,
-    });
-  }
-  return link;
+  if (!link.target) return link;
+  const icon = typeof row.target_icon === "string" ? row.target_icon : null;
+  return { ...link, target: { ...link.target, icon } };
 }
 
 // Links in live documents whose target does not exist or is in the trash. Three disjoint sets,

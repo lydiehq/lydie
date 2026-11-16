@@ -149,7 +149,7 @@ test("guarded queries still see every change to their documents", async () => {
   for (const live of [top, inFolder, links, doc]) await live.close();
 });
 
-test("outgoing links can carry each target's page icon", async () => {
+test("outgoing links carry each target's page icon", async () => {
   const { store, runtime } = await openTestStore();
   await runtime.ops.doc.create({ workspaceId: WS, title: "Plain" });
   await runtime.ops.doc.create({ workspaceId: WS, title: "Garden", properties: { icon: "🌱" } });
@@ -158,13 +158,8 @@ test("outgoing links can carry each target's page icon", async () => {
     title: "Source",
     markdown: "[[Plain]] [[Garden]] [[Missing]]",
   });
-  const links = await store.query(queries.outgoingLinks(source.id, { icons: true }));
-  expect(links.map((l) => (l.target as { icon?: string | null } | null)?.icon)).toEqual([
-    null,
-    "🌱",
-    undefined,
-  ]);
-  // Without the option the rows are the operation's.
-  const plain = await store.query(queries.outgoingLinks(source.id));
-  expect(plain.some((l) => l.target && "icon" in l.target)).toBe(false);
+  const links = await store.query(queries.outgoingLinks(source.id));
+  expect(links.map((l) => l.target?.icon)).toEqual([null, "🌱", undefined]);
+  // The operation returns the same rows.
+  expect((await runtime.ops.doc.outgoingLinks({ id: source.id })).links).toEqual(links);
 });

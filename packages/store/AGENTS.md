@@ -86,7 +86,7 @@ queries.listTree(ws, { rootId?, includeDeleted?, expanded? }) | children(ws, par
   teamspaceMembers(teamspaceId) | grants(docId) | myAccess(docId) (DocumentAccess) |
   publicPages(ws) (pages with a live public link) | publicAccess(docId) (0/1: the nearest page
   whose link reaches it, through live, unrestricted pages; expiry checked when the query runs) |
-  outgoingLinks(sourceId, { icons? }) (icons: each target also has `icon`, its `icon` property)
+  outgoingLinks(sourceId) (each target with `icon`, its `icon` property, or null)
   : StoreQuery<T> { name, sql, parameters, map, key, tables?, guard?: Guard, content?(row) }
   // guard { sql, parameters, tables }: see "Live queries: guards"; content: what a row holds for
   // keeping identity (default its JSON; getDoc uses the body version, not the Markdown)

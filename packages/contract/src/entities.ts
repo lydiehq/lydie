@@ -183,9 +183,17 @@ export const OutgoingLink = z
     targetBlockId: BlockId.nullable(),
     sourceBlockId: BlockId.nullable(),
     sourceProperty: z.string().nullable().optional(),
-    target: LinkSource.nullable().describe(
-      "The live document it resolves to; null when it resolves to nothing or to the trash.",
-    ),
+    target: LinkSource.extend({
+      icon: z
+        .string()
+        .nullable()
+        .optional()
+        .describe("Its page icon (the `icon` property), or null."),
+    })
+      .nullable()
+      .describe(
+        "The live document it resolves to; null when it resolves to nothing or to the trash.",
+      ),
   })
   .meta({ id: "OutgoingLink" });
 export type OutgoingLink = z.infer<typeof OutgoingLink>;

@@ -571,7 +571,13 @@ export type OutgoingLink = {
   targetBlockId: BlockId | null;
   sourceBlockId: BlockId | null;
   sourceProperty?: string | null;
-  target: { id: Uuid; title: string; parentId: Uuid | null; workspaceId: WorkspaceId } | null;
+  target: {
+    id: Uuid;
+    title: string;
+    parentId: Uuid | null;
+    workspaceId: WorkspaceId;
+    icon?: string | null;
+  } | null;
 };
 
 // workspace = everyone in the workspace except guests.

@@ -97,8 +97,8 @@ export function LinkLayer(props: EditorOverlayProps) {
   );
 }
 
-// Page icons of the documents this one links to, drawn on its wiki links (LYD-253). The local
-// backend's `doc.links` carries each target's icon (`target.icon`): one query for all of them.
+// Page icons of the documents this one links to, drawn on its wiki links (LYD-253). `doc.links`
+// carries each target's icon (`target.icon`): one query for all of them.
 function LinkIcons({ editor, docId }: EditorOverlayProps) {
   const store = linkStoreOf(editor);
   const links = useQuery("doc.links", { id: docId });
@@ -106,7 +106,7 @@ function LinkIcons({ editor, docId }: EditorOverlayProps) {
     const icons = new Map<string, string>();
     for (const { target, sourceProperty, syntax, targetRef } of links.data) {
       if (!target || sourceProperty != null || syntax !== "wikilink") continue;
-      const icon = "icon" in target ? pageIconOf({ [PAGE_ICON_KEY]: target.icon }) : null;
+      const icon = pageIconOf({ [PAGE_ICON_KEY]: target.icon });
       if (icon) icons.set(linkKey(targetRef), icon);
     }
     store.setIcons(icons);

@@ -156,7 +156,7 @@ const storeQueries: StoreBacked = {
     queries.search(p.workspaceId, p.text, p.limit === undefined ? {} : { limit: p.limit }),
   "doc.backlinks": (p) => queries.backlinks(p.id),
   // With the targets' page icons, which editors draw on wiki links (`target.icon`).
-  "doc.links": (p) => queries.outgoingLinks(p.id, { icons: true }),
+  "doc.links": (p) => queries.outgoingLinks(p.id),
   "doc.blockBacklinks": (p) => queries.blockBacklinks(p.id, p.blockId),
   "doc.unresolvedLinks": (p) => queries.unresolvedLinks(p.workspaceId),
   "doc.unlinkedMentions": (p) =>

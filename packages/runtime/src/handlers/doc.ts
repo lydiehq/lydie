@@ -658,7 +658,13 @@ export const docHandlers: Handlers<Operations> = {
           sourceProperty: r.sourceProperty ?? null,
           target:
             t && !t.deletedAt
-              ? { id: t.id, title: t.title, parentId: t.parentId, workspaceId: t.workspaceId }
+              ? {
+                  id: t.id,
+                  title: t.title,
+                  parentId: t.parentId,
+                  workspaceId: t.workspaceId,
+                  icon: typeof t.properties.icon === "string" ? t.properties.icon : null,
+                }
               : null,
         };
       }),

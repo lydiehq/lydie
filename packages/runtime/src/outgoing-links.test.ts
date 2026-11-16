@@ -33,3 +33,16 @@ it("doc.outgoingLinks resolves each link to its live target (LYD-252)", async ()
     ["Other", null, null, "related", null],
   ]);
 });
+
+it("doc.outgoingLinks gives each target's page icon", async () => {
+  const { ops } = createRuntime({ ...createMemoryPorts(), actor: { type: "user", id: "u" } });
+  await ops.doc.create({ workspaceId: "ws", title: "Plain" });
+  await ops.doc.create({ workspaceId: "ws", title: "Garden", properties: { icon: "🌱" } });
+  const source = await ops.doc.create({
+    workspaceId: "ws",
+    title: "Source",
+    markdown: "[[Plain]] [[Garden]] [[Missing]]",
+  });
+  const { links } = await ops.doc.outgoingLinks({ id: source.id });
+  expect(links.map((l) => l.target?.icon)).toEqual([null, "🌱", undefined]);
+});

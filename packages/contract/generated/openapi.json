@@ -8364,6 +8364,13 @@
                   },
                   "workspaceId": {
                     "$ref": "#/components/schemas/WorkspaceId"
+                  },
+                  "icon": {
+                    "description": "Its page icon (the `icon` property), or null.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
                   }
                 },
                 "required": [

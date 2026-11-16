@@ -268,7 +268,8 @@ own object of `.optional()` fields, as `ViewConfigPatch` does. A test checks tha
 
 Recent additions: `database.create` takes `teamspaceId` (hosted only). `doc.outgoingLinks`
 (`list_outgoing_links`, `GET /documents/{id}/links`, `lydie doc links`) returns `OutgoingLink[]`:
-each link as written, with `target` (the live document it resolves to) or null.
+each link as written, with `target` (the live document it resolves to, with its page icon
+`target.icon`, the `icon` property or null) or null.
 
 ## MCP dispatch, schema rewrites
 
