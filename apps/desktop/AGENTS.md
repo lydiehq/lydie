@@ -97,10 +97,11 @@ e2e/                          Playwright-on-Electron tests against the built app
 - Windows open from the stored session (`session.load()`): the token and user read from the
   keychain decide the scope at once, and the server's check (`session.check()`, in the
   background, at most 10 s) can then move the session to expired, which the renderer follows on the `state`
-  stream. A folder window's scope waits for nothing. The sync engine, collab and Yjs are
-  `src/main/hosted-lazy.ts`, imported when a hosted workspace opens or the hand-off runs, so the
-  main process does not evaluate them before its first window (`out/main/index.js`: 1,286 KB before,
-  960 KB after, Nov 2026; the MCP and hosted chunks are 219 KB and 128 KB).
+  stream. A folder window's scope waits for nothing. The sync engine, collab, Yjs and the Markdown
+  extractor are `src/main/hosted-lazy.ts`, imported when a hosted workspace opens or the hand-off
+  runs, so the main process does not evaluate them before its first window. With the file bridge
+  and the MCP SDK also loaded on first use, `out/main/index.js` went from 1,286 KB to 537 KB
+  (Nov 2026).
 - `HostedManager` holds the session (token in `SecretStore`, i.e. the OS keychain), decides each
   window's scope once (a folder window shows its folder; one without opens the remembered hosted
   workspace when signed in, else the web app shows a start screen), and opens one synced database
