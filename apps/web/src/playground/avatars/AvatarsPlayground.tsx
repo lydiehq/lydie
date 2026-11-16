@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import type { ReactNode } from "react";
 
+import { AGENT_NAMES, AGENT_VARIANTS, AgentMocks } from "./agents.tsx";
 import { CONCEPTS, Mascot, MASCOT_STATES, useTime } from "./mascot.tsx";
 import type { Concept, MascotState } from "./mascot.tsx";
 import { VARIANTS } from "./variants.tsx";
@@ -82,12 +83,12 @@ const SECTIONS: { kind: Kind; title: string; description: string }[] = [
   },
 ];
 
-type Picks = Partial<Record<Kind | "mascot", string>>;
+type Picks = Partial<Record<Kind | "mascot" | "agent", string>>;
 
 export function AvatarsPlayground() {
   const app = useApp();
   const [picks, setPicks] = useState<Picks>(() => app.storage.get<Picks>(STORAGE_KEY) ?? {});
-  const toggle = (kind: Kind | "mascot", id: string) => {
+  const toggle = (kind: Kind | "mascot" | "agent", id: string) => {
     const next = { ...picks, [kind]: picks[kind] === id ? undefined : id };
     setPicks(next);
     app.storage.set(STORAGE_KEY, next);
@@ -95,6 +96,7 @@ export function AvatarsPlayground() {
   const chosen = (kind: Kind): Variant =>
     VARIANTS[kind].find((v) => v.id === picks[kind]) ?? VARIANTS[kind][0]!;
   const concept = CONCEPTS.find((c) => c.id === picks.mascot) ?? CONCEPTS[0]!;
+  const agent = AGENT_VARIANTS.find((v) => v.id === picks.agent) ?? AGENT_VARIANTS[0]!;
   const draw = {
     person: (name: string, size: number) => chosen("person").render(name, size),
     workspace: (name: string, size: number) => chosen("workspace").render(name, size),
@@ -112,6 +114,30 @@ export function AvatarsPlayground() {
             per row; the mocks at the bottom use the starred ones (or the first).
           </p>
         </header>
+
+        <section aria-label="Agents" className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-sm font-medium text-gray-900">Agents</h2>
+            <p className="max-w-[720px] text-sm text-gray-500">
+              Most writing in Lydie can come through MCP, the API or the CLI, so a page should say
+              who wrote it, agents included, and for whom. An agent's avatar is a scribble like
+              everyone's, but must read as a machine at 16 px and never pass for a person. Star one;
+              the mocks below use it ({agent.name}).
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {AGENT_VARIANTS.map((variant) => (
+              <VariantCard
+                key={variant.id}
+                variant={variant}
+                names={AGENT_NAMES}
+                picked={picks.agent === variant.id}
+                onPick={() => toggle("agent", variant.id)}
+              />
+            ))}
+          </div>
+          <AgentMocks agent={agent} />
+        </section>
 
         <Scribbles />
 
