@@ -168,8 +168,10 @@ React:
   (a layout effect, before the host's `onCreate`), with `addToHistory: false` and `preventUpdate`:
   TipTap re-sets node views on mount and ProseMirror redraws everything when they change.
 - Code blocks and callouts are plain ProseMirror node views (`codeBlockView`, `calloutView`; the
-  code language picker alone is React through `ReactRenderer`): TipTap's React node views read the
-  DOM selection in a ref callback on mount, a forced layout per block.
+  code language picker alone is React, a portal that `CodeLanguagePickers` in `<LydieEditor>` draws
+  for every code block at once: TipTap's `ReactRenderer` copies its whole renderer map per picker
+  mounted or destroyed): TipTap's React node views read the DOM selection in a ref callback on
+  mount, a forced layout per block.
 - Math (`react/node-views/math-view.ts`, also plain node views) is typeset with KaTeX, which is
   large: `react/node-views/katex.ts` (KaTeX and its stylesheet) is imported only by `loadKatex()`,
   the first time a document shows math, so it lands in its own chunk. Until then the source

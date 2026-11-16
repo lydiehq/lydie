@@ -24,7 +24,7 @@ import type { CodeLanguagePickerProps, EmbedRenderProps, TableHandleProps } from
 import { DefaultSuggestionList } from "./DefaultSuggestionList";
 import { startBlockDrag } from "./drag-preview";
 import { calloutView } from "./node-views/callout-view";
-import { codeBlockView } from "./node-views/CodeBlockView";
+import { codeBlockView, CodeLanguagePickers } from "./node-views/CodeBlockView";
 import { EmbedView } from "./node-views/EmbedView";
 import { mathBlockView, mathInlineView } from "./node-views/math-view";
 import { RawBlockView, RawInlineView } from "./node-views/RawViews";
@@ -538,6 +538,7 @@ function EditorWithContent(props: LydieEditorProps) {
           }
           style={{ "--editor-content-line-start": lineStart } as CSSProperties}
         />
+        <CodeLanguagePickers editor={editor} />
         {editable && (
           <TableControls editor={editor} container={root} renderHandle={props.renderTableHandle} />
         )}
