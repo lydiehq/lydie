@@ -68,10 +68,14 @@ const Item = memo(function Item({ item }: { item: TrashItem }) {
   );
 });
 
+// The hosted service empties its trash on its own; a folder's trash keeps its own rules.
+const RETENTION_NOTICE = "Pages in the trash are deleted forever after 30 days.";
+
 function TrashView() {
   const app = useApp();
   const ops = useOps();
   const workspace = useWorkspace();
+  const hosted = workspace.mode === "synced";
   const { data, isLoading, error } = useQuery("trash.list", { workspaceId: workspace.workspaceId });
   const empty = async () => {
     const ok = await app.confirm({
@@ -95,6 +99,7 @@ function TrashView() {
           </Button>
         )}
       </div>
+      {hosted && data.length > 0 && <p className="text-sm text-gray-500">{RETENTION_NOTICE}</p>}
       <div className="min-h-0 grow overflow-y-auto pb-8">
         {error ? (
           <ErrorState error={error} />
@@ -104,7 +109,11 @@ function TrashView() {
           <EmptyState
             title="The trash is empty"
             illustration={<TrashIllustration />}
-            description="Deleted documents stay here until you delete them forever."
+            description={
+              hosted
+                ? RETENTION_NOTICE
+                : "Deleted documents stay here until you delete them forever."
+            }
           />
         ) : (
           <ul aria-label="Deleted items">

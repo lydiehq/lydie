@@ -17,4 +17,4 @@ Licence: AGPL-3.0-only.
 
 ## What it does
 
-`view:trash` with a live `trash.list`: restore (opens it), delete forever, empty trash (with confirmation). Sidebar link and command `trash.open`.
+`view:trash` with a live `trash.list`: restore (opens it), delete forever, empty trash (with confirmation). Sidebar link and command `trash.open`. In synced (hosted) workspaces it says that pages in the trash are deleted forever after 30 days, which the hosted service does on its own; local and folder workspaces keep their trash until it is emptied.
