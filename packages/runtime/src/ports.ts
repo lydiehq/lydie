@@ -81,6 +81,12 @@ export type DocsRead = {
   findByLinkKey(workspaceId: string, key: string): Promise<Document | null>;
   // Every live document whose title matches a link key, ordered by (sortKey, id).
   findAllByLinkKey?(workspaceId: string, key: string): Promise<Document[]>;
+  // findAllByLinkKey for several keys in one round trip: each key's matches (keys with none may be
+  // left out), each list ordered by (sortKey, id).
+  findAllByLinkKeys?(
+    workspaceId: string,
+    keys: readonly string[],
+  ): Promise<Map<string, Document[]>>;
   // The keys around a slot among the live children of `parentId`, ignoring `excludeId`.
   // null when the anchor is not such a sibling.
   slotKeys?(
@@ -89,8 +95,12 @@ export type DocsRead = {
     anchor: SlotAnchor,
     excludeId?: string,
   ): Promise<SlotKeys | null>;
-  // Deleted documents whose parent was not deleted together with them (the trash's top level).
-  trashed?(workspaceId: string): Promise<(Document & { descendantCount: number })[]>;
+  // Deleted documents whose parent was not deleted together with them (the trash's top level),
+  // newest deletion first. `limit`: only the first that many are needed (a backend may return all).
+  trashed?(
+    workspaceId: string,
+    options?: { limit?: number },
+  ): Promise<(Document & { descendantCount: number })[]>;
   // Several documents by id (missing ones left out). Order is unspecified.
   getMany?(ids: readonly string[]): Promise<Document[]>;
 };
@@ -111,8 +121,18 @@ export type BodiesRead = {
   get(id: string): Promise<DocumentBody | null>;
 };
 
+// `fresh`: the document was created in this transaction, so it has no rows of this kind yet and
+// there is nothing to replace. A backend may ignore it.
+export type FreshOptions = { fresh?: boolean };
+
 export type BodiesWrite = {
-  put(id: string, workspaceId: string, body: DocumentBody, updatedAt: string): Promise<void>;
+  put(
+    id: string,
+    workspaceId: string,
+    body: DocumentBody,
+    updatedAt: string,
+    options?: FreshOptions,
+  ): Promise<void>;
   // Several bodies in a constant number of round trips (indexing a folder).
   putMany?(
     bodies: readonly { id: string; workspaceId: string; body: DocumentBody; updatedAt: string }[],
@@ -133,7 +153,7 @@ export type LinksRead = {
 };
 
 export type LinksWrite = {
-  replaceFrom(sourceId: string, links: readonly LinkRow[]): Promise<void>;
+  replaceFrom(sourceId: string, links: readonly LinkRow[], options?: FreshOptions): Promise<void>;
   // replaceFrom for several sources at once (indexing a folder).
   replaceFromMany?(
     entries: readonly { sourceId: string; links: readonly LinkRow[] }[],
@@ -155,7 +175,12 @@ export type BlocksRead = {
 };
 
 export type BlocksWrite = {
-  replaceFor(docId: string, workspaceId: string, blocks: readonly Block[]): Promise<void>;
+  replaceFor(
+    docId: string,
+    workspaceId: string,
+    blocks: readonly Block[],
+    options?: FreshOptions,
+  ): Promise<void>;
   // replaceFor for several documents at once (indexing a folder).
   replaceForMany?(
     entries: readonly { docId: string; workspaceId: string; blocks: readonly Block[] }[],
@@ -259,6 +284,12 @@ export type ActivityWrite = {
   latest(key: ActivityKey): Promise<Activity | null>;
   insert(row: Activity): Promise<void>;
   update(id: string, patch: ActivityPatch): Promise<void>;
+  // The same for several keys or rows in one round trip (an operation's events are written
+  // together when its transaction ends). `latestMany` returns the newest row of each key that has
+  // one, in any order.
+  latestMany?(keys: readonly ActivityKey[]): Promise<Activity[]>;
+  insertMany?(rows: readonly Activity[]): Promise<void>;
+  updateMany?(updates: readonly { id: string; patch: ActivityPatch }[]): Promise<void>;
 };
 
 // The upload queue: applied operations waiting for the sync peer.

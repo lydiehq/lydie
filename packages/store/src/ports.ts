@@ -1,4 +1,5 @@
 import { actorRef } from "@lydie/contract";
+import type { Activity, Document } from "@lydie/contract";
 import { linkKey } from "@lydie/runtime";
 import type {
   ActivityRead,
@@ -104,6 +105,10 @@ const THREAD_PATCH: Record<keyof Omit<ThreadPatch, "anchor">, string> = {
 };
 
 const ASCII = /^\p{ASCII}*$/u;
+// What unicode61 counts as a token character by default (categories L*, N*, Co), plus the
+// combining marks it folds away (remove_diacritics), which stay inside a word.
+const TITLE_WORD = /[\p{L}\p{M}\p{N}\p{Co}]+/gu;
+const ftsString = (word: string) => `"${word.replaceAll('"', '""')}"`;
 const json = (value: unknown) => JSON.stringify(value);
 
 function docsRead(tx: LockContext): DocsRead {
@@ -162,21 +167,53 @@ function docsRead(tx: LockContext): DocsRead {
       return (await docs.findAllByLinkKey!(workspaceId, key))[0] ?? null;
     },
     async findAllByLinkKey(workspaceId, key) {
-      // doc_keys holds lower(trim(title)), indexed. SQLite's lower() only folds ASCII, so
-      // non-ASCII keys (and titles ending in ".md") are matched in JS against a workspace scan.
-      const rows = ASCII.test(key)
-        ? await tx.getAll<Row>(
-            `SELECT ${documentColumns("d")} FROM doc_keys k JOIN documents d ON d.id = k.doc_id
-             WHERE k.workspace_id = ? AND k.key IN (?, ?) AND d.deleted_at IS NULL
-             ORDER BY d.sort_key, d.id`,
-            [workspaceId, key, `${key}.md`],
-          )
-        : await tx.getAll<Row>(
-            `SELECT ${DOCUMENT_COLUMNS} FROM documents
-             WHERE workspace_id = ? AND deleted_at IS NULL ORDER BY sort_key, id`,
-            [workspaceId],
-          );
-      return rows.map(toDocument).filter((d) => linkKey(d.title) === key);
+      return (await docs.findAllByLinkKeys!(workspaceId, [key])).get(key) ?? [];
+    },
+    async findAllByLinkKeys(workspaceId, keys) {
+      // doc_keys holds lower(trim(title)), indexed. SQLite's lower() only folds ASCII, so the
+      // index finds ASCII keys (and titles ending in ".md"); every candidate is checked in JS.
+      // Each key's matches come from one statement, in its order.
+      const out = new Map<string, Document[]>();
+      const collect = (rows: Row[], wanted: ReadonlySet<string>) => {
+        for (const d of rows.map(toDocument)) {
+          const key = linkKey(d.title);
+          if (!wanted.has(key)) continue;
+          const list = out.get(key);
+          if (list) list.push(d);
+          else out.set(key, [d]);
+        }
+      };
+      const ascii = keys.filter((k) => ASCII.test(k));
+      if (ascii.length > 0) {
+        const rows = await tx.getAll<Row>(
+          `SELECT ${documentColumns("d")} FROM doc_keys k JOIN documents d ON d.id = k.doc_id
+           WHERE k.workspace_id = ? AND k.key IN (SELECT value FROM json_each(?))
+             AND d.deleted_at IS NULL
+           ORDER BY d.sort_key, d.id`,
+          [workspaceId, json(ascii.flatMap((k) => [k, `${k}.md`]))],
+        );
+        collect(rows, new Set(ascii));
+      }
+      // Other keys: search_fts tokenises titles with unicode61, which folds case and diacritics,
+      // so every title with this key holds its words. A key without any (only symbols) scans.
+      for (const key of keys.filter((k) => !ASCII.test(k))) {
+        const words = key.match(TITLE_WORD);
+        const rows = words
+          ? await tx.getAll<Row>(
+              `SELECT ${documentColumns("d")} FROM search_fts f
+               JOIN search_map m ON m.rowid = f.rowid JOIN documents d ON d.id = m.doc_id
+               WHERE search_fts MATCH ? AND d.workspace_id = ? AND d.deleted_at IS NULL
+               ORDER BY d.sort_key, d.id`,
+              [`title : (${words.map(ftsString).join(" AND ")})`, workspaceId],
+            )
+          : await tx.getAll<Row>(
+              `SELECT ${DOCUMENT_COLUMNS} FROM documents
+               WHERE workspace_id = ? AND deleted_at IS NULL ORDER BY sort_key, id`,
+              [workspaceId],
+            );
+        collect(rows, new Set([key]));
+      }
+      return out;
     },
     async slotKeys(workspaceId, parentId, anchor, excludeId) {
       const scope = `workspace_id = ? AND parent_id IS ? AND deleted_at IS NULL AND id IS NOT ?`;
@@ -215,31 +252,34 @@ function docsRead(tx: LockContext): DocsRead {
       );
       return rows.map(toDocument);
     },
-    async trashed(workspaceId) {
-      const roots = (
-        await tx.getAll<Row>(
-          `SELECT ${documentColumns("d")} FROM documents d
+    async trashed(workspaceId, options) {
+      // The roots first (limited), then what was deleted together with each, in one statement.
+      const rows = await tx.getAll<Row>(
+        `WITH RECURSIVE roots AS (
+           SELECT d.id, d.deleted_at FROM documents d
            LEFT JOIN documents p ON p.id = d.parent_id
            WHERE d.workspace_id = ? AND d.deleted_at IS NOT NULL
              AND (p.id IS NULL OR p.deleted_at IS NOT d.deleted_at)
-           ORDER BY d.deleted_at DESC, d.id`,
-          [workspaceId],
-        )
-      ).map(toDocument);
-      const out = [];
-      for (const root of roots) {
-        const counted = await tx.getOptional<{ n: number }>(
-          `WITH RECURSIVE sub(id) AS (
-             SELECT id FROM documents WHERE parent_id = ? AND deleted_at = ?
-             UNION ALL
-             SELECT d.id FROM documents d JOIN sub ON d.parent_id = sub.id WHERE d.deleted_at = ?
-           )
-           SELECT count(*) AS n FROM sub`,
-          [root.id, root.deletedAt, root.deletedAt],
-        );
-        out.push({ ...root, descendantCount: Number(counted?.n ?? 0) });
-      }
-      return out;
+           ORDER BY d.deleted_at DESC, d.id
+           LIMIT ?
+         ),
+         sub(root, id, at) AS (
+           SELECT r.id, c.id, r.deleted_at FROM roots r
+           JOIN documents c ON c.parent_id = r.id AND c.deleted_at = r.deleted_at
+           UNION ALL
+           SELECT sub.root, d.id, sub.at FROM sub
+           JOIN documents d ON d.parent_id = sub.id AND d.deleted_at = sub.at
+         ),
+         counts AS (SELECT root, count(*) AS n FROM sub GROUP BY root)
+         SELECT ${documentColumns("d")}, coalesce(c.n, 0) AS descendant_count
+         FROM roots r JOIN documents d ON d.id = r.id LEFT JOIN counts c ON c.root = r.id
+         ORDER BY d.deleted_at DESC, d.id`,
+        [workspaceId, options?.limit ?? -1],
+      );
+      return rows.map((row) => ({
+        ...toDocument(row),
+        descendantCount: Number(row.descendant_count ?? 0),
+      }));
     },
   };
   return docs;
@@ -353,13 +393,15 @@ function bodiesRead(tx: LockContext): BodiesRead {
 
 function bodiesWrite(tx: LockContext): BodiesWrite {
   return {
-    async put(id, workspaceId, body, updatedAt) {
-      const updated = await tx.execute(
-        `UPDATE document_bodies SET workspace_id = ?, markdown = ?, version = ?, updated_at = ?
-         WHERE id = ? RETURNING id`,
-        [workspaceId, body.markdown, body.version, updatedAt, id],
-      );
-      if ((updated.rows?.length ?? 0) > 0) return;
+    async put(id, workspaceId, body, updatedAt, options) {
+      if (!options?.fresh) {
+        const updated = await tx.execute(
+          `UPDATE document_bodies SET workspace_id = ?, markdown = ?, version = ?, updated_at = ?
+           WHERE id = ? RETURNING id`,
+          [workspaceId, body.markdown, body.version, updatedAt, id],
+        );
+        if ((updated.rows?.length ?? 0) > 0) return;
+      }
       await tx.execute(
         `INSERT INTO document_bodies (id, workspace_id, markdown, version, updated_at)
          VALUES (?, ?, ?, ?, ?)`,
@@ -418,8 +460,8 @@ function linksRead(tx: LockContext): LinksRead {
 
 function linksWrite(tx: LockContext): LinksWrite {
   return {
-    async replaceFrom(sourceId, links) {
-      await tx.execute("DELETE FROM links WHERE source_id = ?", [sourceId]);
+    async replaceFrom(sourceId, links, options) {
+      if (!options?.fresh) await tx.execute("DELETE FROM links WHERE source_id = ?", [sourceId]);
       if (links.length === 0) return;
       await tx.execute(
         `INSERT INTO links (${LINK_COLUMNS})
@@ -479,8 +521,8 @@ function blocks(tx: LockContext): BlocksRead & BlocksWrite {
       );
       return rows.map(toBlock);
     },
-    async replaceFor(docId, workspaceId, list) {
-      await tx.execute("DELETE FROM blocks WHERE doc_id = ?", [docId]);
+    async replaceFor(docId, workspaceId, list, options) {
+      if (!options?.fresh) await tx.execute("DELETE FROM blocks WHERE doc_id = ?", [docId]);
       if (list.length === 0) return;
       // A duplicated ^id keeps its first block, as Obsidian does.
       await tx.execute(
@@ -640,9 +682,11 @@ function threads(tx: LockContext): ThreadsRead & ThreadsWrite {
       );
     },
     async purgeFor(documentIds) {
-      for (const documentId of documentIds) {
-        await tx.execute("DELETE FROM threads WHERE document_id = ?", [documentId]);
-      }
+      if (documentIds.length === 0) return;
+      await tx.execute(
+        "DELETE FROM threads WHERE document_id IN (SELECT value FROM json_each(?))",
+        [json(documentIds)],
+      );
     },
   };
 }
@@ -911,23 +955,36 @@ function activity(tx: LockContext): ActivityRead & ActivityWrite {
       );
       return row ? toActivity(row) : null;
     },
+    async latestMany(keys) {
+      if (keys.length === 0) return [];
+      const rows = await tx.getAll<Row>(
+        `SELECT ${ACTIVITY_COLUMNS} FROM activity WHERE id IN (
+           SELECT (
+             SELECT a.id FROM activity a INDEXED BY activity_key
+             WHERE a.workspace_id = k.value ->> 'workspaceId' AND a.target_id = k.value ->> 'targetId'
+               AND a.type = k.value ->> 'type' AND a.actor_ref = k.value ->> 'actor'
+               AND a.session_id IS k.value ->> 'sessionId'
+             ORDER BY a.last_at DESC, a.id DESC
+             LIMIT 1)
+           FROM json_each(?) k)`,
+        [json(keys)],
+      );
+      return rows.map(toActivity);
+    },
     async insert(a) {
       await tx.execute(
         `INSERT INTO activity (${ACTIVITY_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          a.id,
-          a.workspaceId,
-          json(a.actor),
-          actorRef(a.actor),
-          a.sessionId,
-          a.type,
-          a.targetId,
-          a.targetTitle,
-          json(a.data),
-          a.count,
-          a.firstAt,
-          a.lastAt,
-        ],
+        activityValues(a),
+      );
+    },
+    async insertMany(list) {
+      if (list.length === 0) return;
+      await tx.execute(
+        `INSERT INTO activity (${ACTIVITY_COLUMNS})
+         SELECT value ->> 0, value ->> 1, value ->> 2, value ->> 3, value ->> 4, value ->> 5,
+                value ->> 6, value ->> 7, value ->> 8, value ->> 9, value ->> 10, value ->> 11
+         FROM json_each(?)`,
+        [json(list.map(activityValues))],
       );
     },
     async update(id, patch) {
@@ -936,7 +993,43 @@ function activity(tx: LockContext): ActivityRead & ActivityWrite {
         [patch.count, patch.lastAt, patch.targetTitle, json(patch.data), id],
       );
     },
+    async updateMany(updates) {
+      if (updates.length === 0) return;
+      await tx.execute(
+        `UPDATE activity SET count = u.value ->> 1, last_at = u.value ->> 2,
+           target_title = u.value ->> 3, data = u.value ->> 4
+         FROM json_each(?) AS u WHERE activity.id = u.value ->> 0`,
+        [
+          json(
+            updates.map(({ id, patch }) => [
+              id,
+              patch.count,
+              patch.lastAt,
+              patch.targetTitle,
+              json(patch.data),
+            ]),
+          ),
+        ],
+      );
+    },
   };
+}
+
+function activityValues(a: Activity): unknown[] {
+  return [
+    a.id,
+    a.workspaceId,
+    json(a.actor),
+    actorRef(a.actor),
+    a.sessionId,
+    a.type,
+    a.targetId,
+    a.targetTitle,
+    json(a.data),
+    a.count,
+    a.firstAt,
+    a.lastAt,
+  ];
 }
 
 const pair = <T>(value: T): [T, T] => [value, value];

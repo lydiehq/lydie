@@ -146,25 +146,108 @@ export async function recordActivity(
   hint: ActivityHint | undefined,
   newId: () => string,
 ): Promise<void> {
-  const port = tx.activity;
-  if (!port) return;
-  const targetId = activityTarget(event);
-  const draft: ActivityDraft = {
-    workspaceId: event.workspaceId,
-    actor: event.actor,
-    sessionId: event.sessionId ?? null,
-    type: event.type,
-    targetId,
-    targetTitle: hint?.title ?? (await titleOf(tx, event, targetId)),
-    data: activityData(event, hint),
-    at: event.at,
-  };
-  const decision = coalesceActivity(await port.latest(activityKeyOf(draft)), draft, newId);
-  if (decision.kind === "insert") await port.insert(decision.row);
-  else await port.update(decision.id, decision.patch);
+  const [draft] = await activityDrafts(tx, [{ event, hint }]);
+  if (draft) await writeActivity(tx, [draft], newId);
 }
 
-async function titleOf(tx: DbTx, event: LydieEvent, targetId: string): Promise<string | null> {
+// The drafts of some events, with the titles of their targets as they are now (after the
+// handler): titles the events or hints do not carry are read in one round trip.
+export async function activityDrafts(
+  tx: DbTx,
+  items: readonly { event: LydieEvent; hint: ActivityHint | undefined }[],
+): Promise<ActivityDraft[]> {
+  if (!tx.activity || items.length === 0) return [];
+  const known = items.map(({ event, hint }) => hint?.title ?? knownTitle(event));
+  const docIds = new Set<string>();
+  const attachmentIds = new Set<string>();
+  items.forEach(({ event }, i) => {
+    if (known[i] !== undefined) return;
+    (isAttachmentEvent(event) ? attachmentIds : docIds).add(activityTarget(event));
+  });
+  const titles = new Map<string, string>();
+  if (docIds.size > 0) {
+    const docs = tx.docs.getMany
+      ? await tx.docs.getMany([...docIds])
+      : await Promise.all([...docIds].map((id) => tx.docs.get(id)));
+    for (const d of docs) if (d) titles.set(d.id, d.title);
+  }
+  for (const id of attachmentIds) {
+    const filename = (await tx.attachments?.get(id))?.filename;
+    if (filename !== undefined) titles.set(id, filename);
+  }
+  return items.map(({ event, hint }, i) => {
+    const targetId = activityTarget(event);
+    return {
+      workspaceId: event.workspaceId,
+      actor: event.actor,
+      sessionId: event.sessionId ?? null,
+      type: event.type,
+      targetId,
+      targetTitle: known[i] ?? titles.get(targetId) ?? null,
+      data: activityData(event, hint),
+      at: event.at,
+    };
+  });
+}
+
+// Coalesces drafts, in order, into the log: each one merges into the newest row with its key,
+// which may be one an earlier draft wrote, exactly as writing them one at a time would. The reads
+// and writes go in as few round trips as the port allows.
+export async function writeActivity(
+  tx: DbTx,
+  drafts: readonly ActivityDraft[],
+  newId: () => string,
+): Promise<void> {
+  const port = tx.activity;
+  if (!port || drafts.length === 0) return;
+  const keyed = drafts.map((draft) => ({ draft, key: activityKeyOf(draft) }));
+  const distinct = new Map(keyed.map((k) => [keyString(k.key), k.key]));
+  const current = new Map<string, Activity | null>();
+  if (port.latestMany && distinct.size > 1) {
+    for (const row of await port.latestMany([...distinct.values()])) {
+      current.set(keyString({ ...row, actor: actorRef(row.actor) }), row);
+    }
+  } else {
+    for (const [k, key] of distinct) current.set(k, await port.latest(key));
+  }
+  const inserts = new Map<string, Activity>();
+  const updates = new Map<string, ActivityPatch>();
+  for (const { draft, key } of keyed) {
+    const k = keyString(key);
+    const previous = current.get(k) ?? null;
+    const decision = coalesceActivity(previous, draft, newId);
+    if (decision.kind === "insert") {
+      inserts.set(decision.row.id, decision.row);
+      current.set(k, decision.row);
+      continue;
+    }
+    const merged = { ...previous!, ...decision.patch };
+    current.set(k, merged);
+    // A row inserted by an earlier draft is inserted as it ends up.
+    if (inserts.has(decision.id)) inserts.set(decision.id, merged);
+    else updates.set(decision.id, decision.patch);
+  }
+  const rows = [...inserts.values()];
+  if (port.insertMany && rows.length > 1) await port.insertMany(rows);
+  else for (const row of rows) await port.insert(row);
+  const patches = [...updates].map(([id, patch]) => ({ id, patch }));
+  if (port.updateMany && patches.length > 1) await port.updateMany(patches);
+  else for (const { id, patch } of patches) await port.update(id, patch);
+}
+
+const keyString = (key: ActivityKey) =>
+  JSON.stringify([key.workspaceId, key.actor, key.sessionId, key.type, key.targetId]);
+
+function isAttachmentEvent(event: LydieEvent): boolean {
+  return (
+    event.type === "attachment.deleted" ||
+    event.type === "attachment.restored" ||
+    event.type === "attachment.purged"
+  );
+}
+
+// The title an event carries; undefined when it has to be read.
+function knownTitle(event: LydieEvent): string | undefined {
   switch (event.type) {
     case "doc.created":
       return event.data.document.title;
@@ -172,12 +255,8 @@ async function titleOf(tx: DbTx, event: LydieEvent, targetId: string): Promise<s
       return event.data.title;
     case "attachment.created":
       return event.data.attachment.filename;
-    case "attachment.deleted":
-    case "attachment.restored":
-    case "attachment.purged":
-      return (await tx.attachments?.get(targetId))?.filename ?? null;
     default:
-      return (await tx.docs.get(targetId))?.title ?? null;
+      return undefined;
   }
 }
 

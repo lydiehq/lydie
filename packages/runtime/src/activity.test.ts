@@ -266,6 +266,74 @@ describe("what is recorded", () => {
     expect(rows()).toHaveLength(before);
   });
 
+  it("writes a transaction's rows together, as writing them one at a time would", async () => {
+    const { ports, runtime, rows } = setup();
+    const calls = { latest: 0, latestMany: 0, insert: 0, insertMany: 0 };
+    const db: Db = {
+      read: (fn) => ports.db.read(fn),
+      write: (fn) =>
+        ports.db.write((tx) => {
+          const a = tx.activity!;
+          return fn({
+            ...tx,
+            activity: {
+              ...a,
+              latest: (key) => (calls.latest++, a.latest(key)),
+              latestMany: (keys) => (calls.latestMany++, a.latestMany!(keys)),
+              insert: (row) => (calls.insert++, a.insert(row)),
+              insertMany: (list) => (calls.insertMany++, a.insertMany!(list)),
+            },
+          });
+        }),
+    };
+    const counted = createRuntime({ ...ports, db, actor: user });
+    const doc = await runtime.ops.doc.create({ workspaceId: WS, title: "Note" });
+    await counted.transaction("Edits", async (ops) => {
+      await ops.doc.rename({ id: doc.id, title: "Draft" });
+      await ops.doc.rename({ id: doc.id, title: "Final" });
+      await ops.doc.setProperties({ id: doc.id, set: { status: "done" } });
+      await ops.doc.setProperties({ id: doc.id, set: { tags: ["x"] } });
+      await ops.doc.create({ workspaceId: WS, title: "Other" });
+    });
+    expect(calls).toEqual({ latest: 0, latestMany: 1, insert: 0, insertMany: 1 });
+    expect(rows().find((r) => r.type === "doc.renamed")).toMatchObject({
+      count: 2,
+      targetTitle: "Final",
+      data: { previousTitle: "Note", title: "Final" },
+    });
+    expect(rows().find((r) => r.type === "doc.propertiesChanged")).toMatchObject({
+      count: 2,
+      targetTitle: "Final",
+      data: { keys: ["status", "tags"] },
+    });
+    expect(rows().filter((r) => r.type === "doc.created")).toHaveLength(2);
+  });
+
+  it("leaves out the activity of a step whose savepoint rolled back", async () => {
+    const ports = createMemoryPorts();
+    // A composite that tries one rename in a savepoint (which fails after it) and does another.
+    const runtime = createRuntime({
+      ...ports,
+      actor: user,
+      handlers: {
+        async "inbox.capture"(ctx, input) {
+          const id = input.markdown;
+          await ctx.tx.savepoint!(async () => {
+            await ctx.exec("doc.rename", { id, title: "Rolled back" });
+            throw new Error("undo this step");
+          }).catch(() => {});
+          await ctx.exec("doc.rename", { id, title: "Kept" });
+          return { inboxId: id, documentId: id, created: false };
+        },
+      },
+    });
+    const doc = await runtime.ops.doc.create({ workspaceId: WS, title: "Note" });
+    await runtime.ops.inbox.capture({ workspaceId: WS, markdown: doc.id });
+    const renames = ports.state.activity.filter((r) => r.type === "doc.renamed");
+    expect(renames).toHaveLength(1);
+    expect(renames[0]).toMatchObject({ count: 1, data: { previousTitle: "Note", title: "Kept" } });
+  });
+
   it("keeps the title of what was purged, and counts the subtree", async () => {
     const { ops, tick, rows } = setup();
     const doc = await ops.doc.create({ workspaceId: WS, title: "Old" });

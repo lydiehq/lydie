@@ -47,25 +47,107 @@ export async function resolveLink(
   source: Document,
   link: Pick<ExtractedLink, "target" | "syntax">,
 ): Promise<string | null> {
-  const id = normalizeId(link.target);
-  if (id) {
-    const byId = await tx.docs.get(id);
-    if (byId && byId.workspaceId === source.workspaceId && !byId.deletedAt) return byId.id;
+  return (await resolveLinks(tx, source, [link]))[0] ?? null;
+}
+
+// Whether a link resolves relative to its source's folder (Markdown `./x`, `../x`).
+export function isRelativeLink(link: Pick<ExtractedLink, "target" | "syntax">): boolean {
+  return link.syntax === "markdown" && /^\.\.?\//.test(link.target);
+}
+
+// resolveLink for every link of a document at once: the ids and the title keys are each looked
+// up in one round trip where the port allows it, each distinct key once.
+export async function resolveLinks(
+  tx: DbRead,
+  source: Document,
+  links: readonly Pick<ExtractedLink, "target" | "syntax">[],
+): Promise<(string | null)[]> {
+  if (links.length === 0) return [];
+  const ids = links.map((l) => normalizeId(l.target));
+  const byId = await getDocs(
+    tx,
+    ids.filter((id) => id !== null),
+  );
+  type Parsed =
+    | { resolved: string | null }
+    | { link: (typeof links)[number]; parts: string[]; key: string };
+  const parsed = links.map((link, i): Parsed => {
+    const id = ids[i];
+    const found = id ? byId.get(id) : undefined;
+    if (found && found.workspaceId === source.workspaceId && !found.deletedAt) {
+      return { resolved: found.id };
+    }
+    const parts = segments(link.target);
+    const name = parts.pop();
+    return name ? { link, parts, key: targetKey(name) } : { resolved: null };
+  });
+  const keys = [...new Set(parsed.flatMap((p) => ("key" in p ? [p.key] : [])))];
+  const candidatesOf = await findByKeys(tx, source.workspaceId, keys);
+  const folderOf = folderCache(tx);
+  const out: (string | null)[] = [];
+  for (const p of parsed) {
+    if ("resolved" in p) out.push(p.resolved);
+    else out.push(await pick(folderOf, source, p.link, p.parts, candidatesOf.get(p.key) ?? []));
   }
-  const relative = link.syntax === "markdown" && /^\.\.?\//.test(link.target);
-  const parts = segments(link.target);
-  const name = parts.pop();
-  if (!name) return null;
-  const key = targetKey(name);
-  const candidates = tx.docs.findAllByLinkKey
-    ? await tx.docs.findAllByLinkKey(source.workspaceId, key)
-    : [await tx.docs.findByLinkKey(source.workspaceId, key)].filter((d) => d !== null);
+  return out;
+}
+
+async function getDocs(tx: DbRead, ids: readonly string[]): Promise<Map<string, Document>> {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return new Map();
+  const docs = tx.docs.getMany
+    ? await tx.docs.getMany(unique)
+    : await Promise.all(unique.map((id) => tx.docs.get(id)));
+  return new Map(docs.filter((d) => d !== null).map((d) => [d.id, d]));
+}
+
+async function findByKeys(
+  tx: DbRead,
+  workspaceId: string,
+  keys: readonly string[],
+): Promise<Map<string, Document[]>> {
+  if (keys.length === 0) return new Map();
+  if (tx.docs.findAllByLinkKeys && keys.length > 1) {
+    return tx.docs.findAllByLinkKeys(workspaceId, keys);
+  }
+  const out = new Map<string, Document[]>();
+  for (const key of keys) {
+    out.set(
+      key,
+      tx.docs.findAllByLinkKey
+        ? await tx.docs.findAllByLinkKey(workspaceId, key)
+        : [await tx.docs.findByLinkKey(workspaceId, key)].filter((d) => d !== null),
+    );
+  }
+  return out;
+}
+
+// Folder keys by document, for one resolution pass (documents under one folder share a lookup).
+function folderCache(tx: DbRead) {
+  const byParent = new Map<string | null, Promise<string[]>>();
+  return (doc: Document): Promise<string[]> => {
+    let keys = byParent.get(doc.parentId);
+    if (!keys) {
+      keys = folderKeys(tx, doc);
+      byParent.set(doc.parentId, keys);
+    }
+    return keys;
+  };
+}
+
+async function pick(
+  folderOf: (doc: Document) => Promise<string[]>,
+  source: Document,
+  link: Pick<ExtractedLink, "target" | "syntax">,
+  parts: string[],
+  candidates: readonly Document[],
+): Promise<string | null> {
   if (candidates.length === 0) return null;
   if (candidates.length === 1 && parts.length === 0) return candidates[0]!.id;
 
-  const sourceFolder = await folderKeys(tx, source);
+  const sourceFolder = await folderOf(source);
   let wanted: string[] | null = null;
-  if (relative) {
+  if (isRelativeLink(link)) {
     wanted = [...sourceFolder];
     for (const part of parts) {
       if (part === "..") wanted.pop();
@@ -74,7 +156,7 @@ export async function resolveLink(
   }
   const dirKeys = parts.filter((p) => p !== "..").map(linkKey);
   const scored: { doc: Document; folder: string[] }[] = [];
-  for (const doc of candidates) scored.push({ doc, folder: await folderKeys(tx, doc) });
+  for (const doc of candidates) scored.push({ doc, folder: await folderOf(doc) });
 
   const same = (a: string[], b: string[]) => a.length === b.length && a.every((k, i) => k === b[i]);
   if (wanted) {

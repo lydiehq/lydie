@@ -14,6 +14,7 @@ export {
   ACTIVITY_KEYS_LIMIT,
   ACTIVITY_WINDOW_MS,
   activityData,
+  activityDrafts,
   activityKeyOf,
   activitySubjectOf,
   activityTarget,
@@ -22,13 +23,14 @@ export {
   encodeActivityCursor,
   mergeActivityData,
   recordActivity,
+  writeActivity,
 } from "./activity.ts";
 export type { ActivityDecision, ActivityDraft, ActivityHint } from "./activity.ts";
 export { exportFilename, exportWorkspace, zipStream } from "./export.ts";
 export type { ExportEntry, ExportOptions, ExportSource, RewriteLinks } from "./export.ts";
 export { touchesOf, touchesOverlap } from "./history.ts";
 export type { History, HistoryState, HistoryStep } from "./history.ts";
-export { resolveLink, targetKey } from "./links.ts";
+export { resolveLink, resolveLinks, targetKey } from "./links.ts";
 export { propertyLinks, relationKeysOf } from "./property-links.ts";
 export type { PropertyLink } from "./property-links.ts";
 export { placeKey } from "./position.ts";

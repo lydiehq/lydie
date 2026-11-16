@@ -22,8 +22,8 @@ import type {
 } from "@lydie/contract";
 import { z } from "zod";
 
-import { recordActivity } from "./activity.ts";
-import type { ActivityHint } from "./activity.ts";
+import { activityDrafts, writeActivity } from "./activity.ts";
+import type { ActivityDraft, ActivityHint } from "./activity.ts";
 import { indexBody } from "./handlers/doc.ts";
 import { coreHandlers } from "./handlers/index.ts";
 import { createHistory, touchesOf } from "./history.ts";
@@ -41,6 +41,7 @@ import type {
   Search,
   Versions,
 } from "./ports.ts";
+import { forgetRelationKeys } from "./property-links.ts";
 import { extract as defaultExtract } from "./text.ts";
 import type { Extract, ExtractedLink } from "./text.ts";
 import { uuid } from "./uuid.ts";
@@ -218,6 +219,8 @@ type Frame = {
   scope: string;
   scopes: readonly Scope[] | "*";
   activity: boolean;
+  // Activity of the operations applied so far, written when the transaction's work is done.
+  drafts: ActivityDraft[];
   events: LydieEvent[];
   entries: HistoryRow[];
   afterCommit: (() => void | Promise<void>)[];
@@ -356,9 +359,10 @@ export function createRuntime<R extends Registry = Operations>(
     };
     const result = parseOutput(op, await handler(ctx, input));
     // Only this operation's own events: a composite's steps record theirs in their own `apply`.
-    for (const { event, hint } of emitted) {
-      if (!frame.activity || hint?.quiet) continue;
-      await recordActivity(frame.tx, event, hint, () => ids.uuid());
+    // Titles are read now; the rows are written together when the transaction's work is done.
+    if (frame.activity) {
+      const recorded = emitted.filter(({ hint }) => !hint?.quiet);
+      frame.drafts.push(...(await activityDrafts(frame.tx, recorded)));
     }
     if (op.composite) return result;
 
@@ -397,7 +401,7 @@ export function createRuntime<R extends Registry = Operations>(
 
   function newFrame(tx: DbTx, options: ExecuteOptions | undefined): Frame {
     const actor = options?.actor ?? config.actor;
-    return {
+    const frame: Frame = {
       tx,
       now: clock.now().toISOString(),
       groupId: ids.uuid(),
@@ -406,10 +410,13 @@ export function createRuntime<R extends Registry = Operations>(
       scope: options?.scope ?? "default",
       scopes: options?.scopes ?? config.scopes ?? "*",
       activity: options?.activity ?? true,
+      drafts: [],
       events: [],
       entries: [],
       afterCommit: [],
     };
+    frame.tx = frameTx(tx, frame);
+    return frame;
   }
 
   // Opens a transaction, runs `body` in it, then publishes events and runs after-commit work.
@@ -419,8 +426,11 @@ export function createRuntime<R extends Registry = Operations>(
   ): Promise<{ result: T; frame: Frame }> {
     let frame: Frame | undefined;
     const result = await config.db.write(async (tx) => {
-      frame = newFrame(tx, options);
-      return body(frame);
+      const f = newFrame(tx, options);
+      frame = f;
+      const value = await body(f);
+      await writeActivity(f.tx, f.drafts, () => ids.uuid());
+      return value;
     });
     const done = frame!;
     if (done.events.length > 0 && config.events) {
@@ -560,7 +570,8 @@ export function createRuntime<R extends Registry = Operations>(
     };
     return {
       ...base(actor, null),
-      tx,
+      // Its own object: per-transaction caches key on it.
+      tx: { ...tx },
       now: clock.now().toISOString(),
       actorRef: actorRef(actor),
       operationId: ids.uuid(),
@@ -590,6 +601,39 @@ export function createRuntime<R extends Registry = Operations>(
     history,
     reindexBodies,
   };
+}
+
+// The transaction as one frame's handlers see it (a new object per transaction, which per-
+// transaction caches key on). A savepoint that rolls back drops the activity its operations
+// queued, and writes that can change a database's schema forget the cached relation keys.
+function frameTx(tx: DbTx, frame: Frame): DbTx {
+  const wrapped: DbTx = { ...tx };
+  const forget = () => forgetRelationKeys(wrapped);
+  if (tx.savepoint) {
+    wrapped.savepoint = async <T>(fn: () => Promise<T>): Promise<T> => {
+      const queued = frame.drafts.length;
+      try {
+        return await tx.savepoint!(fn);
+      } catch (error) {
+        frame.drafts.length = queued;
+        forget();
+        throw error;
+      }
+    };
+  }
+  const docs = tx.docs;
+  if (docs.purge) wrapped.docs = { ...docs, purge: (ids) => (forget(), docs.purge!(ids)) };
+  const store = tx.databases;
+  if (store) {
+    wrapped.databases = {
+      ...store,
+      insert: (database) => (forget(), store.insert(database)),
+      update: (id, patch) => (forget(), store.update(id, patch)),
+      insertProperty: (property) => (forget(), store.insertProperty(property)),
+      updateProperty: (id, patch) => (forget(), store.updateProperty(id, patch)),
+    };
+  }
+  return wrapped;
 }
 
 function buildProxy<R extends Registry>(

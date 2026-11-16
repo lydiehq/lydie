@@ -305,7 +305,7 @@ async function writeRows(ctx: MutationContext, pending: Pending): Promise<string
       "doc.propertiesChanged",
       doc.workspaceId,
       { id: u.id, properties: u.patch.properties },
-      rowHint(ctx, changedKeys(doc.properties, u.patch.properties)),
+      rowHint(ctx, changedKeys(doc.properties, u.patch.properties), doc.title),
     );
   }
   return updates.map((u) => u.id);
@@ -333,8 +333,10 @@ async function rewriting<T>(
 
 // A rewritten row is not activity of its own: the schema change is one `database.changed` row
 // (LYD-410). The event is still published (the file bridge writes the row's frontmatter).
-function rowHint(ctx: MutationContext, keys: string[]): ActivityHint {
-  return activeRewrites.has(ctx) ? { keys, quiet: true } : { keys };
+// `title`: the row's, when the caller has it (the log would otherwise read it per row).
+function rowHint(ctx: MutationContext, keys: string[], title?: string): ActivityHint {
+  const hint: ActivityHint = title === undefined ? { keys } : { keys, title };
+  return activeRewrites.has(ctx) ? { ...hint, quiet: true } : hint;
 }
 
 // Records `database.setValues` inverses (exact) restoring the previous values of every change,
@@ -677,19 +679,29 @@ async function setValues(
     }
   }
 
-  // Two-way relations: add or remove this row on the other side.
+  // Two-way relations: add or remove this row on the other side. Reverse properties and the rows
+  // on the other side are read once for every change (nothing is written until the end).
+  const reverses = new Map<string, DatabaseProperty | null>();
+  const others = new Set<string>();
   for (const change of relationChanges) {
     const config = change.p.config.relation;
     if (!config?.twoWay || !config.reversePropertyId) continue;
-    const reverse = await dbs(ctx.tx).property(config.reversePropertyId);
+    if (!reverses.has(config.reversePropertyId)) {
+      reverses.set(config.reversePropertyId, await dbs(ctx.tx).property(config.reversePropertyId));
+    }
+    for (const id of [...change.before, ...change.after]) if (!rows.has(id)) others.add(id);
+  }
+  const targets = await loadDocs(ctx.tx, [...others]);
+  for (const change of relationChanges) {
+    const config = change.p.config.relation;
+    if (!config?.twoWay || !config.reversePropertyId) continue;
+    const reverse = reverses.get(config.reversePropertyId);
     if (!reverse || reverse.deletedAt || reverse.type !== "relation") continue;
     const added = change.after.filter((id) => !change.before.includes(id));
     const removed = change.before.filter((id) => !change.after.includes(id));
-    const targets = await loadDocs(
-      ctx.tx,
-      [...added, ...removed].filter((id) => !pending.has(id)),
-    );
-    const docOf = (id: string) => pending.get(id)?.doc ?? targets.get(id);
+    const ends = new Set([...added, ...removed]);
+    const docOf = (id: string) =>
+      pending.get(id)?.doc ?? (ends.has(id) ? (targets.get(id) ?? rows.get(id)) : undefined);
     for (const id of [...added, ...removed]) {
       const target = docOf(id);
       if (!target || target.deletedAt || target.parentId !== reverse.databaseId) continue;

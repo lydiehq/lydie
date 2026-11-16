@@ -64,6 +64,27 @@ export async function relationKeysOf(tx: DbRead, doc: Document): Promise<Set<str
   return new Set(props.filter((p) => p.type === "relation").map((p) => p.key));
 }
 
+// relationKeysOf, remembered per transaction and parent: importing or editing many rows of one
+// database reads its schema once. The runtime hands each transaction its own `tx` object and
+// calls `forgetRelationKeys` when the transaction writes a database or a property.
+const relationKeyCache = new WeakMap<DbRead, Map<string, Promise<Set<string>>>>();
+
+export function cachedRelationKeys(tx: DbRead, doc: Document): Promise<Set<string>> {
+  if (!doc.parentId || !tx.databases) return Promise.resolve(new Set());
+  let cache = relationKeyCache.get(tx);
+  if (!cache) relationKeyCache.set(tx, (cache = new Map()));
+  let keys = cache.get(doc.parentId);
+  if (!keys) {
+    keys = relationKeysOf(tx, doc);
+    cache.set(doc.parentId, keys);
+  }
+  return keys;
+}
+
+export function forgetRelationKeys(tx: DbRead): void {
+  relationKeyCache.delete(tx);
+}
+
 // Body links of a document as stored (property links are rebuilt from its properties).
 export function bodyLinkRows(rows: readonly LinkRow[]): LinkRow[] {
   return rows.filter((r) => !r.sourceProperty);

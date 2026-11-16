@@ -184,6 +184,14 @@ export function createMemoryPorts(): MemoryPorts {
           .sort(bySortKey)
           .map(clone);
       },
+      async findAllByLinkKeys(workspaceId, keys) {
+        const out = new Map<string, Document[]>();
+        for (const key of new Set(keys)) {
+          const found = await tx.docs.findAllByLinkKey!(workspaceId, key);
+          if (found.length > 0) out.set(key, found);
+        }
+        return out;
+      },
       async trashed(workspaceId) {
         return [...state.docs.values()]
           .filter((d) => {
@@ -435,12 +443,22 @@ export function createMemoryPorts(): MemoryPorts {
           .sort(newestActivity)[0];
         return clone(found ?? null);
       },
+      async latestMany(keys) {
+        const rows = await Promise.all(keys.map((key) => tx.activity!.latest(key)));
+        return rows.filter((r) => r !== null);
+      },
       async insert(row) {
         state.activity.push(clone(row));
+      },
+      async insertMany(rows) {
+        for (const row of rows) state.activity.push(clone(row));
       },
       async update(id, patch) {
         const row = state.activity.find((a) => a.id === id);
         if (row) Object.assign(row, clone(patch));
+      },
+      async updateMany(updates) {
+        for (const { id, patch } of updates) await tx.activity!.update(id, patch);
       },
     },
     databases: {

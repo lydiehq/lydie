@@ -1,10 +1,10 @@
 import { isUuid, LydieError } from "@lydie/contract";
-import type { Document, Operations, Properties } from "@lydie/contract";
+import type { Attachment, Document, Operations, Properties } from "@lydie/contract";
 
-import { resolveLink, targetKey } from "../links.ts";
-import type { DbRead, DbTx, LinkRow } from "../ports.ts";
+import { isRelativeLink, resolveLinks, targetKey } from "../links.ts";
+import type { DbRead, DbTx, DocPatch, LinkRow } from "../ports.ts";
 import { placeKey } from "../position.ts";
-import { bodyLinkRows, propertyLinks, relationKeysOf } from "../property-links.ts";
+import { bodyLinkRows, cachedRelationKeys, propertyLinks } from "../property-links.ts";
 import type { Handlers, MutationContext } from "../runtime.ts";
 import { applyEdits, bodyVersion, linkKey } from "../text.ts";
 import type { Extracted, ExtractedLink } from "../text.ts";
@@ -46,22 +46,32 @@ const writtenAs = (l: {
 }) => `${l.kind}\u0000${l.syntax ?? ""}\u0000${l.targetRef}\u0000${l.sourceProperty ?? ""}`;
 
 // Rebuilds a document's link rows: its body links (`body`, freshly extracted; null keeps the
-// stored ones) and the links in its properties ([[links]], relation values).
+// stored ones) and the links in its properties ([[links]], relation values). `fresh`: the
+// document was created in this transaction and has no link rows yet.
 export async function indexLinks(
   ctx: MutationContext,
   doc: Document,
   body: readonly ExtractedLink[] | null,
+  { fresh = false }: { fresh?: boolean } = {},
 ): Promise<void> {
   if (body === null && !ctx.tx.links.from) return;
-  const existing = (await ctx.tx.links.from?.(doc.id)) ?? [];
+  const existing = fresh ? [] : ((await ctx.tx.links.from?.(doc.id)) ?? []);
   // A link keeps pointing at the document it resolved to before (by id) while that document is
   // live, even if its title no longer matches: renames never silently break links. The file bridge
-  // rewrites the link text on rename, as Obsidian does.
+  // rewrites the link text on rename, as Obsidian does. So a link written as before, whose target
+  // is still live, keeps it without being resolved again (a typing save resolves nothing).
   const previous = new Map<string, string>();
   for (const link of existing) if (link.targetId) previous.set(writtenAs(link), link.targetId);
-  const rows: LinkRow[] = body === null ? bodyLinkRows(existing) : [];
-  const add = async (link: ExtractedLink, property: string | null) => {
-    let targetId = await resolveLink(ctx.tx, doc, link);
+  const live = new Set<string>();
+  if (previous.size > 0) {
+    const ids = [...new Set(previous.values())];
+    const docs = ctx.tx.docs.getMany
+      ? await ctx.tx.docs.getMany(ids)
+      : await Promise.all(ids.map((id) => ctx.tx.docs.get(id)));
+    for (const d of docs) if (d && !d.deletedAt) live.add(d.id);
+  }
+  const wanted: { link: ExtractedLink; property: string | null; kept: string | undefined }[] = [];
+  const want = (link: ExtractedLink, property: string | null) => {
     const before = previous.get(
       writtenAs({
         kind: link.kind,
@@ -70,16 +80,29 @@ export async function indexLinks(
         sourceProperty: property,
       }),
     );
-    if (!targetId && before) {
-      const target = await ctx.tx.docs.get(before);
-      if (target && !target.deletedAt) targetId = target.id;
-    }
+    wanted.push({ link, property, kept: before && live.has(before) ? before : undefined });
+  };
+  for (const link of body ?? []) want(link, null);
+  for (const link of propertyLinks(doc.properties, await cachedRelationKeys(ctx.tx, doc))) {
+    want(link, link.property);
+  }
+  // Relative links follow the source's folder, which may have changed: those always resolve.
+  const unresolved = wanted.filter((w) => !w.kept || isRelativeLink(w.link));
+  const resolved = await resolveLinks(
+    ctx.tx,
+    doc,
+    unresolved.map((w) => w.link),
+  );
+  const targets = new Map(unresolved.map((w, i) => [w, resolved[i] ?? null]));
+  const rows: LinkRow[] = body === null ? bodyLinkRows(existing) : [];
+  for (const w of wanted) {
+    const { link, property } = w;
     rows.push({
       id: ctx.ids.uuid(),
       workspaceId: doc.workspaceId,
       sourceId: doc.id,
       sourceBlockId: link.sourceBlockId,
-      targetId,
+      targetId: targets.get(w) ?? w.kept ?? null,
       targetRef: link.target,
       targetKey: targetKey(link.target),
       targetHeading: link.heading,
@@ -88,10 +111,10 @@ export async function indexLinks(
       syntax: link.syntax,
       sourceProperty: property,
     });
-  };
-  for (const link of body ?? []) await add(link, null);
-  for (const link of propertyLinks(doc.properties, await relationKeysOf(ctx.tx, doc))) {
-    await add(link, link.property);
+  }
+  if (fresh) {
+    if (rows.length > 0) await ctx.tx.links.replaceFrom(doc.id, rows, { fresh });
+    return;
   }
   // Most body saves (typing) leave the links as they were: writing them again would only wake
   // every live query that reads links (backlinks, outgoing links).
@@ -147,24 +170,40 @@ export async function relinkProperties(
   const pick = (p: Properties) =>
     Object.fromEntries(Object.entries(p).filter(([k]) => changed.has(k)));
   if (!mayLink(pick(doc.properties)) && !mayLink(pick(before))) return;
-  const keys = await relationKeysOf(ctx.tx, doc);
+  const keys = await cachedRelationKeys(ctx.tx, doc);
   const now = propertyLinks(doc.properties, keys);
   if (JSON.stringify(now) === JSON.stringify(propertyLinks(before, keys))) return;
   await indexLinks(ctx, doc, null);
 }
 
+// A body save marks the document edited (updatedAt, updatedBy) at most once a minute per author:
+// stamping every save of a burst of typing would rewrite the document row each time, waking every
+// live query that reads documents. Another author's save stamps at once.
+const BODY_STAMP_MS = 60_000;
+
+function bodyStamp(
+  ctx: MutationContext,
+  doc: Document,
+): { updatedAt: string; updatedBy: string } | null {
+  const age = Date.parse(ctx.now) - Date.parse(doc.updatedAt);
+  if (doc.updatedBy === ctx.actorRef && age >= 0 && age < BODY_STAMP_MS) return null;
+  return { updatedAt: ctx.now, updatedBy: ctx.actorRef };
+}
+
 // `previous` is the body being replaced (null: the document had none), for version history.
+// `fresh`: the document was created in this transaction (nothing derived from a body exists yet).
 async function writeBody(
   ctx: MutationContext,
   doc: Document,
   markdown: string,
   previous: string | null,
-  restoredFrom?: string,
+  { restoredFrom, fresh = false }: { restoredFrom?: string; fresh?: boolean } = {},
 ): Promise<string> {
   const version = bodyVersion(markdown);
-  await ctx.tx.bodies.put(doc.id, doc.workspaceId, { markdown, version }, ctx.now);
-  await indexBody(ctx, doc, ctx.extract(markdown));
-  ctx.emit("doc.bodyUpdated", doc.workspaceId, { id: doc.id, version });
+  const options = fresh ? { fresh } : undefined;
+  await ctx.tx.bodies.put(doc.id, doc.workspaceId, { markdown, version }, ctx.now, options);
+  await indexBody(ctx, doc, ctx.extract(markdown), options);
+  ctx.emit("doc.bodyUpdated", doc.workspaceId, { id: doc.id, version }, { title: doc.title });
   const versions = ctx.versions;
   if (versions?.record) {
     const change = {
@@ -187,8 +226,10 @@ export async function indexBody(
   ctx: MutationContext,
   doc: Document,
   extracted: Extracted,
+  options?: { fresh?: boolean },
 ): Promise<void> {
-  await indexLinks(ctx, doc, extracted.links);
+  await indexLinks(ctx, doc, extracted.links, options);
+  if (options?.fresh && extracted.blocks.length === 0) return;
   await ctx.tx.blocks?.replaceFor(
     doc.id,
     doc.workspaceId,
@@ -199,6 +240,7 @@ export async function indexBody(
       text: b.text,
       order: b.order,
     })),
+    options,
   );
 }
 
@@ -208,17 +250,20 @@ async function subtreeIds(tx: DbTx, id: string): Promise<string[]> {
   return [id, ...(await tx.docs.descendants(id)).map((d) => d.id)];
 }
 
-// Purges a trashed document's subtree and the attachments that belong to it.
+// Purges a trashed document's subtree and the attachments that belong to it. `attachments`: the
+// workspace's attachments (trashed ones included) when the caller has listed them already.
 export async function purgeDocuments(
   ctx: MutationContext,
   root: Document,
+  attachments?: readonly Attachment[],
 ): Promise<{ docIds: string[]; attachmentIds: string[] }> {
   if (!ctx.tx.docs.purge) unsupported("Purging documents");
   const docIds = await subtreeIds(ctx.tx, root.id);
   const attachmentIds: string[] = [];
   if (ctx.tx.attachments) {
     const owned = new Set(docIds);
-    for (const a of await ctx.tx.attachments.list(root.workspaceId, { includeDeleted: true })) {
+    for (const a of attachments ??
+      (await ctx.tx.attachments.list(root.workspaceId, { includeDeleted: true }))) {
       if (!a.documentId || !owned.has(a.documentId)) continue;
       await purgeAttachmentRow(ctx, a.id);
       attachmentIds.push(a.id);
@@ -309,8 +354,9 @@ export function inverseEdit(
 
 export const docHandlers: Handlers<Operations> = {
   async "doc.create"(ctx, input) {
+    // An id minted here is new; one given in the input may be taken.
     const id = input.id ?? ctx.ids.uuid();
-    if (await ctx.tx.docs.get(id)) {
+    if (input.id && (await ctx.tx.docs.get(id))) {
       throw new LydieError("conflict", `Document ${id} already exists`);
     }
     if (input.parentId) await requireParent(ctx.tx, input.workspaceId, input.parentId);
@@ -333,8 +379,11 @@ export const docHandlers: Handlers<Operations> = {
     ctx.inverse("doc.delete", { id });
     ctx.emit("doc.created", doc.workspaceId, { document: doc });
     await ctx.tx.links.resolveDangling(doc.workspaceId, linkKey(doc.title), doc.id);
-    if (input.markdown !== undefined) await writeBody(ctx, doc, input.markdown, null);
-    else if (mayLink(doc.properties)) await indexLinks(ctx, doc, null);
+    // A minted id has no body, links or blocks anywhere. A given one may have rows left on this
+    // device (a body kept after access was lost): those are replaced.
+    const fresh = input.id === undefined;
+    if (input.markdown !== undefined) await writeBody(ctx, doc, input.markdown, null, { fresh });
+    else if (mayLink(doc.properties)) await indexLinks(ctx, doc, null, { fresh });
     return doc;
   },
 
@@ -392,13 +441,8 @@ export const docHandlers: Handlers<Operations> = {
     if (doc.deletedAt) return { id: doc.id, deletedAt: doc.deletedAt, deletedIds: [] };
     const live = (await ctx.tx.docs.descendants(doc.id)).filter((d) => !d.deletedAt);
     const deletedIds = [doc.id, ...live.map((d) => d.id)];
-    for (const id of deletedIds) {
-      await ctx.tx.docs.update(id, {
-        deletedAt: ctx.now,
-        updatedAt: ctx.now,
-        updatedBy: ctx.actorRef,
-      });
-    }
+    const patch = { deletedAt: ctx.now, updatedAt: ctx.now, updatedBy: ctx.actorRef };
+    await updateAll(ctx.tx, deletedIds, patch);
     ctx.inverse("doc.restore", { id: doc.id });
     ctx.emit("doc.deleted", doc.workspaceId, { id: doc.id, deletedIds });
     return { id: doc.id, deletedAt: ctx.now, deletedIds };
@@ -421,7 +465,11 @@ export const docHandlers: Handlers<Operations> = {
     }
     const stamp = { updatedAt: ctx.now, updatedBy: ctx.actorRef };
     await ctx.tx.docs.update(doc.id, { parentId, sortKey, deletedAt: null, ...stamp });
-    for (const d of together) await ctx.tx.docs.update(d.id, { deletedAt: null, ...stamp });
+    await updateAll(
+      ctx.tx,
+      together.map((d) => d.id),
+      { deletedAt: null, ...stamp },
+    );
     ctx.inverse("doc.delete", { id: doc.id });
     ctx.emit("doc.restored", doc.workspaceId, {
       id: doc.id,
@@ -486,8 +534,8 @@ export const docHandlers: Handlers<Operations> = {
       return { document: doc, version: current.version, warnings };
     }
     const version = await writeBody(ctx, doc, markdown, stored?.markdown ?? null);
-    const stamp = { updatedAt: ctx.now, updatedBy: ctx.actorRef };
-    await ctx.tx.docs.update(doc.id, stamp);
+    const stamp = bodyStamp(ctx, doc);
+    if (stamp) await ctx.tx.docs.update(doc.id, stamp);
     ctx.inverse("doc.updateBody", bodyInverse(doc.id, current.markdown, markdown, version));
     // A whole large body as input: journal the edit it amounts to instead (LYD-244).
     if (input.markdown !== undefined) {
@@ -526,13 +574,9 @@ export const docHandlers: Handlers<Operations> = {
     }
     const previousVersionId =
       (await versions.checkpoint?.(doc.id, current.markdown, ctx.now)) ?? null;
-    const version = await writeBody(
-      ctx,
-      doc,
-      found.markdown,
-      stored?.markdown ?? null,
-      input.versionId,
-    );
+    const version = await writeBody(ctx, doc, found.markdown, stored?.markdown ?? null, {
+      restoredFrom: input.versionId,
+    });
     await ctx.tx.docs.update(doc.id, { updatedAt: ctx.now, updatedBy: ctx.actorRef });
     ctx.inverse("doc.updateBody", bodyInverse(doc.id, current.markdown, found.markdown, version));
     return { versionId: null, previousVersionId, version };
@@ -649,6 +693,15 @@ export const docHandlers: Handlers<Operations> = {
     return { links: await ctx.tx.links.unresolved(input.workspaceId) };
   },
 };
+
+// One patch for several documents, in one round trip where the port allows it.
+async function updateAll(tx: DbTx, ids: readonly string[], patch: DocPatch): Promise<void> {
+  if (tx.docs.updateMany && ids.length > 1) {
+    await tx.docs.updateMany(ids.map((id) => ({ id, patch })));
+  } else {
+    for (const id of ids) await tx.docs.update(id, patch);
+  }
+}
 
 async function walkUp(tx: DbRead, id: string): Promise<Document[]> {
   const out: Document[] = [];

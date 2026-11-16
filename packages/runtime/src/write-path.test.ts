@@ -58,6 +58,100 @@ it("extracts a large body before taking the write lock", async () => {
   expect(calls.extractInWrite).toBe(1);
 });
 
+it("marks a document edited at most once a minute per author", async () => {
+  const ports = createMemoryPorts();
+  let now = Date.parse("2026-11-12T10:00:00.000Z");
+  const clock = { now: () => new Date(now) };
+  const runtime = createRuntime({ ...ports, clock, actor: { type: "user", id: "u" } });
+  const other = runtime.as({ type: "user", id: "v" });
+  const doc = await runtime.ops.doc.create({ workspaceId: "ws", title: "Doc", markdown: "a" });
+  const stamp = async () => {
+    const { document } = await runtime.ops.doc.get({ id: doc.id });
+    return [document.updatedAt, document.updatedBy];
+  };
+  now += 30_000;
+  const saved = await runtime.ops.doc.updateBody({ id: doc.id, markdown: "b" });
+  expect(saved.document.updatedAt).toBe("2026-11-12T10:00:00.000Z");
+  expect(await stamp()).toEqual(["2026-11-12T10:00:00.000Z", "u"]);
+  // Another author stamps at once.
+  now += 1_000;
+  await other.doc.updateBody({ id: doc.id, markdown: "c" });
+  expect(await stamp()).toEqual(["2026-11-12T10:00:31.000Z", "v"]);
+  now += 1_000;
+  await runtime.ops.doc.updateBody({ id: doc.id, markdown: "d" });
+  expect(await stamp()).toEqual(["2026-11-12T10:00:32.000Z", "u"]);
+  // The same author a minute later.
+  now += 60_000;
+  const later = await runtime.ops.doc.updateBody({ id: doc.id, markdown: "e" });
+  expect(later.document.updatedAt).toBe("2026-11-12T10:01:32.000Z");
+  expect(await stamp()).toEqual(["2026-11-12T10:01:32.000Z", "u"]);
+});
+
+it("keeps a link's target while it is written as before", async () => {
+  const ports = createMemoryPorts();
+  const runtime = createRuntime({ ...ports, actor: { type: "user", id: "u" } });
+  const ops = runtime.ops;
+  const away = await ops.doc.create({ workspaceId: "ws", title: "Away" });
+  const here = await ops.doc.create({ workspaceId: "ws", title: "Here" });
+  const far = await ops.doc.create({ workspaceId: "ws", title: "Plan", parentId: away.id });
+  const doc = await ops.doc.create({
+    workspaceId: "ws",
+    title: "Doc",
+    parentId: here.id,
+    markdown: "See [[Plan]] and [./Plan](./Plan).",
+  });
+  const targets = async () =>
+    (await ops.doc.outgoingLinks({ id: doc.id })).links.map((l) => [l.targetRef, l.target?.id]);
+  expect(await targets()).toEqual([
+    ["Plan", far.id],
+    ["./Plan", far.id],
+  ]);
+  // A better match appears (in the source's own folder): a save that keeps the wikilink as it
+  // was keeps its target; the relative link follows the folder.
+  const near = await ops.doc.create({ workspaceId: "ws", title: "Plan", parentId: here.id });
+  await ops.doc.updateBody({ id: doc.id, markdown: "See [[Plan]] and [./Plan](./Plan). More." });
+  expect(await targets()).toEqual([
+    ["Plan", far.id],
+    ["./Plan", near.id],
+  ]);
+  // Written differently, it resolves again.
+  await ops.doc.updateBody({ id: doc.id, markdown: "See [[plan]]." });
+  expect(await targets()).toEqual([["plan", near.id]]);
+  // A target that went to the trash is not kept.
+  await ops.doc.delete({ id: near.id });
+  await ops.doc.updateBody({ id: doc.id, markdown: "See [[plan]]. Again." });
+  expect(await targets()).toEqual([["plan", far.id]]);
+});
+
+it("looks up each distinct link key of a save once", async () => {
+  const ports = createMemoryPorts();
+  const lookups: string[][] = [];
+  const db: Db = {
+    read: (fn) => ports.db.read(fn),
+    write: (fn) =>
+      ports.db.write((tx) =>
+        fn({
+          ...tx,
+          docs: {
+            ...tx.docs,
+            findAllByLinkKeys: (ws, keys) => (
+              lookups.push([...keys]),
+              tx.docs.findAllByLinkKeys!(ws, keys)
+            ),
+          },
+        }),
+      ),
+  };
+  const runtime = createRuntime({ ...ports, db, actor: { type: "user", id: "u" } });
+  await runtime.ops.doc.create({ workspaceId: "ws", title: "A" });
+  await runtime.ops.doc.create({
+    workspaceId: "ws",
+    title: "Doc",
+    markdown: "[[A]] [[A#Heading]] [[B]] ![[a]] [[Folder/A]]",
+  });
+  expect(lookups).toEqual([["a", "b"]]);
+});
+
 it("does not rewrite links a save leaves unchanged", async () => {
   const { runtime, calls } = setup();
   await runtime.ops.doc.create({ workspaceId: "ws", title: "Target" });
