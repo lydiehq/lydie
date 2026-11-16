@@ -110,6 +110,12 @@ median(
 );
 median(`app: session, ${SESSION} saves (original as string)`, () => session((r) => r.source), 5);
 console.log(`  (session times are for all ${SESSION} saves, each with its extract)`);
+// A note with frontmatter: the database stores (and the index extracts) the body without it.
+const withFrontmatter = parse(`---\ntitle: Long document\ntags: [bench]\n---\n${seedDoc}`);
+const bodyOf = (source: string) => source.slice(parse(source).body.from);
+median("app: save + extract of the body (frontmatter)", () =>
+  extract(bodyOf(save({ original: withFrontmatter, doc: edit1 }).source)),
+);
 console.log();
 
 const vault = join(root, ".cache/obsidian-help");

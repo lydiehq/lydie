@@ -77,9 +77,13 @@ bun --filter=@lydie/markdown run bench         # parse/save/reconcile timings
     any `&#` keeps all of them. Without any of the three, the mdast autolink transform is skipped too.
   - **GFM tables:** need "|", or ":-"/"-:" for a one-column table.
 - Both are tried at nearly every word or line start, which is what made prose slow to parse.
-- **Parse cache** (`parseWithTree`): the last 4 texts of 1 KB or more, with their mdast trees. A
+- **Parse cache** (`parseWithTree`): the last 6 texts of 1 KB or more, with their mdast trees. A
   save's verification parses its output, and that text is parsed again right after (the index's
-  `extract`, the next save's `original`, the bridge's LCA): those are hits. `save` keeps the
+  `extract`, the next save's `original`, the bridge's LCA): those are hits. A file with frontmatter
+  (or a BOM) also leaves its body, `source.slice(body.from)`, which is what a document stores and
+  the index extracts: the same tree, converted when first asked for (not when the body itself
+  starts with a BOM or frontmatter; `parse.test.ts` checks it against a fresh parse). Note with
+  frontmatter, save + extract of the body: 105 → 52 ms. `save` keeps the
   normalised original per parsed document (a `WeakMap`), and verifies block by block, so the next
   save from the result fingerprints only the edited document. Seed document, one edit: save +
   extract 99 → 57 ms, no-op save 4.9 → 0.5 ms. The save itself is one full parse; verifying only

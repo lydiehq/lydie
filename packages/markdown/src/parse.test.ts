@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
-import { parse } from "./parse";
+import { extract } from "./extract";
+import { clearParseCache, parse, parseWithTree } from "./parse";
 
 function first(source: string) {
   return parse(source).doc.firstChild!.toJSON() as Record<string, unknown>;
@@ -136,5 +137,63 @@ describe("parse", () => {
     expect(t.child(0).child(0).attrs.align).toBe("left");
     expect(t.child(1).child(0).textContent).toBe("x | y");
     expect(t.child(1).child(1).firstChild!.firstChild!.attrs.alias).toBe("al");
+  });
+});
+
+describe("parse cache", () => {
+  // Long enough to be kept; links, block ids, fallbacks and indented blocks so every part of the
+  // source map and the extract is compared.
+  const body = (eol: string) =>
+    Array.from({ length: 60 }, (_, i) =>
+      i % 4 === 0
+        ? `  - item [[Note ${i}]] ^b${i}`
+        : i % 4 === 1
+          ? `<div>raw ${i}</div>`
+          : i % 4 === 2
+            ? "```ts" + eol + `x(${i})` + eol + "```"
+            : `Para ${i} [link](Other%20${i}.md#h) #tag${i}`,
+    ).join(eol + eol) + eol;
+  const view = (r: ReturnType<typeof parse>) => ({
+    source: r.source,
+    doc: r.doc.toJSON(),
+    properties: r.properties,
+    frontmatter: r.frontmatter,
+    body: r.body,
+    eol: r.eol,
+    fallbacks: r.fallbacks,
+  });
+  const files: Array<[string, string]> = [
+    ["frontmatter", `---\ntitle: T\ntags: [a, b]\n---\n${body("\n")}`],
+    ["frontmatter, blank line", `---\ntitle: T\n---\n\n\n${body("\n")}`],
+    ["frontmatter, CRLF body", `---\r\ntitle: T\r\n---\r\n${body("\r\n")}`],
+    ["BOM and frontmatter", `﻿---\ntitle: T\n---\n${body("\n")}`],
+    ["BOM only", `﻿${body("\n")}`],
+    ["body starting with a thematic break", `---\na: 1\n---\n---\n\n${body("\n")}`],
+    ["body that reads as frontmatter", `---\na: 1\n---\n---\nb: 2\n---\n${body("\n")}`],
+  ];
+
+  for (const [name, file] of files) {
+    test(`a file's body reads as a fresh parse of it (${name})`, () => {
+      const start = parse(file).body.from;
+      const text = file.slice(start);
+      clearParseCache();
+      const fresh = view(parse(text));
+      const freshExtract = extract(text);
+      clearParseCache();
+      parse(file);
+      expect(view(parse(text))).toEqual(fresh);
+      clearParseCache();
+      parse(file);
+      expect(extract(text)).toEqual(freshExtract);
+    });
+  }
+
+  test("the body of a parsed file is a cache hit", () => {
+    const file = files[0]![1];
+    clearParseCache();
+    parse(file);
+    const text = file.slice(parse(file).body.from);
+    expect(parse(text)).toBe(parse(text));
+    expect(parseWithTree(text).tree).toBe(parseWithTree(file).tree);
   });
 });
