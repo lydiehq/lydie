@@ -155,7 +155,8 @@ const storeQueries: StoreBacked = {
   "doc.search": (p) =>
     queries.search(p.workspaceId, p.text, p.limit === undefined ? {} : { limit: p.limit }),
   "doc.backlinks": (p) => queries.backlinks(p.id),
-  "doc.links": (p) => queries.outgoingLinks(p.id),
+  // With the targets' page icons, which editors draw on wiki links (`target.icon`).
+  "doc.links": (p) => queries.outgoingLinks(p.id, { icons: true }),
   "doc.blockBacklinks": (p) => queries.blockBacklinks(p.id, p.blockId),
   "doc.unresolvedLinks": (p) => queries.unresolvedLinks(p.workspaceId),
   "doc.unlinkedMentions": (p) =>
@@ -189,10 +190,11 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
   const registry = createLiveRegistry({
     ...(options.lingerMs !== undefined ? { lingerMs: options.lingerMs } : {}),
   });
-  // Re-runs of queries that are not store-watchable.
-  const changed = new Set<() => void>();
-  const signalChange = () => {
-    for (const listener of [...changed]) listener();
+  // Re-runs of queries that are not store-watchable: with the events of a commit, or null after
+  // this backend's own mutation when there is no event hub.
+  const changed = new Set<(events: readonly LydieEvent[] | null) => void>();
+  const signalChange = (events: readonly LydieEvent[] | null = null) => {
+    for (const listener of [...changed]) listener(events);
   };
   const offEvents = options.events?.subscribe(signalChange);
 
@@ -252,9 +254,13 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
   };
 
   const storeSource =
-    <T>(query: StoreQuery<T> | (() => LiveQuery<T>), patcher?: Patcher<T>): LiveSource<T> =>
+    <T>(
+      query: StoreQuery<T> | (() => LiveQuery<T>),
+      patcher?: Patcher<T>,
+      watch?: { throttleMs?: number },
+    ): LiveSource<T> =>
     (emit) => {
-      const live = typeof query === "function" ? query() : store.live(query);
+      const live = typeof query === "function" ? query() : store.live(query, watch);
       // The store hands out a new state object per emission even when nothing changed.
       let last: LiveState<T> | null = null;
       // Optimistic patches stack on what is shown (an earlier one may not have committed yet).
@@ -299,7 +305,8 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
       };
     };
 
-  // The trash is a contract query, not a store query: run it and re-run it on change.
+  // The trash is a contract query, not a store query: run it and re-run it when something goes
+  // into it, comes out, or an item in it changes (not after every save).
   const trashSource =
     (params: LiveParams<"trash.list">): LiveSource<LiveRow<"trash.list">> =>
     (emit) => {
@@ -307,6 +314,10 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
       let stopped = false;
       let running = false;
       let again = false;
+      const onChange = (events: readonly LydieEvent[] | null) => {
+        if (events && !events.some((e) => touchesTrash(e, params.workspaceId, state.data))) return;
+        void run();
+      };
       const run = async () => {
         if (running) {
           again = true;
@@ -336,11 +347,11 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
           }
         }
       };
-      changed.add(run);
+      changed.add(onChange);
       void run();
       return () => {
         stopped = true;
-        changed.delete(run);
+        changed.delete(onChange);
       };
     };
 
@@ -401,6 +412,7 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
           return storeSource(
             build(params),
             patcherFor(name, params, noContext) as Patcher<LiveRow<N>> | undefined,
+            throttleFor(name),
           );
         },
         lingerFor(name, options.lingerMs),
@@ -500,12 +512,52 @@ export function createLocalBackend(options: LocalBackendOptions): LocalBackend {
 }
 
 // Windows of a database view come and go as a list scrolls; each live one re-runs on every
-// change, so they linger briefly instead of the registry's 10 s.
+// change, so they linger briefly instead of the registry's 10 s. A search lingers not at all:
+// each settled query text is a live query of its own, and nobody comes back to an old one.
 export const VIEW_LINGER_MS = 1000;
 
 export function lingerFor(name: string, lingerMs: number | undefined): { lingerMs?: number } {
+  if (name === "doc.search") return { lingerMs: 0 };
   if (name !== "database.view") return {};
   return { lingerMs: Math.min(lingerMs ?? VIEW_LINGER_MS, VIEW_LINGER_MS) };
+}
+
+// Queries that read across the workspace (full text, every link, the newest pages) and change
+// with almost every save: while someone types they re-run at most once per window. The first
+// change after a quiet window still re-runs at once (see @lydie/store's coalesce.ts).
+export const HEAVY_THROTTLE_MS = 1500;
+
+const HEAVY: ReadonlySet<string> = new Set([
+  "doc.search",
+  "doc.unlinkedMentions",
+  "doc.unresolvedLinks",
+  "doc.recent",
+]);
+
+export function throttleFor(name: string): { throttleMs?: number } {
+  return HEAVY.has(name) ? { throttleMs: HEAVY_THROTTLE_MS } : {};
+}
+
+const TRASH_EVENTS: ReadonlySet<string> = new Set([
+  "doc.deleted",
+  "doc.restored",
+  "doc.purged",
+  "attachment.deleted",
+  "attachment.restored",
+  "attachment.purged",
+]);
+
+// Whether an event can change a workspace's trash list: something went in or out, or an item
+// in it was renamed or moved.
+export function touchesTrash(
+  event: LydieEvent,
+  workspaceId: string,
+  items: readonly { id: string }[],
+): boolean {
+  if (event.workspaceId !== workspaceId) return false;
+  if (TRASH_EVENTS.has(event.type)) return true;
+  const id = (event.data as { id?: unknown }).id;
+  return typeof id === "string" && items.some((item) => item.id === id);
 }
 
 export function toError(error: unknown): Error {

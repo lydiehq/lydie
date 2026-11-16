@@ -41,7 +41,12 @@ MARKDOWN_EXTRACT_VERSION, reextractIfStale(store, runtime, workspaceId)
                                      // database without a folder re-extracts its bodies on the next
                                      // open (store.meta "extract_version"; the web app runs it when idle)
 createLiveRegistry, liveKey, stabilize, encodeRows, applyLiveEvent   // transport internals
-// registry.get(key, source, { lingerMs? }): per-query linger (database.view windows: 1 s, VIEW_LINGER_MS)
+// registry.get(key, source, { lingerMs? }): per-query linger (database.view windows: 1 s, VIEW_LINGER_MS;
+// doc.search: 0, every settled query text is a query of its own)
+// throttleFor(name): doc.search, doc.unlinkedMentions, doc.unresolvedLinks and doc.recent re-run
+// at most every HEAVY_THROTTLE_MS (1.5 s) while saves keep coming (the first change still at once)
+// touchesTrash(event, workspaceId, items): the live trash list re-runs only for events that put
+// something in or take it out, or change an item in it
 
 // "@lydie/app"
 startApp({ backend, platform, plugins, storage?, poolSize?, holdMs?, layoutDebounceMs?, services? }): Promise<Host>
