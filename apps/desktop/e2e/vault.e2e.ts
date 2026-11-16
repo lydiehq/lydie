@@ -70,9 +70,14 @@ afterAll(async () => {
 
 describe("vault in the main process", () => {
   it("indexes the folder, with the database outside it", async () => {
-    const status = (await page.evaluate(() =>
-      window.lydiePlatform.services!.request("lydie-vault", "status", null),
-    )) as { state: string; documents: number };
+    // The window is served while the folder is indexed (`acquireServing`).
+    const status = await poll(
+      async () =>
+        (await page.evaluate(() =>
+          window.lydiePlatform.services!.request("lydie-vault", "status", null),
+        )) as { state: string; documents: number },
+      (s) => s.state === "ready",
+    );
     expect(status).toMatchObject({ state: "ready", documents: 3 });
     const tree = await execute<{ entries: { title: string; depth: number }[] }>("doc.listTree", {
       workspaceId,

@@ -13,8 +13,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { backendService } from "@lydie/app/backend";
-import { vaultService } from "@lydie/bridge-fs";
-import type { VaultStatus } from "@lydie/bridge-fs";
+import { openVault, vaultService } from "@lydie/bridge-fs";
+import type { Vault, VaultStatus } from "@lydie/bridge-fs";
 
 import { ServiceRegistry } from "./services.ts";
 import { registerVaultServices, VaultManager } from "./vaults.ts";
@@ -150,4 +150,51 @@ test("folder settings: read, change and stream through the vault service (LYD-26
   await new Promise((r) => setTimeout(r, 10));
   off();
   expect(seen.length).toBeGreaterThanOrEqual(2);
+});
+
+test("a window is served once the database is open; its writes wait for the index", async () => {
+  const { folder, dataDir } = setup();
+  // Indexing that only finishes when the test says so.
+  let finishIndex = () => {};
+  const indexing = new Promise<void>((resolve) => (finishIndex = resolve));
+  manager = new VaultManager({
+    dataDir,
+    open: async (options) => {
+      const vault = await openVault(options);
+      const indexed = vault.indexed.then(() => indexing);
+      return new Proxy(vault, {
+        get: (target, key) => {
+          if (key === "indexed") return indexed;
+          const value = Reflect.get(target, key, target) as unknown;
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      }) as Vault;
+    },
+  });
+  const services = new ServiceRegistry();
+  registerVaultServices(services, async (caller) =>
+    manager!.acquireServing(folder, caller.windowId),
+  );
+  const caller = { windowId: "w1" };
+  const info = (await services.request(backendService.name, "info", null, caller)) as {
+    workspaceId: string;
+  };
+  let created = false;
+  const creating = services
+    .request(
+      backendService.name,
+      "execute",
+      { id: "doc.create", input: { workspaceId: info.workspaceId, title: "Later" } },
+      caller,
+    )
+    .then(() => (created = true));
+  await Bun.sleep(50);
+  expect(created).toBe(false);
+  // Reads are answered meanwhile.
+  expect(await services.request(backendService.name, "info", null, caller)).toMatchObject({
+    workspaceId: info.workspaceId,
+  });
+  finishIndex();
+  await creating;
+  expect(created).toBe(true);
 });

@@ -26,6 +26,7 @@ import { createUpdater } from "./updater.ts";
 import { noFolder, registerVaultServices, VaultManager } from "./vaults.ts";
 import { preloadPath, WindowManager } from "./windows.ts";
 import type { WindowContext, WindowKind } from "./windows.ts";
+import type { WorkspaceFs } from "./workspace-fs.ts";
 
 // Bundled into one file, so this runs right after Electron loads the main script.
 const mainStartedAt = Date.now();
@@ -212,9 +213,9 @@ async function start() {
 
   const grantedFolders = new Set(store.recentFolders().map((folder) => folder.id));
 
-  const openWindow = async (scope: WorkspaceScope, kind: WindowKind) => {
+  const openWindow = async (scope: WorkspaceScope, kind: WindowKind, fs?: WorkspaceFs) => {
     try {
-      return await windows!.open(scope, kind);
+      return await windows!.open(scope, kind, fs ? { fs } : {});
     } catch (error) {
       console.error("[lydie] could not open window", error);
       dialog.showErrorBox("Could not open window", (error as Error).message);
@@ -224,17 +225,19 @@ async function start() {
   const openLaunchRequest = async (request: LaunchRequest) => {
     const kind: WindowKind = request.diagnostics ? "diagnostics" : "app";
     let scope: WorkspaceScope = { kind: "none" };
+    let fs: WorkspaceFs | undefined;
     if (request.folder) {
       try {
         const local = await windows!.localScope(resolve(request.folder));
         grantedFolders.add(local.fs.root);
         scope = local.scope;
+        fs = local.fs;
       } catch (error) {
         if (request.restoring) console.warn("[lydie] could not reopen the last folder", error);
         else dialog.showErrorBox("Could not open folder", (error as Error).message);
       }
     }
-    const context = await openWindow(scope, kind);
+    const context = await openWindow(scope, kind, fs);
     if (request.deepLink) deliverLink(request.deepLink);
     return context;
   };
@@ -305,7 +308,8 @@ async function start() {
     async (caller) => {
       const context = windows?.all().find((c) => c.id === caller.windowId);
       if (!context || context.scope.kind !== "local") noFolder();
-      return vaults.acquire(context.scope.folder.id, context.id);
+      // Served from the database while the folder is indexed; writes wait for the index.
+      return vaults.acquireServing(context.scope.folder.id, context.id);
     },
     (caller) => hosted.backendFor(caller.windowId),
   );

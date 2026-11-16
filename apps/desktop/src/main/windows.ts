@@ -46,6 +46,8 @@ export type WindowContext = {
 export type OpenOptions = {
   // Always a new window, showing this first (see `windows.initialRoute`).
   route?: WindowRoute;
+  // The folder of a local scope, already opened with `localScope`.
+  fs?: WorkspaceFs;
 };
 
 const MAX_PENDING_ACTIONS = 20;
@@ -183,7 +185,10 @@ export class WindowManager {
   ): Promise<WindowContext> {
     let fs: WorkspaceFs | null = null;
     if (scope.kind === "local") {
-      const local = await this.localScope(scope.folder.id);
+      const local =
+        options.fs?.root === scope.folder.id
+          ? { fs: options.fs, scope }
+          : await this.localScope(scope.folder.id);
       fs = local.fs;
       scope = local.scope;
     }
