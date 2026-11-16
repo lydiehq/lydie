@@ -5,6 +5,8 @@ import babel from "@rolldown/plugin-babel";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "electron-vite";
 
+import { bundledDependencies } from "./scripts/runtime-dependencies.ts";
+
 // Keep Vite's cache in the install root's node_modules, as apps/web does.
 const installedNodeModules = dirname(
   dirname(createRequire(import.meta.url).resolve("vite/package.json")),
@@ -20,6 +22,9 @@ export default defineConfig(({ command }) => ({
     },
     build: {
       minify: command === "build",
+      // Native dependencies stay in node_modules; the pure-JS ones (electron-updater and what it
+      // needs) are bundled, so the packaged app does not carry their packages.
+      externalizeDeps: { exclude: bundledDependencies(import.meta.dirname) },
       rolldownOptions: {
         input: { index: "src/main/index.ts" },
         output: { format: "es" },

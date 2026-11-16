@@ -24,6 +24,7 @@ import { join } from "node:path";
 
 import type { Configuration } from "electron-builder";
 
+import { unusedPackages } from "./scripts/runtime-dependencies.ts";
 import { channelOf, parseVersion } from "./src/main/update-feed.ts";
 
 const env = process.env;
@@ -77,9 +78,31 @@ const config: Configuration = {
     "!**/*.map",
     // Build inputs of better-sqlite3 (it ships prebuilds): sources and node-addon-api.
     "!node_modules/better-sqlite3/{deps,src,docs,node_modules}/**",
+    // Packages bundled into out/main (electron-updater and its dependencies) or only needed to
+    // build addons (scripts/runtime-dependencies.ts).
+    ...unusedPackages(import.meta.dirname).map((name) => `!node_modules/${name}{,/**}`),
+    // Sources and docs of the packages that stay: they run from lib/ and dist/.
+    "!node_modules/{@powersync/*,@parcel/watcher,comlink}/src/**",
+    "!node_modules/{*,@*/*}/docs/**",
   ],
-  // The web app is the UI; it is served from here over lydie-app://web.
-  extraResources: [{ from: "../web/dist", to: "web", filter: ["**/*", "!**/*.map"] }],
+  // The web app is the UI; it is served from here over lydie-app://web. Left out: what only the
+  // browser loads. The browser's database (wa-sqlite builds and their OPFS file systems: the
+  // desktop's databases are in the main process), the service worker (not registered in the
+  // desktop app), and KaTeX's woff/ttf fallbacks (Chromium takes the woff2 listed first).
+  extraResources: [
+    {
+      from: "../web/dist",
+      to: "web",
+      filter: [
+        "**/*",
+        "!**/*.map",
+        "!assets/*wa-sqlite*",
+        "!assets/OPFS*VFS*",
+        "!sw.js",
+        "!assets/KaTeX_*.{ttf,woff}",
+      ],
+    },
+  ],
   asar: true,
   // Real files for native code: PowerSync's worker (started from app.asar.unpacked, see
   // `unpackedAsar` in @lydie/store/node) dlopens its SQLite extension next to itself and imports

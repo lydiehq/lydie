@@ -242,9 +242,17 @@ there is nothing to hide there.
   `/app.asar/` to `/app.asar.unpacked/`. Fuses `onlyLoadAppFromAsar` and
   `enableEmbeddedAsarIntegrityValidation` are on. better-sqlite3 (N-API prebuild) and @parcel/watcher
   load in Electron 45 without a rebuild (`npmRebuild: false`).
-- Size: `files` drops better-sqlite3 `deps/src/docs/node_modules`; `scripts/after-pack.ts` removes
-  other platforms' and arches' binaries from `app.asar.unpacked`. Mac arm64: 282 MB `.app`,
-  `app.asar` 4.6 MB, `app.asar.unpacked` 5.0 MB.
+- Only native code stays a package in node_modules (`scripts/runtime-dependencies.ts`:
+  `@parcel/watcher`, `@powersync/node`, `better-sqlite3`). Every other dependency
+  (electron-updater with js-yaml, fs-extra, semver, …) is bundled into `out/main`, and `files`
+  leaves out the packages only they need, plus `node-addon-api` (build-only), the sources and docs
+  of the packages that stay and better-sqlite3's `deps/src/docs/node_modules`. A new dependency
+  is bundled unless it is added to `EXTERNAL_DEPENDENCIES`.
+- The web build is copied without what only the browser loads: the wa-sqlite builds and OPFS file
+  systems (the desktop's databases are in main), `sw.js` and KaTeX's woff/ttf fallbacks.
+- Size: `scripts/after-pack.ts` removes other platforms' and arches' binaries from
+  `app.asar.unpacked`. Mac arm64 (Nov 2026): 283 MB `.app`, `app.asar` 3.6 MB (was 5.1),
+  `app.asar.unpacked` 3.9 MB (4.4), `Resources/web` 6.2 MB (14.7).
 - The fuses block Playwright on the packaged app. Smoke-test it by running
   `Lydie.app/Contents/MacOS/Lydie --open-folder=<tmp>` with `LYDIE_USER_DATA=<tmp>`, then SIGTERM, and
   look for "[lydie] databases closed".
