@@ -248,7 +248,8 @@ export function ShareDialog({ close, props }: { close: () => void; props: unknow
     }
     setBusy(true);
     setError(null);
-    try {
+    // A promise chain rather than try/finally, which the React Compiler cannot compile.
+    const attempt = async () => {
       const result = await api.call("share.invite", { documentId, email, level });
       app.notify({
         title:
@@ -260,11 +261,10 @@ export function ShareDialog({ close, props }: { close: () => void; props: unknow
       });
       setQuery("");
       await sharing.reload();
-    } catch (e) {
-      setError(`Could not invite ${email}: ${errorText(e)}`);
-    } finally {
-      setBusy(false);
-    }
+    };
+    await attempt()
+      .catch((e: unknown) => setError(`Could not invite ${email}: ${errorText(e)}`))
+      .finally(() => setBusy(false));
   };
 
   return (

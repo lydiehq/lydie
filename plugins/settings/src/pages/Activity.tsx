@@ -494,7 +494,8 @@ function SessionRow({
     });
     if (!confirmed) return;
     setUndoing(true);
-    try {
+    // A promise chain rather than try/finally, which the React Compiler cannot compile.
+    const attempt = async () => {
       const result = await source.undoSession(session.sessionId);
       const undone = result.undoneIds.length;
       const counts = new Map<SkipReason, number>();
@@ -508,15 +509,16 @@ function SessionRow({
         kind: undone > 0 && !skipped ? "success" : "warning",
       });
       onUndone();
-    } catch (error) {
-      app.notify({
-        title: "Could not undo the session",
-        ...(error instanceof Error ? { description: error.message } : {}),
-        kind: "error",
-      });
-    } finally {
-      setUndoing(false);
-    }
+    };
+    await attempt()
+      .catch((error: unknown) =>
+        app.notify({
+          title: "Could not undo the session",
+          ...(error instanceof Error ? { description: error.message } : {}),
+          kind: "error",
+        }),
+      )
+      .finally(() => setUndoing(false));
   };
 
   return (

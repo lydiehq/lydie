@@ -79,14 +79,18 @@ export function ImportDialog({ importer, close }: { importer: ImporterDef; close
     const controller = new AbortController();
     abort.current = controller;
     setStep({ kind: "reading", progress: null });
-    try {
+    // The throw outside the try statement, where the React Compiler cannot compile one.
+    const readPlan = async () => {
       const plan = await importer.read(files, {
         app,
         signal: controller.signal,
         onProgress: (progress) => setStep({ kind: "reading", progress }),
       });
       if (!plan.pages.length) throw new Error("There is nothing to import in these files.");
-      setStep({ kind: "review", plan });
+      return plan;
+    };
+    try {
+      setStep({ kind: "review", plan: await readPlan() });
     } catch (e) {
       setStep({ kind: "pick" });
       if (!isAbort(e)) setError(e instanceof Error ? e.message : String(e));

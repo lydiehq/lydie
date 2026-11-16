@@ -60,12 +60,12 @@ function ProgressButton({ children, size, variant, label, busyLabel, run }: Prog
       }
       onPress={async () => {
         setBusy(true);
-        try {
-          await run(setProgress);
-        } finally {
+        // A promise chain rather than try/finally, which the React Compiler cannot compile.
+        const attempt = async () => run(setProgress);
+        await attempt().finally(() => {
           setBusy(false);
           setProgress(null);
-        }
+        });
       }}
     >
       {shown ?? children}

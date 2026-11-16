@@ -87,7 +87,8 @@ export function PublicLinks({
   const create = async () => {
     setBusy(true);
     setError(null);
-    try {
+    // A promise chain rather than try/finally, which the React Compiler cannot compile.
+    const attempt = async () => {
       const result = await api.call("shareLink.create", {
         documentId,
         includeSubpages: subpages,
@@ -99,11 +100,10 @@ export function PublicLinks({
       setCreating(false);
       setPassword("");
       await links.reload();
-    } catch (e) {
-      setError(errorText(e));
-    } finally {
-      setBusy(false);
-    }
+    };
+    await attempt()
+      .catch((e: unknown) => setError(errorText(e)))
+      .finally(() => setBusy(false));
   };
 
   const list = links.data?.shareLinks ?? [];

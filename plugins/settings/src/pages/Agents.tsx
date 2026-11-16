@@ -62,13 +62,11 @@ function LocalMcp({ mcp }: { mcp: NonNullable<VaultApi["mcp"]> }) {
           onChange={async (enabled) => {
             setBusy(true);
             setError(null);
-            try {
-              await mcp.setEnabled(enabled);
-            } catch (e) {
-              setError(e instanceof Error ? e.message : String(e));
-            } finally {
-              setBusy(false);
-            }
+            // A promise chain rather than try/finally, which the React Compiler cannot compile.
+            const attempt = async () => mcp.setEnabled(enabled);
+            await attempt()
+              .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+              .finally(() => setBusy(false));
           }}
         />
       </SettingsRow>
@@ -122,7 +120,8 @@ function ApiTokens({ onSecret }: { onSecret: (secret: string) => void }) {
   const create = async () => {
     setBusy(true);
     setError(null);
-    try {
+    // A promise chain rather than try/finally, which the React Compiler cannot compile.
+    const attempt = async () => {
       const days = EXPIRY[expiry];
       const result = await api.call("apiToken.create", {
         workspaceId,
@@ -134,11 +133,10 @@ function ApiTokens({ onSecret }: { onSecret: (secret: string) => void }) {
       onSecret(result.secret);
       setName("");
       await tokens.reload();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
+    };
+    await attempt()
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setBusy(false));
   };
   const list = tokens.data?.tokens ?? [];
   return (

@@ -148,7 +148,8 @@ function AppLockDialog({
     }
     setBusy(true);
     setError(null);
-    try {
+    // A promise chain rather than try/finally, which the React Compiler cannot compile.
+    const attempt = async () => {
       if (action === "enable") {
         await lock.setUp({ secret, idleMinutes: idleMinutes(idle), touchId });
       } else if (action === "change") {
@@ -161,13 +162,14 @@ function AppLockDialog({
         return;
       }
       close();
-    } catch (e) {
-      // The main process's reason ("Use at least 4 characters"), after Electron's prefix.
-      const message = e instanceof Error ? e.message : String(e);
-      setError(message.replace(/^Error invoking remote method '[^']+': (Error: )?/, ""));
-    } finally {
-      setBusy(false);
-    }
+    };
+    await attempt()
+      .catch((e: unknown) => {
+        // The main process's reason ("Use at least 4 characters"), after Electron's prefix.
+        const message = e instanceof Error ? e.message : String(e);
+        setError(message.replace(/^Error invoking remote method '[^']+': (Error: )?/, ""));
+      })
+      .finally(() => setBusy(false));
   };
 
   return (
