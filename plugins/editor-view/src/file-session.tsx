@@ -179,15 +179,13 @@ export function useFileSession(
         const setSeq = log.current.update(-1);
         const mark = ++sends.current;
         saving.current++;
-        let result: Awaited<ReturnType<DocumentSession["save"]>>;
-        try {
-          result = await session.save(patch ?? live?.toJSON() ?? doc);
-        } finally {
+        const result = await session.save(patch ?? live?.toJSON() ?? doc).finally(() => {
           saving.current--;
-        }
+        });
         setSeq(result.seq);
         if (!result.stale) {
           if (live && sends.current === mark) sent.current = { seq: result.seq, doc: live };
+          log.current.saved(result.seq);
           return;
         }
         sent.current = null;
